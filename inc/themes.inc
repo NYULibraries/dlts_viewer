@@ -9,7 +9,11 @@
  * Themes functions
  */
 function theme_dlts_viewer_pager_button($variables) {
-  $classes = array('paging' , $variables['operation']);
+	// Notice: Undefined index: pager side in theme_dlts_viewer_pager_button() (line 12 of dlts_viewer/inc/themes.inc).
+	// @TODO: Hack for now, fix this later on once I know why this is here
+	$variables['pager side'] = isset($variables['pager side']) ? $variables['pager side'] : NULL;
+
+  $classes = array('paging', $variables['operation'], $variables['pager side']);
   if (dlts_viewer_is_pjax()) {
     $classes[] = 'pjax';
   }
@@ -69,17 +73,6 @@ function theme_dlts_viewer_openlayers_image($variables) {
   $file_uri = file_create_url($file['uri']);
   if (isset($file['timestamp'])) {
   	$file_uri = $file_uri . '?v=' . $file['timestamp'];
-  }
-  if (!isset($file['width'])) {
-  	include_once __DIR__ . '/inc/loaders.inc';
-    $djatoka = dlts_viewer_djatoka_request($file);
-    if (!isset($file['djakota_width'])) {
-      $file['width'] = $djatoka['width'];
-      $file['height'] = $djatoka['height'];
-      $file['levels'] = $djatoka['levels'];
-      $file['dwtLevels'] = $djatoka['dwtLevels'];
-      $file['compositingLayerCount'] = $djatoka['compositingLayerCount'];
-    }
   }
   $openlayers_options = array(
     'service' => variable_get('dlts_viewer_djatoka_service', 'http://dl-imgdev.home.nyu.edu/adore-djatoka'),

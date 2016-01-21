@@ -15,6 +15,8 @@ YUI().use(
     /** set a X-PJAX HTTP header for all IO requests */
     Y.io.header('X-PJAX', 'true');
     
+    Y.log('componets');
+    
     var PJAX_INVALID = -1;
     
     var PJAX_UNKNOWN_ERROR = -2;    
@@ -26,10 +28,12 @@ YUI().use(
     var pagemeta = Y.one('.pane.pagemeta');
 
     var display = Y.one('#display');
+
+    var pager = Y.one('#pager');
     
     var displayData = display.getData();
 
-    var land_dir = html.get('dir');
+    var land_dir = pager.get('dir');
 
     var bookUrl = displayData['url'];
 
@@ -47,13 +51,28 @@ YUI().use(
       clickableRail: false, 
       max: sequenceCount, 
       value: sequence, 
-      length:(Y.one('#pager').get('offsetWidth') - 120 ) + 'px' 
+      length:(Y.one('#pager').get('offsetWidth') - 120) + 'px' 
     });
     
     /** nodes */
 
     function resizePageMeta() {
       slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
+       var viewportHeight = this.get('winHeight'),
+        adminBarHeight = 0,
+        topHeight = Y.one('#top').get('offsetHeight'),
+        navbarHeight = Y.one('#navbar').get('offsetHeight'),
+        pageHeight = Y.one('#pager').get('offsetHeight'),
+        nodeAdminMenu = Y.one('#admin-menu'),
+        sidebarHeight
+      ; /** definition list end */
+      if (nodeAdminMenu) {
+        adminBarHeight =  nodeAdminMenu.get('offsetHeight') ;
+      }
+      sidebarHeight = viewportHeight - (adminBarHeight + topHeight + navbarHeight + pageHeight);
+      Y.one('#pagemeta').setStyles({
+        'height': sidebarHeight
+      });
     }
 
     function on_toggle_language(e) {
@@ -93,6 +112,8 @@ YUI().use(
 
     function on_button_click(e) {
     
+      Y.log(e);
+    	
       e.preventDefault();
 
       var self = this;
@@ -194,7 +215,7 @@ YUI().use(
       }, function() {
         this.removeClass(css_class);
       });
-    };
+    }
 
     /** callback for changes in the value of the slider */
     function slide_value_change(e) {
@@ -220,7 +241,7 @@ YUI().use(
         pjax.navigate(bookUrl + '/' + e.target.getValue());
 
         /** slider set focus to the slider rail, blur as soon as possible so that user can use the keyboard to read the book */
-        Y.soon(function() { slider.thumb.blur() });
+        Y.soon(function() { slider.thumb.blur();});
 
       }
 
@@ -286,9 +307,9 @@ YUI().use(
         
         var node = e.content.node;
         
-      var map = node.one('.dlts_image_map');
-      
-      if (map) {
+        var map = node.one('.dlts_image_map');
+
+        if (map) {
 
           var config = {};
           
@@ -307,7 +328,7 @@ YUI().use(
           }
           
           if (previous) {
-          previous.replace(node.one('.previous').cloneNode(true));
+            previous.replace(node.one('.previous').cloneNode(true));
           }
 
           /** Configuration for the new book page */
@@ -326,11 +347,8 @@ YUI().use(
               compositingLayerCount: map.getAttribute('data-compositingLayerCount')
             }
           };
-          
           Y.on('available', change_page, '#' + config.id, OpenLayers, config);
-          
           Y.fire('pjax:load:available', config);
-          
       }
       else {
         throw new PjaxException(e.url);
@@ -372,11 +390,11 @@ YUI().use(
       }      
 
       if (top) {
-      top.addClass('hidden');      
+        top.addClass('hidden');      
       }
       
       if (metadata) {
-      metadata.removeClass('on');      
+        metadata.removeClass('on');      
       }
       
     }
@@ -492,10 +510,14 @@ YUI().use(
     function onButtonThumbnailsOn(e) {
       Y.log('onButtonThumbnailsOn');
       var thumbnails = Y.one('#thumbnails');
+      var thumbnailsParams = Y.one('#thumbnails-params');
       var data = {};
-      if (thumbnails) {
-        data = thumbnails.getData();
-        Y.io(data.url + '?page=' + data.page + '&rows=' + data.rows, { on: { start: onButtonThumbnailsOnIOStart , complete: onThumbnailsOnSuccess } });
+      if (thumbnailsParams) {
+        data = thumbnailsParams.getData();
+        Y.io(data.url + '?page=' + data.page + '&rows=' + data.rows,
+          { on: { start: onButtonThumbnailsOnIOStart ,
+                  complete: onThumbnailsOnSuccess } }
+        );
       }
     }
     
@@ -601,8 +623,6 @@ YUI().use(
     
     html.delegate('click', on_button_click, 'a.button');
     
-    Y.on('contentready|windowresize', resizePageMeta, '#pagemeta');
-
     html.delegate('click', pjax_callback, 'a.paging');
     
     Y.on('pjax:change|openlayers:next|openlayers:previous', pjax_callback);
@@ -617,14 +637,18 @@ YUI().use(
 
     Y.once('contentready', openLayersTilesLoading, '.dlts_image_map');
     
+    Y.on('contentready', resizePageMeta, '#pagemeta');
+   
+    Y.on('windowresize', resizePageMeta);
+
     /** Thumbnails related events */
 
     Y.on('button:button-thumbnails:on', onButtonThumbnailsOn);
 
     Y.on('button:button-thumbnails:off', onButtonThumbnailsOff);
 
-    Y.delegate('click', onThumbnailsContainerPagerClick , 'body', '.thumbnails .views-row a');
+    Y.delegate('click', onThumbnailsContainerPagerClick, 'body', '.thumbnails .views-row a');
     
-    Y.one('body').delegate('click', onThumbnailsPagePagerClick , '#thumbnails .pager a');
+    Y.one('body').delegate('click', onThumbnailsPagePagerClick, '#thumbnails .pager a');
 
 });
