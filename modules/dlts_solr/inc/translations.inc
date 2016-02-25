@@ -18,6 +18,8 @@ function dlts_solr_index_book_translations(&$document, &$entity, $entity_type, $
         $title_long = $wrapper->field_title->value();
         if (!empty($title_long)) {
         	$title = trim($title_long);
+        	/** the fields are the same but I don't want to remove title_long right now as it might be used somewhere **/
+        	$document->addField('ss' . $prefix . '_title', $title);
         	$document->addField('ss' . $prefix . '_title_long', $title);
         	$document->addField('ss' . $prefix . '_stitle', dlts_solr_remove_accents(strtolower($title)));
         	$document->addField('iass' . $prefix . '_longlabel',  dlts_solr_remove_accents(strtolower($title)));
@@ -33,7 +35,12 @@ function dlts_solr_index_book_translations(&$document, &$entity, $entity_type, $
         $authors = $wrapper->field_author->value();
         if (!empty($authors)) {
         	foreach ($authors as $author) {
+
         		$searchableFields[] = $author;
+        		if ( $index == 0 ) {
+                              $document->addField('ss_' . $lang . '_s' . $label, dlts_solr_remove_accents( strtolower($value) ));
+                              $document->addField('iass_' . $lang . '_' . $label, dlts_solr_remove_accents( strtolower($value) ));
+                            }
         		$document->addField('sm' . $prefix . '_author', $author);
         	}
         }
