@@ -76,7 +76,11 @@ function dlts_viewer_mongodb_load_thumbnails($isPartOf, $page = 0, $per_page = 1
 			if(dlts_viewer_is_embed() && $collection_name=='dlts_photo') {
                $thumbnail['url'] = url($thumbnail['url'], array('query' => array('embed' => 'true')));
             }
-			$thumbnail['imageServeURI'] = dlts_viewer_djatoka_url($thumbnail['cm'],$embeded_thumb );
+			if( $collection_name=='dlts_photo' ) {
+                $thumbnail['imageServeURI'] = file_create_url(str_replace('_d.jp2', '_thumbnail.jpg',$thumbnail['cm']['uri']));
+            } else {
+                $thumbnail['imageServeURI'] = dlts_viewer_djatoka_url($thumbnail['cm'],$embeded_thumb );
+            }
 			$items[] = $thumbnail;
 		}
     return array('count' => $count, 'items' => $items);
