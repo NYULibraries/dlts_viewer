@@ -91,6 +91,14 @@
         }
       }
     }
+    .field-name-field-language {
+      .field-item {
+        &:not(:last-child)::after {
+          content: ",";
+          padding-right: 3px;
+        }
+      }
+    }
     .field-name-series-for-this-book {
       .field-label {
         display: block;
