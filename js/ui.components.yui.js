@@ -568,7 +568,7 @@ YUI().use(
     function onDisplayContentReady () {
       var display = Y.one('#display');
       var displayData = display.getData();
-      Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', displayData}));
+      Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: displayData}));
     }
 
     Y.once('contentready', onDisplayContentReady, '#display');
