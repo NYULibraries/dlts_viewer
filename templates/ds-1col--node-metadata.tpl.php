@@ -24,8 +24,8 @@
      data-title="<?php print $title ?>"
      data-pageView="<?php print $pageView ?>">
     <?php print $book_page ?>
-    <?php print $button_previous ?>
-    <?php print $button_next ?>
+    <?php if (isset($button_previous)) print $button_previous; ?>
+    <?php if (isset($button_next)) print $button_next;  ?>
 </div>
 <div class="pane load loading">
     <?php if (isset($loading)) print $loading ; ?>
