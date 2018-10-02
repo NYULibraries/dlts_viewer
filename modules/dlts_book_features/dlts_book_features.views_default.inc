@@ -400,7 +400,7 @@ function dlts_book_features_views_default_views() {
   $handler->display->display_options['fields']['field_service_copy']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['field_service_copy']['element_wrapper_type'] = '0';
   $handler->display->display_options['fields']['field_service_copy']['element_default_classes'] = FALSE;
-  /* Sort criterion: Content: Date of Publication (field_publication_date) */
+  /* Sort criterion: Content: Date (field_publication_date) */
   $handler->display->display_options['sorts']['field_publication_date_value']['id'] = 'field_publication_date_value';
   $handler->display->display_options['sorts']['field_publication_date_value']['table'] = 'field_data_field_publication_date';
   $handler->display->display_options['sorts']['field_publication_date_value']['field'] = 'field_publication_date_value';
@@ -563,7 +563,7 @@ function dlts_book_features_views_default_views() {
   $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
   $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
   $handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
-  /* Sort criterion: Content: Date of Publication (field_publication_date) */
+  /* Sort criterion: Content: Date (field_publication_date) */
   $handler->display->display_options['sorts']['field_publication_date_value']['id'] = 'field_publication_date_value';
   $handler->display->display_options['sorts']['field_publication_date_value']['table'] = 'field_data_field_publication_date';
   $handler->display->display_options['sorts']['field_publication_date_value']['field'] = 'field_publication_date_value';
@@ -626,7 +626,7 @@ function dlts_book_features_views_default_views() {
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
   $handler->display->display_options['defaults']['sorts'] = FALSE;
-  /* Sort criterion: Content: Date of Publication (field_publication_date) */
+  /* Sort criterion: Content: Date (field_publication_date) */
   $handler->display->display_options['sorts']['field_publication_date_value']['id'] = 'field_publication_date_value';
   $handler->display->display_options['sorts']['field_publication_date_value']['table'] = 'field_data_field_publication_date';
   $handler->display->display_options['sorts']['field_publication_date_value']['field'] = 'field_publication_date_value';

@@ -49,6 +49,11 @@ function dlts_book_features_ds_field_settings_info() {
   $ds_fieldsetting->bundle = 'dlts_map';
   $ds_fieldsetting->view_mode = 'metadata';
   $ds_fieldsetting->settings = array(
+    'title' => array(
+      'weight' => '0',
+      'label' => 'hidden',
+      'format' => 'default',
+    ),
     'field_notes_field' => array(
       'formatter_settings' => array(
         'ft' => array(
