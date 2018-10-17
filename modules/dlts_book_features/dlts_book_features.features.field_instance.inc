@@ -1792,7 +1792,7 @@ Vertical: \'Flip Book\' style bindings',
         'weight' => 18,
       ),
       'metadata' => array(
-        'label' => 'inline',
+        'label' => 'hidden',
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
@@ -3067,6 +3067,102 @@ Vertical: \'Flip Book\' style bindings',
     ),
   );
 
+  // Exported field_instance: 'node-dlts_map-field_language'.
+  $field_instances['node-dlts_map-field_language'] = array(
+    'bundle' => 'dlts_map',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 34,
+      ),
+      'metadata' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'ds_extras_field_template' => '',
+    'entity_type' => 'node',
+    'field_name' => 'field_language',
+    'label' => 'Language',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 42,
+    ),
+  );
+
+  // Exported field_instance: 'node-dlts_map-field_language_code'.
+  $field_instances['node-dlts_map-field_language_code'] = array(
+    'bundle' => 'dlts_map',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 35,
+      ),
+      'metadata' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'ds_extras_field_template' => '',
+    'entity_type' => 'node',
+    'field_name' => 'field_language_code',
+    'label' => 'Language Code',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 44,
+    ),
+  );
+
   // Exported field_instance: 'node-dlts_map-field_notes_field'.
   $field_instances['node-dlts_map-field_notes_field'] = array(
     'bundle' => 'dlts_map',
@@ -3103,7 +3199,7 @@ Vertical: \'Flip Book\' style bindings',
     'ds_extras_field_template' => '',
     'entity_type' => 'node',
     'field_name' => 'field_notes_field',
-    'label' => 'Notes field',
+    'label' => 'Notes',
     'required' => 0,
     'settings' => array(
       'entity_translation_sync' => FALSE,
@@ -3189,6 +3285,60 @@ Vertical: \'Flip Book\' style bindings',
     ),
   );
 
+  // Exported field_instance: 'node-dlts_map-field_page_count'.
+  $field_instances['node-dlts_map-field_page_count'] = array(
+    'bundle' => 'dlts_map',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'number',
+        'settings' => array(
+          'decimal_separator' => '.',
+          'prefix_suffix' => TRUE,
+          'scale' => 0,
+          'thousand_separator' => '',
+        ),
+        'type' => 'number_integer',
+        'weight' => 30,
+      ),
+      'metadata' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'ds_extras_field_template' => '',
+    'entity_type' => 'node',
+    'field_name' => 'field_page_count',
+    'label' => 'Page Count',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'max' => '',
+      'min' => '',
+      'prefix' => '',
+      'suffix' => '',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'number',
+      'settings' => array(),
+      'type' => 'number',
+      'weight' => 34,
+    ),
+  );
+
   // Exported field_instance: 'node-dlts_map-field_partner'.
   $field_instances['node-dlts_map-field_partner'] = array(
     'bundle' => 'dlts_map',
@@ -3240,6 +3390,51 @@ Vertical: \'Flip Book\' style bindings',
       ),
       'type' => 'node_reference_autocomplete',
       'weight' => 5,
+    ),
+  );
+
+  // Exported field_instance: 'node-dlts_map-field_pdf_file'.
+  $field_instances['node-dlts_map-field_pdf_file'] = array(
+    'bundle' => 'dlts_map',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'field_fileserver',
+        'settings' => array(),
+        'type' => 'field_fileserver_link',
+        'weight' => 33,
+      ),
+      'metadata' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'ds_extras_field_template' => '',
+    'entity_type' => 'node',
+    'field_name' => 'field_pdf_file',
+    'label' => 'PDF',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'field_fileserver',
+      'settings' => array(),
+      'type' => 'field_fileserver_link',
+      'weight' => 40,
     ),
   );
 
@@ -3514,6 +3709,51 @@ Vertical: \'Flip Book\' style bindings',
     ),
   );
 
+  // Exported field_instance: 'node-dlts_map-field_representative_image'.
+  $field_instances['node-dlts_map-field_representative_image'] = array(
+    'bundle' => 'dlts_map',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'field_fileserver',
+        'settings' => array(),
+        'type' => 'field_fileserver_link',
+        'weight' => 32,
+      ),
+      'metadata' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'ds_extras_field_template' => '',
+    'entity_type' => 'node',
+    'field_name' => 'field_representative_image',
+    'label' => 'Representative Image',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'field_fileserver',
+      'settings' => array(),
+      'type' => 'field_fileserver_image',
+      'weight' => 38,
+    ),
+  );
+
   // Exported field_instance: 'node-dlts_map-field_rights'.
   $field_instances['node-dlts_map-field_rights'] = array(
     'bundle' => 'dlts_map',
@@ -3679,6 +3919,60 @@ Vertical: \'Flip Book\' style bindings',
     ),
   );
 
+  // Exported field_instance: 'node-dlts_map-field_sequence_count'.
+  $field_instances['node-dlts_map-field_sequence_count'] = array(
+    'bundle' => 'dlts_map',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'number',
+        'settings' => array(
+          'decimal_separator' => '.',
+          'prefix_suffix' => TRUE,
+          'scale' => 0,
+          'thousand_separator' => '',
+        ),
+        'type' => 'number_integer',
+        'weight' => 31,
+      ),
+      'metadata' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'ds_extras_field_template' => '',
+    'entity_type' => 'node',
+    'field_name' => 'field_sequence_count',
+    'label' => 'Sequence Count',
+    'required' => 0,
+    'settings' => array(
+      'entity_translation_sync' => FALSE,
+      'max' => '',
+      'min' => '',
+      'prefix' => '',
+      'suffix' => '',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'number',
+      'settings' => array(),
+      'type' => 'number',
+      'weight' => 36,
+    ),
+  );
+
   // Exported field_instance: 'node-dlts_map-field_subject'.
   $field_instances['node-dlts_map-field_subject'] = array(
     'bundle' => 'dlts_map',
@@ -3696,7 +3990,7 @@ Vertical: \'Flip Book\' style bindings',
         'label' => 'inline',
         'module' => 'taxonomy',
         'settings' => array(),
-        'type' => 'taxonomy_term_reference_link',
+        'type' => 'taxonomy_term_reference_plain',
         'weight' => 6,
       ),
       'multivolbook' => array(
@@ -3799,9 +4093,8 @@ Vertical: \'Flip Book\' style bindings',
       ),
       'metadata' => array(
         'label' => 'hidden',
-        'module' => 'text',
         'settings' => array(),
-        'type' => 'text_default',
+        'type' => 'hidden',
         'weight' => 0,
       ),
       'multivolbook' => array(
@@ -5148,7 +5441,7 @@ Vertical: \'Flip Book\' style bindings');
   t('Language Code');
   t('Multi-Volume');
   t('Name');
-  t('Notes field');
+  t('Notes');
   t('Number');
   t('OCR Text');
   t('Other Version');
