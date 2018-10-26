@@ -57,7 +57,7 @@ function dlts_viewer_init() {
  * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_theme/7
  */
 function dlts_viewer_custom_theme() {
-  if (arg(0) == 'books' || arg(0) == 'photos' || arg(0) == 'maps') {
+  if (dlts_viewer_is_resource()) {
     return 'tao';
   }
 }
@@ -115,7 +115,7 @@ function dlts_viewer_preprocess_html(&$vars) {
    */
   header_remove('X-Frame-Options');
   // check if we are in an admin page
-  if (arg(0) !== 'admin') {
+  if (dlts_viewer_is_resource()) {
     /** The Viewer sets language direction in the markup */
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);    
     /** we are not in admin page, default Viewer HTML template */
@@ -172,7 +172,7 @@ function dlts_viewer_preprocess_node(&$vars) {
  * https://api.drupal.org/api/drupal/includes%21theme.inc/function/template_preprocess_page/7
  */
 function dlts_viewer_preprocess_page(&$vars) {
-  if (arg(0) !== 'admin') {
+  if (dlts_viewer_is_resource()) {
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     if (dlts_viewer_is_pjax()) {
       $vars['theme_hook_suggestions'][] = 'page__books_pjax';
@@ -185,7 +185,7 @@ function dlts_viewer_preprocess_page(&$vars) {
  * https://api.drupal.org/api/drupal/includes%21theme.inc/function/template_process_page/7
  */
 function dlts_viewer_process_page(&$vars) {
-  if (arg(0) !== 'admin') {
+  if (dlts_viewer_is_resource()) {
     $is_embed = dlts_viewer_is_embed();
     $is_pjax = dlts_viewer_is_pjax();
     $vars['theme_hook_suggestions'][] = 'page__viewer';
