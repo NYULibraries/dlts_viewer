@@ -1,9 +1,10 @@
 <?php
+
 /**
  * @file
  * Books
  */
-// function dlts_viewer_process_node_dlts_book(&$vars) {}
+
 /**
  * Implements "a version" template_preprocess_node().
  * https://api.drupal.org/api/drupal/modules%21node%21node.module/function/template_preprocess_node/7
