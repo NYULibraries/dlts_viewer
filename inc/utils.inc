@@ -127,6 +127,25 @@ function dlts_viewer_is_resource() {
   return $is_resource;
 }
 
+function dlts_viewer_is_mobile() {
+  $is_mobile = &drupal_static('is_mobile');
+  if (!isset($is_mobile)) {
+    // default to desktop version
+    $is_mobile = FALSE;
+    try {
+      require_once libraries_get_path('Mobile_Detect') . '/Mobile_Detect.php';
+      $detect = new Mobile_Detect;
+      if ($detect->isMobile()) {
+        $is_mobile = TRUE;
+      }
+    }
+    catch (Exception $e) {
+      watchdog_exception('dlts_viewer', $e);
+    }
+  }
+  return $is_mobile;
+}
+
 function dlts_viewer_is_pjax() {
     $is_pjax = &drupal_static('is_pjax');
     if (!isset($is_pjax) && function_exists('getallheaders')) {
