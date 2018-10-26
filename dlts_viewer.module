@@ -126,6 +126,12 @@ function dlts_viewer_preprocess_html(&$vars) {
       /** default Viewer PJAX HTML template */
       $vars['theme_hook_suggestions'][] = 'html__viewer_pjax';
     }
+    if (dlts_viewer_is_mobile()) {
+      $vars['classes_array'][] = 'is_mobile';
+    }
+    else {
+      $vars['classes_array'][] = 'not_mobile';
+    }    
     /**
      * We use Drupal to render objects from MongoDB that don't have a record register
      * in Drupal's database. We don't want Drupal to manage this records. We need a
