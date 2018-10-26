@@ -116,6 +116,8 @@ function dlts_viewer_preprocess_html(&$vars) {
   header_remove('X-Frame-Options');
   // check if we are in an admin page
   if (dlts_viewer_is_resource()) {
+    // see html.tpl.php
+    $vars['pane_metadata_hidden'] = '';
     /** The Viewer sets language direction in the markup */
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);    
     /** we are not in admin page, default Viewer HTML template */
@@ -129,10 +131,14 @@ function dlts_viewer_preprocess_html(&$vars) {
     /** Check for  mobile */
     if (dlts_viewer_is_mobile()) {
       $vars['classes_array'][] = 'is_mobile';
+      // hide information panel for mobile
+      // see https://jira.nyu.edu/jira/browse/DLTSVIEWER-70
+      $vars['pane_metadata_hidden'] = 'pagemeta-hidden';
     }
     else {
-      $vars['classes_array'][] = 'not_mobile';
-    }    
+      $vars['classes_array'][] = 'not_mobile';      
+    }
+    
     /**
      * We use Drupal to render objects from MongoDB that don't have a record register
      * in Drupal's database. We don't want Drupal to manage this records. We need a

@@ -68,9 +68,10 @@ function dlts_viewer_pjax_map_view(&$entity) {
 }
 
 function dlts_viewer_map_dispatcher($entity, $arg) {
+    // check for mobile devices
+    $is_mobile = dlts_viewer_is_mobile();    
     // check request type
     $is_pjax = dlts_viewer_is_pjax();
-
     drupal_set_title($entity->title);
     // wrapp map entity with Entity API wrapper
     $book_wrapper = entity_metadata_wrapper('node', $entity);
@@ -137,7 +138,7 @@ function dlts_viewer_map_dispatcher($entity, $arg) {
         $entity->book_page_data = $arg;
         $entity->button_metadata = $button_metadata;
         $entity->loading = theme('dlts_viewer_loading', $loading_options);
-        $entity->pane_metadata_hidden = FALSE;
+        $entity->pane_metadata_hidden = $is_mobile;
         $entity->sequence = 1;
         $entity->sequence_count = 1;
         $entity->pageView = 'single';
