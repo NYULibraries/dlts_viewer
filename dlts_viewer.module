@@ -126,6 +126,7 @@ function dlts_viewer_preprocess_html(&$vars) {
       /** default Viewer PJAX HTML template */
       $vars['theme_hook_suggestions'][] = 'html__viewer_pjax';
     }
+    /** Check for  mobile */
     if (dlts_viewer_is_mobile()) {
       $vars['classes_array'][] = 'is_mobile';
     }
