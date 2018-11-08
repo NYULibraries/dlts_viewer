@@ -49,6 +49,11 @@ function dlts_book_features_ds_field_settings_info() {
   $ds_fieldsetting->bundle = 'dlts_map';
   $ds_fieldsetting->view_mode = 'metadata';
   $ds_fieldsetting->settings = array(
+    'title' => array(
+      'weight' => '0',
+      'label' => 'hidden',
+      'format' => 'default',
+    ),
     'field_notes_field' => array(
       'formatter_settings' => array(
         'ft' => array(
@@ -182,6 +187,69 @@ function dlts_book_features_ds_layout_settings_info() {
     'layout_disable_css' => FALSE,
   );
   $export['node|dlts_book|metadata'] = $ds_layout;
+
+  $ds_layout = new stdClass();
+  $ds_layout->api_version = 1;
+  $ds_layout->id = 'node|dlts_map|metadata';
+  $ds_layout->entity_type = 'node';
+  $ds_layout->bundle = 'dlts_map';
+  $ds_layout->view_mode = 'metadata';
+  $ds_layout->layout = 'ds_1col';
+  $ds_layout->settings = array(
+    'regions' => array(
+      'ds_content' => array(
+        0 => 'title',
+        1 => 'field_subtitle',
+        2 => 'field_author',
+        3 => 'field_publication_location',
+        4 => 'field_publisher',
+        5 => 'field_publication_date_text',
+        6 => 'field_subject',
+        7 => 'field_physical_description',
+        8 => 'field_notes_field',
+        9 => 'field_call_number',
+        10 => 'field_collection',
+        11 => 'field_partner',
+        12 => 'field_handle',
+        13 => 'field_rights',
+        14 => 'field_geographic_subject',
+        15 => 'field_geographic_coordinates',
+        16 => 'field_dimensions',
+        17 => 'field_description',
+      ),
+    ),
+    'fields' => array(
+      'title' => 'ds_content',
+      'field_subtitle' => 'ds_content',
+      'field_author' => 'ds_content',
+      'field_publication_location' => 'ds_content',
+      'field_publisher' => 'ds_content',
+      'field_publication_date_text' => 'ds_content',
+      'field_subject' => 'ds_content',
+      'field_physical_description' => 'ds_content',
+      'field_notes_field' => 'ds_content',
+      'field_call_number' => 'ds_content',
+      'field_collection' => 'ds_content',
+      'field_partner' => 'ds_content',
+      'field_handle' => 'ds_content',
+      'field_rights' => 'ds_content',
+      'field_geographic_subject' => 'ds_content',
+      'field_geographic_coordinates' => 'ds_content',
+      'field_dimensions' => 'ds_content',
+      'field_description' => 'ds_content',
+    ),
+    'classes' => array(),
+    'wrappers' => array(
+      'ds_content' => 'div',
+    ),
+    'layout_wrapper' => 'div',
+    'layout_attributes' => '',
+    'layout_attributes_merge' => 1,
+    'layout_link_attribute' => '',
+    'layout_link_custom' => '',
+    'layout_disable_css' => FALSE,
+  );
+  $export['node|dlts_map|metadata'] = $ds_layout;
 
   return $export;
 }

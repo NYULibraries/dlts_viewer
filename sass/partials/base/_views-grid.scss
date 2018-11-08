@@ -1,39 +1,37 @@
-/*!
-Pure v0.6.0
-Copyright 2014 Yahoo! Inc. All rights reserved.
-Licensed under the BSD License.
-https://github.com/yahoo/pure/blob/master/LICENSE.md
-*/
-/*!
+//
+//Pure v0.6.0
+//Copyright 2014 Yahoo! Inc. All rights reserved.
+//Licensed under the BSD License.
+//https://github.com/yahoo/pure/blob/master/LICENSE.md
+//
 
-/* ==========================================================================
-   Pure Base Extras
-   ========================================================================== */
+// ==========================================================================
+//   Pure Base Extras
+//
+//
+// Extra rules that Pure adds on top of Normalize.css
+//
 
-/**
- * Extra rules that Pure adds on top of Normalize.css
- */
-
-/**
- * Always hide an element when it has the `hidden` HTML attribute.
- */
+//
+// Always hide an element when it has the `hidden` HTML attribute.
+ //
 
 .hidden,
 [hidden] {
     display: none !important;
 }
 
-/**
- * Add this class to an image to make it fit within it's fluid parent wrapper while maintaining
- * aspect ratio.
- */
+
+ //Add this class to an image to make it fit within it's fluid parent wrapper while maintaining
+// aspect ratio.
+
 .views-img {
     max-width: 100%;
     height: auto;
     display: block;
 }
 
-/*csslint regex-selectors:false, known-properties:false, duplicate-properties:false*/
+//csslint regex-selectors:false, known-properties:false, duplicate-properties:false*/
 
 .views-g {
     letter-spacing: -0.31em; /* Webkit: collapse white-space between units */
@@ -41,30 +39,9 @@ https://github.com/yahoo/pure/blob/master/LICENSE.md
     *word-spacing: -0.43em; /* IE < 8: collapse white-space between units */
     text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */
 
-    /*
-    Sets the font stack to fonts known to work properly with the above letter
-    and word spacings. See: https://github.com/yahoo/pure/issues/41/
-
-    The following font stack makes Pure Grids work on all known environments.
-
-    * FreeSans: Ships with many Linux distros, including Ubuntu
-
-    * Arimo: Ships with Chrome OS. Arimo has to be defined before Helvetica and
-      Arial to get picked up by the browser, even though neither is available
-      in Chrome OS.
-
-    * Droid Sans: Ships with all versions of Android.
-
-    * Helvetica, Arial, sans-serif: Common font stack on OS X and Windows.
-    */
+   
     font-family: FreeSans, Arimo, "Droid Sans", Helvetica, Arial, sans-serif;
 
-    /*
-    Use flexbox when possible to avoid `letter-spacing` side-effects.
-
-    NOTE: Firefox(as of 25) does not currently support flex-wrap, so the
-    `-moz-` prefix version is omitted.
-    */
 
     display: -webkit-flex;
     -webkit-flex-flow: row wrap;
@@ -79,10 +56,7 @@ https://github.com/yahoo/pure/blob/master/LICENSE.md
   align-content: flex-start;
 }
 
-/* Opera as of 12 on Windows needs word-spacing.
-   The ".opera-only" selector is used to prevent actual prefocus styling
-   and is not required in markup.
-*/
+
 .opera-only :-o-prefocus,
 .views-g {
     word-spacing: -0.43em;
@@ -98,10 +72,7 @@ https://github.com/yahoo/pure/blob/master/LICENSE.md
     text-rendering: auto;
 }
 
-/*
-Resets the font family back to the OS/browser's default sans-serif font,
-this the same font stack that Normalize.css sets for the `body`.
-*/
+
 .views-g [class *= "views-u"] {
     font-family: sans-serif;
 }
@@ -318,5 +289,5 @@ this the same font stack that Normalize.css sets for the `body`.
     width: 100%;
 }
 
-/* YUI CSS Detection Stamp */
+// YUI CSS Detection Stamp 
 #yui3-css-stamp.cssgrids { display: none; }

@@ -2,7 +2,7 @@
     <?php print $navbar ?>
 </div>
 <div id="main" class="pane main" dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>">
-    <div id="pagemeta" class="pane pagemeta">
+    <div id="pagemeta" class="pane pagemeta <?php echo ($pane_metadata_hidden) ? 'hidden' : '' ?>">
         <div class="container">
             <<?php print $ds_content_wrapper; print $layout_attributes; ?> class="<?php print $classes;?> " dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" data-dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" data-lang="<?php print isset($lang_language) ? $lang_language : "und" ?>" >
             <?php if (isset($lang_options)) : ?>
@@ -24,8 +24,8 @@
      data-title="<?php print $title ?>"
      data-pageView="<?php print $pageView ?>">
     <?php print $book_page ?>
-    <?php print $button_previous ?>
-    <?php print $button_next ?>
+    <?php if (isset($button_previous)) print $button_previous; ?>
+    <?php if (isset($button_next)) print $button_next;  ?>
 </div>
 <div class="pane load loading">
     <?php if (isset($loading)) print $loading ; ?>

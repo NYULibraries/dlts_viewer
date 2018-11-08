@@ -1,4 +1,5 @@
 <?php
+
 function dlts_viewer_content_by_field($field_name) {
     $out = array();
     $field_name = filter_xss($field_name);
@@ -36,6 +37,7 @@ function dlts_viewer_content_by_field($field_name) {
     }
     return $out;
 }
+
 /**
  * Package and send page callback as JSON/JSONP.
  * See: http://api.drupal.org/api/drupal/includes--common.inc/function/drupal_deliver_html_page/7
@@ -86,6 +88,76 @@ function dlts_viewer_deliver_json($page_callback_result) {
         }
     }
 }
+
+/**
+ * List objects type
+ * @return
+ * Return Objects list that map the object type
+ * to it's route.
+ */
+function dlts_viewer_object_types() {
+    return array(
+      'book' => 'books',
+      'photo' => 'photos',
+      'map' => 'maps'
+    );
+  }
+
+/**
+ * Check if DLTS Vierwer will render this object request
+ *
+ * @return
+ * Return a boolean indicating whether this object request can be render 
+ * by DLTS Vierwer.
+ */
+function dlts_viewer_is_resource() {
+  // cache $is_resource
+  $is_resource = &drupal_static('is_resource');
+  if (!isset($is_resource)) {
+    $route_argument = arg(0);
+    // Get a list of objects that DLTS Vierwer render
+    $object_types = dlts_viewer_object_types();
+    // We use arguments in the URL to detect object type request
+    // dlts_viewer_object_types return a Objects list that map the object type
+    // to it's route. Get the route values as array
+    $types = array_values($object_types);
+    // check if DLTS Vierwer render the object requested
+    $is_resource = in_array($route_argument, $types);
+  }
+  return $is_resource;
+}
+
+function dlts_viewer_is_mobile() {
+  $is_mobile = &drupal_static('is_mobile');
+  if (!isset($is_mobile)) {
+    // default to desktop version
+    $is_mobile = FALSE;
+    try {
+      $detect = dlts_viewer_mobile_detect();
+      if ($detect->isMobile()) {
+        $is_mobile = TRUE;
+      }
+    }
+    catch (Exception $e) {
+      watchdog_exception('dlts_viewer', $e);
+    }
+  }
+  return $is_mobile;
+}
+
+/**
+ * See http://mobiledetect.net/
+ */
+function dlts_viewer_mobile_detect() {
+  try {
+    require_once libraries_get_path('Mobile_Detect') . '/Mobile_Detect.php';
+    return new Mobile_Detect;
+  }
+  catch (Exception $e) {
+    watchdog_exception('dlts_viewer', $e);
+  }
+}
+
 function dlts_viewer_is_pjax() {
     $is_pjax = &drupal_static('is_pjax');
     if (!isset($is_pjax) && function_exists('getallheaders')) {
@@ -107,6 +179,7 @@ function dlts_viewer_is_pjax() {
     }
     return $is_pjax;
 }
+
 function dlts_viewer_is_embed() {
     $is_embed = &drupal_static('is_embed');
     if (!isset($is_embed)) {
@@ -122,6 +195,7 @@ function dlts_viewer_is_embed() {
     }
     return $is_embed;
 }
+
 function dlts_viewer_viewer_language($vars = NULL) {
     $viewer_language = &drupal_static('viewer_language');
     if (!isset($viewer_language)) {
@@ -152,6 +226,7 @@ function dlts_viewer_viewer_language($vars = NULL) {
     }
     return $viewer_language;
 }
+
 function return_nodeid_json($dlts_id, $lang_code = NULL) {
     $langs = $lang_code ? array($lang_code) : array('und', 'en');
     $query = new EntityFieldQuery();
@@ -168,6 +243,7 @@ function return_nodeid_json($dlts_id, $lang_code = NULL) {
     echo drupal_json_encode($nodeids);
     die;
 }
+
 function return_page_nodeids_json($dlts_id) {
     // @TODO: broken, we no longer have this content types
     return;

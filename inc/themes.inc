@@ -8,13 +8,11 @@
 /**
  * Themes functions
  */
-/**
+
+ /**
  * Implements hook_custom_theme().
  * http://api.drupal.org/api/drupal/modules--system--system.api.php/function/hook_custom_theme/7
  */
-
-
-
 function dlts_viewer_theme() {
     return array(
         'dlts_viewer_pager_button' => array(
@@ -167,6 +165,7 @@ function dlts_viewer_theme() {
         ),
     );
 }
+
 function dlts_viewer_theme_registry_alter(&$theme_registry) {
     if (!empty($theme_registry['field'])) {
         $theme_registry['field']['function'] = 'dlts_viewer_theme_field';
@@ -200,8 +199,7 @@ function theme_dlts_viewer_pager_button($variables) {
   return drupal_render($render_array);
 }
 
-function theme_dlts_viewer_navbar_item($variables)
-{
+function theme_dlts_viewer_navbar_item($variables) {
     $parts = array('html' => TRUE);
     if (isset($variables['fragment'])) {
         $parts = array_merge($parts, array('fragment' => $variables['fragment']));
@@ -219,6 +217,7 @@ function theme_dlts_viewer_navbar_item($variables)
     }
     return '<li class="navbar-item">' . l(t('<span>@title</span>', array('@title' => $variables['title'])), $url,$parts);
 }
+
 /**
  * Returns HTML for a high-resolution JPEG 2000 image.
  *
@@ -239,6 +238,23 @@ function theme_dlts_viewer_openlayers_image($variables) {
   if (isset($file['timestamp'])) {
   	$file_uri = $file_uri . '?v=' . $file['timestamp'];
   }
+  
+  // check if zoom its part of the request
+  if (isset($file['zoom'])) {
+    $zoom = $file['zoom'];
+  }
+  else {
+    // we default zoom to 1 (tablets and "desktops")
+    $zoom = 1;
+    // Mobile_Detect
+    $detect = dlts_viewer_mobile_detect();      
+    // we give phone users the smallest possible image by default
+    // see https://jira.nyu.edu/jira/browse/DLTSVIEWER-74
+    // Mobiles zoom default 0, exclude tablets.
+    if ($detect->isMobile() && !$detect->isTablet()) {
+      $zoom = 0;
+    }
+  }  
 
   $openlayers_options = array(
     'service' => variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka'),
@@ -249,7 +265,7 @@ function theme_dlts_viewer_openlayers_image($variables) {
       'dwtLevels' => $file['dwtLevels'],
       'compositingLayerCount' => $file['compositingLayerCount'],
     ),
-    'zoom' => isset($file['zoom']) ? $file['zoom'] : 1,
+    'zoom' => $zoom,
   );
   
   $json_data = json_encode($openlayers_options);
@@ -349,7 +365,6 @@ function theme_thumbnails_pager($vars) {
 	}
 }
 
-
 function theme_thumbnails_photo_pager($vars) {
     $tags = $vars['tags'];
     $element = $vars['element'];
@@ -414,4 +429,3 @@ function theme_thumbnails_photo_pager($vars) {
         return '<div class="pager clearfix">' . $pager_links . '</div>';
     }
 }
-

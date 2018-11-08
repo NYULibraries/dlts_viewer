@@ -13,8 +13,8 @@ function dlts_book_features_apachesolr_environments() {
   $environment = new stdClass();
   $environment->api_version = 1;
   $environment->env_id = 'solr';
-  $environment->name = 'Discovery Apache Solr 3.x server';
-  $environment->url = 'http://dev-discovery.dlib.nyu.edu:8080/solr3_discovery/stage';
+  $environment->name = 'Discovery Apache Solr 6.x server';
+  $environment->url = 'http://stagediscovery.dlib.nyu.edu:8983/solr/viewer';
   $environment->service_class = '';
   $environment->conf = array(
     'apachesolr_direct_commit' => 0,
@@ -29,8 +29,9 @@ function dlts_book_features_apachesolr_environments() {
       3 => 'dlts_multivol',
       4 => 'dlts_multivol_book',
       5 => 'dlts_partner',
-      6 => 'dlts_series',
-      7 => 'dlts_series_book',
+      6 => 'dlts_photo_set',
+      7 => 'dlts_series',
+      8 => 'dlts_series_book',
     ),
   );
   $export['solr'] = $environment;
