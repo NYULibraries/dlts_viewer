@@ -133,8 +133,7 @@ function dlts_viewer_is_mobile() {
     // default to desktop version
     $is_mobile = FALSE;
     try {
-      require_once libraries_get_path('Mobile_Detect') . '/Mobile_Detect.php';
-      $detect = new Mobile_Detect;
+      $detect = dlts_viewer_mobile_detect();
       if ($detect->isMobile()) {
         $is_mobile = TRUE;
       }
@@ -144,6 +143,19 @@ function dlts_viewer_is_mobile() {
     }
   }
   return $is_mobile;
+}
+
+/**
+ * See http://mobiledetect.net/
+ */
+function dlts_viewer_mobile_detect() {
+  try {
+    require_once libraries_get_path('Mobile_Detect') . '/Mobile_Detect.php';
+    return new Mobile_Detect;
+  }
+  catch (Exception $e) {
+    watchdog_exception('dlts_viewer', $e);
+  }
 }
 
 function dlts_viewer_is_pjax() {
@@ -167,6 +179,7 @@ function dlts_viewer_is_pjax() {
     }
     return $is_pjax;
 }
+
 function dlts_viewer_is_embed() {
     $is_embed = &drupal_static('is_embed');
     if (!isset($is_embed)) {
@@ -182,6 +195,7 @@ function dlts_viewer_is_embed() {
     }
     return $is_embed;
 }
+
 function dlts_viewer_viewer_language($vars = NULL) {
     $viewer_language = &drupal_static('viewer_language');
     if (!isset($viewer_language)) {
@@ -212,6 +226,7 @@ function dlts_viewer_viewer_language($vars = NULL) {
     }
     return $viewer_language;
 }
+
 function return_nodeid_json($dlts_id, $lang_code = NULL) {
     $langs = $lang_code ? array($lang_code) : array('und', 'en');
     $query = new EntityFieldQuery();
@@ -228,6 +243,7 @@ function return_nodeid_json($dlts_id, $lang_code = NULL) {
     echo drupal_json_encode($nodeids);
     die;
 }
+
 function return_page_nodeids_json($dlts_id) {
     // @TODO: broken, we no longer have this content types
     return;
