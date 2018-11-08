@@ -1,9 +1,10 @@
 <?php
+
 /**
  * @file
  * Books
  */
-// function dlts_viewer_process_node_dlts_book(&$vars) {}
+
 /**
  * Implements "a version" template_preprocess_node().
  * https://api.drupal.org/api/drupal/modules%21node%21node.module/function/template_preprocess_node/7
@@ -28,6 +29,7 @@ function dlts_viewer_preprocess_node_dlts_book(&$vars) {
         }
     }
 }
+
 function dlts_viewer_dispatch_thumbnails($identifier) {
     /** Load helpers */
     module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
@@ -74,6 +76,7 @@ function dlts_viewer_dispatch_thumbnails($identifier) {
         drupal_exit();
     }
 }
+
 function dlts_viewer_full_book_view(&$entity) {
     $module_path = drupal_get_path('module', 'dlts_viewer');
     $js_common_config = array('type' => 'file', 'scope' => 'footer');
@@ -87,10 +90,12 @@ function dlts_viewer_full_book_view(&$entity) {
     drupal_add_js(variable_get('dlts_viewer_openlayers_source', 'sites/all/libraries/openlayers/build/OpenLayers.js'), array('group' => JS_LIBRARY));
     return node_view($entity , 'metadata', $entity->language);
 }
+
 function dlts_viewer_book_metadata_view($entity) {
     $element = node_view($entity, 'metadata');
     return drupal_render($element);
 }
+
 function dlts_viewer_pjax_book_view(&$entity) {
     $vars = array(
         'button_next' => $entity->button_next,
@@ -114,6 +119,7 @@ function dlts_viewer_pjax_book_view(&$entity) {
     );
     return theme('viewer_page', $vars);
 }
+
 function _language_field(&$entity) {
     $languages = language_list('enabled');
     $languages = $languages[1];
@@ -145,9 +151,14 @@ function _language_field(&$entity) {
         }
     }
 }
+
 function dlts_viewer_dispatcher($entity, $arg) {
+    // test if resource
+    $is_resource = dlts_viewer_is_resource();
     // check request type
     $is_pjax = dlts_viewer_is_pjax();
+    // check for mobile devices
+    $is_mobile = dlts_viewer_is_mobile();
     // get query parameters
     $query_parameters = drupal_get_query_parameters();
     // check if this books is part of a multi-volume
@@ -274,7 +285,7 @@ function dlts_viewer_dispatcher($entity, $arg) {
             'attributes' => array(
                 'data-title' => t('Metadata'),
                 'title' => t('Show/hide metadata'),
-                'class' => array('button', 'metadata', 'on'),
+                'class' => array('button', 'metadata', (($is_mobile) ? 'off' : 'on')),
                 'id' => array('button-metadata')
             ),
             'fragment' => 'metadata',
@@ -339,8 +350,8 @@ function dlts_viewer_dispatcher($entity, $arg) {
         $entity->button_next = $button_next;
         $entity->button_previous = $button_previous;
         $entity->button_togglepage = $button_togglepage;
-        $entity->loading = theme('dlts_viewer_loading', $loading_options);
-        $entity->pane_metadata_hidden = FALSE;
+        $entity->loading = theme('dlts_viewer_loading', $loading_options); 
+        $entity->pane_metadata_hidden = $is_mobile;
         $entity->sequence = $page;
         $entity->sequence_count = $sequence_count;
         $slider_options = array(
@@ -380,6 +391,7 @@ function dlts_viewer_dispatcher($entity, $arg) {
             break;
     }
 }
+
 /**
  * Route callback for books edit page
  * http://{site}/books/{identifier}/edit
@@ -397,9 +409,11 @@ function _dlts_viewer_book_edit_redirect($node) {
     }
     drupal_not_found();
 }
+
 function dlts_viewer_book_metadata_display($node) {
     return node_view($node , 'metadata' , $node->language);
 }
+
 /**
  * Menu callback; prints the loaded structure of the current node/user.
  */
