@@ -5,15 +5,18 @@ body {
         display: none;
         visibility: hidden;
       }
+
       .display {
         margin-left: inherit;
         margin-right: inherit;
+
         .pager-left {
           left: initial;
         }
       }
     }
   }
+
   .display {
     position: relative;
     z-index: 10;
@@ -23,6 +26,7 @@ body {
     width: inherit;
     height: inherit;
     float: left;
+
     /**
      * https://jira.nyu.edu/browse/DLTSVIEWER-9 
      */
@@ -30,27 +34,34 @@ body {
       width: 100%;
       height: 100%;
     }
+
     .pager-right {
       right: -20px;
     }
+
     .button {
       &.toggle-page {
         display: none;
         visibility: hidden;
       }
     }
+
     .next-page-off,
     .previous-page-off {
       margin-top: 35%;
       display: block;
       opacity: $dimmed-opacity;
     }
+
     a {
       @include bv-text-shadow(icon-embossed-text-shadow);
+
       color: $paging-icon-color;
       text-decoration: none;
+
       &:before {
         @include bv-font-faced($icon-font-name);
+
         line-height: 1em;
         font-style: normal;
         font-weight: normal;
@@ -60,6 +71,7 @@ body {
         speak: none;
         -webkit-font-smoothing: antialiased;
       }
+
       &.paging {
         position: fixed;
         display: inline;
@@ -67,37 +79,45 @@ body {
         opacity: $normal-opacity / 2;
         top: 40%;
         z-index: 9999;
+
         &.pager-left {
           left: $metadata-pane-width - 20;
           text-decoration: none;
+
           &:before {
             content: "\e014";
           }
         }
+
         &.pager-right {
           &:before {
             content: "\e002";
           }
         }
+
         &.inactive {
           display: none;
           visibility: hidden;
         }
+
         &:hover {
           opacity: $active-opacity;
         }
       }
+
       span {
         display: none;
         visibility: hidden;
       }
     }
   }
+
   .pane.main[dir="rtl"] .pane.display {
     // when the metadata panel is on the right
     .paging.pager-right {
       right: 260px;
     }
+
     .paging.pager-left {
       left: -20px;
     }
