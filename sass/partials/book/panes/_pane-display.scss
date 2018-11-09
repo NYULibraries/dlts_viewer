@@ -15,6 +15,15 @@ body {
         }
       }
     }
+
+    .pagemeta-hidden {
+      .pane.main[dir="rtl"] .pane.display {
+        // when the metadata panel is on the right
+        .paging.pager-right {
+          right: inherit;
+        }
+      }
+    }
   }
 
   .display {
