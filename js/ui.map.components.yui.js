@@ -97,6 +97,7 @@ YUI().use(
 
 
         function pjax_navigate(e) {
+            Y.one('body').addClass('openlayers-loading')
             var msg = e.url.replace(bookUrl, '' ).replace('/' , '');
             if (/(^[\d]+$){1}/.test(msg ) || /(^[\d]+-[\d]+$){1}/.test(msg)) {
                 this.one('.current_page').set('text', msg);
@@ -255,8 +256,8 @@ YUI().use(
         }
 
         function openLayersTilesLoading() {
-            if (Y.one('body').hasClass('openlayers-loading' )) {
-                Y.later(500, Y.one('.pane.load'), openLayersTilesLoading);
+            if (Y.one('body').hasClass('openlayers-loading')) {
+                Y.later(200, Y.one('.pane.load'), openLayersTilesLoading);
             }
             else {
                 Y.one('.pane.load').hide();
