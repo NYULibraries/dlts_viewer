@@ -15,7 +15,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <base target="content-frame">
 </head>
-<body class="pane-body <?php echo $pane_metadata_hidden ?>">
+<body class="pane-body openlayers-loading <?php echo $pane_metadata_hidden ?>">
 <?php print $page_top ?>
 <?php print $page ?>
 <?php print $page_bottom ?>
