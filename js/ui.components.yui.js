@@ -174,6 +174,7 @@ YUI().use(
     }
 
     function pjax_navigate(e) {
+      Y.one('body').addClass('openlayers-loading');
       var msg = e.url.replace(bookUrl, '' ).replace('/' , '');
       if (/(^[\d]+$){1}/.test(msg ) || /(^[\d]+-[\d]+$){1}/.test(msg)) {
         this.one('.current_page').set('text', msg);
@@ -336,11 +337,8 @@ YUI().use(
         imgMetadata: config.metadata
       });
       Y.on('contentready', function() {
-    	Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'openlayers:change', data: config }));
-    	Y.fire('openlayers:change', config);
-        Y.later(1000, Y.one('.pane.load'), function() {
-          this.hide();
-        });
+    	  Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'openlayers:change', data: config }));
+    	  Y.fire('openlayers:change', config);
       }, '#' + config.id);
     }
 
@@ -357,8 +355,8 @@ YUI().use(
     }
 
     function openLayersTilesLoading() {
-      if (Y.one('body').hasClass('openlayers-loading' )) {
-        Y.later(500, Y.one('.pane.load'), openLayersTilesLoading);
+      if (Y.one('body').hasClass('openlayers-loading')) {
+        Y.later(200, Y.one('.pane.load'), openLayersTilesLoading);
       }
       else {
         Y.one('.pane.load').hide();
