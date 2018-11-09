@@ -570,7 +570,10 @@ YUI().use(
       var displayData = display.getData();
       Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: displayData}));
     }
-
+    function resizeSlider() {
+      slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
+    }
+    Y.on('windowresize', resizeSlider);
     Y.once('contentready', onDisplayContentReady, '#display');
 
 });
