@@ -4,8 +4,6 @@ YUI().use(
     'event', 
     'event-custom', function(Y) {
     
-      console.log('ui.keyboard.yui.js')
-
      // https://github.com/RobertWHurst/KeyboardJS
      // A JavaScript library for binding keyboard combos without the pain of key codes and key combo conflicts.    
      // version: 2.4.1   
