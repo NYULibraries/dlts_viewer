@@ -108,19 +108,23 @@ YUI().use(
       }
       Y.fire(event_prefix + ':toggle', e);
     }
+
     /** TODO: I don't like this, find a more elegant solution */
     function pager_form(e) {
       e.preventDefault();
       var value = this.get('value');
-      var current = parseInt(book.sequence_number, 10);
+      var olMap = Y.one('.olMap');
+      var olMapData = olMap.getData();
+      var current = parseInt(olMapData.sequence, 10);
       var css_class;
       if (value.match(/\D/)) {
         css_class = 'error';
       }
       else {
         value = parseInt(value, 10);
-        if (value !== current &&(value > 0 && value <= sequenceCount )) {
+        if (value !== current && (value > 0 && value <= sequenceCount)) {
           css_class = 'ok';
+          Y.one('.current_page').set('text', value);
           pjax.navigate(bookUrl + '/' +  value);
         }
         else {
