@@ -136,7 +136,7 @@ function _language_field(&$entity) {
     $entity->lang_name = isset($languages[$entity->language]->name) ? $languages[$entity->language]->name : 'English';
     $translations = translation_path_get_translations('node/' . $entity->nid);
     if (count($translations) > 1) {
-        $entity->lang_options = array('#type' => 'markup', '#prefix' => '<select class="language">', '#suffix' => '</select>', '#markup' => '');
+        $entity->lang_options = array('#type' => 'markup', '#prefix' => '<select class="language" aria-label="Choose Language for Metadata">', '#suffix' => '</select>', '#markup' => '');
         foreach ($translations as $key => $index) {
             $url = url('books/' . $entity->identifier . '/display', array('absolute' => true, 'query' => array('lang' => $key)));
             $markup = array(
