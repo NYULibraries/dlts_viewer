@@ -92,8 +92,16 @@ function dlts_viewer_full_book_view(&$entity) {
 }
 
 function dlts_viewer_book_metadata_view($entity) {
-    $element = node_view($entity, 'metadata');
+    $element = node_view($entity, 'metadata',$entity->language);
     return drupal_render($element);
+}
+
+function dlts_viewer_process_node_dlts_book(&$vars) {
+    $args = arg();
+    $count = count($args);
+    if ($count === 3 && $args[2] == 'display') {
+        $vars['theme_hook_suggestions'][] = 'node__display';
+    }
 }
 
 function dlts_viewer_pjax_book_view(&$entity) {

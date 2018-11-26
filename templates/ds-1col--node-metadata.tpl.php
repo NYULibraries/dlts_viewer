@@ -30,7 +30,6 @@
 <div class="pane load loading">
     <?php if (isset($loading)) print $loading ; ?>
 </div>
-</div>
 <?php if (isset($read_order)) : ?>
     <div id="pager" class="pane pager" dir="<?php print $read_order; ?>">
         <?php if (isset($slider)) : print $slider ; endif ; ?>
