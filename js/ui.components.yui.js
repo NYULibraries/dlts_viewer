@@ -161,6 +161,7 @@ YUI().use(
       var data = map.getData();
       var request = bookUrl + '/' + e.target.getValue() + '?page_view=' + data.pageview;
       if (!Y.Lang.isValue(slider.triggerBy)) {
+        Y.one('.current_page').set('text', e.target.getValue());
         pjax.navigate(request);
         /** slider set focus to the slider rail, blur as soon as possible so that user can use the keyboard to read the book */
         Y.soon(function() {
