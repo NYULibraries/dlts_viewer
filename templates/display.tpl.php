@@ -1,4 +1,3 @@
-<div id="pagemeta" class="pane pagemeta" dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>">
  <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TRVMLPF"
                   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -15,4 +14,3 @@
     <?php if (!empty($drupal_render_children)): ?>
         <?php print $drupal_render_children ?>
     <?php endif; ?>
-</div>
