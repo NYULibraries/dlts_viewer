@@ -45,7 +45,7 @@ YUI().use(
 
     // left arrow (or j) - nudge left
     keyboardJS.bind(['j', 'left'], function() {
-      map.pan(0, -slideFactor);
+      map.pan(slideFactor, 0);
     });
 
     // shift + right (or shift + k) - load page to the right of this one (previous or next depending13 on language)
