@@ -40,7 +40,7 @@ YUI().use(
 
     // right arrow (or k) - nudge right
     keyboardJS.bind(['k', 'right'], function() {
-      map.pan(0, -slideFactor);
+      map.pan(-slideFactor, 0);
     });
 
     // left arrow (or j) - nudge left
