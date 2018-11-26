@@ -733,7 +733,7 @@ YUI.add('slider-base', function(Y, NAME) {
      * @type {String}
      * @default &lt;span class="{thumbClass}" tabindex="-1">&lt;img src="{thumbShadowUrl}" alt="Slider thumb shadow" class="{thumbShadowClass}">&lt;img src="{thumbImageUrl}" alt="Slider thumb" class="{thumbImageClass}">&lt;/span>
      */
-    THUMB_TEMPLATE : '<span class="{thumbClass}" aria-labelledby="{thumbAriaLabelId}" aria-valuetext="" aria-valuemax="" aria-valuemin="" aria-valuenow="" role="slider" tabindex="0">' + // keyboard access jeff     tabindex="-1"
+    THUMB_TEMPLATE : '<span aria-hidden="true" class="{thumbClass}" aria-valuetext="" aria-valuemax="" aria-valuemin="" aria-valuenow="" role="slider" tabindex="0">' + // keyboard access jeff     tabindex="-1"
     '<img src="{thumbShadowUrl}" ' + 'alt="Slider thumb shadow" ' + 'class="{thumbShadowClass}">' + '<img src="{thumbImageUrl}" ' + 'alt="Slider thumb" ' + 'class="{thumbImageClass}">' + '</span>'
 
   }, {
