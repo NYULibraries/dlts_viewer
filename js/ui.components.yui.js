@@ -108,19 +108,23 @@ YUI().use(
       }
       Y.fire(event_prefix + ':toggle', e);
     }
+
     /** TODO: I don't like this, find a more elegant solution */
     function pager_form(e) {
       e.preventDefault();
       var value = this.get('value');
-      var current = parseInt(book.sequence_number, 10);
+      var olMap = Y.one('.olMap');
+      var olMapData = olMap.getData();
+      var current = parseInt(olMapData.sequence, 10);
       var css_class;
       if (value.match(/\D/)) {
         css_class = 'error';
       }
       else {
         value = parseInt(value, 10);
-        if (value !== current &&(value > 0 && value <= sequenceCount )) {
+        if (value !== current && (value > 0 && value <= sequenceCount)) {
           css_class = 'ok';
+          Y.one('.current_page').set('text', value);
           pjax.navigate(bookUrl + '/' +  value);
         }
         else {
@@ -161,6 +165,7 @@ YUI().use(
       var data = map.getData();
       var request = bookUrl + '/' + e.target.getValue() + '?page_view=' + data.pageview;
       if (!Y.Lang.isValue(slider.triggerBy)) {
+        Y.one('.current_page').set('text', e.target.getValue());
         pjax.navigate(request);
         /** slider set focus to the slider rail, blur as soon as possible so that user can use the keyboard to read the book */
         Y.soon(function() {
@@ -174,6 +179,7 @@ YUI().use(
     }
 
     function pjax_navigate(e) {
+      Y.one('body').addClass('openlayers-loading');
       var msg = e.url.replace(bookUrl, '' ).replace('/' , '');
       if (/(^[\d]+$){1}/.test(msg ) || /(^[\d]+-[\d]+$){1}/.test(msg)) {
         this.one('.current_page').set('text', msg);
@@ -336,11 +342,8 @@ YUI().use(
         imgMetadata: config.metadata
       });
       Y.on('contentready', function() {
-    	Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'openlayers:change', data: config }));
-    	Y.fire('openlayers:change', config);
-        Y.later(1000, Y.one('.pane.load'), function() {
-          this.hide();
-        });
+    	  Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'openlayers:change', data: config }));
+    	  Y.fire('openlayers:change', config);
       }, '#' + config.id);
     }
 
@@ -357,8 +360,8 @@ YUI().use(
     }
 
     function openLayersTilesLoading() {
-      if (Y.one('body').hasClass('openlayers-loading' )) {
-        Y.later(500, Y.one('.pane.load'), openLayersTilesLoading);
+      if (Y.one('body').hasClass('openlayers-loading')) {
+        Y.later(200, Y.one('.pane.load'), openLayersTilesLoading);
       }
       else {
         Y.one('.pane.load').hide();
@@ -570,7 +573,10 @@ YUI().use(
       var displayData = display.getData();
       Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: displayData}));
     }
-
+    function resizeSlider() {
+      slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
+    }
+    Y.on('windowresize', resizeSlider);
     Y.once('contentready', onDisplayContentReady, '#display');
 
 });
