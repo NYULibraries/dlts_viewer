@@ -92,8 +92,16 @@ function dlts_viewer_full_book_view(&$entity) {
 }
 
 function dlts_viewer_book_metadata_view($entity) {
-    $element = node_view($entity, 'metadata');
+    $element = node_view($entity, 'metadata',$entity->language);
     return drupal_render($element);
+}
+
+function dlts_viewer_process_node_dlts_book(&$vars) {
+    $args = arg();
+    $count = count($args);
+    if ($count === 3 && $args[2] == 'display') {
+        $vars['theme_hook_suggestions'][] = 'node__display';
+    }
 }
 
 function dlts_viewer_pjax_book_view(&$entity) {
@@ -128,7 +136,7 @@ function _language_field(&$entity) {
     $entity->lang_name = isset($languages[$entity->language]->name) ? $languages[$entity->language]->name : 'English';
     $translations = translation_path_get_translations('node/' . $entity->nid);
     if (count($translations) > 1) {
-        $entity->lang_options = array('#type' => 'markup', '#prefix' => '<select class="language">', '#suffix' => '</select>', '#markup' => '');
+        $entity->lang_options = array('#type' => 'markup', '#prefix' => '<select class="language" aria-label="Choose Language for Metadata">', '#suffix' => '</select>', '#markup' => '');
         foreach ($translations as $key => $index) {
             $url = url('books/' . $entity->identifier . '/display', array('absolute' => true, 'query' => array('lang' => $key)));
             $markup = array(

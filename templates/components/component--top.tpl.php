@@ -1,4 +1,4 @@
-<div id="top" class="pane top">
+<div id="top" class="pane top" role="banner">
     <div class="views-u-1">
         <?php if ($is_admin && $messages) : ?>
             <?php print $messages; ?>
