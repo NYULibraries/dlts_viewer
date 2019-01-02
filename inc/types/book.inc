@@ -163,6 +163,10 @@ function _language_field(&$entity) {
 function dlts_viewer_dispatcher($entity, $arg) {
     // test if resource
     $is_resource = dlts_viewer_is_resource();
+
+    if ($is_resource) {
+      dlts_viewer_resource_language_code($entity);
+    }
     // check request type
     $is_pjax = dlts_viewer_is_pjax();
     // check for mobile devices
@@ -186,7 +190,6 @@ function dlts_viewer_dispatcher($entity, $arg) {
     // figure out the right way to pick the title
     // maybe we can do something along the lines of: Book Title (also known as Series book title 1, Series book title 2)
     //if ($entity->isSeriesBook) {
-    //dpm($entity->seriesBook);
     //foreach ($entity->seriesBook as $series_book) {
     // for now just get the last one (since we just have one for now)
     // talk about this with the group and fix later.

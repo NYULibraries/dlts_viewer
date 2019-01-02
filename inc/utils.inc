@@ -146,7 +146,7 @@ function dlts_viewer_is_mobile() {
 }
 
 /**
- * See http://mobiledetect.net/
+ * See http://mobiledetect.net/ 
  */
 function dlts_viewer_mobile_detect() {
   try {
@@ -196,6 +196,32 @@ function dlts_viewer_is_embed() {
     return $is_embed;
 }
 
+/** 
+ * return language code of the resource (if available)
+ */
+function dlts_viewer_resource_language_code($vars = NULL) {
+  $resource_language_code = &drupal_static('resource_language_code');
+  if (!isset($resource_language_code)) {
+    if (!empty($vars) && gettype($vars) == 'object') {
+      // as of today, books are the only resource with the field `field_language_code`
+      if ($vars->type == 'dlts_book') {
+        $wrapper = entity_metadata_wrapper('node', $vars);
+        $field_language_code = $wrapper->field_language_code->value();
+        if ($field_language_code) {
+           // Field allows unlimited number of values. This seem wrong. Shifts the first value 
+           // of the array off and returns it
+           // See: admin/structure/types/manage/dlts-book/fields/field_language_code
+           $resource_language_code = array_shift($field_language_code);
+        }
+      }
+    }
+  }
+  return $resource_language_code;
+}
+
+/** 
+ * return language direction of the resource
+ */
 function dlts_viewer_viewer_language($vars = NULL) {
     $viewer_language = &drupal_static('viewer_language');
     if (!isset($viewer_language)) {
