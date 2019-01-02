@@ -119,7 +119,7 @@ function dlts_viewer_preprocess_html(&$vars) {
     // see html.tpl.php
     $vars['pane_metadata_hidden'] = '';
     /** The Viewer sets language direction in the markup */
-    $vars['language_dir'] = dlts_viewer_viewer_language($vars);    
+    $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     /** we are not in admin page, default Viewer HTML template */
     $vars['theme_hook_suggestions'][] = 'html__viewer';
     $vars['classes_array'][] = 'yui3-skin-sam';
@@ -138,6 +138,17 @@ function dlts_viewer_preprocess_html(&$vars) {
     else {
       $vars['classes_array'][] = 'not_mobile';      
     }
+
+    // See: https://jira.nyu.edu/jira/browse/DLTSVIEWER-81
+    $language_default = language_default();
+    $vars['resource_language_code'] = $language_default->language;
+    // We have access to $resource_language_code in the global context
+    // if the resource exist. 
+    // See: dlts_viewer_dispatcher()
+    $resource_language_code = dlts_viewer_resource_language_code();
+    if ($resource_language_code) {
+      $vars['resource_language_code'] = $resource_language_code;
+    }    
     
     /**
      * We use Drupal to render objects from MongoDB that don't have a record register
