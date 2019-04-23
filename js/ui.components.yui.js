@@ -108,19 +108,23 @@ YUI().use(
       }
       Y.fire(event_prefix + ':toggle', e);
     }
+
     /** TODO: I don't like this, find a more elegant solution */
     function pager_form(e) {
       e.preventDefault();
       var value = this.get('value');
-      var current = parseInt(book.sequence_number, 10);
+      var olMap = Y.one('.olMap');
+      var olMapData = olMap.getData();
+      var current = parseInt(olMapData.sequence, 10);
       var css_class;
       if (value.match(/\D/)) {
         css_class = 'error';
       }
       else {
         value = parseInt(value, 10);
-        if (value !== current &&(value > 0 && value <= sequenceCount )) {
+        if (value !== current && (value > 0 && value <= sequenceCount)) {
           css_class = 'ok';
+          Y.one('.current_page').set('text', value);
           pjax.navigate(bookUrl + '/' +  value);
         }
         else {
@@ -161,6 +165,7 @@ YUI().use(
       var data = map.getData();
       var request = bookUrl + '/' + e.target.getValue() + '?page_view=' + data.pageview;
       if (!Y.Lang.isValue(slider.triggerBy)) {
+        Y.one('.current_page').set('text', e.target.getValue());
         pjax.navigate(request);
         /** slider set focus to the slider rail, blur as soon as possible so that user can use the keyboard to read the book */
         Y.soon(function() {
@@ -568,7 +573,10 @@ YUI().use(
       var displayData = display.getData();
       Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: displayData}));
     }
-
+    function resizeSlider() {
+      slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
+    }
+    Y.on('windowresize', resizeSlider);
     Y.once('contentready', onDisplayContentReady, '#display');
 
 });
