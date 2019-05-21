@@ -1,19 +1,13 @@
 /* jshint laxcomma: true, laxbreak: true, unused: false */
-YUI().use(
-    'node'
-  , 'event'
-  , 'event-custom'
-  , 'transition'
-  , 'slider'
-  , 'pjax'
-  , 'gallery-soon'
-  , 'widget-anim'
-  , 'crossframe'
-  , function(Y) {
+YUI().use('node', 'event', 'event-custom', 'transition', 'slider', 'pjax', 'gallery-soon', 'widget-anim', function(Y) {
+
+  // 'crossframe',
+
   'use strict';
 
   /** set a X-PJAX HTTP header for all IO requests */
   Y.io.header('X-PJAX', 'true');
+
   var PJAX_INVALID = -1;
   var PJAX_UNKNOWN_ERROR = -2;
   var html = Y.one('html');
@@ -27,6 +21,9 @@ YUI().use(
   var sequenceCount = parseInt(displayData['sequence-count'] , 10);
   var sequence = parseInt(displayData['sequence'] , 10);
   var slider_datasource = Y.one('#slider_value');
+
+  var viewer = undefined;
+
   /** slider object */
   var slider = new Y.Slider({
     axis: 'x',
@@ -37,9 +34,10 @@ YUI().use(
     value: sequence,
     length:(Y.one('#pager').get('offsetWidth') - 120) + 'px'
   });
+
   /** nodes */
 
-    function on_toggle_language(e) {
+  function on_toggle_language(e) {
       var current_target = e.currentTarget;
       var data_target = current_target.get('value');
       e.preventDefault();
@@ -62,7 +60,7 @@ YUI().use(
           }
         }
       });
-    }
+  }
 
     function on_button_click(e) {
       e.preventDefault();
@@ -110,7 +108,7 @@ YUI().use(
     }
 
     /** TODO: I don't like this, find a more elegant solution */
-    function pager_form(e) {
+    function pager_form (e) {
       e.preventDefault();
       var value = this.get('value');
       var olMap = Y.one('.olMap');
@@ -146,7 +144,7 @@ YUI().use(
     }
 
     /** callback for changes in the value of the slider */
-    function slide_value_change(e) {
+    function slide_value_change (e) {
       /** slider event */
       if (!Y.Lang.isValue(slider.triggerBy)) {
         slider_datasource.set('value', e.newVal);
@@ -158,7 +156,7 @@ YUI().use(
     }
 
     /** callback for the slide end event */
-    function slide_end(e) {
+    function slide_end (e) {
       e.preventDefault();
       var target = e.target;
       var map = Y.one('.dlts_viewer_map');
@@ -178,10 +176,10 @@ YUI().use(
       }
     }
 
-    function pjax_navigate(e) {
+    function pjax_navigate (e) {
       Y.one('body').addClass('openlayers-loading');
       var msg = e.url.replace(bookUrl, '' ).replace('/' , '');
-      if (/(^[\d]+$){1}/.test(msg ) || /(^[\d]+-[\d]+$){1}/.test(msg)) {
+      if (/(^[\d]+$){1}/.test(msg) || /(^[\d]+-[\d]+$){1}/.test(msg)) {
         this.one('.current_page').set('text', msg);
       }
       this.addClass('loading').show();
@@ -210,7 +208,7 @@ YUI().use(
       Y.fire('button:button-thumbnails:off');
     }
 
-    function PjaxException(value) {
+    function PjaxException (value) {
       this.value = value;
       this.message = "does not conform to the expected format for a PJAX request";
       this.toString = function() {
@@ -218,28 +216,46 @@ YUI().use(
       };
     }
 
-    function pjax_load(e) {
+    function pjax_load (e) {
+
       var config = {};
+
+      var display = Y.one('#display');
+
       var node = e.content.node;
+
+      console.log(e.content.node)
+
       var toggle = Y.one('.navbar-item .toggle');
+
       var next = Y.one('.navbar-item .next');
+
       var previous = Y.one('.navbar-item .previous');
+
+      /** check if request include a map object */
+      var map = node.one('.dlts_viewer_map');
+
       try {
-        /** check if request include a map object */
-        var map = node.one('.dlts_viewer_map');
+
         if (map) {
+
+          display.setAttribute('data-sequence', map.getAttribute('data-sequence'));
+
           /** if "toggle" navbar item is available, replace it with this request link */
           if (toggle) {
             toggle.replace(node.one('.toggle').cloneNode(true));
           }
+
           /** if "next" navbar item is available, replace it with this request link */
           if (next) {
             next.replace(node.one('.next').cloneNode(true));
           }
+
           /** if "previous" navbar item is available, replace it with this request link */
           if (previous) {
             previous.replace(node.one('.previous').cloneNode(true));
           }
+
           /** Configuration for the new book page */
           config = {
             id: map.get('id'),
@@ -248,16 +264,12 @@ YUI().use(
             sequence: map.getAttribute('data-sequence'),
             sequenceCount: map.getAttribute('data-sequenceCount'),
             uri: map.getAttribute('data-uri'),
-            metadata: {
-              width: map.getAttribute('data-width'),
-              height: map.getAttribute('data-height'),
-              levels: map.getAttribute('data-levels'),
-              dwtLevels: map.getAttribute('data-dwtlevels'),
-              compositingLayerCount: map.getAttribute('data-compositingLayerCount')
-            }
           };
+
           Y.on('available', change_page, '#' + config.id, OpenLayers, config);
+
           Y.fire('pjax:load:available', config);
+
         }
         else {
           throw new PjaxException(e.url);
@@ -323,30 +335,6 @@ YUI().use(
       Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-fullscreen:off'}));
     }
 
-    function change_page(config) {
-
-      var map;
-      var service;
-      var zoom;
-      var open_layers_dlts = OpenLayers.DLTS;
-      if (Y.Lang.isObject(open_layers_dlts.pages[0], true)) {
-        map = open_layers_dlts.pages[0];
-        service = map.baseLayer.url; // get this value from a data attribute
-        zoom = map.getZoom(); // get this value from a data attribute
-      }
-      open_layers_dlts.pages = [];
-      open_layers_dlts.Page(config.id, config.uri, {
-        zoom: zoom,
-        boxes: config.boxes,
-        service: service,
-        imgMetadata: config.metadata
-      });
-      Y.on('contentready', function() {
-    	  Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'openlayers:change', data: config }));
-    	  Y.fire('openlayers:change', config);
-      }, '#' + config.id);
-    }
-
     function onButtonMetadataOn(e) {
       this.removeClass('hidden');
       this.ancestor('.pane-body').removeClass('pagemeta-hidden');
@@ -368,19 +356,24 @@ YUI().use(
       }
     }
 
-    function onPjaxLoadAvailable(conf) {
-      var page_title = Y.one('#page-title') ;
+    function onPjaxLoadAvailable (conf) {
+      var page_title = Y.one('#page-title');
+      var thumbnails = Y.one('.view-book-thumbnails');
       var sequence = conf.sequence;
       var thumbnails = false;
       var currentPage = false;
       var node = false;
+
       if (page_title) {
         page_title.set('text', conf.title);
       }
+
       slider.triggerBy = 'pjax:load:available';
+
       slider.set('value', parseInt(sequence, 10));
+
       Y.one('#slider_value').set('value', sequence);
-      var thumbnails = Y.one('.view-book-thumbnails');
+
       if (thumbnails) {
         currentPage = thumbnails.one('.current-page');
         if (currentPage) {
@@ -391,6 +384,7 @@ YUI().use(
           node.addClass('current-page');
         }
       }
+
     }
 
     function onButtonThumbnailsOnIOStart(e) {
@@ -571,12 +565,94 @@ YUI().use(
     function onDisplayContentReady () {
       var display = Y.one('#display');
       var displayData = display.getData();
-      Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: displayData}));
+      var iiif = Y.one('.openseadragon');
+      var iiifData = iiif.getData();
+
+      console.log(iiifData)
+
+      // Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: displayData}));
+
+      viewer = OpenSeadragon(JSON.parse(iiifData.iiif));
+
+      viewer.addHandler('open', viewerEventOpen);
+
+      viewer.addHandler('add-item', viewerEventAddItem);
+
+      // viewer.addHandler('animation-finish', viewerEventAnimationFinish);
+
+      // viewer.addHandler('fully-loaded-change', viewerEventFullyLoadedChange);
+
+      // viewer.addHandler('tile-loaded', viewerEventTileLoaded);
+
+      // viewer.addHandler('update-viewport', viewerEventUpdateViewport);
+
     }
+
+    function viewerEventUpdateViewport (data) {
+      console.log('update-viewport', 'event');
+      console.log(data);
+    }
+
+    function viewerEventTileLoaded (data) {
+      console.log('tile-loaded', 'event');
+      console.log(data);
+    }
+
+    function viewerEventAnimationFinish (data) {
+      console.log('animation-finish', 'event');
+      console.log(data);
+    }
+
+    function viewerEventFullyLoadedChange (data) {
+      console.log('fully-loaded-change', 'event');
+      console.log(data);
+    }
+
+    function viewerEventOpen (data) {
+      // document.getElementById("currentpage").innerHTML = ( data.page + 1 ) + " of 3";
+      console.log('open', 'event');
+      // console.log(data);
+      Y.one('.pane.load').hide();
+    }
+
     function resizeSlider() {
       slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
     }
+
     Y.on('windowresize', resizeSlider);
+
     Y.once('contentready', onDisplayContentReady, '#display');
+
+    // Options for the observer (which mutations to observe)
+    var config = { attributes: true, childList: false, subtree: false };
+
+    // Callback function to execute when mutations are observed
+    var callback = mutationsList => {
+      for (var mutation of mutationsList) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-sequence') {
+          var dataset = mutation.target.dataset;
+          console.log(dataset)
+          // var viewer = OpenSeadragon(JSON.parse(dataset.iiif));
+              // viewer.addHandler('open', viewerEventOpen);
+              // viewer.addHandler('add-item', viewerEventAddItem);
+
+          // Y.on('contentready', function() {
+          //   Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'openlayers:change', data: config }));
+          //   Y.fire('openlayers:change', config);
+          // }, '#' + config.id);
+
+        }
+      }
+    };
+
+    // Create an observer instance linked to the callback function
+    var observer = new MutationObserver(callback);
+
+    // Select the node that will be observed for mutations
+    var targetNode = document.getElementById('display');
+
+    // Start observing the target node for configured mutations
+    observer.observe(targetNode, config);
+
 
 });

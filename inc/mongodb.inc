@@ -32,6 +32,7 @@ function dlts_viewer_mongodb_new_sequence($arguments, $collection_name = 'dlts_b
 }
 
 function dlts_viewer_mongodb_load_by_identifier($identifier, $collection_name) {
+	die(__FUNCTION__);
     $query = (object) array('identifier' => $identifier);
     $cursor = mongodb_collection($collection_name);
     $result = $cursor->findOne($query);
@@ -39,16 +40,19 @@ function dlts_viewer_mongodb_load_by_identifier($identifier, $collection_name) {
 }
 
 function dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection_name = 'dlts_books_page') {
-	// make sure we have a number
-	$sequence = (int) $sequence;
-	// prepare query
-	$query = (object) array('isPartOf' => $isPartOf, 'sequence' => $sequence);
-	$cursor = mongodb_collection($collection_name);
-	$result = $cursor->findOne($query);
-	return $result;
+    // make sure we have a number
+    $sequence = (int) $sequence;
+    // prepare query
+    $query = (object) array(
+        'isPartOf' => $isPartOf,
+        'sequence' => $sequence
+    );
+    $cursor = mongodb_collection($collection_name);
+    $result = $cursor->findOne($query);
+    return $result;
 }
 
-function dlts_viewer_mongodb_load_thumbnails($isPartOf, $page = 0, $per_page = 10, $collection_name, $content_type, $embeded_thumb=false) {
+function dlts_viewer_mongodb_load_thumbnails($isPartOf, $page = 0, $per_page = 10, $collection_name =  null, $content_type =  null, $embeded_thumb = false) {
 	/**
 	 * Load helpers
 	 */

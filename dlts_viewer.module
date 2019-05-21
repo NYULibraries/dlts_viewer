@@ -1,7 +1,5 @@
 <?php
 
-// https://api.drupal.org/api/examples/batch_example!batch_example.module/7
-
 /**
  * @file
  * DLTS Viewer module
@@ -119,7 +117,7 @@ function dlts_viewer_preprocess_html(&$vars) {
     // see html.tpl.php
     $vars['pane_metadata_hidden'] = '';
     /** The Viewer sets language direction in the markup */
-    $vars['language_dir'] = dlts_viewer_viewer_language($vars);    
+    $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     /** we are not in admin page, default Viewer HTML template */
     $vars['theme_hook_suggestions'][] = 'html__viewer';
     $vars['classes_array'][] = 'yui3-skin-sam';
@@ -136,9 +134,20 @@ function dlts_viewer_preprocess_html(&$vars) {
       $vars['pane_metadata_hidden'] = 'pagemeta-hidden';
     }
     else {
-      $vars['classes_array'][] = 'not_mobile';      
+      $vars['classes_array'][] = 'not_mobile';
     }
-    
+
+    // See: https://jira.nyu.edu/jira/browse/DLTSVIEWER-81
+    $language_default = language_default();
+    $vars['resource_language_code'] = $language_default->language;
+    // We have access to $resource_language_code in the global context
+    // if the resource exist.
+    // See: dlts_viewer_dispatcher()
+    $resource_language_code = dlts_viewer_resource_language_code();
+    if ($resource_language_code) {
+      $vars['resource_language_code'] = $resource_language_code;
+    }
+
     /**
      * We use Drupal to render objects from MongoDB that don't have a record register
      * in Drupal's database. We don't want Drupal to manage this records. We need a
@@ -204,9 +213,11 @@ function dlts_viewer_process_page(&$vars) {
     $vars['theme_hook_suggestions'][] = 'page__viewer';
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     $vars['is_embed'] = $is_embed;
+
     if ($is_pjax) {
       $vars['theme_hook_suggestions'][] = 'page__viewer_pjax';
     }
+
     // check if this is a embed request. Don't show title if is embeded
     if (!$is_embed) {
       $top_options = array(
@@ -234,6 +245,7 @@ function dlts_viewer_process_page(&$vars) {
  * @see FileFilesServerStreamWrapper
  */
 function dlts_viewer_stream_wrappers() {
+  // die(__FUNCTION__);
   $wrappers = array(
     'fileserver' => array(
       'name' => t('Fileserver StreamWrapper'),
@@ -241,11 +253,12 @@ function dlts_viewer_stream_wrappers() {
       'description' => t('Access file from the FileServer.'),
       'type' => STREAM_WRAPPERS_WRITE_VISIBLE,
     ),
-  ) ;
+  );
   return $wrappers;
 }
 
 function dlts_viewer_metadata_display($node) {
+  die(__FUNCTION__);
 	return node_view($node, 'metadata', $node->language);
 }
 
@@ -285,7 +298,7 @@ function dlts_viewer_theme_field($variables) {
 		$output .= '<div dir="'. $dir .'" class="field-label"' . $variables['title_attributes'] . '>' . $label . ':&nbsp;</div>';
 	}
 	// Render the items.
-	$output .= '<div dir="'. $dir .'" class="field-items"' . $variables['content_attributes'] . '>';
+	$output .= '<div dir="'. $dir .'" class="field-items"' . $variables['content_attributes'] . 'wq>';
 	foreach ($variables['items'] as $delta => $item) {
 		$classes = 'field-item ' . ($delta % 2 ? 'odd' : 'even');
 		$output .= '<div dir="'. $dir .'" class="' . $classes . '"' . $variables['item_attributes'][$delta] . '>' . drupal_render($item) . '</div>';
@@ -298,6 +311,7 @@ function dlts_viewer_theme_field($variables) {
 
 // here we need to make sure we delete the record from Apache Solr
 function dlts_viewer_node_delete($node) {
+  die(__FUNCTION__);
   $records = db_query("SELECT document from {dlts_viewer_books_json} WHERE nid = :nid", array(":nid" => $node->nid));
   foreach ($records as $record) {
     if (file_exists($record->document)) {
@@ -306,3 +320,8 @@ function dlts_viewer_node_delete($node) {
   }
   db_delete('dlts_viewer_books_json')->condition('nid', $node->nid)->execute();
 }
+
+// OpenSeadragon
+// working with http://vagrantviewer.local/viewer/books/fales_io_book000009/1
+
+// Cantaloupe Image Server 4.1 -> http://127.0.0.1:8182/

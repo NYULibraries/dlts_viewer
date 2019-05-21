@@ -107,7 +107,7 @@ function dlts_viewer_object_types() {
  * Check if DLTS Vierwer will render this object request
  *
  * @return
- * Return a boolean indicating whether this object request can be render 
+ * Return a boolean indicating whether this object request can be render
  * by DLTS Vierwer.
  */
 function dlts_viewer_is_resource() {
@@ -124,6 +124,7 @@ function dlts_viewer_is_resource() {
     // check if DLTS Vierwer render the object requested
     $is_resource = in_array($route_argument, $types);
   }
+
   return $is_resource;
 }
 
@@ -158,22 +159,62 @@ function dlts_viewer_mobile_detect() {
   }
 }
 
+function _language_field(&$entity) {
+    $languages = language_list('enabled');
+    $languages = $languages[1];
+    $entity->lang_dir = (!isset($languages[$entity->language]->direction) || isset($languages[$entity->language]->direction) && $languages[$entity->language]->direction == 0) ? 'ltr' : 'rtl';
+    $entity->lang_language = isset($languages[$entity->language]->language) ? $languages[$entity->language]->language : 'en';
+    $entity->lang_name = isset($languages[$entity->language]->name) ? $languages[$entity->language]->name : 'English';
+    $translations = translation_path_get_translations('node/' . $entity->nid);
+    if (count($translations) > 1) {
+        $entity->lang_options = array('#type' => 'markup', '#prefix' => '<select class="language" aria-label="Choose Language for Metadata">', '#suffix' => '</select>', '#markup' => '');
+        foreach ($translations as $key => $index) {
+            $url = url('books/' . $entity->identifier . '/display', array('absolute' => true, 'query' => array('lang' => $key)));
+            $markup = array(
+                '#tag' => 'option',
+                '#theme' => 'html_tag',
+                '#attributes' => array(
+                    'data-title' => t('@lang', array('@lang' => $languages[$key]->native)),
+                    'data-language' => $key,
+                    'title' => t('@lang', array('@lang' => $languages[$key]->native)),
+                    'class' => array('language', $key),
+                    'data-url' => $url,
+                    'value' => $url,
+                ),
+                '#value' => t('@lang', array('@lang' => $languages[$key]->native)),
+            );
+            if ($entity->lang_language == $key) {
+                $markup['#attributes']['selected'] = 'selected';
+            }
+            $entity->lang_options['#markup'] .= theme('html_tag', $markup);
+        }
+    }
+}
+
+function dlts_viewer_is_dev_mode() {
+  $dev_mode = &drupal_static('dev_mode');
+  if (!isset($dev_mode) {
+    $dev_mode = false;
+  }
+  return $dev_mode;
+}
+
 function dlts_viewer_is_pjax() {
     $is_pjax = &drupal_static('is_pjax');
     if (!isset($is_pjax) && function_exists('getallheaders')) {
         $headers = getallheaders();
         if (isset($headers['X-Pjax']) || isset($headers['X-PJAX'])) {
             drupal_add_http_header('uri', request_uri());
-            $is_pjax = TRUE;
+            $is_pjax = true;
         }
         else {
             $params = drupal_get_query_parameters();
             if (isset($params['pjax'])) {
                 drupal_add_http_header('uri', base_path() . request_uri());
-                $is_pjax = TRUE;
+                $is_pjax = true;
             }
             else {
-                $is_pjax = FALSE;
+                $is_pjax = false;
             }
         }
     }
@@ -196,6 +237,32 @@ function dlts_viewer_is_embed() {
     return $is_embed;
 }
 
+/**
+ * return language code of the resource (if available)
+ */
+function dlts_viewer_resource_language_code($vars = NULL) {
+  $resource_language_code = &drupal_static('resource_language_code');
+  if (!isset($resource_language_code)) {
+    if (!empty($vars) && gettype($vars) == 'object') {
+      // as of today, books are the only resource with the field `field_language_code`
+      if ($vars->type == 'dlts_book') {
+        $wrapper = entity_metadata_wrapper('node', $vars);
+        $field_language_code = $wrapper->field_language_code->value();
+        if ($field_language_code) {
+           // Field allows unlimited number of values. This seem wrong. Shifts the first value
+           // of the array off and returns it
+           // See: admin/structure/types/manage/dlts-book/fields/field_language_code
+           $resource_language_code = array_shift($field_language_code);
+        }
+      }
+    }
+  }
+  return $resource_language_code;
+}
+
+/**
+ * return language direction of the resource
+ */
 function dlts_viewer_viewer_language($vars = NULL) {
     $viewer_language = &drupal_static('viewer_language');
     if (!isset($viewer_language)) {

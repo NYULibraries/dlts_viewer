@@ -72,6 +72,17 @@ function dlts_viewer_drush_command() {
             'pages' => dt('Create pages.'),
         ),
     );
+
+    $items['update-mongo-record'] = array(
+      'callback' => 'dlts_viewer_update_mongo_record',
+      'description' => dt('Update book pages record with IFFF V. 2'),
+    );
+
+    $items['search-mongo-record'] = array(
+      'callback' => 'dlts_viewer_search_mongo_record',
+      'description' => dt('Search book pages record.'),
+    );
+
     return $items;
 }
 
@@ -326,4 +337,88 @@ function dlts_viewer_pull_books_from_git_repo() {
   	}
   }
   chdir($pwd);
+}
+
+function dlts_viewer_search_mongo_record($isPartOf = null, $sequence = 1) {
+    /**
+     * Load MongoDB helper
+     */
+    module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
+
+    $collection_name = 'dlts_books_page';
+
+    $isPartOf = 'fales_io_book000009';
+
+    $sequence = 1;
+
+    $result = dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection_name);
+
+    print_r($result);
+
+}
+
+function dlts_viewer_update_mongo_record() {
+
+    /**
+     * Load MongoDB helper
+     */
+    module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
+
+    $isPartOf = 'fales_io_book000009';
+
+    // view modes, we map the views with their machine names in MongoDB
+    $collections = array(
+        'single' => 'dlts_books_page',
+        'double' => 'dlts_stitched_books_page',
+    );
+
+    // viewer defaults to single page view
+    $collection = 'dlts_books_page';
+
+    $entity = dlts_book_load($isPartOf);
+
+    $wrapper = entity_metadata_wrapper('node', $entity);
+
+    $sequence = (int) $wrapper->field_sequence_count->value();
+
+    $sequence = 0;
+
+    while ($sequence < 10) {
+
+        drush_log($sequence, 'ok');
+
+        $result = dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection);
+
+        $options = array(
+            'method' => 'GET',
+            // 'timeout' => 15,
+        );
+
+        // $image_server_url = variable_get('dlts_viewer_djatoka_service', 'http://127.0.0.1:8182');
+
+        // Vagran can't reach container using 127.0.0.1
+        $image_server_url = 'http://192.168.0.3:8182';
+
+        // when using HttpSource source we need to escape certain characters
+        // see: https://cantaloupe-project.github.io/manual/4.1/sources.html#HttpSource
+        $image_id = urlencode(file_create_url($result['cm']['uri']));
+
+        $image_metadata_uri = $image_server_url . '/iiif/2/' . $image_id . '/info.json';
+
+        $dragon_metadata = drupal_http_request($image_metadata_uri, $options);
+
+        if ($dragon_metadata) {
+            // update $result reference with Image Server requested metadata
+
+            $result['iiif'] = json_decode($dragon_metadata->data);
+
+            // update sequence record
+            dlts_viewer_mongodb_update_sequence($result, $collection);
+        }
+
+
+        ++$sequence;
+
+    }
+
 }

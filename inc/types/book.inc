@@ -11,7 +11,7 @@
  * THIS is not a default Drupal hook
  */
 function dlts_viewer_preprocess_node_dlts_book(&$vars) {
-    /** We don't render a DLTS Book object, redirect to a "Book page" */
+    // we don't render a DLTS Book object, redirect to a "Book page"
     if ($vars['view_mode'] == 'full') {
         $wrapper = entity_metadata_wrapper('node', $vars['node']);
         $identifier = $wrapper->field_identifier->value();
@@ -78,17 +78,38 @@ function dlts_viewer_dispatch_thumbnails($identifier) {
 }
 
 function dlts_viewer_full_book_view(&$entity) {
+
     $module_path = drupal_get_path('module', 'dlts_viewer');
-    $js_common_config = array('type' => 'file', 'scope' => 'footer');
-    $css_common_config = array('group' => CSS_DEFAULT, 'every_page' => TRUE);
-    drupal_add_css($module_path . '/css/dlts_viewer.css', $css_common_config);
-    drupal_add_js('http://yui.yahooapis.com/3.18.1/build/yui/yui-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -100));
-    drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
+
+    $js_common_config = array(
+        'type' => 'file',
+        'scope' => 'footer'
+    );
+
+    drupal_add_css(
+        $module_path . '/css/dlts_viewer.css',
+        array(
+            'group' => CSS_DEFAULT,
+            'every_page' => true
+        )
+    );
+
+    $yui3 = 'http://yui.yahooapis.com/3.18.1/build/yui/yui-min.js';
+
+    drupal_add_js($yui3, 'external', array('group' => JS_LIBRARY, 'weight' => -100));
+
+    // drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
+
     drupal_add_js($module_path . '/js/modules/slider-base.js', $js_common_config);
-    drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
+
+    // drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
+
     drupal_add_js($module_path . '/js/ui.components.yui.js', $js_common_config);
-    drupal_add_js(variable_get('dlts_viewer_openlayers_source', 'sites/all/libraries/openlayers/build/OpenLayers.js'), array('group' => JS_LIBRARY));
-    return node_view($entity , 'metadata', $entity->language);
+
+    drupal_add_js($module_path . '/js/openseadragon/openseadragon.js', array('group' => JS_LIBRARY, 'weight' => -100));
+
+    return node_view($entity, 'metadata', $entity->language);
+
 }
 
 function dlts_viewer_book_metadata_view($entity) {
@@ -161,6 +182,7 @@ function _language_field(&$entity) {
 }
 
 function dlts_viewer_dispatcher($entity, $arg) {
+    dlts_viewer_resource_language_code($entity);
     // test if resource
     $is_resource = dlts_viewer_is_resource();
     // check request type
@@ -180,33 +202,28 @@ function dlts_viewer_dispatcher($entity, $arg) {
         // change entity title
         $entity->title = t('@title @volume', array('@title' => $multivolume_book->title, '@volume' => $volume_number_str));
     }
-    // check if this books is part of a series
-    // $series_book = dlts_viewer_is_series_book($entity);
-    // not sure if this is right. the book can part of multiple series book
-    // figure out the right way to pick the title
-    // maybe we can do something along the lines of: Book Title (also known as Series book title 1, Series book title 2)
-    //if ($entity->isSeriesBook) {
-    //dpm($entity->seriesBook);
-    //foreach ($entity->seriesBook as $series_book) {
-    // for now just get the last one (since we just have one for now)
-    // talk about this with the group and fix later.
-    //$entity->title = $series_book['volume_label'];
-    //}
-    //}
+
     // set entity title
     drupal_set_title($entity->title);
+
     // wrapp book entity with Entity API wrapper
     $book_wrapper = entity_metadata_wrapper('node', $entity);
+
     // book identifier
     $identifier = $book_wrapper->field_identifier->value();
+
     // set $identifier so that .tpl.php can use it
     $entity->identifier = $identifier;
+
     // book URL
-    $book_url = url('node/' . $entity->nid , array('absolute' => TRUE));
+    $book_url = url('node/' . $entity->nid, array('absolute' => true));
+
     // set $url so that .tpl.php can use it
     $entity->url = $book_url;
+
     // set language
     _language_field($entity);
+
     // check for type of request: 1) book page or 2) display pane
     if (!is_array($arg) && $arg == 'display') {
         // type of request
@@ -222,51 +239,53 @@ function dlts_viewer_dispatcher($entity, $arg) {
             $display_type = 'book_page_pjax';
         }
         // we assume single page view
-        $is_single_page = TRUE;
+        $is_single_page = true;
         $thumbnails_rows_per_page = 10;
         $sequence = $arg['sequence'];
         if (isset($query_parameters['rows'])) {
             $thumbnails_rows_per_page = filter_xss($query_parameters['rows']);
         }
         if (is_array($sequence)) {
-            /** get the first page of the requested sequence */
+            // get the first page of the requested sequence
             $page = min($sequence);
             $sequence_max = max($sequence);
             $sequence_min = min($sequence);
-            /** check if this is a double page view */
+            // check if this is a double page view
             if (count($sequence) > 1) {
-                $is_single_page = FALSE;
+                $is_single_page = false;
             }
         }
         else {
-            /** get the first page of the requested sequence */
+            // get the first page of the requested sequence
             $page = $sequence_max = $sequence_min = $sequence;
-            $is_single_page = TRUE;
+            $is_single_page = true;
         }
         $sequence_count = $book_wrapper->field_sequence_count->value();
         $int_read_order = 0;
-        if(isset($book_wrapper->field_read_order)) {
+        if (isset($book_wrapper->field_read_order)) {
             $int_read_order = $book_wrapper->field_read_order->value();
         }
         $entity->read_order = ($int_read_order == 1) ? 'rtl' : 'ltr';
         $next_page = $sequence_max + 1;
         $previous_page = $sequence_min - 1;
-        $previous_page_active = TRUE;
-        $next_page_active = TRUE;
+        $previous_page_active = true;
+        $next_page_active = true;
         if ($previous_page < 1) {
             $previous_page = 1;
         }
         if ($next_page > $sequence_count) {
             $next_page = $sequence_count;
-            $next_page_active = FALSE;
+            $next_page_active = false;
         }
         if ($sequence_max == 1) {
-            $previous_page_active = FALSE;
+            $previous_page_active = false;
         }
-        /** next page */
+        // next page
         $next_pager_side = ($entity->read_order === 'ltr') ? 'pager-right' : 'pager-left';
-        /** prev page */
+
+        // prev page
         $previous_pager_side = ($entity->read_order === 'ltr') ? 'pager-left' : 'pager-right';
+
         $button_previous_options = array(
             'id' => 'previous-page',
             'type' => 'dlts_book_page',
@@ -274,12 +293,14 @@ function dlts_viewer_dispatcher($entity, $arg) {
             'url' => $book_url . '/' . $previous_page . ((!$is_single_page) ? '?page_view=double' : ''),
             'classes' => array('previous', $previous_pager_side, ($previous_page_active ? 'active' : 'inactive'))
         );
+
         $button_next_options = array(
             'id' => 'next-page',
             'text' => t('Go to next page'),
             'url' => $book_url . '/' . $next_page . ((!$is_single_page) ? '?page_view=double' : ''),
             'classes' => array('next', $next_pager_side, ($next_page_active ? 'active' : 'inactive'))
         );
+
         $button_togglepage_options = array(
             'id' => 'toggle-page',
             'type' => 'dlts_book_page',
@@ -287,6 +308,7 @@ function dlts_viewer_dispatcher($entity, $arg) {
             'url' => $book_url . '/' . $sequence_min . (($is_single_page ) ? '?page_view=double' : ''),
             'classes' => array('toggle', 'active', ($is_single_page) ? ' page-double' : ' page-single'),
         );
+
         $button_metadata_options = array(
             'title' => t('Metadata'),
             'path' => 'node/' . $entity->nid,
@@ -298,6 +320,7 @@ function dlts_viewer_dispatcher($entity, $arg) {
             ),
             'fragment' => 'metadata',
         );
+
         $button_fullscreen_options = array(
             'title' => t('Toggle fullscreen'),
             'path' => 'node/' . $entity->nid,
@@ -309,6 +332,7 @@ function dlts_viewer_dispatcher($entity, $arg) {
             ),
             'fragment' => 'fullscreen',
         );
+
         $button_thumbnails_options = array(
             'title' => t('Pages'),
             'path' => 'node/' . $entity->nid,
@@ -320,29 +344,42 @@ function dlts_viewer_dispatcher($entity, $arg) {
             ),
             'fragment' => 'thumbnails',
         );
+
         $button_previous = theme('dlts_viewer_pager_button', $button_previous_options);
+
         $button_next = theme('dlts_viewer_pager_button', $button_next_options);
+
         /** fullscreen button */
         $button_fullscreen = theme('dlts_viewer_navbar_item', $button_fullscreen_options);
+
         /** Metadata button */
         $button_metadata = theme('dlts_viewer_navbar_item', $button_metadata_options);
+
         /** thumbnails button */
         $button_thumbnails = theme('dlts_viewer_navbar_item', $button_thumbnails_options);
+
         /** Toggle between Single and Double page button */
         $button_togglepage = theme('dlts_viewer_pager_button', $button_togglepage_options);
+
         $controlpanel_button = theme('dlts_viewer_controlpanel');
+
         /** Book page sequence number */
         $entity->book_page_sequence_number = $page;
+
         /** Set navbar pager buttons according to read direction */
         $nav_pager_button_left_arrow = $button_previous;
+
         $nav_pager_button_right_arrow = $button_next;
+
         if ($entity->read_order == 'rtl') {
             $nav_pager_button_left_arrow = $button_next;
             $nav_pager_button_right_arrow = $button_previous;
         }
+
         $nav_pager_button_left_arrow = '<li class="navbar-item navbar-pager-left">' . $nav_pager_button_left_arrow . '</li>';
         $nav_pager_button_right_arrow = '<li class="navbar-item navbar-pager-right">' . $nav_pager_button_right_arrow . '</li>';
         $button_togglepage = '<li class="navbar-item">' . $button_togglepage . '</li>';
+
         $navbar_options = array(
             'nav_buttons_left' => array($button_metadata, $button_togglepage, $button_thumbnails),
             'nav_buttons_right' => array($button_fullscreen),
@@ -351,17 +388,29 @@ function dlts_viewer_dispatcher($entity, $arg) {
             'nav_buttons_pager_right_arrow' => $nav_pager_button_right_arrow,
             'control_panel' => $controlpanel_button,
         );
+
         $loading_options = array('sequence_number' => $page);
+
         $entity->navbar = theme('dlts_viewer_navbar', $navbar_options);
+
         $entity->book_page_data = $arg;
+
         $entity->button_metadata = $button_metadata;
+
         $entity->button_next = $button_next;
+
         $entity->button_previous = $button_previous;
+
         $entity->button_togglepage = $button_togglepage;
-        $entity->loading = theme('dlts_viewer_loading', $loading_options); 
+
+        $entity->loading = theme('dlts_viewer_loading', $loading_options);
+
         $entity->pane_metadata_hidden = $is_mobile;
+
         $entity->sequence = $page;
+
         $entity->sequence_count = $sequence_count;
+
         $slider_options = array(
             'slider_id' => 'slider',
             'uri' => $book_url,
@@ -369,18 +418,29 @@ function dlts_viewer_dispatcher($entity, $arg) {
             'sequence_number' => $page,
             'sequence_count' => $sequence_count
         );
+
         $entity->thumbnailsPage = ceil($page / $thumbnails_rows_per_page) - 1;
+
         $entity->thumbnailsRows = $thumbnails_rows_per_page;
+
         $entity->thumbnailsURL = $book_url . '/thumbnails';
+
         $entity->pageView = ($is_single_page) ? 'single' : 'double';
+
         $arg['pageView'] = $entity->pageView;
+
         $arg['thumbnailsUrl'] = $entity->thumbnailsURL;
+
         $arg['thumbnailsRows'] = $entity->thumbnailsRows;
+
         $arg['thumbnailsPage'] = $entity->thumbnailsPage;
+
         $book_page_options = array(
             'file' => $arg
         );
+
         $entity->book_page = theme('dlts_viewer_openlayers_image', $book_page_options);
+
         $entity->slider = theme('dlts_viewer_slider', $slider_options);
     }
     // types of returns

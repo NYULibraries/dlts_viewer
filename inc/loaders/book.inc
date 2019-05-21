@@ -42,7 +42,7 @@ function dlts_book_load($identifier) {
         $nid = array_pop($keys);
         return node_load($nid);
     }
-    return FALSE;
+    return false;
 }
 
 /**
@@ -60,9 +60,6 @@ function dlts_book_page_load($sequence) {
      */
     module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
 
-    // I don't like this. Can we find a better solution for this?
-    // investigate a way to pass this from hook_menu
-    // @TODO: Make it so that it can be call as API
     $isPartOf = arg(1);
 
     // view modes, we map the views with their machine names in MongoDB
@@ -86,73 +83,17 @@ function dlts_book_page_load($sequence) {
 
     $result = dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection_name);
 
-    if ($result && isset($result['cm']) && !empty($result['cm']['uri'])) {
-        /**
-         * Sequence exist in MongoDB but we need to request metadata from image server
-         */
-        if (empty($result['cm']['levels'])) {
-            /**
-             * Load connector
-             */
-            module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
-            /**
-             * Pass over $result['cm'] as $file argument
-             */
-            $djatoka = dlts_viewer_djatoka_request($result['cm']);
-            /**
-             * No error, update MongoDB record
-             * @TODO: Consider using Drupal queue to update the record.
-             * See: https://api.drupal.org/api/drupal/modules!system!system.queue.inc/class/DrupalQueue/7
-             */
-            if (!isset($djatoka['error'])) {
-                /**
-                 * Update $result reference with Image Server requested metadata
-                 */
-                $result['cm'] = array_merge($result['cm'], $djatoka);
-                /**
-                 * Update sequence record
-                 */
-                dlts_viewer_mongodb_update_sequence($result, $collection_name);
-                /**
-                 * Return sequence object
-                 */
-                return array(
-                    'fid' => (string) $result['_id'],
-                    'sequence' => $result['sequence'],
-                    'uri' => file_create_url($result['cm']['uri']),
-                    'width' => $djatoka['width'],
-                    'height' => $djatoka['height'],
-                    'levels' => $djatoka['levels'],
-                    'dwtLevels' => $djatoka['dwtLevels'],
-                    'compositingLayerCount' => $djatoka['compositingLayerCount'],
-                    'timestamp' => $result['cm']['timestamp']
-                );
-            }
-            /**
-             * Request failed.
-             */
-            else {
-            }
-        }
-        else {
-            return array(
-                'fid' => (string) $result['_id'],
-                'sequence' => $result['sequence'],
-                'uri' => file_create_url($result['cm']['uri']),
-                'width' => $result['cm']['width'],
-                'height' => $result['cm']['height'],
-                'levels' => $result['cm']['levels'],
-                'dwtLevels' => $result['cm']['dwtLevels'],
-                'compositingLayerCount' => $result['cm']['compositingLayerCount'],
-                'timestamp' => $result['cm']['timestamp'],
-            );
-        }
+    if ($result && isset($result['iiif'])) {
+        return array(
+            'fid' => (string) $result['_id'],
+            'sequence' => $result['sequence'],
+            'iiif' => $result['iiif'],
+        );
     }
 
-    drupal_set_message(t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.', array('@sequence' => $sequence, '@identifier' => $isPartOf)), 'error');
-
-    watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', array('%identifier' => $isPartOf, '%sequence' => $sequence), WATCHDOG_NOTICE);
-
     // if $result is empty, retrun FALSE so that hook_menu can 404 redirect
-    return FALSE;
+    drupal_set_message(t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.', array('@sequence' => $sequence, '@identifier' => $isPartOf)), 'error');
+    watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', array('%identifier' => $isPartOf, '%sequence' => $sequence), WATCHDOG_NOTICE);
+    return false;
+
 }

@@ -49,6 +49,15 @@ function dlts_viewer_theme() {
                 'sequence_number' => 0,
             ),
         ),
+
+        'dlts_viewer_googletagmanager' => array(
+            'template' => 'templates/components/component--googletagmanager',
+        ),
+
+        'dlts_viewer_googletagmanagernoscript' => array(
+            'template' => 'templates/components/googletagmanagernoscript',
+        ),
+
         'dlts_viewer_slider' => array(
             'template' => 'templates/components/component--slider',
             'variables' => array(
@@ -200,7 +209,7 @@ function theme_dlts_viewer_pager_button($variables) {
 }
 
 function theme_dlts_viewer_navbar_item($variables) {
-    $parts = array('html' => TRUE);
+    $parts = array('html' => true);
     if (isset($variables['fragment'])) {
         $parts = array_merge($parts, array('fragment' => $variables['fragment']));
     }
@@ -227,95 +236,64 @@ function theme_dlts_viewer_navbar_item($variables) {
  *
  * @ingroup themable
  */
-function theme_dlts_viewer_openlayers_image($variables) {
+function theme_dlts_viewer_openlayers_image($variables)
+{
 
-  $file = $variables['file'];
+    $file = $variables['file'];
 
-  $fid = 'id-' . $file['fid'];
+    $fid = 'id-' . $file['fid'];
 
-  $file_uri = file_create_url($file['uri']);
-
-  if (isset($file['timestamp'])) {
-  	$file_uri = $file_uri . '?v=' . $file['timestamp'];
-  }
-  
-  // check if zoom its part of the request
-  if (isset($file['zoom'])) {
-    $zoom = $file['zoom'];
-  }
-  else {
-    // we default zoom to 1 (tablets and "desktops")
-    $zoom = 1;
-    // Mobile_Detect
-    $detect = dlts_viewer_mobile_detect();      
-    // we give phone users the smallest possible image by default
-    // see https://jira.nyu.edu/jira/browse/DLTSVIEWER-74
-    // Mobiles zoom default 0, exclude tablets.
-    if ($detect->isMobile() && !$detect->isTablet()) {
-      $zoom = 0;
+    // check if zoom its part of the request
+    if (isset($file['zoom'])) {
+        $zoom = $file['zoom'];
+    } else {
+        // we default zoom to 1 (tablets and "desktops")
+        $zoom = 1;
+        // Mobile_Detect
+        $detect = dlts_viewer_mobile_detect();
+        // we give phone users the smallest possible image by default
+        // see https://jira.nyu.edu/jira/browse/DLTSVIEWER-74
+        // Mobiles zoom default 0, exclude tablets.
+        if ($detect->isMobile() && !$detect->isTablet()) {
+            $zoom = 0;
+        }
     }
-  }  
 
-  $openlayers_options = array(
-    'service' => variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka'),
-    'imgMetadata' => array(
-      'width' => $file['width'],
-      'height' => $file['height'],
-      'levels' => $file['levels'],
-      'dwtLevels' => $file['dwtLevels'],
-      'compositingLayerCount' => $file['compositingLayerCount'],
-    ),
-    'zoom' => $zoom,
-  );
-  
-  $json_data = json_encode($openlayers_options);
+    // https://openseadragon.github.io/examples/ui-binding-custom-buttons/
 
-  $js_inline = '(function(O){O.DLTS.Page("' . $fid . '","' .  $file_uri . '",' . $json_data . ')})(OpenLayers);';
+    $config = array(
+        'id' => $fid,
+        'preserveViewport' => true,
+        'visibilityRatio' => 1,
+        'minZoomLevel' => 1,
+        'defaultZoomLevel' => 1,
+        'sequenceMode' => false,
+        'tileSources' =>  array($file['iiif']),
+    );
 
-  $js_options = array('group' => JS_DEFAULT, 'type' => 'inline', 'every_page' => FALSE, 'weight' => 5, 'scope' => 'footer', 'cache' => TRUE, 'defer' => TRUE);
+    if (!isset($file['thumbnailsUrl'])) {
+        $file['thumbnailsUrl'] = 'undefined';
+    }
 
-  drupal_add_js($js_inline, $js_options);
-
-  if(!isset($file['thumbnailsUrl'])) {
-      $file['thumbnailsUrl'] = 'undefined';
-  }
-  if(!isset($file['thumbnailsRows'])) {
+    if (!isset($file['thumbnailsRows'])) {
         $file['thumbnailsRows'] = 0;
-  }
-  if(!isset($file['thumbnailsPage'])) {
+    }
+
+    if (!isset($file['thumbnailsPage'])) {
         $file['thumbnailsPage'] = 0;
-  }
+    }
 
-  $options = array(
-    '@id' => $fid,
-    '@uri' => $file_uri,
-    '@width' => $file['width'],
-    '@height' => $file['height'],
-    '@levels' => $file['levels'],
-    '@dwtLevels' => $file['dwtLevels'],
-    '@layer' => $file['compositingLayerCount'],
-  	'@sequence' => array_shift($file['sequence']),
-  	'@thumbnailsUrl' => $file['thumbnailsUrl'],
-    '@thumbnailsRows' => $file['thumbnailsRows'],
-    '@thumbnailsPage' => $file['thumbnailsPage'],
-  	'@pageView' => 'single',
-  );
+    $options = array(
+        '@id' => $fid,
+        '@sequence' => array_shift($file['sequence']),
+        '@thumbnailsUrl' => $file['thumbnailsUrl'],
+        '@thumbnailsRows' => $file['thumbnailsRows'],
+        '@thumbnailsPage' => $file['thumbnailsPage'],
+        '@pageView' => 'single',
+        '@iiif' => json_encode($config)
+    );
 
-  return t('<div 
-    id="@id" 
-    class="dlts_image_map dlts_viewer_map" 
-    data-sequence="@sequence" 
-    data-pageView="@pageView" 
-    data-uri="@uri" 
-    data-width="@width" 
-    data-height="@height" 
-    data-levels="@levels" 
-    data-dwtLevels="@dwtLevels" 
-    data-compositing-layer="@layer"
-    data-thumbnails-url="@thumbnailsUrl"
-    data-thumbnails-rows="@thumbnailsRows"
-    data-thumbnails-page="@thumbnailsPage"
-  ></div>', $options);
+    return t('<div id="@id" class="openseadragon dlts_image_map dlts_viewer_map" data-iiif="@iiif" data-sequence="@sequence" data-pageView="@pageView" data-thumbnails-url="@thumbnailsUrl" data-thumbnails-rows="@thumbnailsRows" data-thumbnails-page="@thumbnailsPage"></div>', $options);
 }
 
 /**
