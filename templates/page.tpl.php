@@ -1,12 +1,11 @@
 <?php if ($page) : ?>
-  <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TRVMLPF"
-                  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
+  <?php if (1 == 2) : ?>
+    <?php print $googletagmanagernoscript ?>
+  <?php endif; ?>
   <div id="page" class="page">
     <?php if (!$is_embed) : ?>
       <?php print $top ?>
     <?php endif; ?>
-    <?php print render($page['content']); ?>
+    <?php print render($page['content']) ?>
   </div>
 <?php endif; ?>

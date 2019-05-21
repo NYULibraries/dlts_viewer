@@ -1,7 +1,6 @@
 <iframe id="book-viewer" src="<?php print $url ?>" width="<?php print $width ?>" height="<?php print $height ?>">
-    <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TRVMLPF"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-    <p><?php print t('Your browser does not support iframes.') ?></p>
+  <?php if (1 == 2) : ?>
+    <?php print $googletagmanagernoscript ?>
+  <?php endif; ?>
+  <p><?php print t('Your browser does not support iframes.') ?></p>
 </iframe>

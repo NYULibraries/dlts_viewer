@@ -7,7 +7,7 @@
             <<?php print $ds_content_wrapper; print $layout_attributes; ?> class="<?php print $classes;?> " dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" data-dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" data-lang="<?php print isset($lang_language) ? $lang_language : "und" ?>" >
             <?php if (isset($lang_options)) : ?>
                 <div class="metapane-dropdowns">
-                    <div class="lang-options"><?php print locale('Available languages', NULL, $lang_language) ?>: <?php print render($lang_options) ; ?>
+                    <div class="lang-options"><?php print locale('Available languages', null, $lang_language) ?>: <?php print render($lang_options) ; ?>
                     </div>
                 </div>
             <?php endif; ?>
@@ -33,7 +33,7 @@
 </div>
 <?php if (isset($read_order)) : ?>
     <div id="pager" class="pane pager" dir="<?php print $read_order; ?>">
-        <?php if (isset($slider)) : print $slider ; endif ; ?>
+        <?php if (isset($slider)) : print $slider; endif; ?>
     </div>
 <?php endif; ?>
 <div role="presentation" id="thumbnails" class="views-g pane thumbnails hidden">

@@ -7,7 +7,13 @@
             <?php if (isset($content)) print render($content); ?>
         </div>
     </div>
-    <div id="display" class="pane display" data-url="<?php print $url ?>" data-identifier="<?php print $identifier ?>" data-sequence-count="<?php print $sequence_count ?>" data-sequence="<?php print $book_page_sequence_number ?>" data-title="<?php print $title ?>">
+    <div id="display"
+         class="pane display"
+         data-iiif="<?php print $iiif ?>"
+         data-identifier="<?php print $identifier ?>"
+         data-sequence-count="<?php print $sequence_count ?>"
+         data-sequence="<?php print $book_page_sequence_number ?>"
+         data-title="<?php print $title ?>">
         <?php print $book_page ?>
         <?php if (isset($button_previous)) : print $button_previous ; endif; ?>
         <?php if (isset($button_previous)) : print $button_next ; endif; ?>

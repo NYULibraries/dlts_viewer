@@ -1,6 +1,6 @@
 <div id="display"
      class="pane display"
-     data-url="<?php print $url ?>"
+     data-iiif="<?php print $iiif ?>"
      data-identifier="<?php print $identifier ?>"
      data-sequence-count="<?php print $sequence_count ?>"
      data-sequence="<?php print $book_page_sequence_number ?>"
