@@ -3,7 +3,7 @@ description = DLTS Viewer
 package = DLTS
 
 core = 7.x
-version = 7.x-1.6.1
+version = 7.x-3.0.0
 
 files[] = inc/streams.inc
 
