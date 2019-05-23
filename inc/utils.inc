@@ -193,7 +193,7 @@ function _language_field(&$entity) {
 
 function dlts_viewer_is_dev_mode() {
   $dev_mode = &drupal_static('dev_mode');
-  if (!isset($dev_mode) {
+  if (!isset($dev_mode)) {
     $dev_mode = false;
   }
   return $dev_mode;

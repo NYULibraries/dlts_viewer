@@ -98,7 +98,7 @@ function dlts_viewer_full_book_view(&$entity) {
 
     drupal_add_js($yui3, 'external', array('group' => JS_LIBRARY, 'weight' => -100));
 
-    // drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
+    drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
 
     drupal_add_js($module_path . '/js/modules/slider-base.js', $js_common_config);
 
@@ -113,7 +113,7 @@ function dlts_viewer_full_book_view(&$entity) {
 }
 
 function dlts_viewer_book_metadata_view($entity) {
-    $element = node_view($entity, 'metadata',$entity->language);
+    $element = node_view($entity, 'metadata', $entity->language);
     return drupal_render($element);
 }
 
@@ -130,12 +130,8 @@ function dlts_viewer_pjax_book_view(&$entity) {
         'button_next' => $entity->button_next,
         'button_previous' => $entity->button_previous,
         'button_togglepage' => $entity->button_togglepage,
-        'compositingLayerCount' => $entity->book_page_data['compositingLayerCount'],
-        'dwtLevels' => $entity->book_page_data['dwtLevels'],
         'fid' => $entity->book_page_data['fid'],
-        'height' => $entity->book_page_data['height'],
         'identifier' => $entity->identifier,
-        'levels' => $entity->book_page_data['levels'],
         'sequence' => $entity->sequence,
         'sequence_count' => $entity->sequence_count,
         'thumbnailsPage' => $entity->thumbnailsPage,
@@ -143,42 +139,11 @@ function dlts_viewer_pjax_book_view(&$entity) {
         'thumbnailsURL' => $entity->thumbnailsURL,
         'title' => $entity->title,
         'uri' => $entity->book_page_data['uri'],
-        'width' => $entity->book_page_data['width'],
+        'iiif' => json_encode($entity->book_page_data['iiif']),
         'pageView' => $entity->pageView,
     );
-    return theme('viewer_page', $vars);
-}
 
-function _language_field(&$entity) {
-    $languages = language_list('enabled');
-    $languages = $languages[1];
-    $entity->lang_dir = (!isset($languages[$entity->language]->direction) || isset($languages[$entity->language]->direction) && $languages[$entity->language]->direction == 0) ? 'ltr' : 'rtl';
-    $entity->lang_language = isset($languages[$entity->language]->language) ? $languages[$entity->language]->language : 'en';
-    $entity->lang_name = isset($languages[$entity->language]->name) ? $languages[$entity->language]->name : 'English';
-    $translations = translation_path_get_translations('node/' . $entity->nid);
-    if (count($translations) > 1) {
-        $entity->lang_options = array('#type' => 'markup', '#prefix' => '<select class="language" aria-label="Choose Language for Metadata">', '#suffix' => '</select>', '#markup' => '');
-        foreach ($translations as $key => $index) {
-            $url = url('books/' . $entity->identifier . '/display', array('absolute' => true, 'query' => array('lang' => $key)));
-            $markup = array(
-                '#tag' => 'option',
-                '#theme' => 'html_tag',
-                '#attributes' => array(
-                    'data-title' => t('@lang', array('@lang' => $languages[$key]->native)),
-                    'data-language' => $key,
-                    'title' => t('@lang', array('@lang' => $languages[$key]->native)),
-                    'class' => array('language', $key),
-                    'data-url' => $url,
-                    'value' => $url,
-                ),
-                '#value' => t('@lang', array('@lang' => $languages[$key]->native)),
-            );
-            if ($entity->lang_language == $key) {
-                $markup['#attributes']['selected'] = 'selected';
-            }
-            $entity->lang_options['#markup'] .= theme('html_tag', $markup);
-        }
-    }
+    return theme('viewer_page', $vars);
 }
 
 function dlts_viewer_dispatcher($entity, $arg) {
@@ -226,14 +191,11 @@ function dlts_viewer_dispatcher($entity, $arg) {
 
     // check for type of request: 1) book page or 2) display pane
     if (!is_array($arg) && $arg == 'display') {
-        // type of request
         $display_type = 'book_metadata';
         if ($is_pjax) {
             $display_type = 'book_metadata_pjax';
         }
-    }
-    else {
-        // type of request
+    } else {
         $display_type = 'book_page';
         if ($is_pjax) {
             $display_type = 'book_page_pjax';
@@ -254,8 +216,7 @@ function dlts_viewer_dispatcher($entity, $arg) {
             if (count($sequence) > 1) {
                 $is_single_page = false;
             }
-        }
-        else {
+        } else {
             // get the first page of the requested sequence
             $page = $sequence_max = $sequence_min = $sequence;
             $is_single_page = true;
@@ -349,24 +310,24 @@ function dlts_viewer_dispatcher($entity, $arg) {
 
         $button_next = theme('dlts_viewer_pager_button', $button_next_options);
 
-        /** fullscreen button */
+        // fullscreen button
         $button_fullscreen = theme('dlts_viewer_navbar_item', $button_fullscreen_options);
 
-        /** Metadata button */
+        // metadata button
         $button_metadata = theme('dlts_viewer_navbar_item', $button_metadata_options);
 
-        /** thumbnails button */
+        // thumbnails button
         $button_thumbnails = theme('dlts_viewer_navbar_item', $button_thumbnails_options);
 
-        /** Toggle between Single and Double page button */
+        // toggle between Single and Double page button
         $button_togglepage = theme('dlts_viewer_pager_button', $button_togglepage_options);
 
         $controlpanel_button = theme('dlts_viewer_controlpanel');
 
-        /** Book page sequence number */
+        // Book page sequence number
         $entity->book_page_sequence_number = $page;
 
-        /** Set navbar pager buttons according to read direction */
+        // Set navbar pager buttons according to read direction
         $nav_pager_button_left_arrow = $button_previous;
 
         $nav_pager_button_right_arrow = $button_next;
@@ -485,7 +446,7 @@ function dlts_viewer_book_metadata_display($node) {
 /**
  * Menu callback; prints the loaded structure of the current node/user.
  */
-function dlts_viewer_load_object($type, $object, $name = NULL) {
+function dlts_viewer_load_object($type, $object, $name = null) {
     $out = '';
     $name = isset($name) ? $name : $type;
     $entity = entity_metadata_wrapper('node', $object);

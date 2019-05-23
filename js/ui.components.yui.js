@@ -1,7 +1,13 @@
 /* jshint laxcomma: true, laxbreak: true, unused: false */
-YUI().use('node', 'event', 'event-custom', 'transition', 'slider', 'pjax', 'gallery-soon', 'widget-anim', function(Y) {
-
-  // 'crossframe',
+YUI().use(
+  'node', 
+  'event', 
+  'event-custom', 
+  'transition', 
+  'slider', 'pjax', 
+  'gallery-soon', 
+  'widget-anim', 
+  function(Y) {
 
   'use strict';
 
@@ -224,8 +230,6 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'slider', 'pjax', 'gall
 
       var node = e.content.node;
 
-      console.log(e.content.node)
-
       var toggle = Y.one('.navbar-item .toggle');
 
       var next = Y.one('.navbar-item .next');
@@ -238,6 +242,8 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'slider', 'pjax', 'gall
       try {
 
         if (map) {
+
+          display.setAttribute('data-iiif', map.getAttribute('data-iiif'));
 
           display.setAttribute('data-sequence', map.getAttribute('data-sequence'));
 
@@ -266,7 +272,7 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'slider', 'pjax', 'gall
             uri: map.getAttribute('data-uri'),
           };
 
-          Y.on('available', change_page, '#' + config.id, OpenLayers, config);
+          // Y.on('available', change_page, '#' + config.id, config);
 
           Y.fire('pjax:load:available', config);
 
@@ -308,7 +314,7 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'slider', 'pjax', 'gall
       if (top) {
         top.addClass('hidden');
       }
-      Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-fullscreen:on'}));
+      // Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-fullscreen:on'}));
     }
 
     function fullscreenOff(e) {
@@ -332,19 +338,19 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'slider', 'pjax', 'gall
       if (top) {
         top.removeClass('hidden');
       }
-      Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-fullscreen:off'}));
+      // Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-fullscreen:off'}));
     }
 
     function onButtonMetadataOn(e) {
       this.removeClass('hidden');
       this.ancestor('.pane-body').removeClass('pagemeta-hidden');
-      Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-metadata:on'}));
+      // Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-metadata:on'}));
     }
 
     function onButtonMetadataOff(e) {
       this.addClass('hidden');
       this.ancestor('.pane-body').addClass('pagemeta-hidden');
-      Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-metadata:off'}));
+      // Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-metadata:off'}));
     }
 
     function openLayersTilesLoading() {
@@ -551,7 +557,7 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'slider', 'pjax', 'gall
         window.location.replace(url);
       }
       else {
-        Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'change:option:multivolume', data }));
+        // Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'change:option:multivolume', data }));
       }
     }
 
@@ -560,6 +566,8 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'slider', 'pjax', 'gall
 
     Y.delegate('change', onSelectMVChange, 'body', '.field-name-mv-2016 form');
 
+    var viewer = null;
+
     // Post message to parent frame when "pane display" is available
     // and give access to the node data attributes
     function onDisplayContentReady () {
@@ -567,8 +575,6 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'slider', 'pjax', 'gall
       var displayData = display.getData();
       var iiif = Y.one('.openseadragon');
       var iiifData = iiif.getData();
-
-      console.log(iiifData)
 
       // Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: displayData}));
 
@@ -626,20 +632,36 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'slider', 'pjax', 'gall
     // Options for the observer (which mutations to observe)
     var config = { attributes: true, childList: false, subtree: false };
 
+    function postMessageViewerChange(data) {
+      // Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:change', data: data }));
+      Y.fire('viewer:change', data);
+    }
+
+    var viewer = null;
+
     // Callback function to execute when mutations are observed
     var callback = mutationsList => {
       for (var mutation of mutationsList) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'data-sequence') {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-iiif') {
           var dataset = mutation.target.dataset;
-          console.log(dataset)
-          // var viewer = OpenSeadragon(JSON.parse(dataset.iiif));
-              // viewer.addHandler('open', viewerEventOpen);
-              // viewer.addHandler('add-item', viewerEventAddItem);
+          var conf = {
+            'id': 'openseadragon',
+            'preserveViewport': true,
+             'visibilityRatio': 1,
+             'minZoomLevel': 1,
+             'defaultZoomLevel': 1,
+             'sequenceMode': false,
+             'tileSources': [ JSON.parse(dataset.iiif) ]
+          }
 
-          // Y.on('contentready', function() {
-          //   Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'openlayers:change', data: config }));
-          //   Y.fire('openlayers:change', config);
-          // }, '#' + config.id);
+          viewer.destroy()
+
+          viewer = OpenSeadragon(conf);
+          viewer.addHandler('open', viewerEventOpen);
+
+          Y.on('contentready', function() {
+            postMessageViewerChange(data);
+          }, '#' + config.id);
 
         }
       }

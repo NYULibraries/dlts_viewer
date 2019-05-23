@@ -2,9 +2,9 @@
     <?php if (isset($button_previous)) : ?>
         <?php print $button_previous ?>
     <?php endif; ?>
-    <div id="<?php print $fid ?>"
+    <div id="openseadragon"
          class="dlts_viewer_map"
-         data-iiif="<?php print $iiif ?>"
+         data-iiif='<?php print $iiif ?>'
          data-pageView="<?php print $pageView ?>"
          data-sequenceCount="<?php print $sequence_count ?>"
          data-sequence="<?php print $sequence ?>"
