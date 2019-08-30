@@ -20,7 +20,7 @@ module.exports = exports = class HephaestusCommandExample extends Command {
 
     const prettier = require('prettier');
 
-    let base = read.text(`${appDir()}/ui.components.yui.js`);
+    let base = read.text(`${appDir()}/entrypoint.js`);
 
     [
       { file: `${appDir()}/lib/openseadragon/openseadragon.js`, match: 'hephastusAddLibOpenSeadragon' },
