@@ -6,6 +6,8 @@ const { extname } = require('path');
 
 const { EOL } = require('os');
 
+const prettier = require('prettier');
+
 module.exports = exports = class HephaestusCommandExample extends Command {
 
   get command () {
@@ -17,8 +19,6 @@ module.exports = exports = class HephaestusCommandExample extends Command {
   }
 
   action () {
-
-    const prettier = require('prettier');
 
     let base = read.text(`${appDir()}/entrypoint.js`);
 
