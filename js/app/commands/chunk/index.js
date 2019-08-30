@@ -8,6 +8,8 @@ const { EOL } = require('os');
 
 const prettier = require('prettier');
 
+const babel = require('@babel/core');
+
 module.exports = exports = class HephaestusCommandExample extends Command {
 
   get command () {
@@ -46,7 +48,13 @@ module.exports = exports = class HephaestusCommandExample extends Command {
       base = base.replace(library.match, fnOut);
     });
 
-    write(`${appDir()}/dlts_viewer.js`, prettier.format(base, { semi: true, parser: 'babel' }));
+    const code = prettier.format(base, {
+      semi: true, parser: 'babel'
+    });
+
+    const output = babel.transform(code, { compact: false });
+
+    write(`${appDir()}/dlts_viewer.js`, output.code);
 
   }
 
