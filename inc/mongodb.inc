@@ -4,20 +4,26 @@
  * @file
  * MongoDB.inc
  */
-// $collection_name: dlts_book_page OR dlts_book_stitched_page
+
 function dlts_viewer_mongodb_update_sequence($arguments, $collection_name = 'dlts_books_page') {
-  $cursor = mongodb_collection($collection_name);
-  $data = (array) $arguments;
+
+	$cursor = mongodb_collection($collection_name);
+
+	$data = (array) $arguments;
+
 	// make sure we let MongoDB assing the _id for the document.
   if (isset($data['_id'])) {
     unset($data['_id']);
   }
-  $query = array('sequence' => $data['sequence'], 'isPartOf' => $data['isPartOf']);
-  // Find document and modify
+
+	$query = array('sequence' => $data['sequence'], 'isPartOf' => $data['isPartOf']);
+
+	// Find document and modify
   // See: https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/
   // See: http://php.net/manual/en/mongocollection.findandmodify.php
   $op = $cursor->findAndModify($query, array('$set' => $data), null,  array('sort' => array('rating' => 1), 'upsert' => true, 'new' => true));
-  // We should have the current result document as an associative array.
+
+	// We should have the current result document as an associative array.
   // if NULL, we have a problem, log error.
   if (!$op) {
   	watchdog('MongoDB update document', 'Unable to update book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', array('%identifier' => $arguments['isPartOf'], '%sequence' => $arguments['sequence']), WATCHDOG_ERROR);
@@ -32,24 +38,31 @@ function dlts_viewer_mongodb_new_sequence($arguments, $collection_name = 'dlts_b
 }
 
 function dlts_viewer_mongodb_load_by_identifier($identifier, $collection_name) {
-	die(__FUNCTION__);
     $query = (object) array('identifier' => $identifier);
     $cursor = mongodb_collection($collection_name);
     $result = $cursor->findOne($query);
     return $result;
 }
 
-function dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection_name = 'dlts_books_page') {
-    // make sure we have a number
-    $sequence = (int) $sequence;
-    // prepare query
-    $query = (object) array(
-        'isPartOf' => $isPartOf,
-        'sequence' => $sequence
-    );
-    $cursor = mongodb_collection($collection_name);
-    $result = $cursor->findOne($query);
-    return $result;
+function dlts_viewer_mongodb_load_sequence($sequence, $isPartOf) {
+
+  $collection_name = 'dlts_books_page';
+
+	// make sure we have a number
+  $sequence = (int) $sequence;
+
+	// prepare query
+  $query = (object) array(
+    'isPartOf' => $isPartOf,
+    'sequence' => $sequence
+	);
+
+	$cursor = mongodb_collection($collection_name);
+
+	$result = $cursor->findOne($query);
+
+	return $result;
+
 }
 
 function dlts_viewer_mongodb_load_thumbnails($isPartOf, $page = 0, $per_page = 10, $collection_name =  null, $content_type =  null, $embeded_thumb = false) {

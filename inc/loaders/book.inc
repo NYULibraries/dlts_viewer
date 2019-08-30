@@ -93,7 +93,9 @@ function dlts_book_page_load($sequence) {
 
     // if $result is empty, retrun FALSE so that hook_menu can 404 redirect
     drupal_set_message(t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.', array('@sequence' => $sequence, '@identifier' => $isPartOf)), 'error');
+    
     watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', array('%identifier' => $isPartOf, '%sequence' => $sequence), WATCHDOG_NOTICE);
+    
     return false;
 
 }

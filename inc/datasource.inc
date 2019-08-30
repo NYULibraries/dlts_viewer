@@ -5,17 +5,30 @@
  * Datasource
  */
 
-// @TODO: duplication
-function dlts_viewer_multivolume_book($nid) {
-	$query = new EntityFieldQuery;
-	$result = $query
-	->entityCondition('entity_type', 'node')
-	->entityCondition('bundle', 'dlts_multivol_book')
-	->fieldCondition('field_book', 'nid', $nid, '=')
-	->execute();
-	if (empty($result['node'])) return FALSE;
-	$keys = array_keys($result['node']);
-	return node_load_multiple($keys);
+/**
+ * Undocumented function
+ *
+ * @param string $nid Node id
+ *
+ * @return array
+ */
+function dlts_viewer_multivolume_book($nid)
+{
+    $query = new EntityFieldQuery;
+
+    $result = $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'dlts_multivol_book')
+        ->fieldCondition('field_book', 'nid', $nid, '=')
+        ->execute();
+
+    if (empty($result['node'])) {
+        return FALSE;
+    }
+
+    $keys = array_keys($result['node']);
+
+    return node_load_multiple($keys);
+
 }
 
 function dlts_viewer_is_multivolume_book($entity) {
@@ -34,25 +47,25 @@ function dlts_viewer_is_multivolume_book($entity) {
 }
 
 function dlts_viewer_is_series_book(&$entity) {
-  
+
 	$is_part_of = array();
-	
+
 	$entity->isSeriesBook = false;
-	
+
 	$entity_type = 'node';
-	
+
 	$bundle = 'dlts_series_book';
-	
+
 	$book_nid = $entity->nid;
-	
+
 	$book_entity = $entity;
-	
+
 	$book_wrapper = entity_metadata_wrapper($entity_type, $entity);
-	
+
 	$book_long_title = $book_wrapper->field_title->value();
-	
+
 	$collections = $book_wrapper->field_collection->value(); // multi-value field
-	
+
 	foreach ($collections as $key => $collection) {
 		$collection_wrapper = entity_metadata_wrapper($entity_type, $collection);
 		$collection_label = $collection_wrapper->field_name->value(); // single-value field
@@ -71,24 +84,24 @@ function dlts_viewer_is_series_book(&$entity) {
 				$title = $book_long_title;
 				$series_book_node = node_load($nid);
 				$series_book_wrapper = entity_metadata_wrapper($entity_type, $series_book_node);
-				
+
 				$series = $series_book_wrapper->field_series->value(); // single-value field
-				
+
 				$volume_number = $series_book_wrapper->field_volume_number->value(); // single-value field
-				
+
 				$volume_number_str = $series_book_wrapper->field_volume_number_str->value(); // single-value field
-				
+
 				if (!empty($volume_number_str)) {
 					$title = $book_long_title . ' ' . $volume_number_str;
 				}
 				elseif (!empty($volume_number)) {
 					$title = $book_long_title . ' ' . $volume_number;
 				}
-				
+
 			  $series_wrapper = entity_metadata_wrapper($entity_type, $series);
-			  
+
 			  $series_identifier = $series_wrapper->field_identifier->value();
-				
+
 				$is_part_of[] = array(
 				  'series_identifier' => $series_identifier,
 				  'series' => $series->title,

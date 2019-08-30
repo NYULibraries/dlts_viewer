@@ -69,9 +69,6 @@ function dlts_viewer_book_metadata($book) {
 	module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
   $type = dlts_utilities_content_types_type($book->type);
   $fields = array();
-  $metadata = array();
-  $subjects = array();
-  $collections = array();
   $ewrapper = entity_metadata_wrapper('node', $book);
   foreach ($type['fields'] as $field) {
     $name = str_replace('field_', '', $field['field_name']);

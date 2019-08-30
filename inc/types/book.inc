@@ -98,17 +98,45 @@ function dlts_viewer_full_book_view(&$entity) {
 
     drupal_add_js($yui3, 'external', array('group' => JS_LIBRARY, 'weight' => -100));
 
-    drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
-
-    drupal_add_js($module_path . '/js/modules/slider-base.js', $js_common_config);
-
     // drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
 
-    drupal_add_js($module_path . '/js/ui.components.yui.js', $js_common_config);
-
-    drupal_add_js($module_path . '/js/openseadragon/openseadragon.js', array('group' => JS_LIBRARY, 'weight' => -100));
+    drupal_add_js($module_path . '/js/dlts_viewer.js', $js_common_config);
 
     return node_view($entity, 'metadata', $entity->language);
+
+}
+
+function dlts_viewer_iiif_data ($type, $isPartOf, $sequence = 1) {
+
+  $image_server = variable_get('dlts_viewer_iiif_server', NULL);
+
+  // while I develop
+  if (isset($_SERVER['SERVER_NAME']) && $_SERVER['SERVER_NAME'] == 'viewer.local') {
+    if (isset($_SERVER['REMOTE_ADDR'])) {
+      $image_server = 'http://' . $_SERVER['REMOTE_ADDR'] . ':8182';
+    }
+  }
+
+  $image_server = 'http://3.215.124.212:8182';
+
+  $options = array(
+    'method' => 'GET',
+    'timeout' => 15,
+  );
+
+  $result = dlts_viewer_mongodb_load_sequence($sequence, $isPartOf);
+
+  $image_id = urlencode(str_replace('fileserver://',  '', $result['cm']['uri']));
+
+  $image_metadata_uri = $image_server . '/iiif/2/' . $image_id . '/info.json';
+
+  $response = drupal_http_request($image_metadata_uri, $options);
+
+  if ($response) {
+    if ($response->code == '200' && isset($response->data)) {
+      return drupal_json_decode($response->data);
+    }
+  }
 
 }
 
@@ -142,30 +170,40 @@ function dlts_viewer_pjax_book_view(&$entity) {
         'iiif' => json_encode($entity->book_page_data['iiif']),
         'pageView' => $entity->pageView,
     );
-
     return theme('viewer_page', $vars);
 }
 
 function dlts_viewer_dispatcher($entity, $arg) {
+
     dlts_viewer_resource_language_code($entity);
+
     // test if resource
     $is_resource = dlts_viewer_is_resource();
+
     // check request type
     $is_pjax = dlts_viewer_is_pjax();
+
     // check for mobile devices
     $is_mobile = dlts_viewer_is_mobile();
+
     // get query parameters
     $query_parameters = drupal_get_query_parameters();
+
     // check if this books is part of a multi-volume
     $multivolume_book = dlts_viewer_is_multivolume_book($entity);
+
     // if book is part of multi-volume; use append volume value to entity title
     if ($multivolume_book) {
+
         // wrapp multi-volume entity with Entity API wrapper
         $wrapper = entity_metadata_wrapper('node', $multivolume_book);
+
         // get volume value
         $volume_number_str = $wrapper->field_volume_number_str->value();
         // change entity title
+
         $entity->title = t('@title @volume', array('@title' => $multivolume_book->title, '@volume' => $volume_number_str));
+
     }
 
     // set entity title
@@ -191,19 +229,28 @@ function dlts_viewer_dispatcher($entity, $arg) {
 
     // check for type of request: 1) book page or 2) display pane
     if (!is_array($arg) && $arg == 'display') {
+
         $display_type = 'book_metadata';
+
         if ($is_pjax) {
             $display_type = 'book_metadata_pjax';
         }
+
     } else {
+
         $display_type = 'book_page';
+
         if ($is_pjax) {
             $display_type = 'book_page_pjax';
         }
+
         // we assume single page view
         $is_single_page = true;
+
         $thumbnails_rows_per_page = 10;
+
         $sequence = $arg['sequence'];
+
         if (isset($query_parameters['rows'])) {
             $thumbnails_rows_per_page = filter_xss($query_parameters['rows']);
         }
@@ -221,26 +268,38 @@ function dlts_viewer_dispatcher($entity, $arg) {
             $page = $sequence_max = $sequence_min = $sequence;
             $is_single_page = true;
         }
+
         $sequence_count = $book_wrapper->field_sequence_count->value();
+
         $int_read_order = 0;
+
         if (isset($book_wrapper->field_read_order)) {
             $int_read_order = $book_wrapper->field_read_order->value();
         }
+
         $entity->read_order = ($int_read_order == 1) ? 'rtl' : 'ltr';
+
         $next_page = $sequence_max + 1;
+
         $previous_page = $sequence_min - 1;
+
         $previous_page_active = true;
+
         $next_page_active = true;
+
         if ($previous_page < 1) {
             $previous_page = 1;
         }
+
         if ($next_page > $sequence_count) {
             $next_page = $sequence_count;
             $next_page_active = false;
         }
+
         if ($sequence_max == 1) {
             $previous_page_active = false;
         }
+
         // next page
         $next_pager_side = ($entity->read_order === 'ltr') ? 'pager-right' : 'pager-left';
 
@@ -440,7 +499,7 @@ function _dlts_viewer_book_edit_redirect($node) {
 }
 
 function dlts_viewer_book_metadata_display($node) {
-    return node_view($node , 'metadata' , $node->language);
+    return node_view($node, 'metadata', $node->language);
 }
 
 /**
@@ -462,7 +521,7 @@ function dlts_viewer_load_object($type, $object, $name = null) {
         }
         if (file_exists($document)) {
             $result->document = basename($result->document);
-            $result->created = date('F jS, Y h:i:s A',$result->created);
+            $result->created = date('F jS, Y h:i:s A', $result->created);
             $rows[] = (array) $result;
         }
     }
@@ -485,7 +544,7 @@ function dlts_viewer_load_object($type, $object, $name = null) {
             foreach ($collection as $item) {
                 $collections[] = l($item->title, 'node/' . $item->nid);
             }
-            $rows[] = array($book->nid,$book->title,l($series->title, 'node/' . $series->nid), implode(', ',$collections));
+            $rows[] = array($book->nid,$book->title,l($series->title, 'node/' . $series->nid), implode(', ', $collections));
         }
         $out .= theme('table', array('header' => $header, 'rows' => $rows));
     }

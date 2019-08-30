@@ -45,16 +45,11 @@ include_once 'inc/utils.inc';
  */
 include_once 'inc/themes.inc';
 
-
-function dlts_viewer_init() {
-  drupal_add_http_header('Access-Control-Allow-Origin', '*');
-}
-
 /**
  * Implementation of hook_theme().
  * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_theme/7
  */
-function dlts_viewer_custom_theme() {
+function dlts_viewer_custom_theme () {
   if (dlts_viewer_is_resource()) {
     return 'tao';
   }
@@ -68,7 +63,7 @@ function dlts_viewer_custom_theme() {
 /**
  * Implements hook_permission().
  */
-function dlts_viewer_permission() {
+function dlts_viewer_permission () {
   return array(
     'administer fileserver' => array(
       'title' => t('administer fileserver'),
@@ -81,7 +76,7 @@ function dlts_viewer_permission() {
  * Implements hook_entity_info_alter().
  * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_entity_info_alter/7
  */
-function dlts_viewer_entity_info_alter(&$entity_info) {
+function dlts_viewer_entity_info_alter (&$entity_info) {
   $entity_info['node']['view modes']['metadata'] = array(
     'label' => t('Metadata List'),
     'custom settings' => TRUE,
@@ -92,28 +87,30 @@ function dlts_viewer_entity_info_alter(&$entity_info) {
  * Implements template_preprocess_html
  * https://api.drupal.org/api/drupal/includes%21theme.inc/function/template_preprocess_html/7
  */
-function dlts_viewer_preprocess_html(&$vars) {
-  /**
-   * The X-Frame-Options HTTP response header can be used to indicate whether or not a
-   * browser should be allowed to render a page in a <frame>, <iframe> or <object> .
-   * Sites can use this to avoid clickjacking attacks, by ensuring that their content is
-   * not embedded into other sites.
-   *
-   * The added security is only provided if the user accessing the document is using a
-   * browser supporting X-Frame-Options.
-   *
-   * As of Drupal 7.50, Drupal core sets X-Frame-Options by default to prevent the site
-   * from being embedded in an iframe on another domain. We want our sites to be
-   * embedded; we need to remove this header.
-   *
-   * See: https://www.drupal.org/node/2735873
-   * See: https://www.owasp.org/index.php/Clickjacking
-   * See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
-   *
-   */
-  header_remove('X-Frame-Options');
-  // check if we are in an admin page
+function dlts_viewer_preprocess_html (&$vars) {
+
   if (dlts_viewer_is_resource()) {
+    /**
+     * The X-Frame-Options HTTP response header can be used to indicate whether or not a
+     * browser should be allowed to render a page in a <frame>, <iframe> or <object> .
+     * Sites can use this to avoid clickjacking attacks, by ensuring that their content is
+     * not embedded into other sites.
+     *
+     * The added security is only provided if the user accessing the document is using a
+     * browser supporting X-Frame-Options.
+     *
+     * As of Drupal 7.50, Drupal core sets X-Frame-Options by default to prevent the site
+     * from being embedded in an iframe on another domain. We want our sites to be
+     * embedded; we need to remove this header.
+     *
+     * See: https://www.drupal.org/node/2735873
+     * See: https://www.owasp.org/index.php/Clickjacking
+     * See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+     *
+     */
+    header_remove('X-Frame-Options');
+
+    drupal_add_http_header('Access-Control-Allow-Origin', '*');
     // see html.tpl.php
     $vars['pane_metadata_hidden'] = '';
     /** The Viewer sets language direction in the markup */
@@ -139,11 +136,13 @@ function dlts_viewer_preprocess_html(&$vars) {
 
     // See: https://jira.nyu.edu/jira/browse/DLTSVIEWER-81
     $language_default = language_default();
+
     $vars['resource_language_code'] = $language_default->language;
     // We have access to $resource_language_code in the global context
     // if the resource exist.
     // See: dlts_viewer_dispatcher()
     $resource_language_code = dlts_viewer_resource_language_code();
+
     if ($resource_language_code) {
       $vars['resource_language_code'] = $resource_language_code;
     }
@@ -169,7 +168,7 @@ function dlts_viewer_preprocess_html(&$vars) {
  * Implements hook_process_HOOK
  * https://api.drupal.org/api/drupal/modules%21system%21theme.api.php/function/hook_process_HOOK/7.x
  */
-function dlts_viewer_process_node(&$vars) {
+function dlts_viewer_process_node (&$vars) {
   $function_to_call = __FUNCTION__ . '_' . $vars['node']->type;
   /** Call hook_process_node_TYPE if exist */
   if (function_exists($function_to_call)) {
@@ -181,7 +180,7 @@ function dlts_viewer_process_node(&$vars) {
  * Implements template_preprocess_node().
  * https://api.drupal.org/api/drupal/modules%21node%21node.module/function/template_preprocess_node/7
  */
-function dlts_viewer_preprocess_node(&$vars) {
+function dlts_viewer_preprocess_node (&$vars) {
   $function_to_call = __FUNCTION__ . '_' . $vars['node']->type;
   /** Call hook_process_node_TYPE if exist */
   if (function_exists($function_to_call)) {
@@ -193,7 +192,7 @@ function dlts_viewer_preprocess_node(&$vars) {
  * Implements template_preprocess_page
  * https://api.drupal.org/api/drupal/includes%21theme.inc/function/template_preprocess_page/7
  */
-function dlts_viewer_preprocess_page(&$vars) {
+function dlts_viewer_preprocess_page (&$vars) {
   if (dlts_viewer_is_resource()) {
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     if (dlts_viewer_is_pjax()) {
@@ -206,7 +205,7 @@ function dlts_viewer_preprocess_page(&$vars) {
  * Implements template_process_page().
  * https://api.drupal.org/api/drupal/includes%21theme.inc/function/template_process_page/7
  */
-function dlts_viewer_process_page(&$vars) {
+function dlts_viewer_process_page (&$vars) {
   if (dlts_viewer_is_resource()) {
     $is_embed = dlts_viewer_is_embed();
     $is_pjax = dlts_viewer_is_pjax();
@@ -244,8 +243,7 @@ function dlts_viewer_process_page(&$vars) {
  *
  * @see FileFilesServerStreamWrapper
  */
-function dlts_viewer_stream_wrappers() {
-  // die(__FUNCTION__);
+function dlts_viewer_stream_wrappers () {
   $wrappers = array(
     'fileserver' => array(
       'name' => t('Fileserver StreamWrapper'),
@@ -257,8 +255,7 @@ function dlts_viewer_stream_wrappers() {
   return $wrappers;
 }
 
-function dlts_viewer_metadata_display($node) {
-  die(__FUNCTION__);
+function dlts_viewer_metadata_display ($node) {
 	return node_view($node, 'metadata', $node->language);
 }
 
@@ -270,7 +267,7 @@ function dlts_viewer_metadata_display($node) {
  * interface, go to a different language and in the Drupal admin clear the
  * Drupal cache. (ie, at /admin/config/development/performance
  */
-function dlts_viewer_flush_caches() {
+function dlts_viewer_flush_caches () {
 	// Translatables
 	// Included for use with string extractors like potx.
 	t('Author');
@@ -288,30 +285,11 @@ function dlts_viewer_flush_caches() {
 	t('Vol.');
 }
 
-function dlts_viewer_theme_field($variables) {
-	$dir = dlts_viewer_viewer_language((array)$variables['element']['#object']);
-	$output = '';
-	// Render the label, if it's not hidden.
-	if (!$variables['label_hidden']) {
-		$lang_language = $variables['element']['#object']->language;
-		$label = locale($variables['label'], NULL, $lang_language);
-		$output .= '<div dir="'. $dir .'" class="field-label"' . $variables['title_attributes'] . '>' . $label . ':&nbsp;</div>';
-	}
-	// Render the items.
-	$output .= '<div dir="'. $dir .'" class="field-items"' . $variables['content_attributes'] . 'wq>';
-	foreach ($variables['items'] as $delta => $item) {
-		$classes = 'field-item ' . ($delta % 2 ? 'odd' : 'even');
-		$output .= '<div dir="'. $dir .'" class="' . $classes . '"' . $variables['item_attributes'][$delta] . '>' . drupal_render($item) . '</div>';
-	}
-	$output .= '</div>';
-	// Render the top-level DIV.
-	$output = '<div dir="'. $dir .'" class="' . $variables['classes'] . '"' . $variables['attributes'] . '>' . $output . '</div>';
-	return $output;
-}
-
-// here we need to make sure we delete the record from Apache Solr
-function dlts_viewer_node_delete($node) {
-  die(__FUNCTION__);
+/**
+ * Implements hook_node_delete().
+ * Delete the record from Apache Solr
+ */
+function dlts_viewer_node_delete ($node) {
   $records = db_query("SELECT document from {dlts_viewer_books_json} WHERE nid = :nid", array(":nid" => $node->nid));
   foreach ($records as $record) {
     if (file_exists($record->document)) {
@@ -320,8 +298,3 @@ function dlts_viewer_node_delete($node) {
   }
   db_delete('dlts_viewer_books_json')->condition('nid', $node->nid)->execute();
 }
-
-// OpenSeadragon
-// working with http://vagrantviewer.local/viewer/books/fales_io_book000009/1
-
-// Cantaloupe Image Server 4.1 -> http://127.0.0.1:8182/

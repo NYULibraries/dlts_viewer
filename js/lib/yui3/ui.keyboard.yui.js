@@ -1,12 +1,12 @@
 YUI().use(
-    'node', 
-    'node-event-simulate', 
-    'event', 
+    'node',
+    'node-event-simulate',
+    'event',
     'event-custom', function(Y) {
-    
+
      // https://github.com/RobertWHurst/KeyboardJS
-     // A JavaScript library for binding keyboard combos without the pain of key codes and key combo conflicts.    
-     // version: 2.4.1   
+     // A JavaScript library for binding keyboard combos without the pain of key codes and key combo conflicts.
+     // version: 2.4.1
      !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.keyboardJS=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
           var Keyboard=require("./lib/keyboard"),Locale=require("./lib/locale"),KeyCombo=require("./lib/key-combo"),keyboard=new Keyboard;keyboard.setLocale("us",require("./locales/us")),exports=module.exports=keyboard,exports.Keyboard=Keyboard,exports.Locale=Locale,exports.KeyCombo=KeyCombo;
           },{"./lib/key-combo":2,"./lib/keyboard":3,"./lib/locale":4,"./locales/us":5}],2:[function(require,module,exports){
@@ -23,7 +23,9 @@ YUI().use(
     });
 
     // OpenLayers Map
-    var map = OpenLayers.DLTS.pages[0];
+    // var map = OpenLayers.DLTS.pages[0]; while I develop
+
+    // var map = {}
 
     // The nudge
     var slideFactor = 75;
@@ -52,7 +54,7 @@ YUI().use(
     keyboardJS.bind(['shift + right', 'shift + k'], function() {
       Y.one('a.pager-right').simulate("click");
     });
-  
+
     // shift + left (or shift + j) - load page to the left of this one (previous or next depending on language)
     keyboardJS.bind(['shift + left', 'shift + j'], function() {
       Y.one('a.pager-left').simulate("click");
@@ -60,12 +62,12 @@ YUI().use(
 
     function onHelp (event) {
     }
-  
+
     function onZoom (event) {
       var maxZoom = event.map.resolutions.length - 1;
       var zoomInButton = Y.one('#control-zoom-in .olButton');
-      var zoomOutButton = Y.one('#control-zoom-out .olButton');      
-      
+      var zoomOutButton = Y.one('#control-zoom-out .olButton');
+
       // Check for zoom_out_max class
       if (event.zoom <= 0) {
         zoomOutButton.addClass('zoom_out_max');
@@ -112,9 +114,9 @@ YUI().use(
       Y.fire('toggle:help', map);
     });
 
-    // / spacebar - show/hide metadata panel  
+    // / spacebar - show/hide metadata panel
     keyboardJS.bind(['spacebar'], function() {
-      Y.one('#button-metadata').simulate("click");    
+      Y.one('#button-metadata').simulate("click");
     });
 
     Y.on('viewer:zoom', onZoom);

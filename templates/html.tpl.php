@@ -5,6 +5,11 @@
     <title><?php print $head_title ?></title>
     <?php print $styles ?>
     <?php print $scripts ?>
+    <script>
+    (function (global) {
+      global.DLTS = {};
+    }).call(this, typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
+    </script>
     <!-- Google Tag Manager -->
     <?php // print $google_tag_manager ?>
     <!-- End Google Tag Manager -->
@@ -12,8 +17,8 @@
     <base target="content-frame">
 </head>
 <body class="pane-body openlayers-loading <?php echo $pane_metadata_hidden ?>">
-    <?php print $page_top ?>
-    <?php print $page ?>
-    <?php print $page_bottom ?>
+  <?php print $page_top ?>
+  <?php print $page ?>
+  <?php print $page_bottom ?>
 </body>
 </html>

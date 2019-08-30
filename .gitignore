@@ -9,4 +9,8 @@
 # Ignore editor backup files
 *~
 *#
-#*
+
+.sql
+
+vendor
+node_modules

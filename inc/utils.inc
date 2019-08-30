@@ -310,33 +310,3 @@ function return_nodeid_json($dlts_id, $lang_code = NULL) {
     echo drupal_json_encode($nodeids);
     die;
 }
-
-function return_page_nodeids_json($dlts_id) {
-    // @TODO: broken, we no longer have this content types
-    return;
-    $page_types = array('dlts_book_page', 'dlts_book_stitched_page');
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-        ->propertyCondition('type', $page_types, 'IN')
-        ->fieldCondition('field_is_part_of', 'value', $dlts_id, '=');
-    $result = $query->execute();
-    $nodeids = array();
-    if (isset($result['node'])) {
-        $nodes = node_load_multiple(array_keys($result['node']));
-        foreach ($nodes as $node) {
-            if ($node->type == 'dlts_book_page') {
-                $sequence_number = field_get_items('node',
-                    $node, 'field_sequence_number');
-                $key = $sequence_number[0]['value'];
-            }
-            else {
-                $left_seqnum_value = field_get_items('node', $node, 'field_sequence_number_left');
-                $right_seqnum_value = field_get_items('node', $node, 'field_sequence_number_right');
-                $key = $left_seqnum_value[0]['value'] . "-" . $right_seqnum_value[0]['value'];
-            }
-            $nodeids[$key] = $node->nid;
-        }
-    }
-    drupal_json_output((object) $nodeids);
-    exit;
-}

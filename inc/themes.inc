@@ -2,14 +2,10 @@
 
 /**
  * @file
- * Themes
- */
-
-/**
  * Themes functions
  */
 
- /**
+/**
  * Implements hook_custom_theme().
  * http://api.drupal.org/api/drupal/modules--system--system.api.php/function/hook_custom_theme/7
  */
@@ -175,13 +171,13 @@ function dlts_viewer_theme() {
     );
 }
 
-function dlts_viewer_theme_registry_alter(&$theme_registry) {
+function dlts_viewer_theme_registry_alter (&$theme_registry) {
     if (!empty($theme_registry['field'])) {
         $theme_registry['field']['function'] = 'dlts_viewer_theme_field';
     }
 }
 
-function theme_dlts_viewer_pager_button($variables) {
+function theme_dlts_viewer_pager_button ($variables) {
 
 	$classes = array('paging');
 
@@ -208,7 +204,7 @@ function theme_dlts_viewer_pager_button($variables) {
   return drupal_render($render_array);
 }
 
-function theme_dlts_viewer_navbar_item($variables) {
+function theme_dlts_viewer_navbar_item ($variables) {
     $parts = array('html' => true);
     if (isset($variables['fragment'])) {
         $parts = array_merge($parts, array('fragment' => $variables['fragment']));
@@ -236,7 +232,7 @@ function theme_dlts_viewer_navbar_item($variables) {
  *
  * @ingroup themable
  */
-function theme_dlts_viewer_openlayers_image($variables)
+function theme_dlts_viewer_openlayers_image ($variables)
 {
 
     $file = $variables['file'];
@@ -293,7 +289,7 @@ function theme_dlts_viewer_openlayers_image($variables)
         '@iiif' => json_encode($config)
     );
 
-    return t('<div id="@id" class="openseadragon dlts_image_map dlts_viewer_map" data-iiif="@iiif" data-sequence="@sequence" data-pageView="@pageView" data-thumbnails-url="@thumbnailsUrl" data-thumbnails-rows="@thumbnailsRows" data-thumbnails-page="@thumbnailsPage"></div>', $options);
+    return t('<div id="openseadragon" class="openseadragon dlts_image_map dlts_viewer_map" data-iiif="@iiif" data-sequence="@sequence" data-pageView="@pageView" data-thumbnails-url="@thumbnailsUrl" data-thumbnails-rows="@thumbnailsRows" data-thumbnails-page="@thumbnailsPage"></div>', $options);
 }
 
 /**
@@ -406,4 +402,25 @@ function theme_thumbnails_photo_pager($vars) {
     if ($pager_links) {
         return '<div class="pager clearfix">' . $pager_links . '</div>';
     }
+}
+
+function dlts_viewer_theme_field ($variables) {
+	$dir = dlts_viewer_viewer_language((array)$variables['element']['#object']);
+	$output = '';
+	// Render the label, if it's not hidden.
+	if (!$variables['label_hidden']) {
+		$lang_language = $variables['element']['#object']->language;
+		$label = locale($variables['label'], NULL, $lang_language);
+		$output .= '<div dir="'. $dir .'" class="field-label"' . $variables['title_attributes'] . '>' . $label . ':&nbsp;</div>';
+	}
+	// Render the items.
+	$output .= '<div dir="'. $dir .'" class="field-items"' . $variables['content_attributes'] . 'wq>';
+	foreach ($variables['items'] as $delta => $item) {
+		$classes = 'field-item ' . ($delta % 2 ? 'odd' : 'even');
+		$output .= '<div dir="'. $dir .'" class="' . $classes . '"' . $variables['item_attributes'][$delta] . '>' . drupal_render($item) . '</div>';
+	}
+	$output .= '</div>';
+	// Render the top-level DIV.
+	$output = '<div dir="'. $dir .'" class="' . $variables['classes'] . '"' . $variables['attributes'] . '>' . $output . '</div>';
+	return $output;
 }
