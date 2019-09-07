@@ -47,6 +47,13 @@ function create_dlts_multivol_book($node) {
   if (!empty($node->title)) {
   	// find the max for this field and trunk it
   	$ewrapper->title->set($node->title);
+        $substr_title = $node->title;
+        if (strlen($substr_title) > 255) {
+            //$substr_title = substr($node['entity_title'], 0, 200);
+           $ewrapper->title->set('Title longer that 255 characters');
+        } else {
+           $ewrapper->title->set($substr_title);
+        }
   }
   else {
   	$ewrapper->title->set('Untitled');
