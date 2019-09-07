@@ -234,15 +234,15 @@ function dlts_viewer_free_json_documents_queue($limit = 100) {
 	}
 }
 //function to update book topics from callnumber
-function dlts_viewer_update_book_topic() {
- $result = db_query("SELECT nid,tnid FROM node WHERE type = 'dlts_book'");
+function dlts_viewer_update_book_topic($m=0,$l=300) {
+ $result = db_query("select node.nid,tnid from node,field_data_field_collection where node.nid=field_data_field_collection.entity_id and field_collection_nid in (select nid from node where title='Arabic Collections Online') and type='dlts_book' LIMIT ".$m.",".$l.";");
     foreach ( $result as $record ) {
         $entity = node_load($record->nid);
         $ewrapper = entity_metadata_wrapper('node', $entity);
         $call_number=$ewrapper->field_call_number->value();
         $topic_letter=substr($call_number,0,1);
         $topic=$ewrapper->field_topic->value();
-        if($record->tnid==0) {
+        if($record->tnid==0 || $record->tnid==$record->nid) {
             switch ($topic_letter) {
                 case 'A':
                     if(count($topic)==0) {
@@ -450,24 +450,6 @@ function dlts_viewer_update_book_topic() {
                 case 'N':
                     if(count($topic)==0) {
                         $topic[]='الفنون الجميلة';
-                        $ewrapper->field_topic->set($topic);
-                    }
-                    break;
-                case 'P':
-                    if(count($topic)==0) {
-                        $topic[]='Language and Literature';
-                        $ewrapper->field_topic->set($topic);
-                    }
-                    break;
-                case 'M':
-                    if(count($topic)==0) {
-                        $topic[]='Music and Books on Music';
-                        $ewrapper->field_topic->set($topic);
-                    }
-                    break;
-                case 'N':
-                    if(count($topic)==0) {
-                        $topic[]='اللغات والآداب';
                         $ewrapper->field_topic->set($topic);
                     }
                     break;
