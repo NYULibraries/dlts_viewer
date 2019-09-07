@@ -111,6 +111,19 @@ function dlts_solr_index_book_translations(&$document, &$entity, $entity_type, $
             $document->addField('ss' . $prefix . '_publocation', $publication_location);
         }
         unset($publication_location);
+        /** Topic (field_topic) */
+        /** multi-value field */
+        $topics = $wrapper->field_topic->value();
+        if (!empty($topics)) {
+            foreach ($topics as $topic) {
+                $searchableFields[] =  $topic;
+                $document->addField('sm'.$prefix.'_topic', $topic);
+                $document->addField('tkm'.$prefix.'_topic', $topic);
+                $document->addField('tumar_topic', $topic);
+            }
+        }
+        unset($topics);
+        unset($topic);
       }
     }
   }

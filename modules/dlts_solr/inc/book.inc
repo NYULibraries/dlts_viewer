@@ -528,6 +528,9 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
   	foreach ($topics as $topic) {
   		$searchableFields[] =  $topic;
   		$document->addField('sm_topic', $topic);
+  		$document->addField('tkm_topic', $topic);
+  		$document->addField('tum_topic', str_replace('.','',$topic));
+  		$document->addField('tm_topic', str_replace('.','',$topic));
   	}
   }
   unset($topics);
