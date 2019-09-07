@@ -118,6 +118,8 @@ function dlts_solr_index_book_translations(&$document, &$entity, $entity_type, $
             foreach ($topics as $topic) {
                 $searchableFields[] =  $topic;
                 $document->addField('sm'.$prefix.'_topic', $topic);
+                $document->addField('tkm'.$prefix.'_topic', $topic);
+                $document->addField('tumar_topic', $topic);
             }
         }
         unset($topics);
