@@ -92,7 +92,7 @@ function dlts_viewer_full_book_view(&$entity) {
 }
 
 function dlts_viewer_book_metadata_view($entity) {
-    $element = node_view($entity, 'metadata',$entity->language);
+    $element = node_view($entity, 'metadata', $entity->language);
     return drupal_render($element);
 }
 
@@ -161,6 +161,8 @@ function _language_field(&$entity) {
 }
 
 function dlts_viewer_dispatcher($entity, $arg) {
+    // check if this collection has searchable PDFs
+    $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
     // test if resource
     $is_resource = dlts_viewer_is_resource();
     // check request type
@@ -578,4 +580,3 @@ function dlts_utilities_content_types_type($type) {
     ));
   
   }
-  
