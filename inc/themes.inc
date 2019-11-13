@@ -18,6 +18,14 @@ function dlts_viewer_theme() {
         'dlts_viewer_pager_button' => array(
             'variables' => array(),
         ),
+        'dlts_viewer_field__field_pdf_file' => array(
+          'variables' => array(),
+          'render element' => 'content',
+          'base hook' => 'node',          
+        ),
+        'field__field_pdf_file' => array(
+          'variables' => array(),
+        ),        
         'thumbnails_pager' => array(
             'variables' => array(
                 'tags' => array(),
@@ -170,6 +178,36 @@ function dlts_viewer_theme_registry_alter(&$theme_registry) {
     if (!empty($theme_registry['field'])) {
         $theme_registry['field']['function'] = 'dlts_viewer_theme_field';
     }
+}
+
+function dlts_viewer_theme_field ($variables) {
+
+  $dir = dlts_viewer_viewer_language((array)$variables['element']['#object']);
+    
+  $output = '';
+    
+  // Render the label, if it's not hidden.
+  if (!$variables['label_hidden']) {
+    $lang_language = $variables['element']['#object']->language;
+    $label = locale($variables['label'], NULL, $lang_language);
+    $output .= '<div dir="'. $dir .'" class="field-label"' . $variables['title_attributes'] . '>' . $label . ':&nbsp;</div>';
+  }
+  
+  // Render the items.
+  $output .= '<div dir="'. $dir .'" class="field-items"' . $variables['content_attributes'] . 'wq>';
+  
+  foreach ($variables['items'] as $delta => $item) {
+    $classes = 'field-item ' . ($delta % 2 ? 'odd' : 'even');
+    $output .= '<div dir="'. $dir .'" class="' . $classes . '"' . $variables['item_attributes'][$delta] . '>' . drupal_render($item) . '</div>';
+  }
+
+  $output .= '</div>';
+  
+  // Render the top-level DIV.
+  $output = '<div dir="'. $dir .'" class="' . $variables['classes'] . '"' . $variables['attributes'] . '>' . $output . '</div>';
+  
+  return $output;
+
 }
 
 function theme_dlts_viewer_pager_button($variables) {
@@ -428,4 +466,27 @@ function theme_thumbnails_photo_pager($vars) {
     if ($pager_links) {
         return '<div class="pager clearfix">' . $pager_links . '</div>';
     }
+}
+
+// See ticker https://jira.nyu.edu/jira/browse/DLTSVIEWER-95
+function theme_field__field_pdf_file (&$variables) {
+  
+  $out = '';
+
+  $dir = dlts_viewer_viewer_language((array)$variables['element']['#object']);
+
+  if ($variables['element']['#view_mode'] == 'metadata') {
+    $out .= '<div dir="' . $dir . '" class="field field-name-field-pdf clearfix" style="border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; margin-top: .5em; padding-top: .5em; margin-bottom: .5em; padding-bottom: .5em;">';
+    $out .= '<h4 dir="' . $dir . '" class="title" style="font-weight: bold; margin-bottom: 5px;">Download:</h4>';
+    foreach ($variables['items'] as $key => $item) {
+      $out .= '<div style="margin-bottom: 5px;" dir="' . $dir . '">';
+      $out .= '  <p dir="' . $dir . '" class="label"><i class="far fa-file-pdf"></i> <a href="' . $variables['items'][$key]['#attributes']['href'] . '" class="' . implode(' ', $variables['items'][$key]['#attributes']['class']) . '">' . $variables['items'][$key]['#value'] . ' PDF</a></p>';
+      $out .= '  <p dir="' . $dir . '" style="color: gray; font-size: small;">(searchable)</p>';
+      $out .= '</div>';
+    }
+
+    $out .= '</div>';
+
+    return $out;
+  }
 }
