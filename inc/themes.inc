@@ -476,8 +476,8 @@ function theme_field__field_pdf_file (&$variables) {
   $dir = dlts_viewer_viewer_language((array)$variables['element']['#object']);
 
   if ($variables['element']['#view_mode'] == 'metadata') {
-    $out .= '<div dir="' . $dir . '" class="field field-name-field-pdf clearfix" style="border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; margin-top: .5em; padding-top: .5em; margin-bottom: .5em; padding-bottom: .5em;">';
-    $out .= '<h4 dir="' . $dir . '" class="title" style="font-weight: bold; margin-bottom: 5px;">Download:</h4>';
+    $out .= '<div dir="' . $dir . '" class="field field-name-field-pdf clearfix">';
+    $out .= '<div dir="' . $dir . '" class="field-label">Download:</div>';
     foreach ($variables['items'] as $key => $item) {
       $out .= '<div style="margin-bottom: 5px;" dir="' . $dir . '">';
       $out .= '  <p dir="' . $dir . '" class="label"><i class="far fa-file-pdf"></i> <a href="' . $variables['items'][$key]['#attributes']['href'] . '" class="' . implode(' ', $variables['items'][$key]['#attributes']['class']) . '">' . $variables['items'][$key]['#value'] . ' PDF</a></p>';
