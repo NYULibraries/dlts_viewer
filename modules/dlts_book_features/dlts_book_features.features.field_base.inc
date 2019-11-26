@@ -181,8 +181,11 @@ function dlts_book_features_field_default_field_bases() {
     'settings' => array(
       'entity_translation_sync' => FALSE,
       'referenceable_types' => array(
+        'article' => 0,
         'dlts_book' => 0,
+        'dlts_book_page' => 0,
         'dlts_book_section' => 0,
+        'dlts_book_stitched_page' => 0,
         'dlts_collection' => 'dlts_collection',
         'dlts_map' => 0,
         'dlts_multivol' => 0,
@@ -672,8 +675,11 @@ function dlts_book_features_field_default_field_bases() {
     'settings' => array(
       'entity_translation_sync' => FALSE,
       'referenceable_types' => array(
+        'article' => 0,
         'dlts_book' => 0,
+        'dlts_book_page' => 0,
         'dlts_book_section' => 0,
+        'dlts_book_stitched_page' => 0,
         'dlts_collection' => 0,
         'dlts_map' => 0,
         'dlts_multivol' => 0,
@@ -982,6 +988,32 @@ function dlts_book_features_field_default_field_bases() {
     ),
     'translatable' => 1,
     'type' => 'text_long',
+  );
+
+  // Exported field_base: 'field_searchable_pdf'.
+  $field_bases['field_searchable_pdf'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_searchable_pdf',
+    'indexes' => array(
+      'value' => array(
+        0 => 'value',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'list',
+    'settings' => array(
+      'allowed_values' => array(
+        0 => 0,
+        1 => 1,
+      ),
+      'allowed_values_function' => '',
+      'entity_translation_sync' => FALSE,
+    ),
+    'translatable' => 0,
+    'type' => 'list_boolean',
   );
 
   // Exported field_base: 'field_section_body'.
