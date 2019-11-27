@@ -480,9 +480,9 @@ function theme_field__field_pdf_file (&$variables) {
     $out .= '<div dir="' . $dir . '" class="field-label">Download:</div>';
     foreach ($variables['items'] as $key => $item) {
       $out .= '<div style="margin-bottom: 5px;" dir="' . $dir . '">';
-      $out .= '  <p dir="' . $dir . '" class="label"><i class="far fa-file-pdf"></i> <a href="' . $variables['items'][$key]['#attributes']['href'] . '" class="' . implode(' ', $variables['items'][$key]['#attributes']['class']) . '">' . $variables['items'][$key]['#value'] . ' PDF</a></p>';
+      $out .= '  <div dir="' . $dir . '" class="label"><i class="far fa-file-pdf"></i> <a href="' . $variables['items'][$key]['#attributes']['href'] . '" class="' . implode(' ', $variables['items'][$key]['#attributes']['class']) . '">' . $variables['items'][$key]['#value'] . ' PDF</a></div>';
       if (dlts_viewer_pdf_is_searchable()) {
-        $out .= '  <p dir="' . $dir . '" style="color: gray; font-size: small;">(searchable)</p>';
+        $out .= '  <div dir="' . $dir . '" style="color: gray; font-size: small;">(searchable)</div>';
       }
       $out .= '</div>';
     }
