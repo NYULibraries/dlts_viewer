@@ -42,6 +42,22 @@
       padding-top: .5em;
       margin-bottom: .5em;
       padding-bottom: .5em;
+      div {
+        margin-bottom: 5px;
+      }
+      a:link .is-searchable {
+        margin-top: -5px;
+        color: #474747;
+        font-size: .8rem;
+      }
+      a:hover .is-searchable {
+        color: #952c2f;
+        font-size: .8rem;
+      }
+      .icon {
+        padding-right: 5px;
+        display: inline-block;
+      }
     }
     .field-name-field-subtitle {
       border-bottom: 1px solid #ccc;
