@@ -270,8 +270,8 @@ function dlts_viewer_flush_caches() {
 	t('Provider');
 	t('Permanent link');
 	t('PDF');
-	t('High resolution');
-	t('Low resolution');
+	t('High-resolution');
+	t('Low-resolution');
 	t('Vol.');
 }
 
