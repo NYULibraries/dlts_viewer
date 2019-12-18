@@ -58,15 +58,18 @@
         padding-right: 5px;
         display: inline-block;
       }
+      &[dir="rtl"]{
+         .icon {
+          padding: 0 0 0 5px;   
+        }
+      }
     }
+   
     .field-name-field-subtitle {
-      border-bottom: 1px solid #ccc;
       font-weight: bold;
       font-size: 1.1em;
-
-      // line-height: 1.25;
       margin: .5em 0;
-      padding: 0 0 .5em 0;
+      padding: 0 0;
     }
 
     .field-name-field-rights {
