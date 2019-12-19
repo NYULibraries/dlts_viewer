@@ -92,7 +92,7 @@ function dlts_viewer_full_book_view(&$entity) {
 }
 
 function dlts_viewer_book_metadata_view($entity) {
-    $element = node_view($entity, 'metadata',$entity->language);
+    $element = node_view($entity, 'metadata', $entity->language);
     return drupal_render($element);
 }
 
@@ -161,6 +161,8 @@ function _language_field(&$entity) {
 }
 
 function dlts_viewer_dispatcher($entity, $arg) {
+    // check if this collection has searchable PDFs
+    $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
     // test if resource
     $is_resource = dlts_viewer_is_resource();
     // check request type
@@ -487,3 +489,94 @@ function dlts_viewer_load_object($type, $object, $name = NULL) {
     }
     return $out;
 }
+
+function dlts_utilities_content_types_type($type) {
+    $out = $fields = array();    
+    $content_type = node_type_get_type($type);
+    if (!$content_type) return; 
+    $field_info_instances = field_info_instances('node', $content_type->type);    
+    foreach ($field_info_instances as $field_name => $field_info_instance) {        
+      $info = field_info_field($field_name);        
+      $fields[] = array(
+        'label' => $field_info_instance['label'],
+        'field_name' => $field_info_instance['field_name'],
+        'type' => $field_info_instance['widget']['type'],
+        'cardinality' => (string) $info['cardinality'],
+        'settings' => array(
+          'allowed_values' => isset ($info['settings']['allowed_values']) ? $info['settings']['allowed_values'] : null            
+        ),
+      );          
+    }
+    return array(
+      'typeInfo' => $content_type,
+      'fields' => $fields,
+    );
+  }
+  
+  function _dlts_viewer_book_json ($entity) {
+  
+    header("Access-Control-Allow-Origin: *");
+  
+    header('Content-Type: application/json;charset=utf-8');
+  
+    module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.book');
+      
+    module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
+  
+    // wrapp book entity with Entity API wrapper
+    $book = entity_metadata_wrapper('node', $entity);
+  
+    // book identifier
+    $identifier = $book->field_identifier->value();
+    
+    $title = $entity->title;
+  
+    $type = dlts_utilities_content_types_type($entity->type);
+      
+    $fields = array();
+      
+    foreach ($type['fields'] as $field) {
+      $name = str_replace('field_', '', $field['field_name']);
+      $raw_value = $book->$field['field_name']->value();
+      if ($field['type'] == 'options_buttons') {
+        $value = $field['settings']['allowed_values'][$raw_value];
+      }
+      elseif ($field['type'] == 'link_field' && isset($raw_value['url'] )) {
+        $value = $raw_value['url'];
+      }
+      elseif ($field['type'] == 'file_generic') {
+        $value = array();
+        foreach ((array) $raw_value as $pdf_file) {
+          $value[] = file_create_url($pdf_file['uri']);
+        }
+      }
+      elseif ($field['type'] == 'date_text') {
+        $raw_value['value'];
+      }
+      elseif ($field['type'] == 'image_image') {
+        $value = file_create_url($raw_value['uri']);
+      }
+      elseif ($field['type'] == 'taxonomy_autocomplete') {
+        $value = array();
+        foreach ($raw_value as $taxonomy) {
+          $value[] = $taxonomy->name;
+        }
+      }
+      else {
+        $value = $raw_value;
+      }
+      $fields[$name] = array('label' => $field['label'], 'value' => (array) $value);
+    }
+  
+    echo json_encode(array(
+      'entity_title' => !empty($title) ? $title : $entity->title,
+      'identifier' => $fields['identifier']['value'][0],
+      'entity_path' => url('books/' . $identifier . '/1', array('absolute' => TRUE)),
+      'base_url' => url('', array('absolute' => TRUE)),
+      'entity_language' => $book->language,
+      'entity_status' => $book->status,
+      'entity_type' => $book->type,
+      'metadata' => $fields,
+    ));
+  
+  }
