@@ -16,7 +16,7 @@ function create_dlts_multivol_book($node) {
   	}
   }
 
-  $multivol_book_exist = multivol_book_nid($node->isPartOf[0]->identifier, $node->volume_number);
+  $multivol_book_exist = multivol_book_nid($node->isPartOf[0]->identifier, $node->volume_number, $node->collection[0]->identifier);
 
   if ($multivol_book_exist) {
     // Load the node by NID
