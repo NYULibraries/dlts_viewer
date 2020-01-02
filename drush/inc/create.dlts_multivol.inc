@@ -43,7 +43,6 @@ function create_dlts_multivol($node) {
            $ewrapper->title->set($substr_title);
         }
    }
-  }
   else {
   	$ewrapper->title->set('Untitled');
   }
