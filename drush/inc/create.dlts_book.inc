@@ -273,6 +273,9 @@ function save_dlts_book($node, $language = 'en') {
   if (!empty($node['isbn'])) {
     $ewrapper->field_isbn->set($node['isbn']);
   }
+  if (!empty($node['topic'])) {
+    $ewrapper->field_isbn->set($node['topic']);
+  }
   if (!empty($node['title_long'])) {
     $ewrapper->field_title->set($node['title_long']);
   }
@@ -405,6 +408,7 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
       $multivols =
       $other_versions =
       $isbns =
+      $topics =
       $authors =
       $languages =
       $collections =
@@ -718,6 +722,7 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
       'other_version' => $other_versions,
       'rights' => $rights,
       'isbn' => $isbns,
+      'topic' => $topics,
       'author' => $authors,
       'creator' => $creators,
       'contributor' => $contributors,
