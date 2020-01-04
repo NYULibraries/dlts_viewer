@@ -18,7 +18,7 @@ function create_dlts_series_book($node) {
   	}
   	// @TODO: This looks like a bug ...
   	$series_identifier = $node->isPartOf[0]->identifier;
-  	$exist = series_book_nid($series_identifier, $node->volume_number);
+  	$exist = series_book_nid($node->identifier);
   }
   else {
     $series_nid = series_nid($node->isPartOf->identifier);
@@ -26,7 +26,7 @@ function create_dlts_series_book($node) {
   	  create_dlts_series($node->isPartOf);
   	}
   	$series_identifier = $node->isPartOf->identifier;
-  	$exist = series_book_nid($series_identifier, $node->volume_number, $node->collection[0]->identifier);
+  	$exist = series_book_nid($node->identifier);
   }
 
   if ($exist) {

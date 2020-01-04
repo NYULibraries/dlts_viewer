@@ -22,8 +22,7 @@ function series_book_nid($series_identifier, $volume_page) {
 	$result = $query
 	  ->entityCondition('entity_type', 'node')
 	  ->entityCondition('bundle', 'dlts_series_book')
-	  ->fieldCondition('field_series', 'nid', $series_identifier, '=')
-	  ->fieldCondition('field_volume_number', 'value', $volume_page, '=')
+          ->fieldCondition('field_identifier', 'value', $series_identifier, '=')
 	  ->execute();
 	if (empty($result['node'])) return FALSE;
 	$keys = array_keys($result['node']);
