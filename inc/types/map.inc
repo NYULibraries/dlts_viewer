@@ -232,23 +232,32 @@ function _dlts_viewer_map_json ($entity) {
 
                 foreach ($raw_value as $collection) {
                   $partner_id=$collection->field_partner['und'][0]['nid'];
-                  $partner=node_load($partner_id);
-                  print_r($partner);
-
+                  $col_partner=node_load($partner_id);
                   $value[] =array('title'=>$collection->title,
                                    'identifier'=>$collection->field_identifier['und'][0]['value'],
                                    'code'=>$collection->field_code['und'][0]['value'],
                                    'name'=>$collection->field_name['und'][0]['value'],
                                    'type' => 'dlts_collection',
                                    'language'=> 'und',
-                                   'partner' => array('title'=>$partner->title,
+                                   'partner' => array('title'=>$col_partner->title,
                                        'type'=>'dlts_partner',
                                        'language'=>'und',
-                                       'identifier'=> $partner->field_identifier['und'][0]['value'],
-                                       'code'=>$partner->field_code['und'][0]['value'],
-                                       'name'=>$partner->field_name['und'][0]['value']));
+                                       'identifier'=> $col_partner->field_identifier['und'][0]['value'],
+                                       'code'=>$col_partner->field_code['und'][0]['value'],
+                                       'name'=>$col_partner->field_name['und'][0]['value']));
 
                   }
+            } elseif ($field['label'] == 'Provider') {
+                $value = array();
+                foreach ($raw_value as $partner) {
+                    $value[] =array('title'=>$partner->title,
+                        'identifier'=>$partner->field_identifier['und'][0]['value'],
+                        'code'=>$partner->field_code['und'][0]['value'],
+                        'name'=>$partner->field_name['und'][0]['value'],
+                        'type' => 'dlts_partner',
+                        'language'=> 'und');
+
+                }
             } else {
                 $value = $raw_value;
             }
