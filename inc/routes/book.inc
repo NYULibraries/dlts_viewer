@@ -16,7 +16,7 @@ function _dlts_viewer_menu_book() {
         ),
 
         'books/%dlts_book/json' => array(
-            'title' => 'Edit book',
+            'title' => 'JSON representation of the book',
             'access arguments' => array('access content'),
             'page callback' => '_dlts_viewer_book_json',
             'page arguments' => array(1),

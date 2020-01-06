@@ -184,3 +184,92 @@ function _dlts_viewer_map_edit_redirect($node) {
 function dlts_viewer_map_metadata_display($node) {
     return node_view($node , 'metadata' , $node->language);
 }
+
+function _dlts_viewer_map_json ($entity) {
+
+    header("Access-Control-Allow-Origin: *");
+
+    header('Content-Type: application/json;charset=utf-8');
+
+    module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.book');
+
+    module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
+
+    // wrapp book entity with Entity API wrapper
+    $map = entity_metadata_wrapper('node', $entity);
+
+    // book identifier
+    $identifier = $map->field_identifier->value();
+
+    $title = $entity->title;
+
+    $type = dlts_utilities_content_types_type($entity->type);
+
+    $fields = array();
+
+    foreach ($type['fields'] as $field) {
+        $name = str_replace('field_', '', $field['field_name']);
+        $raw_value = $map->$field['field_name']->value();
+        if ($field['label'] != 'Representative Image') {
+            if ($field['type'] == 'options_buttons') {
+                $value = $field['settings']['allowed_values'][$raw_value];
+            } elseif ($field['type'] == 'link_field' && isset($raw_value['url'])) {
+                $value = $raw_value['url'];
+            } elseif ($field['type'] == 'file_generic') {
+                $value = array();
+                foreach ((array)$raw_value as $pdf_file) {
+                    $value[] = file_create_url($pdf_file['uri']);
+                }
+            } elseif ($field['type'] == 'date_text') {
+                $raw_value['value'];
+            } elseif ($field['type'] == 'taxonomy_autocomplete') {
+                $value = array();
+                foreach ($raw_value as $taxonomy) {
+                    $value[] = $taxonomy->name;
+                }
+            } elseif ($field['label'] == 'Collection') {
+                $value = array();
+
+                foreach ($raw_value as $collection) {
+                  $partner_id=$collection->field_partner['und'][0]['nid'];
+                  $partner=node_load($partner_id);
+                  print_r($partner);
+
+                  $value[] =array('title'=>$collection->title,
+                                   'identifier'=>$collection->field_identifier['und'][0]['value'],
+                                   'code'=>$collection->field_code['und'][0]['value'],
+                                   'name'=>$collection->field_name['und'][0]['value'],
+                                   'type' => 'dlts_collection',
+                                   'language'=> 'und',
+                                   'partner' => array('title'=>$partner->title,
+                                       'type'=>'dlts_partner',
+                                       'language'=>'und',
+                                       'identifier'=> $partner->field_identifier['und'][0]['value'],
+                                       'code'=>$partner->field_code['und'][0]['value'],
+                                       'name'=>$partner->field_name['und'][0]['value']));
+
+                  }
+            } else {
+                $value = $raw_value;
+            }
+            $fields[$name] = array('label' => $field['label'], 'value' => (array)$value);
+        } else {
+            $fields[$name]= array( 'isPartOf' => $identifier,
+                'sequence' => array(1),
+                'realPageNumber' => 1,
+                'cm' => array( 'uri' =>$raw_value['uri']));
+        }
+    }
+
+    echo json_encode(array(
+        'entity_title' => !empty($title) ? $title : $entity->title,
+        'identifier' => $fields['identifier']['value'][0],
+        'entity_path' => url('maps/' . $identifier . '/1', array('absolute' => TRUE)),
+        'base_url' => url('', array('absolute' => TRUE)),
+        'entity_language' => $entity->language,
+        'entity_status' => $map->status,
+        'entity_type' => $map->type,
+        'metadata' => $fields,
+    ));
+
+}

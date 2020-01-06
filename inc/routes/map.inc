@@ -14,6 +14,15 @@ function _dlts_viewer_menu_map() {
             'type' => MENU_CALLBACK,
         ),
 
+        'maps/%dlts_map/json' => array(
+            'title' => 'JSON representation of the book',
+            'access arguments' => array('access content'),
+            'page callback' => '_dlts_viewer_map_json',
+            'page arguments' => array(1),
+            'type' => MENU_CALLBACK,
+        ),
+
+
         'maps/%dlts_map/display' => array(
             'title' => 'Book metadata display',
             'access arguments' => array('access content'),

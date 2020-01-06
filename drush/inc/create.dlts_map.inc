@@ -26,8 +26,10 @@ function save_dlts_map($node, $language = 'en') {
     if ($map_exist) {
         // Load the node by NID
         $entity = node_load($map_exist);
+
         // Wrap it with Entity API
         $ewrapper = entity_metadata_wrapper('node', $entity);
+        print_r($entity);
     }
     else {
         // entity_create replaces the procedural steps in the first example of
@@ -98,7 +100,7 @@ function save_dlts_map($node, $language = 'en') {
         drush_log('Document without identifier', 'error');
         return;
     }
-    // We do not translalete all the values
+    // We do not translate all the values
     if ($node_language == 'en') {
         if (!empty($node['partners']) && is_array($node['partners']) && count($node['partners']) > 0) {
             foreach ($node['partners'] as $partner) {
