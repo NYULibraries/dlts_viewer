@@ -605,8 +605,8 @@ function create_dlts_map_from_json($maps, $cretePages = FALSE, $legacy = FALSE) 
                 $subjects[] = $subject;
             }
         }
-        if (isset($metadata->notes) && !empty($metadata->notes->value)) {
-            foreach ($metadata->notes->value as $note) {
+        if (isset($metadata->notes_field) && !empty($metadata->notes_field->value)) {
+            foreach ($metadata->notes_field->value as $note) {
                 $notes[] = $note;
             }
         }
@@ -615,25 +615,25 @@ function create_dlts_map_from_json($maps, $cretePages = FALSE, $legacy = FALSE) 
             if (!$legacy) {
                 $valid_extensions = array('pdf');
                 foreach ($metadata->pdf_file->value as $pdf_file) {
-                    $pathinfo = pathinfo($pdf_file);
-                    $basename = str_replace('fileserver://', '', $pathinfo['basename']);
-                    $ext = pathinfo($pdf_file, PATHINFO_EXTENSION);
+                    $pdf_file_name=$pdf_file->uri;
+                    $pathinfo = pathinfo($pdf_file_name);
+                    $ext = pathinfo($pdf_file_name, PATHINFO_EXTENSION);
                     // check if we have a fileserver scheme
-                    if (strpos($pdf_file, 'fileserver://') === false) continue;
+                    if (strpos($pdf_file_name, 'fileserver://') === false) continue;
                     // check that the URI is not bigger than the allowed MySQL size for varchar with index
-                    if (strlen($pdf_file) > 255) continue;
+                    if (strlen($pdf_file_name) > 255) continue;
                     // check that the URI contain a file extension
                     if (!$ext) continue;
                     // do we have a valid extension
                     if (!in_array($ext,$valid_extensions)) continue;
-                    if (strpos($pdf_file, '_hi')) {
-                        $pdf_files[] = array('file' => $pdf_file, 'label' => 'High-resolution');
+                    if (strpos($pdf_file_name, '_hi')) {
+                        $pdf_files[] = array('file' => $pdf_file_name, 'label' => 'High-resolution');
                     }
-                    elseif (strpos($pdf_file, '_lo')) {
-                        $pdf_files[] = array('file' => $pdf_file, 'label' => 'Low-resolution');
+                    elseif (strpos($pdf_file_name, '_lo')) {
+                        $pdf_files[] = array('file' => $pdf_file_name, 'label' => 'Low-resolution');
                     }
                     else {
-                        $pdf_files[] = array('file' => $pdf_file);
+                        $pdf_files[] = array('file' => $pdf_file_name);
                     }
                 }
             }
