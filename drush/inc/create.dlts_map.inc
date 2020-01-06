@@ -29,7 +29,6 @@ function save_dlts_map($node, $language = 'en') {
 
         // Wrap it with Entity API
         $ewrapper = entity_metadata_wrapper('node', $entity);
-        print_r($entity);
     }
     else {
         // entity_create replaces the procedural steps in the first example of
