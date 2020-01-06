@@ -9,20 +9,15 @@
  * @TODO: Support for fields: publication_date, geographic_coordinates, geographic_subject
  */
 function save_dlts_book($node, $language = 'en') {
-
-	// Get the current user
+  // Get the current user
   // --user=uid OR --user=1 for super user
 	global $user;
-
   $node_language = (isset($node['entity_language']) ? $node['entity_language'] : $language);
-
   /** force EN language */
   if ($node_language == LANGUAGE_NONE) {
   	$node_language = 'en';
   }
-
   $book_exist = book_nid($node['identifier'], $node_language);
-
   if ($book_exist) {
     // Load the node by NID
     $entity = node_load($book_exist);
@@ -273,9 +268,6 @@ function save_dlts_book($node, $language = 'en') {
   if (!empty($node['isbn'])) {
     $ewrapper->field_isbn->set($node['isbn']);
   }
-  if (!empty($node['topic'])) {
-    $ewrapper->field_topic->set($node['topic']);
-  }
   if (!empty($node['title_long'])) {
     $ewrapper->field_title->set($node['title_long']);
   }
@@ -379,9 +371,7 @@ function save_dlts_book($node, $language = 'en') {
   	  }
     }
   }
-
   return $entity;
-
 }
 
 function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE) {
@@ -390,7 +380,6 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
   foreach ($books as $value) {
   	if (!file_exists($value->uri)) continue;
   	$json_document = $value->uri;
-		$json_filename = $value->filename;
   	$dimensions =
   	  $number =
   	  $scanning_notes =
@@ -408,7 +397,6 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
       $multivols =
       $other_versions =
       $isbns =
-      $topics =
       $authors =
       $languages =
       $collections =
@@ -425,14 +413,10 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
     $json_string = str_replace(array('\r', '\n'), '', $json_string);
     $data = json_decode($json_string);
     $entity_title = $data->entity_title;
-
     drush_log(dt('Importing @title from JSON document @document',array('@title'=>$entity_title, '@document'=>basename ($value->uri))), 'ok');
-
     $entity_language = $data->entity_language;
-
-		$entity_identifier = $data->identifier;
-
-		if (!isset($data->metadata)) {
+    $entity_identifier = $data->identifier;
+    if (!isset($data->metadata)) {
     	$metadata = (object) array();
     }
     else {
@@ -539,10 +523,10 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
     		$scan_order = $scan_order_raw;
     	}
     	else {
-    		if ($read_order_raw == 'Right to left') {
+    		if ($scan_order_raw == "Right to left") {
     			$scan_order = 1;
     		}
-    		else if ($read_order_raw == 'Left to right') {
+    		else if ($scan_order_raw == "Left to right") {
     			$scan_order = 0;
     		}
     	}
@@ -658,10 +642,10 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
       	  // do we have a valid extension
       	  if (!in_array($ext,$valid_extensions)) continue;
       	  if (strpos($pdf_file, '_hi')) {
-      		$pdf_files[] = array('file' => $pdf_file, 'label' => 'High-resolution');
+      		$pdf_files[] = array('file' => $pdf_file, 'label' => 'High resolution');
       	  }
       	  elseif (strpos($pdf_file, '_lo')) {
-      		$pdf_files[] = array('file' => $pdf_file, 'label' => 'Low-resolution');
+      		$pdf_files[] = array('file' => $pdf_file, 'label' => 'Low resolution');
       	  }
       	  else {
       		$pdf_files[] = array('file' => $pdf_file);
@@ -674,10 +658,10 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
       	  // check that the URI is not bigger than the allowed MySQL size for varchar with index
       	  if (strlen($pdf_uri) > 255) continue;
       	  if (strpos($pdf_uri, '_hi')) {
-      	  	$pdf_files[] = array('file' => $pdf_uri, 'label' => 'High-resolution');
+      	  	$pdf_files[] = array('file' => $pdf_uri, 'label' => 'High resolution');
       	  }
       	  elseif (strpos($pdf_uri, '_lo')) {
-      	  	$pdf_files[] = array('file' => $pdf_uri, 'label' => 'Low-resolution');
+      	  	$pdf_files[] = array('file' => $pdf_uri, 'label' => 'Low resolution');
       	  }
       	  else {
       	  	$pdf_files[] = array('file' => $pdf_uri);
@@ -722,7 +706,6 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
       'other_version' => $other_versions,
       'rights' => $rights,
       'isbn' => $isbns,
-      'topic' => $topics,
       'author' => $authors,
       'creator' => $creators,
       'contributor' => $contributors,
@@ -736,33 +719,7 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
       'series' => $series,
     	'json_document' => $json_document,
     );
-
     $created = save_dlts_book($node);
-
-		$filesdir = drupal_realpath('public://') . '/json/' . $json_filename;
-
-    $record = db_query("SELECT identifier from {dlts_viewer_books_json} WHERE identifier = :identifier LIMIT 1", array(":identifier" => $entity_identifier))->fetchField();
-
-    $dir = drupal_realpath('public://') . '/json';
-
-		$isdirready = file_prepare_directory($dir, 775);
-
-		$document = file_unmanaged_save_data($json_string, $filesdir);
-
-		if ($created) {
-	    db_insert('dlts_viewer_books_json')->fields(array(
-				'nid' => $created->nid,
-				'hash' => $created->changed,
-				'identifier' => $entity_identifier,
-				'document'=> $document,
-				'language' => $created->language,
-				'proceed' => 1,
-				'created' => $created->created,
-				'changed' => $created->changed,
-				)
-			)->execute();
-		}
-
     if ($cretePages && $created && isset($created->nid)) {
    	  // we only create pages for books with languages English or Undetermined
    	  if ($entity_language == 'en' || $entity_language == LANGUAGE_NONE) {
