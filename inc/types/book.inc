@@ -536,37 +536,36 @@ function dlts_utilities_content_types_type($type) {
     $fields = array();
       
     foreach ($type['fields'] as $field) {
-      $name = str_replace('field_', '', $field['field_name']);
-      $raw_value = $book->$field['field_name']->value();
-      if ($field['type'] == 'options_buttons') {
-        $value = $field['settings']['allowed_values'][$raw_value];
-      }
-      elseif ($field['type'] == 'link_field' && isset($raw_value['url'] )) {
-        $value = $raw_value['url'];
-      }
-      elseif ($field['type'] == 'file_generic') {
-        $value = array();
-        foreach ((array) $raw_value as $pdf_file) {
-          $value[] = file_create_url($pdf_file['uri']);
+        $name = str_replace('field_', '', $field['field_name']);
+        $raw_value = $book->$field['field_name']->value();
+        if ($field['label'] != 'Representative Image') {
+            if ($field['type'] == 'options_buttons') {
+                $value = $field['settings']['allowed_values'][$raw_value];
+            } elseif ($field['type'] == 'link_field' && isset($raw_value['url'])) {
+                $value = $raw_value['url'];
+            } elseif ($field['type'] == 'file_generic') {
+                $value = array();
+                foreach ((array)$raw_value as $pdf_file) {
+                    $value[] = file_create_url($pdf_file['uri']);
+                }
+            } elseif ($field['type'] == 'date_text') {
+                $raw_value['value'];
+            } elseif ($field['type'] == 'taxonomy_autocomplete') {
+                $value = array();
+                foreach ($raw_value as $taxonomy) {
+                    $value[] = $taxonomy->name;
+                }
+            } else {
+                $value = $raw_value;
+            }
+            $fields[$name] = array('label' => $field['label'], 'value' => (array)$value);
+        } else {
+            $fields[$name]= array( 'isPartOf' => $identifier,
+                'sequence' => array(1),
+                'realPageNumber' => 1,
+                'cm' => array( 'uri' =>$raw_value['uri']));
         }
       }
-      elseif ($field['type'] == 'date_text') {
-        $raw_value['value'];
-      }
-      elseif ($field['type'] == 'image_image') {
-        $value = file_create_url($raw_value['uri']);
-      }
-      elseif ($field['type'] == 'taxonomy_autocomplete') {
-        $value = array();
-        foreach ($raw_value as $taxonomy) {
-          $value[] = $taxonomy->name;
-        }
-      }
-      else {
-        $value = $raw_value;
-      }
-      $fields[$name] = array('label' => $field['label'], 'value' => (array) $value);
-    }
   
     echo json_encode(array(
       'entity_title' => !empty($title) ? $title : $entity->title,
