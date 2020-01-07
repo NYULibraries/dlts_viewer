@@ -74,6 +74,7 @@ function save_dlts_book($node, $language = 'en') {
     $ewrapper = entity_metadata_wrapper('node', $entity);
   }
   $collections_nids = $subjects = array();
+  print_r($node);
   if (!empty($node['entity_title'])) {
   	$node['entity_title'] = trim($node['entity_title']);
   	$substr_title = $node['entity_title'];
