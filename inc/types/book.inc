@@ -555,6 +555,37 @@ function dlts_utilities_content_types_type($type) {
                 foreach ($raw_value as $taxonomy) {
                     $value[] = $taxonomy->name;
                 }
+            } elseif ($field['label'] == 'Collection') {
+                $value = array();
+
+                foreach ($raw_value as $collection) {
+                    $partner_id=$collection->field_partner['und'][0]['nid'];
+                    $col_partner=node_load($partner_id);
+                    $value[] =array('title'=>$collection->title,
+                        'identifier'=>$collection->field_identifier['und'][0]['value'],
+                        'code'=>$collection->field_code['und'][0]['value'],
+                        'name'=>$collection->field_name['und'][0]['value'],
+                        'type' => 'dlts_collection',
+                        'language'=> 'und',
+                        'partner' => array('title'=>$col_partner->title,
+                            'type'=>'dlts_partner',
+                            'language'=>'und',
+                            'identifier'=> $col_partner->field_identifier['und'][0]['value'],
+                            'code'=>$col_partner->field_code['und'][0]['value'],
+                            'name'=>$col_partner->field_name['und'][0]['value']));
+
+                }
+            } elseif ($field['label'] == 'Provider') {
+                $value = array();
+                foreach ($raw_value as $partner) {
+                    $value[] =array('title'=>$partner->title,
+                        'identifier'=>$partner->field_identifier['und'][0]['value'],
+                        'code'=>$partner->field_code['und'][0]['value'],
+                        'name'=>$partner->field_name['und'][0]['value'],
+                        'type' => 'dlts_partner',
+                        'language'=> 'und');
+
+                }
             } else {
                 $value = $raw_value;
             }
@@ -569,12 +600,12 @@ function dlts_utilities_content_types_type($type) {
   
     echo json_encode(array(
       'entity_title' => !empty($title) ? $title : $entity->title,
-      'identifier' => $fields['identifier']['value'][0],
+      'identifier' => $identifier,
       'entity_path' => url('books/' . $identifier . '/1', array('absolute' => TRUE)),
       'base_url' => url('', array('absolute' => TRUE)),
-      'entity_language' => $book->language,
-      'entity_status' => $book->status,
-      'entity_type' => $book->type,
+      'entity_language' =>  $entity->language,
+      'entity_status' => $entity->status,
+      'entity_type' => $entity->type,
       'metadata' => $fields,
     ));
   

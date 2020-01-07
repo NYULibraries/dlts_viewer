@@ -198,7 +198,7 @@ function _dlts_viewer_map_json ($entity) {
     // wrapp book entity with Entity API wrapper
     $map = entity_metadata_wrapper('node', $entity);
 
-    // book identifier
+    // map identifier
     $identifier = $map->field_identifier->value();
 
     $title = $entity->title;
@@ -272,12 +272,12 @@ function _dlts_viewer_map_json ($entity) {
 
     echo json_encode(array(
         'entity_title' => !empty($title) ? $title : $entity->title,
-        'identifier' => $fields['identifier']['value'][0],
+        'identifier' => $identifier,
         'entity_path' => url('maps/' . $identifier . '/1', array('absolute' => TRUE)),
         'base_url' => url('', array('absolute' => TRUE)),
         'entity_language' => $entity->language,
-        'entity_status' => $map->status,
-        'entity_type' => $map->type,
+        'entity_status' => $entity->status,
+        'entity_type' => $entity->type,
         'metadata' => $fields,
     ));
 
