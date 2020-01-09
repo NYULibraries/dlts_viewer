@@ -534,6 +534,8 @@ function dlts_utilities_content_types_type($type) {
     $type = dlts_utilities_content_types_type($entity->type);
       
     $fields = array();
+
+    $pages = array();
       
     foreach ($type['fields'] as $field) {
         $name = str_replace('field_', '', $field['field_name']);
@@ -597,8 +599,27 @@ function dlts_utilities_content_types_type($type) {
                 'cm' => array( 'uri' =>$raw_value['uri']));
         }
       }
-  
-    echo json_encode(array(
+
+      $page_count=$entity->field_page_count['en'][0]['value'];
+
+      if($page_count!=null&&!empty($page_count)) {
+          for ($i=1; $i<=$page_count; $i++)  {
+              $page_raw = dlts_viewer_mongodb_load_sequence($i, $identifier);
+              $page = array(
+                  'sequence' => $page_raw['sequence'],
+                  'uri' => ($page_raw['cm']['uri']),
+                  'width' => $page_raw['cm']['width'],
+                  'height' => $page_raw['cm']['height'],
+                  'levels' => $page_raw['cm']['levels'],
+                  'dwtLevels' => $page_raw['cm']['dwtLevels'],
+                  'compositingLayerCount' => $page_raw['cm']['compositingLayerCount'],
+                  'timestamp' => $page_raw['cm']['timestamp'],
+              );
+              $pages[] = $page;
+          }
+      }
+
+      echo json_encode(array(
       'entity_title' => !empty($title) ? $title : $entity->title,
       'identifier' => $identifier,
       'entity_path' => url('books/' . $identifier . '/1', array('absolute' => TRUE)),
@@ -607,6 +628,7 @@ function dlts_utilities_content_types_type($type) {
       'entity_status' => $entity->status,
       'entity_type' => $entity->type,
       'metadata' => $fields,
+      'pages'=> $pages
     ));
   
   }
