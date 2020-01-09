@@ -195,6 +195,8 @@ function _dlts_viewer_map_json ($entity) {
 
     module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
 
+    module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
+
     // wrapp book entity with Entity API wrapper
     $map = entity_metadata_wrapper('node', $entity);
 
@@ -207,6 +209,8 @@ function _dlts_viewer_map_json ($entity) {
 
     $fields = array();
 
+    $pages = array();
+
     foreach ($type['fields'] as $field) {
         $name = str_replace('field_', '', $field['field_name']);
         $raw_value = $map->$field['field_name']->value();
@@ -215,10 +219,10 @@ function _dlts_viewer_map_json ($entity) {
                 $value = $field['settings']['allowed_values'][$raw_value];
             } elseif ($field['type'] == 'link_field' && isset($raw_value['url'])) {
                 $value = $raw_value['url'];
-            } elseif ($field['type'] == 'file_generic') {
+            } elseif ($field['type'] == 'field_fileserver_link') {
                 $value = array();
                 foreach ((array)$raw_value as $pdf_file) {
-                    $value[] = file_create_url($pdf_file['uri']);
+                    $value[] = ($pdf_file['uri']);
                 }
             } elseif ($field['type'] == 'date_text') {
                 $raw_value['value'];
@@ -270,6 +274,25 @@ function _dlts_viewer_map_json ($entity) {
         }
     }
 
+    $page_count=$entity->field_page_count['en'][0]['value'];
+
+    if($page_count!=null&&!empty($page_count)) {
+        for ($i=1; $i<=$page_count; $i++)  {
+            $page_raw = dlts_viewer_mongodb_load_sequence($i, $identifier, 'dlts_map_page');
+            $page = array(
+                'sequence' => $page_raw['sequence'],
+                'uri' => ($page_raw['cm']['uri']),
+                'width' => $page_raw['cm']['width'],
+                'height' => $page_raw['cm']['height'],
+                'levels' => $page_raw['cm']['levels'],
+                'dwtLevels' => $page_raw['cm']['dwtLevels'],
+                'compositingLayerCount' => $page_raw['cm']['compositingLayerCount'],
+                'timestamp' => $page_raw['cm']['timestamp'],
+            );
+            $pages[] = $page;
+        }
+    }
+
     echo json_encode(array(
         'entity_title' => !empty($title) ? $title : $entity->title,
         'identifier' => $identifier,
@@ -279,6 +302,7 @@ function _dlts_viewer_map_json ($entity) {
         'entity_status' => $entity->status,
         'entity_type' => $entity->type,
         'metadata' => $fields,
+        'pages' => $pages
     ));
 
 }
