@@ -513,7 +513,7 @@ function dlts_utilities_content_types_type($type) {
     );
   }
   
-  function _dlts_viewer_book_json ($entity) {
+  function _dlts_viewer_book_json ($entity,$add_pages=TRUE ) {
   
     header("Access-Control-Allow-Origin: *");
   
@@ -600,35 +600,36 @@ function dlts_utilities_content_types_type($type) {
         }
       }
 
-      $page_count=$entity->field_page_count['en'][0]['value'];
 
-      if($page_count!=null&&!empty($page_count)) {
-          for ($i=1; $i<=$page_count; $i++)  {
-              $page_raw = dlts_viewer_mongodb_load_sequence($i, $identifier);
-              $page = array(
-                  'sequence' => $page_raw['sequence'],
-                  'uri' => ($page_raw['cm']['uri']),
-                  'width' => $page_raw['cm']['width'],
-                  'height' => $page_raw['cm']['height'],
-                  'levels' => $page_raw['cm']['levels'],
-                  'dwtLevels' => $page_raw['cm']['dwtLevels'],
-                  'compositingLayerCount' => $page_raw['cm']['compositingLayerCount'],
-                  'timestamp' => $page_raw['cm']['timestamp'],
-              );
-              $pages[] = $page;
+          if($add_pages) {
+              $pages_raw = dlts_viewer_mongodb_load_by_item_identifier( $identifier, 'dlts_books_page');
+              foreach($pages_raw as $page_raw) {
+                  $page = array (page =>array('isPartOf'=>$identifier,
+                      'realPageNumber'=> $page_raw['realPageNumber'],
+                      'sequence' => $page_raw['sequence'],
+                       cm=>array(
+                          'uri' => ($page_raw['cm']['uri']),
+                          'width' => $page_raw['cm']['width'],
+                          'height' => $page_raw['cm']['height'],
+                          'levels' => $page_raw['cm']['levels'],
+                          'dwtLevels' => $page_raw['cm']['dwtLevels'],
+                          'compositingLayerCount' => $page_raw['cm']['compositingLayerCount'],
+                          'timestamp' => $page_raw['cm']['timestamp'],
+                      )));
+                  $pages[] = $page;
+              }
           }
-      }
 
       echo json_encode(array(
-      'entity_title' => !empty($title) ? $title : $entity->title,
-      'identifier' => $identifier,
-      'entity_path' => url('books/' . $identifier . '/1', array('absolute' => TRUE)),
-      'base_url' => url('', array('absolute' => TRUE)),
-      'entity_language' =>  $entity->language,
-      'entity_status' => $entity->status,
-      'entity_type' => $entity->type,
-      'metadata' => $fields,
-      'pages'=> $pages
-    ));
+          'entity_title' => !empty($title) ? $title : $entity->title,
+          'identifier' => $identifier,
+          'entity_path' => url('books/' . $identifier . '/1', array('absolute' => TRUE)),
+          'base_url' => url('', array('absolute' => TRUE)),
+          'entity_language' =>  $entity->language,
+          'entity_status' => $entity->status,
+          'entity_type' => $entity->type,
+          'metadata' => $fields,
+          'pages'=> $pages
+      ));
   
   }
