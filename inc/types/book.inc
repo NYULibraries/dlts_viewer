@@ -545,10 +545,10 @@ function dlts_utilities_content_types_type($type) {
                 $value = $field['settings']['allowed_values'][$raw_value];
             } elseif ($field['type'] == 'link_field' && isset($raw_value['url'])) {
                 $value = $raw_value['url'];
-            } elseif ($field['type'] == 'file_generic') {
+            } elseif ($field['type'] == 'field_fileserver_link') {
                 $value = array();
                 foreach ((array)$raw_value as $pdf_file) {
-                    $value[] = file_create_url($pdf_file['uri']);
+                    $value[] = ($pdf_file['uri']);
                 }
             } elseif ($field['type'] == 'date_text') {
                 $raw_value['value'];
