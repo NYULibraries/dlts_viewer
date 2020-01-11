@@ -136,10 +136,10 @@ function save_dlts_book($node, $language = 'en') {
   		$ewrapper->field_handle->set(array('url' => $node['handle']));
   	}
   	if (!empty($node['binding_orientation'])) {
-  		$ewrapper->field_binding_orientation->set((int)$node['binding_orientation']);
+  		$ewrapper->field_binding_orientation->set($node['binding_orientation'][0]);
   	}
   	if (!empty($node['scan_order'])) {
-  		$ewrapper->field_scan_order->set((int)$node['scan_order']);
+  		$ewrapper->field_scan_order->set($node['scan_order'][0]);
   	}
   	if (!empty($node['page_count'])) {
   		$ewrapper->field_page_count->set((int)$node['page_count']);
@@ -237,7 +237,7 @@ function save_dlts_book($node, $language = 'en') {
   	  }
   	  $field_read_order = $source_node_ewrapper->field_read_order->value();
   	  if (!empty($field_read_order)) {
-  	  	$ewrapper->field_read_order->set((int)($field_read_order));
+  	  	$ewrapper->field_read_order->set($field_read_order);
   	  }
   	  $field_number = $source_node_ewrapper->field_number->value();
   	  if (!empty($field_number)) {
@@ -491,11 +491,11 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
     }
     if (isset($metadata->binding_orientation) && !empty($metadata->binding_orientation->value)) {
     	$binding_orientation_raw = $metadata->binding_orientation->value[0];
-    		if ($binding_orientation_raw == 'Horizontal'|| $binding_orientation_raw == '0') {
-    			$binding_orientation = 0;
+    		if ($binding_orientation_raw == 'Horizontal'|| $binding_orientation_raw == '1') {
+    			$binding_orientation[] = 1;
     		}
-    		else if ($binding_orientation_raw == 'Vertical'|| $binding_orientation_raw == '1') {
-    			$binding_orientation = 1;
+    		else if ($binding_orientation_raw == 'Vertical'|| $binding_orientation_raw == '0') {
+    			$binding_orientation[] = 0;
     		}
     }
     if (isset($metadata->read_order) && !empty($metadata->read_order->value)) {
@@ -511,10 +511,10 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
     if (isset($metadata->scan_order) && !empty($metadata->scan_order->value)) {
     	$scan_order_raw = $metadata->scan_order->value[0];
     		if ($scan_order_raw =='Right to left'|| $scan_order_raw == '1') {
-    			$scan_order = 1;
+    			$scan_order[] = 1;
     		}
     		else if ($scan_order_raw =='Left to right'|| $scan_order_raw == '0') {
-                $scan_order = 0;
+                $scan_order[] = 0;
             }
     }
     if (isset($metadata->scanning_notes) && !empty($metadata->scanning_notes->value)) {
@@ -680,7 +680,7 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
       'language_code' => $language_codes,
       'language' => $languages,
       'number' => $number,
-        'read_order' => $read_order,
+      'read_order' => $read_order,
       'scan_order' => $scan_order,
       'scanning_notes' => $scanning_notes,
       'volume' => $volume,
