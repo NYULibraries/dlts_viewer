@@ -533,13 +533,18 @@ function dlts_utilities_content_types_type($type) {
   
     $type = dlts_utilities_content_types_type($entity->type);
       
-    $fields = array();
-
+    $fields =
+    $series =
+    $volume =
     $pages = array();
+
+    $multivolume_books = dlts_viewer_multivolume_book($entity->nid);
+    $series_books = dlts_viewer_series_book($entity->nid);
       
     foreach ($type['fields'] as $field) {
         $name = str_replace('field_', '', $field['field_name']);
         $raw_value = $book->$field['field_name']->value();
+
         if ($field['label'] != 'Representative Image') {
             if ($field['type'] == 'options_buttons') {
                 $value = $field['settings']['allowed_values'][$raw_value];
@@ -561,20 +566,38 @@ function dlts_utilities_content_types_type($type) {
                 $value = array();
 
                 foreach ($raw_value as $collection) {
-                    $partner_id=$collection->field_partner['und'][0]['nid'];
-                    $col_partner=node_load($partner_id);
-                    $value[] =array('title'=>$collection->title,
-                        'identifier'=>$collection->field_identifier['und'][0]['value'],
-                        'code'=>$collection->field_code['und'][0]['value'],
-                        'name'=>$collection->field_name['und'][0]['value'],
-                        'type' => 'dlts_collection',
-                        'language'=> 'und',
-                        'partner' => array('title'=>$col_partner->title,
-                            'type'=>'dlts_partner',
-                            'language'=>'und',
-                            'identifier'=> $col_partner->field_identifier['und'][0]['value'],
-                            'code'=>$col_partner->field_code['und'][0]['value'],
-                            'name'=>$col_partner->field_name['und'][0]['value']));
+
+                    $value[] = dlts_viewer_collection_json($collection);
+
+                    if (!empty($multivolume_books)) {
+                        foreach ($multivolume_books as $multivolume_book) {
+                            $multivol_wrapper = entity_metadata_wrapper('node', $multivolume_book);
+                            $parent_multivolume = $multivol_wrapper->field_multivol->value();
+                            $volume = array( 'volume'=>array(array('identifier'=>$multivolume_book->field_identifier['und'][0]['value'],
+                                'volume_number' =>  $multivolume_book->field_volume_number['und'][0]['value'],
+                                'volume_number_str' =>  $multivolume_book->field_volume_number_str['und'][0]['value'],
+                                 'collection' => dlts_viewer_collection_json($collection),
+                                 'isPartOf'=> array('title'=>$parent_multivolume->title,'type'=>'dlts_multivol','language'=>'und',
+                                 'identifier'=>$parent_multivolume->field_identifier['und'][0]['value'],'ri'=>null))));
+                        }
+                    }
+
+
+
+                    if (!empty($series_books)) {
+                        foreach ($series_books as $series_book) {
+                            $series_wrapper = entity_metadata_wrapper('node', $series_book);
+                            $parent_series = $series_wrapper->field_series->value();
+                            $series[] = array('identifier'=>$series_book->field_identifier['und'][0]['value'],
+                                'type' => 'dlts_series_book',
+                                'title'=> $series_book->title,
+                                'volume_number' =>  $series_book->field_volume_number['und'][0]['value'],
+                                'volume_number_str' =>  $series_book->field_volume_number_str['und'][0]['value'],
+                                'collection' => dlts_viewer_collection_json($collection),
+                                'isPartOf'=> array('title'=>$parent_series->title,'type'=>'dlts_series','language'=>'und',
+                                    'identifier'=>$parent_series->field_identifier['und'][0]['value'],'ri'=>null));
+                        }
+                    }
 
                 }
             } elseif ($field['label'] == 'Provider') {
@@ -629,7 +652,31 @@ function dlts_utilities_content_types_type($type) {
           'entity_status' => $entity->status,
           'entity_type' => $entity->type,
           'metadata' => $fields,
+          'series' => $series,
+          'multivolume' => $volume,
           'pages'=> $pages
       ));
-  
+
   }
+
+  function dlts_viewer_collection_json($collection)
+  {
+         $partner_id = $collection->field_partner['und'][0]['nid'];
+          $col_partner = node_load($partner_id);
+          $value = array('title' => $collection->title,
+              'identifier' => $collection->field_identifier['und'][0]['value'],
+              'code' => $collection->field_code['und'][0]['value'],
+              'name' => $collection->field_name['und'][0]['value'],
+              'type' => 'dlts_collection',
+              'language' => 'und',
+              'partner' => array('title' => $col_partner->title,
+                  'type' => 'dlts_partner',
+                  'language' => 'und',
+                  'identifier' => $col_partner->field_identifier['und'][0]['value'],
+                  'code' => $col_partner->field_code['und'][0]['value'],
+                  'name' => $col_partner->field_name['und'][0]['value']));
+
+      return $value;
+  }
+
+
