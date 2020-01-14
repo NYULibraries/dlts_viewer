@@ -580,10 +580,11 @@ function _dlts_viewer_book_json($entity, $add_pages = TRUE)
             } elseif ($field['label'] == 'Provider') {
                 $value = array();
                 foreach ($raw_value as $partner) {
-                    $value[] = array('title' => $partner->title,
-                        'identifier' => $partner->field_identifier['und'][0]['value'],
-                        'code' => $partner->field_code['und'][0]['value'],
-                        'name' => $partner->field_name['und'][0]['value'],
+                    $partner_wrapper= entity_metadata_wrapper('node', $partner);
+                    $value[] = array('title' => $partner_wrapper->title->value(),
+                        'identifier' => $partner_wrapper->field_identifier->value(),
+                        'code' => $partner_wrapper->field_code->value(),
+                        'name' => $partner_wrapper->field_name->value(),
                         'type' => 'dlts_partner',
                         'language' => 'und');
 
@@ -602,13 +603,15 @@ function _dlts_viewer_book_json($entity, $add_pages = TRUE)
     if (!empty($multivolume_books)) {
         foreach ($multivolume_books as $multivolume_book) {
             $multivol_wrapper = entity_metadata_wrapper('node', $multivolume_book);
-            $parent_multivolume = $multivol_wrapper->field_multivol->value();
-            $volume = array('volume' => array(array('identifier' => $multivolume_book->field_identifier['und'][0]['value'],
-                'volume_number' => $multivolume_book->field_volume_number['und'][0]['value'],
-                'volume_number_str' => $multivolume_book->field_volume_number_str['und'][0]['value'],
+            $parent_multivol = $multivol_wrapper->field_multivol->value();
+            $parent_wrapper = entity_metadata_wrapper('node',$parent_multivol);
+            $volume = array('volume' => array(array('identifier' => $multivol_wrapper->field_identifier->value(),
+                'title'=> $multivol_wrapper->title->value(),
+                'volume_number' => $multivol_wrapper->field_volume_number->value(),
+                'volume_number_str' => $multivol_wrapper->field_volume_number_str->value(),
                 'collection' => dlts_viewer_collection_json($collections),
-                'isPartOf' => array('title' => $parent_multivolume->title, 'type' => 'dlts_multivol', 'language' => 'und',
-                    'identifier' => $parent_multivolume->field_identifier['und'][0]['value'], 'ri' => null))));
+                'isPartOf' => array('title' => $multivol_wrapper->title->value(), 'type' => 'dlts_multivol', 'language' => 'und',
+                'identifier' => $parent_wrapper->field_identifier->value(), 'ri' => null))));
         }
     }
 
@@ -617,14 +620,15 @@ function _dlts_viewer_book_json($entity, $add_pages = TRUE)
         foreach ($series_books as $series_book) {
             $series_wrapper = entity_metadata_wrapper('node', $series_book);
             $parent_series = $series_wrapper->field_series->value();
-            $series[] = array('identifier' => $series_book->field_identifier['und'][0]['value'],
+            $parent_wrapper = entity_metadata_wrapper('node',$parent_series);
+            $series[] = array('identifier' => $series_wrapper->field_identifier->value(),
                 'type' => 'dlts_series_book',
-                'title' => $series_book->title,
-                'volume_number' => $series_book->field_volume_number['und'][0]['value'],
-                'volume_number_str' => $series_book->field_volume_number_str['und'][0]['value'],
+                'title' => $series_wrapper->title->value(),
+                'volume_number' => $series_wrapper->field_volume_number->value(),
+                'volume_number_str' => $series_wrapper->field_volume_number_str->value(),
                 'collection' => dlts_viewer_collection_json($collections),
-                'isPartOf' => array('title' => $parent_series->title, 'type' => 'dlts_series', 'language' => 'und',
-                    'identifier' => $parent_series->field_identifier['und'][0]['value'], 'ri' => null));
+                'isPartOf' => array('title' => $parent_wrapper->title->value(), 'type' => 'dlts_series', 'language' => 'und',
+                 'identifier' => $parent_wrapper->field_identifier->value(),'ri' => null));
         }
     }
 
@@ -646,18 +650,17 @@ function _dlts_viewer_book_json($entity, $add_pages = TRUE)
             $pages[] = $page;
         }
     }
-
     echo json_encode(array(
         'entity_title' => !empty($title) ? $title : $entity->title,
         'identifier' => $identifier,
-        'entity_path' => url('books/' . $identifier . '/1', array('absolute' => TRUE)),
+        'entity_path' => url('maps/' . $identifier . '/1', array('absolute' => TRUE)),
         'base_url' => url('', array('absolute' => TRUE)),
         'entity_language' => $entity->language,
         'entity_status' => $entity->status,
         'entity_type' => $entity->type,
         'metadata' => $fields,
-        'series' => $series,
         'multivolume' => $volume,
+        'series' => $series,
         'pages' => $pages
     ));
 
@@ -667,20 +670,21 @@ function dlts_viewer_collection_json($collections)
 {
     $value = array();
     foreach ($collections as $collection) {
-        $partner_id = $collection->field_partner['und'][0]['nid'];
-        $col_partner = node_load($partner_id);
-        $value[] = array('title' => $collection->title,
-            'identifier' => $collection->field_identifier['und'][0]['value'],
-            'code' => $collection->field_code['und'][0]['value'],
-            'name' => $collection->field_name['und'][0]['value'],
+        $collection_wrapper= entity_metadata_wrapper('node', $collection);
+        $col_partner = $collection_wrapper->field_partner->value();
+        $partner_wrapper= entity_metadata_wrapper('node', $col_partner[0]);
+        $value[] = array('title' => $collection_wrapper->title->value(),
+            'identifier' => $collection_wrapper->field_identifier->value(),
+            'code' => $collection_wrapper->field_code->value(),
+            'name' => $collection_wrapper->field_name->value(),
             'type' => 'dlts_collection',
             'language' => 'und',
-            'partner' => array('title' => $col_partner->title,
+            'partner' => array('title' => $partner_wrapper->title->value(),
                 'type' => 'dlts_partner',
                 'language' => 'und',
-                'identifier' => $col_partner->field_identifier['und'][0]['value'],
-                'code' => $col_partner->field_code['und'][0]['value'],
-                'name' => $col_partner->field_name['und'][0]['value']));
+                'identifier' => $partner_wrapper->field_identifier->value(),
+                'code' => $partner_wrapper->field_code->value(),
+                'name' => $partner_wrapper->field_name->value()));
     }
     return $value;
 }

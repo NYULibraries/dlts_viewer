@@ -16,17 +16,16 @@ function series_nid($identifier) {
   return (int)$keys[0];
 }
 
-function series_book_nid($series_identifier, $volume_page) {
-	$query = new EntityFieldQuery;
-	$series_nid = series_nid($series_identifier);
-	$result = $query
-	  ->entityCondition('entity_type', 'node')
-	  ->entityCondition('bundle', 'dlts_series_book')
-          ->fieldCondition('field_identifier', 'value', $series_identifier, '=')
-	  ->execute();
-	if (empty($result['node'])) return FALSE;
-	$keys = array_keys($result['node']);
-	return (int)$keys[0];
+function series_book_nid($identifier) {
+    $query = new EntityFieldQuery;
+    $result = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'dlts_series_book')
+        ->fieldCondition('field_identifier', 'value', $identifier, '=')
+        ->execute();
+    if (empty($result['node'])) return FALSE;
+    $keys = array_keys($result['node']);
+    return (int)$keys[0];
 }
 
 function find_nodes($type) {
@@ -75,14 +74,12 @@ function multivol_nid($identifier) {
   return (int)$keys[0];
 }
 
-function multivol_book_nid($multivol_identifier, $volume_page) {
+function multivol_book_nid($multivol_identifier) {
   $query = new EntityFieldQuery;
-  $multivol_nid = multivol_nid($multivol_identifier);
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_multivol_book')
-    ->fieldCondition('field_multivol', 'nid', $multivol_nid, '=')
-    ->fieldCondition('field_volume_number', 'value', $volume_page, '=')
+    ->fieldCondition('field_identifier', 'value', $multivol_identifier, '=')
     ->execute();
   if (empty($result['node'])) return FALSE;
   $keys = array_keys($result['node']);
