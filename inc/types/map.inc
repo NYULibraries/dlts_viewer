@@ -280,10 +280,10 @@ function _dlts_viewer_map_json ($entity, $add_pages=TRUE) {
     if($add_pages) {
         $pages_raw = dlts_viewer_mongodb_load_by_item_identifier( $identifier, 'dlts_map_page');
         foreach($pages_raw as $page_raw) {
-            $page = array (page =>array('isPartOf'=>$identifier,
+            $page = array ('page' =>array('isPartOf'=>$identifier,
                 'realPageNumber'=> $page_raw['realPageNumber'],
                 'sequence' => $page_raw['sequence'],
-                cm=>array(
+                'cm'=>array(
                     'uri' => ($page_raw['cm']['uri']),
                     'width' => $page_raw['cm']['width'],
                     'height' => $page_raw['cm']['height'],
