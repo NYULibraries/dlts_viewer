@@ -610,7 +610,7 @@ function _dlts_viewer_book_json($entity, $add_pages = TRUE)
                 'volume_number' => $multivol_wrapper->field_volume_number->value(),
                 'volume_number_str' => $multivol_wrapper->field_volume_number_str->value(),
                 'collection' => dlts_viewer_collection_json($collections),
-                'isPartOf' => array('title' => $multivol_wrapper->title->value(), 'type' => 'dlts_multivol', 'language' => 'und',
+                'isPartOf' => array('title' => $parent_wrapper->title->value(), 'type' => 'dlts_multivol', 'language' => 'und',
                 'identifier' => $parent_wrapper->field_identifier->value(), 'ri' => null))));
         }
     }
