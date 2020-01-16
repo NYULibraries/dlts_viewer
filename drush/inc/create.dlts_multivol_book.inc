@@ -12,7 +12,7 @@ function create_dlts_multivol_book($node) {
   /** make sure the parent relationship exist*/
     if (is_array($node->isPartOf)) {
         foreach ($node->isPartOf as $isPartOf) {
-            $multivolume_nid = multivolume_nid($isPartOf->identifier);
+            $multivolume_nid = multivol_nid($isPartOf->identifier);
             if (!$multivolume_nid) {
                 create_dlts_multivol($isPartOf);
             }
@@ -70,7 +70,14 @@ function create_dlts_multivol_book($node) {
 
     if (!empty($node->collection)) {
         $nids = array();
-        foreach ($node->collection as $collection) {
+        $collections = array();
+        #there is 2 dimensional array for old books so need that check.
+        if(is_array( $node->collection[0])) {
+            $collections = $node->collection[0];
+        } else {
+            $collections = $node->collection;
+        }
+        foreach ($collections as $collection) {
             $nid = collection_nid($collection->identifier);
             if ($nid) {
                 $nids[]= $nid;
