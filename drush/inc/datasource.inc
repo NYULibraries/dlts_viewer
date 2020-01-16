@@ -73,17 +73,19 @@ function multivol_nid($identifier) {
   $keys = array_keys($result['node']);
   return (int)$keys[0];
 }
-
-function multivol_book_nid($multivol_identifier) {
-  $query = new EntityFieldQuery;
-  $result = $query
-    ->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'dlts_multivol_book')
-    ->fieldCondition('field_identifier', 'value', $multivol_identifier, '=')
-    ->execute();
-  if (empty($result['node'])) return FALSE;
-  $keys = array_keys($result['node']);
-  return (int)$keys[0];
+#all multivolume books have the same external identifier as the multivolume itself. We use volume number to insure uniqueness
+function multivol_book_nid($multivol_identifier, $volume_number) {
+    $query = new EntityFieldQuery;
+    $multivol_nid = multivol_nid($multivol_identifier);
+    $result = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'dlts_multivol_book')
+        ->fieldCondition('field_multivol', 'nid', $multivol_nid, '=')
+        ->fieldCondition('field_volume_number', 'value', $volume_number, '=')
+        ->execute();
+    if (empty($result['node'])) return FALSE;
+    $keys = array_keys($result['node']);
+    return (int)$keys[0];
 }
 
 function book_page_nid($book_nid, $sequence_number) {
