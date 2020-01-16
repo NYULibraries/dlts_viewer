@@ -375,7 +375,7 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
   		$ri = file_create_url($representative_image['uri']);
   	}
   	elseif ($pathinfo['extension'] == 'jp2') {
-  		$ri = dlts_viewer_djatoka_url($representative_image);
+  		$ri = dlts_viewer_djatoka_url($representative_image,false,true);
   	}
       $dirname = $pathinfo['dirname'];
       $dir_path = pathinfo($dirname);
