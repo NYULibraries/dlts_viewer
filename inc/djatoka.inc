@@ -33,7 +33,7 @@ function dlts_viewer_djatoka_request($file) {
   }
 }
 
-function dlts_viewer_djatoka_url($file, $embeded_tumb=false) {
+function dlts_viewer_djatoka_url($file, $embeded_tumb=false, $solr_index=false) {
 	$service = variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka');
 	$arguments = array(
 	  'url_ver' => 'Z39.88-2004',
@@ -45,13 +45,18 @@ function dlts_viewer_djatoka_url($file, $embeded_tumb=false) {
     if($embeded_tumb) {
         $arguments['svc.scale'] = '100';
     } else {
-        if (isset($file['image_style'])) {
-            $dimmensions = explode("x", $file['image_style']);
-            if (count($dimmensions) == 2 && is_numeric($dimmensions[1])) {
-                $arguments['svc.scale'] = $dimmensions[1];
-            }
+        #added for https://jira.nyu.edu/jira/browse/DLTSBOOKS-208 and DLTSACO-627. Needed for better sites generation
+        if($solr_index) {
+            $arguments['svc.level'] = '1';
         } else {
-            $arguments['svc.scale'] = '230';
+            if (isset($file['image_style'])) {
+                $dimmensions = explode("x", $file['image_style']);
+                if (count($dimmensions) == 2 && is_numeric($dimmensions[1])) {
+                    $arguments['svc.scale'] = $dimmensions[1];
+                }
+            } else {
+                $arguments['svc.scale'] = '230';
+            }
         }
     }
 
