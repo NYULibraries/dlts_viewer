@@ -29,7 +29,7 @@ function dlts_viewer_djatoka_request($file) {
   else {
   	drupal_set_message(t('<em>Djatoka Image Server</em>: Error requesting image metadata from Djakota service. @url.', array('@url' => $rft_id)), 'error');
     watchdog('dlts_viewer', 'Error requesting image metadata from Djakota service. Please configure Djatoka Jpeg 2000 Image Server.', array(), WATCHDOG_ERROR);
-    return array('message' => $msg, 'error' => 404, 'code' => 404);
+    return array('message' => 'Page not found', 'error' => 404, 'code' => 404);
   }
 }
 
