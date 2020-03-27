@@ -283,7 +283,10 @@ function dlts_viewer_flush_caches() {
 	t('PDF');
 	t('High-resolution');
 	t('Low-resolution');
-	t('Vol.');
+  t('Vol.');
+  t('Download');
+  t('High resolution PDF');
+  t('Low resolution PDF ');
 }
 
 // here we need to make sure we delete the record from Apache Solr
