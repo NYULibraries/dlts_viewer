@@ -7,8 +7,8 @@
 *.iml
 
 js/node_modules
-./*.sql
-./*.json
+*.sql
+*.json
 
 # Ignore editor backup files
 *~
