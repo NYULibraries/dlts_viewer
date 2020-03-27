@@ -551,10 +551,11 @@ YUI().use(
       e.halt();
       var currentTarget = e.currentTarget;
       var value = currentTarget.one(':checked').get('value');
-      var url = value.substring(value.indexOf('::') + 2, value.length);
+      var lang = Y.one('.node-dlts-book').getAttribute('data-lang');      
+      var url = value.substring(value.indexOf('::') + 2, value.length) + '/1?lang=' + lang;
       var data = { url : url };
       if (window.self === window.top) {
-        window.location.replace(url);
+        window.location.assign(url)
       }
       else {
         Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'change:option:multivolume', data }));
