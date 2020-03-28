@@ -6,6 +6,10 @@
 # Ignore Intellij/PHPStorm/WebStorm files
 *.iml
 
+js/node_modules
+*.sql
+*.json
+
 # Ignore editor backup files
 *~
 *#

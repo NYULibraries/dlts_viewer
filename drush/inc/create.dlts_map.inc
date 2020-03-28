@@ -26,6 +26,7 @@ function save_dlts_map($node, $language = 'en') {
     if ($map_exist) {
         // Load the node by NID
         $entity = node_load($map_exist);
+
         // Wrap it with Entity API
         $ewrapper = entity_metadata_wrapper('node', $entity);
     }
@@ -98,7 +99,7 @@ function save_dlts_map($node, $language = 'en') {
         drush_log('Document without identifier', 'error');
         return;
     }
-    // We do not translalete all the values
+    // We do not translate all the values
     if ($node_language == 'en') {
         if (!empty($node['partners']) && is_array($node['partners']) && count($node['partners']) > 0) {
             foreach ($node['partners'] as $partner) {
@@ -604,8 +605,8 @@ function create_dlts_map_from_json($maps, $cretePages = FALSE, $legacy = FALSE) 
                 $subjects[] = $subject;
             }
         }
-        if (isset($metadata->notes) && !empty($metadata->notes->value)) {
-            foreach ($metadata->notes->value as $note) {
+        if (isset($metadata->notes_field) && !empty($metadata->notes_field->value)) {
+            foreach ($metadata->notes_field->value as $note) {
                 $notes[] = $note;
             }
         }
@@ -642,10 +643,10 @@ function create_dlts_map_from_json($maps, $cretePages = FALSE, $legacy = FALSE) 
                     // check that the URI is not bigger than the allowed MySQL size for varchar with index
                     if (strlen($pdf_uri) > 255) continue;
                     if (strpos($pdf_uri, '_hi')) {
-                        $pdf_files[] = array('file' => $pdf_uri, 'label' => 'High resolution');
+                        $pdf_files[] = array('file' => $pdf_uri, 'label' => 'High-resolution');
                     }
                     elseif (strpos($pdf_uri, '_lo')) {
-                        $pdf_files[] = array('file' => $pdf_uri, 'label' => 'Low resolution');
+                        $pdf_files[] = array('file' => $pdf_uri, 'label' => 'Low-resolution');
                     }
                     else {
                         $pdf_files[] = array('file' => $pdf_uri);

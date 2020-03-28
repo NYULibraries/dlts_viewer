@@ -1,4 +1,5 @@
 <?php
+
 function _dlts_viewer_menu_book() {
     $menu = array(
 
@@ -10,6 +11,14 @@ function _dlts_viewer_menu_book() {
             'title' => 'Edit book',
             'access arguments' => array('edit any dlts_book content'),
             'page callback' => '_dlts_viewer_book_edit_redirect',
+            'page arguments' => array(1),
+            'type' => MENU_CALLBACK,
+        ),
+
+        'books/%dlts_book/json' => array(
+            'title' => 'JSON representation of the book',
+            'access arguments' => array('access content'),
+            'page callback' => '_dlts_viewer_book_json',
             'page arguments' => array(1),
             'type' => MENU_CALLBACK,
         ),
@@ -46,6 +55,15 @@ function _dlts_viewer_menu_book() {
             'page callback' => 'dlts_viewer_dispatcher',
             'page arguments' => array(1 , 2),
             'delivery callback' => 'drupal_deliver_html_page',
+            'type' => MENU_CALLBACK,
+        ),
+
+        'iiif/2/%/%/%/info.json' => array(
+            'title' => 'IIIF API 2',
+            'access arguments' => array('access content'),
+            'page callback' => 'dlts_viewer_iiif_data',
+            'page arguments' => array(2, 3, 4),
+            'delivery callback' => 'dlts_viewer_deliver_json',
             'type' => MENU_CALLBACK,
         ),
 

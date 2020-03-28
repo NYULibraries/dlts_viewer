@@ -184,3 +184,127 @@ function _dlts_viewer_map_edit_redirect($node) {
 function dlts_viewer_map_metadata_display($node) {
     return node_view($node , 'metadata' , $node->language);
 }
+
+function _dlts_viewer_map_json ($entity, $add_pages=TRUE) {
+
+    header("Access-Control-Allow-Origin: *");
+
+    header('Content-Type: application/json;charset=utf-8');
+
+    module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.book');
+
+    module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
+
+    module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
+
+    // wrapp book entity with Entity API wrapper
+    $map = entity_metadata_wrapper('node', $entity);
+
+    // map identifier
+    $identifier = $map->field_identifier->value();
+
+    $title = $entity->title;
+
+    $type = dlts_utilities_content_types_type($entity->type);
+
+    $fields = array();
+
+    $pages = array();
+
+    foreach ($type['fields'] as $field) {
+        $name = str_replace('field_', '', $field['field_name']);
+        $raw_value = $map->$field['field_name']->value();
+        if ($field['label'] != 'Representative Image') {
+            if ($field['type'] == 'options_buttons') {
+                $value = $field['settings']['allowed_values'][$raw_value];
+            } elseif ($field['type'] == 'link_field' && isset($raw_value['url'])) {
+                $value = $raw_value['url'];
+            } elseif ($field['type'] == 'field_fileserver_link') {
+                $value = array();
+                foreach ((array)$raw_value as $pdf_file) {
+                    $value[] = ($pdf_file['uri']);
+                }
+            } elseif ($field['type'] == 'date_text') {
+                $raw_value['value'];
+            } elseif ($field['type'] == 'taxonomy_autocomplete') {
+                $value = array();
+                foreach ($raw_value as $taxonomy) {
+                    $value[] = $taxonomy->name;
+                }
+            } elseif ($field['label'] == 'Collection') {
+                $value = array();
+
+                foreach ($raw_value as $collection) {
+                        $collection_wrapper= entity_metadata_wrapper('node', $collection);
+                        $col_partner = $collection_wrapper->field_partner->value();
+                        $partner_wrapper= entity_metadata_wrapper('node', $col_partner[0]);
+                        $value[] = array('title' => $collection_wrapper->title->value(),
+                            'identifier' => $collection_wrapper->field_identifier->value(),
+                            'code' => $collection_wrapper->field_code->value(),
+                            'name' => $collection_wrapper->field_name->value(),
+                            'type' => 'dlts_collection',
+                            'language' => 'und',
+                            'partner' => array('title' => $partner_wrapper->title->value(),
+                                'type' => 'dlts_partner',
+                                'language' => 'und',
+                                'identifier' => $partner_wrapper->field_identifier->value(),
+                                'code' => $partner_wrapper->field_code->value(),
+                                'name' => $partner_wrapper->field_name->value()));
+                    }
+            } elseif ($field['label'] == 'Provider') {
+                $value = array();
+                foreach ($raw_value as $partner) {
+                    $partner_wrapper= entity_metadata_wrapper('node', $partner);
+                    $value[] =array('title'=>$partner_wrapper->title->value(),
+                        'identifier'=>$partner_wrapper->field_identifier->value(),
+                        'code'=>$partner_wrapper->field_code->value(),
+                        'name'=>$partner_wrapper->field_name->value(),
+                        'type' => 'dlts_partner',
+                        'language'=> 'und');
+
+                }
+            } else {
+                $value = $raw_value;
+            }
+            $fields[$name] = array('label' => $field['label'], 'value' => (array)$value);
+        } else {
+            $fields[$name]= array( 'isPartOf' => $identifier,
+                'sequence' => array(1),
+                'realPageNumber' => 1,
+                'cm' => array( 'uri' =>$raw_value['uri']));
+        }
+    }
+
+    $page_count=$entity->field_page_count['en'][0]['value'];
+
+    if($add_pages) {
+        $pages_raw = dlts_viewer_mongodb_load_by_item_identifier( $identifier, 'dlts_map_page');
+        foreach($pages_raw as $page_raw) {
+            $page = array ('page' =>array('isPartOf'=>$identifier,
+                'realPageNumber'=> $page_raw['realPageNumber'],
+                'sequence' => $page_raw['sequence'],
+                'cm'=>array(
+                    'uri' => ($page_raw['cm']['uri']),
+                    'width' => $page_raw['cm']['width'],
+                    'height' => $page_raw['cm']['height'],
+                    'levels' => $page_raw['cm']['levels'],
+                    'dwtLevels' => $page_raw['cm']['dwtLevels'],
+                    'compositingLayerCount' => $page_raw['cm']['compositingLayerCount'],
+                    'timestamp' => $page_raw['cm']['timestamp'],
+                )));
+            $pages[] = $page;
+        }
+    }
+    echo json_encode(array(
+        'entity_title' => !empty($title) ? $title : $entity->title,
+        'identifier' => $identifier,
+        'entity_path' => url('maps/' . $identifier . '/1', array('absolute' => TRUE)),
+        'base_url' => url('', array('absolute' => TRUE)),
+        'entity_language' => $entity->language,
+        'entity_status' => $entity->status,
+        'entity_type' => $entity->type,
+        'metadata' => $fields,
+        'pages' => $pages
+    ));
+
+}
