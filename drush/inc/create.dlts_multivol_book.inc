@@ -9,14 +9,23 @@ function create_dlts_multivol_book($node) {
 
   global $user;
 
-  /** make sure the parent relationship exist */
-  foreach ($node->isPartOf as $isPartOf) {
-  	if (!multivol_nid($isPartOf->identifier)) {
-  		create_dlts_multivol($isPartOf);
-  	}
-  }
+  /** make sure the parent relationship exist*/
+    if (is_array($node->isPartOf)) {
+        foreach ($node->isPartOf as $isPartOf) {
+            $multivolume_nid = multivol_nid($isPartOf->identifier);
+            if (!$multivolume_nid) {
+                create_dlts_multivol($isPartOf);
+            }
+        }
+    }
+    else {
+        $multivolume_nid = multivol_nid($node->isPartOf->identifier);
+        if (!$multivolume_nid) {
+            create_dlts_multivol($node->isPartOf);
+        }
+    }
 
-  $multivol_book_exist = multivol_book_nid($node->isPartOf[0]->identifier, $node->volume_number, $node->collection[0]->identifier);
+  $multivol_book_exist = multivol_book_nid($node->identifier,$node->volume_number);
 
   if ($multivol_book_exist) {
     // Load the node by NID
@@ -59,12 +68,23 @@ function create_dlts_multivol_book($node) {
   	$ewrapper->title->set('Untitled');
   }
 
-  if ($node->collection) {
-    $nid = collection_nid($node->collection[0]->identifier);
-    if ($nid) {
-      $ewrapper->field_collection->set(array($nid));
+    if (!empty($node->collection)) {
+        $nids = array();
+        $collections = array();
+        #there is 2 dimensional array for old books so need that check.
+        if(is_array( $node->collection[0])) {
+            $collections = $node->collection[0];
+        } else {
+            $collections = $node->collection;
+        }
+        foreach ($collections as $collection) {
+            $nid = collection_nid($collection->identifier);
+            if ($nid) {
+                $nids[]= $nid;
+            }
+        }
+        $ewrapper->field_collection->set(array($nid));
     }
-  }
   if ($node->identifier) {
     $ewrapper->field_identifier->set($node->identifier);
   }
@@ -84,8 +104,16 @@ function create_dlts_multivol_book($node) {
       $ewrapper->field_book->set($book_exist);
     }
   }
+    if (is_array($node->isPartOf)) {
+        $multivol_exist = multivol_nid($node->isPartOf[0]->identifier);
+    }
+    else {
+        $multivol_exist = multivol_nid($node->isPartOf->identifier);
+    }
 
-  $multivol_exist = multivol_nid($node->isPartOf[0]->identifier);
+    if ($multivol_exist) {
+        $ewrapper->field_multivol->set($multivol_exist);
+    }
   if ($multivol_exist) {
     $ewrapper->field_multivol->set($multivol_exist);
   }

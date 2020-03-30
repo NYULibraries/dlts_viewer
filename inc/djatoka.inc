@@ -9,13 +9,11 @@
  * Djatoka request
  */
 function dlts_viewer_djatoka_request($file) {
+
 	$file = (object) $file;
   $service_url = variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka');
   $rft_id = file_create_url($file->uri);
-  // aof; here for now.
-  //if (isset($file->timestamp)) {
-    //$rft_id = $rft_id . '?v=' . $file->timestamp;
-  //}
+
   if (!empty($service_url)) {
     $request = url($service_url . '/resolver', array('absolute' => TRUE, 'query' => array('url_ver' => 'Z39.88-2004', 'svc_id' => 'info:lanl-repo/svc/getMetadata', 'rft_id' => $rft_id)));
     $response = drupal_http_request($request);
@@ -31,11 +29,11 @@ function dlts_viewer_djatoka_request($file) {
   else {
   	drupal_set_message(t('<em>Djatoka Image Server</em>: Error requesting image metadata from Djakota service. @url.', array('@url' => $rft_id)), 'error');
     watchdog('dlts_viewer', 'Error requesting image metadata from Djakota service. Please configure Djatoka Jpeg 2000 Image Server.', array(), WATCHDOG_ERROR);
-    return array('message' => $msg, 'error' => 404, 'code' => 404);
+    return array('message' => 'Page not found', 'error' => 404, 'code' => 404);
   }
 }
 
-function dlts_viewer_djatoka_url($file, $embeded_tumb=false) {
+function dlts_viewer_djatoka_url($file, $embeded_tumb=false, $solr_index=false) {
 	$service = variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka');
 	$arguments = array(
 	  'url_ver' => 'Z39.88-2004',
@@ -47,13 +45,18 @@ function dlts_viewer_djatoka_url($file, $embeded_tumb=false) {
     if($embeded_tumb) {
         $arguments['svc.scale'] = '100';
     } else {
-        if (isset($file['image_style'])) {
-            $dimmensions = explode("x", $file['image_style']);
-            if (count($dimmensions) == 2 && is_numeric($dimmensions[1])) {
-                $arguments['svc.scale'] = $dimmensions[1];
-            }
+        #added for https://jira.nyu.edu/jira/browse/DLTSBOOKS-208 and DLTSACO-627. Needed for better sites generation
+        if($solr_index) {
+            $arguments['svc.level'] = '1';
         } else {
-            $arguments['svc.scale'] = '230';
+            if (isset($file['image_style'])) {
+                $dimmensions = explode("x", $file['image_style']);
+                if (count($dimmensions) == 2 && is_numeric($dimmensions[1])) {
+                    $arguments['svc.scale'] = $dimmensions[1];
+                }
+            } else {
+                $arguments['svc.scale'] = '230';
+            }
         }
     }
 

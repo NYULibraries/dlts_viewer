@@ -18,6 +18,14 @@ function dlts_viewer_theme() {
         'dlts_viewer_pager_button' => array(
             'variables' => array(),
         ),
+        'dlts_viewer_field__field_pdf_file' => array(
+          'variables' => array(),
+          'render element' => 'content',
+          'base hook' => 'node',          
+        ),
+        'field__field_pdf_file' => array(
+          'variables' => array(),
+        ),        
         'thumbnails_pager' => array(
             'variables' => array(
                 'tags' => array(),
@@ -170,6 +178,36 @@ function dlts_viewer_theme_registry_alter(&$theme_registry) {
     if (!empty($theme_registry['field'])) {
         $theme_registry['field']['function'] = 'dlts_viewer_theme_field';
     }
+}
+
+function dlts_viewer_theme_field ($variables) {
+
+  $dir = dlts_viewer_viewer_language((array)$variables['element']['#object']);
+    
+  $output = '';
+    
+  // Render the label, if it's not hidden.
+  if (!$variables['label_hidden']) {
+    $lang_language = $variables['element']['#object']->language;
+    $label = locale($variables['label'], NULL, $lang_language);
+    $output .= '<div dir="'. $dir .'" class="field-label"' . $variables['title_attributes'] . '>' . $label . ':&nbsp;</div>';
+  }
+  
+  // Render the items.
+  $output .= '<div dir="'. $dir .'" class="field-items"' . $variables['content_attributes'] . 'wq>';
+  
+  foreach ($variables['items'] as $delta => $item) {
+    $classes = 'field-item ' . ($delta % 2 ? 'odd' : 'even');
+    $output .= '<div dir="'. $dir .'" class="' . $classes . '"' . $variables['item_attributes'][$delta] . '>' . drupal_render($item) . '</div>';
+  }
+
+  $output .= '</div>';
+  
+  // Render the top-level DIV.
+  $output = '<div dir="'. $dir .'" class="' . $variables['classes'] . '"' . $variables['attributes'] . '>' . $output . '</div>';
+  
+  return $output;
+
 }
 
 function theme_dlts_viewer_pager_button($variables) {
@@ -428,4 +466,41 @@ function theme_thumbnails_photo_pager($vars) {
     if ($pager_links) {
         return '<div class="pager clearfix">' . $pager_links . '</div>';
     }
+}
+
+// See ticker https://jira.nyu.edu/jira/browse/DLTSVIEWER-95
+function theme_field__field_pdf_file (&$variables) {
+  
+  $out = '';
+
+  $dir = dlts_viewer_viewer_language((array)$variables['element']['#object']);
+
+  if ($variables['element']['#view_mode'] == 'metadata') {
+    $out .= '<div dir="' . $dir . '" class="field field-name-field-pdf clearfix">';
+    $out .= '<div dir="' . $dir . '" class="field-label">Download:</div>';
+    foreach ($variables['items'] as $key => $item) {
+      $out .= '<div class="pdf-items" dir="' . $dir . '">';
+      $out .= '<div class="pdf-item" dir="' . $dir . '"><a href="' . $variables['items'][$key]['#attributes']['href'] . '" class="' . implode(' ', $variables['items'][$key]['#attributes']['class']) . '">';
+      $out .= '<span class="icon" aria-hidden="true" role="presentation">
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" fill="#9f2226" width="14" height="17" viewBox="0 0 30 40" style="enable-background:new 0 0 30 40;" xml:space="preserve">
+            <path d="M14.2,20c-0.4-1.2-0.4-3.7-0.2-3.7C14.7,16.3,14.6,19.2,14.2,20z M14.1,23.7c-0.6,1.6-1.4,3.4-2.2,4.9
+                c1.4-0.5,3-1.3,4.9-1.7C15.8,26.1,14.8,25.1,14.1,23.7L14.1,23.7z M6.7,33.4c0,0.1,1-0.4,2.7-3.1C8.9,30.8,7.2,32.2,6.7,33.4z
+                M19.4,12.5H30v25.6c0,1-0.8,1.9-1.9,1.9H1.9c-1,0-1.9-0.8-1.9-1.9V1.9C0,0.8,0.8,0,1.9,0h15.6v10.6C17.5,11.7,18.3,12.5,19.4,12.5z
+                M18.8,25.9c-1.6-1-2.6-2.3-3.3-4.2c0.4-1.4,0.9-3.6,0.5-5c-0.4-2.3-3.3-2.1-3.7-0.5c-0.4,1.4,0,3.4,0.6,6c-0.9,2.2-2.2,5-3.2,6.7
+                c0,0,0,0,0,0c-2.1,1.1-5.7,3.5-4.3,5.3C5.8,34.8,6.6,35,7,35c1.4,0,2.8-1.4,4.8-4.8c2-0.7,4.2-1.5,6.2-1.8c1.7,0.9,3.7,1.5,5,1.5
+                c2.3,0,2.4-2.5,1.5-3.4C23.4,25.4,20.3,25.7,18.8,25.9z M29.5,8.2l-7.7-7.7C21.4,0.2,21,0,20.5,0H20v10h10V9.5
+                C30,9,29.8,8.6,29.5,8.2z M23.7,28.1c0.3-0.2-0.2-0.9-3.3-0.7C23.2,28.7,23.7,28.1,23.7,28.1z"></path>
+            </svg></span>';
+      $out .= $variables['items'][$key]['#value'] . ' PDF ';
+       
+       if (dlts_viewer_pdf_is_searchable()) {
+        $out .= '  <span class="is-searchable" dir="' . $dir . '">(searchable)</span>';
+      }
+      $out .= '</a></div></div>';
+    }
+
+    $out .= '</div>';
+
+    return $out;
+  }
 }

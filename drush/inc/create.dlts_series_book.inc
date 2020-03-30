@@ -16,18 +16,16 @@ function create_dlts_series_book($node) {
   			create_dlts_series($isPartOf);
   		}
   	}
-  	// @TODO: This looks like a bug ...
-  	$series_identifier = $node->isPartOf[0]->identifier;
-  	$exist = series_book_nid($series_identifier, $node->volume_number, $node->collection[0]->identifier);
   }
   else {
     $series_nid = series_nid($node->isPartOf->identifier);
     if (!$series_nid) {
   	  create_dlts_series($node->isPartOf);
   	}
-  	$series_identifier = $node->isPartOf->identifier;
-  	$exist = series_book_nid($series_identifier, $node->volume_number, $node->collection[0]->identifier);
+
   }
+
+    $exist = series_book_nid($node->identifier);
 
   if ($exist) {
     // Load the node by NID
@@ -51,19 +49,33 @@ function create_dlts_series_book($node) {
     $ewrapper = entity_metadata_wrapper('node', $entity);
   }
 
-  $series_nid = series_nid($series_identifier);
-
   if (!empty($node->title)) {
-  	$ewrapper->title->set($node->title);
+      $substr_title = $node->title;
+      if (strlen($substr_title) > 255) {
+          $ewrapper->title->set('Title longer that 255 characters');
+      } else {
+          $ewrapper->title->set($substr_title);
+      }
   }
   else {
   	$ewrapper->title->set('Untitled');
   }
-  if ($node->collection) {
-    $nid = collection_nid($node->collection[0]->identifier);
-    if ($nid) {
+  if (!empty($node->collection)) {
+      $nids = array();
+      $collections = array();
+      #there is 2 dimensional array for old books so need that check.
+      if(is_array( $node->collection[0])) {
+          $collections = $node->collection[0];
+      } else {
+          $collections = $node->collection;
+      }
+      foreach ($collections as $collection) {
+          $nid = collection_nid($collection->identifier);
+          if ($nid) {
+              $nids[]= $nid;
+          }
+      }
       $ewrapper->field_collection->set(array($nid));
-    }
   }
   if ($node->identifier) {
     $ewrapper->field_identifier->set($node->identifier);
@@ -80,11 +92,13 @@ function create_dlts_series_book($node) {
   if ($node->book) {
     $book_exist = book_nid($node->book, 'en');
     if ($book_exist) {
-      $ewrapper->	field_book->set($book_exist);
+      $ewrapper->field_book->set($book_exist);
     }
   }
-  if ($series_nid) {
-    $ewrapper->field_series->set($series_nid);
+  $series_exist = series_nid($node->isPartOf->identifier);
+
+  if ($series_exist) {
+    $ewrapper->field_series->set($series_exist);
   }
   $ewrapper->save();
   return $entity;

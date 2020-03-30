@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Books
@@ -10,7 +9,8 @@
  * https://api.drupal.org/api/drupal/modules%21node%21node.module/function/template_preprocess_node/7
  * THIS is not a default Drupal hook
  */
-function dlts_viewer_preprocess_node_dlts_book(&$vars) {
+function dlts_viewer_preprocess_node_dlts_book(&$vars)
+{
     /** We don't render a DLTS Book object, redirect to a "Book page" */
     if ($vars['view_mode'] == 'full') {
         $wrapper = entity_metadata_wrapper('node', $vars['node']);
@@ -30,7 +30,8 @@ function dlts_viewer_preprocess_node_dlts_book(&$vars) {
     }
 }
 
-function dlts_viewer_dispatch_thumbnails($identifier) {
+function dlts_viewer_dispatch_thumbnails($identifier)
+{
     /** Load helpers */
     module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
     /** hold query arguments */
@@ -38,29 +39,29 @@ function dlts_viewer_dispatch_thumbnails($identifier) {
     if (isset($query_parameters['sequence'])) {
         $sequence = $query_parameters['sequence'];
     }
-    // start page
+// start page
     $page = 0;
-    // default amount of items to request
+// default amount of items to request
     $per_page = 10;
-    // page number can be part of the query parameter
+// page number can be part of the query parameter
     if (isset($query_parameters['page'])) {
         $page = filter_xss($query_parameters['page']);
     }
-    // app can overwrite the amount of items to display
+// app can overwrite the amount of items to display
     if (isset($query_parameters['rows'])) {
         $per_page = filter_xss($query_parameters['rows']);
     }
-    // request thumbnails from MondoDB
-    $thumbnails = dlts_viewer_mongodb_load_thumbnails($identifier, $page, $per_page, "dlts_books_page","books");
-    // no need to continue if request does not have items.
+// request thumbnails from MondoDB
+    $thumbnails = dlts_viewer_mongodb_load_thumbnails($identifier, $page, $per_page, "dlts_books_page", "books");
+// no need to continue if request does not have items.
     if ($thumbnails) {
-        // count of thumbnails
+// count of thumbnails
         $count = $thumbnails['count'];
-        // Items
+// Items
         $items = $thumbnails['items'];
-        // Initialise the pager
+// Initialise the pager
         $current_page = pager_default_initialize($count, $per_page);
-        // Pager
+// Pager
         $pager = theme('thumbnails_pager', array('quantity' => $count));
         $placeholder = $GLOBALS['base_url'] . '/' . drupal_get_path('module', 'dlts_viewer') . '/images/loadhold.png';
         $output = theme('dlts_viewer_thumbnails', array(
@@ -71,13 +72,13 @@ function dlts_viewer_dispatch_thumbnails($identifier) {
             )
         );
         return $output;
-    }
-    else {
+    } else {
         drupal_exit();
     }
 }
 
-function dlts_viewer_full_book_view(&$entity) {
+function dlts_viewer_full_book_view(&$entity)
+{
     $module_path = drupal_get_path('module', 'dlts_viewer');
     $js_common_config = array('type' => 'file', 'scope' => 'footer');
     $css_common_config = array('group' => CSS_DEFAULT, 'every_page' => TRUE);
@@ -88,15 +89,17 @@ function dlts_viewer_full_book_view(&$entity) {
     drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
     drupal_add_js($module_path . '/js/ui.components.yui.js', $js_common_config);
     drupal_add_js(variable_get('dlts_viewer_openlayers_source', 'sites/all/libraries/openlayers/build/OpenLayers.js'), array('group' => JS_LIBRARY));
-    return node_view($entity , 'metadata', $entity->language);
+    return node_view($entity, 'metadata', $entity->language);
 }
 
-function dlts_viewer_book_metadata_view($entity) {
-    $element = node_view($entity, 'metadata',$entity->language);
+function dlts_viewer_book_metadata_view($entity)
+{
+    $element = node_view($entity, 'metadata', $entity->language);
     return drupal_render($element);
 }
 
-function dlts_viewer_process_node_dlts_book(&$vars) {
+function dlts_viewer_process_node_dlts_book(&$vars)
+{
     $args = arg();
     $count = count($args);
     if ($count === 3 && $args[2] == 'display') {
@@ -104,7 +107,8 @@ function dlts_viewer_process_node_dlts_book(&$vars) {
     }
 }
 
-function dlts_viewer_pjax_book_view(&$entity) {
+function dlts_viewer_pjax_book_view(&$entity)
+{
     $vars = array(
         'button_next' => $entity->button_next,
         'button_previous' => $entity->button_previous,
@@ -128,7 +132,8 @@ function dlts_viewer_pjax_book_view(&$entity) {
     return theme('viewer_page', $vars);
 }
 
-function _language_field(&$entity) {
+function _language_field(&$entity)
+{
     $languages = language_list('enabled');
     $languages = $languages[1];
     $entity->lang_dir = (!isset($languages[$entity->language]->direction) || isset($languages[$entity->language]->direction) && $languages[$entity->language]->direction == 0) ? 'ltr' : 'rtl';
@@ -160,68 +165,70 @@ function _language_field(&$entity) {
     }
 }
 
-function dlts_viewer_dispatcher($entity, $arg) {
-    // test if resource
+function dlts_viewer_dispatcher($entity, $arg)
+{
+// check if this collection has searchable PDFs
+    $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
+// test if resource
     $is_resource = dlts_viewer_is_resource();
-    // check request type
+// check request type
     $is_pjax = dlts_viewer_is_pjax();
-    // check for mobile devices
+// check for mobile devices
     $is_mobile = dlts_viewer_is_mobile();
-    // get query parameters
+// get query parameters
     $query_parameters = drupal_get_query_parameters();
-    // check if this books is part of a multi-volume
+// check if this books is part of a multi-volume
     $multivolume_book = dlts_viewer_is_multivolume_book($entity);
-    // if book is part of multi-volume; use append volume value to entity title
+// if book is part of multi-volume; use append volume value to entity title
     if ($multivolume_book) {
-        // wrapp multi-volume entity with Entity API wrapper
+// wrapp multi-volume entity with Entity API wrapper
         $wrapper = entity_metadata_wrapper('node', $multivolume_book);
-        // get volume value
+// get volume value
         $volume_number_str = $wrapper->field_volume_number_str->value();
-        // change entity title
+// change entity title
         $entity->title = t('@title @volume', array('@title' => $multivolume_book->title, '@volume' => $volume_number_str));
     }
-    // check if this books is part of a series
-    // $series_book = dlts_viewer_is_series_book($entity);
-    // not sure if this is right. the book can part of multiple series book
-    // figure out the right way to pick the title
-    // maybe we can do something along the lines of: Book Title (also known as Series book title 1, Series book title 2)
-    //if ($entity->isSeriesBook) {
-    //dpm($entity->seriesBook);
-    //foreach ($entity->seriesBook as $series_book) {
-    // for now just get the last one (since we just have one for now)
-    // talk about this with the group and fix later.
-    //$entity->title = $series_book['volume_label'];
-    //}
-    //}
-    // set entity title
+// check if this books is part of a series
+// $series_book = dlts_viewer_is_series_book($entity);
+// not sure if this is right. the book can part of multiple series book
+// figure out the right way to pick the title
+// maybe we can do something along the lines of: Book Title (also known as Series book title 1, Series book title 2)
+//if ($entity->isSeriesBook) {
+//dpm($entity->seriesBook);
+//foreach ($entity->seriesBook as $series_book) {
+// for now just get the last one (since we just have one for now)
+// talk about this with the group and fix later.
+//$entity->title = $series_book['volume_label'];
+//}
+//}
+// set entity title
     drupal_set_title($entity->title);
-    // wrapp book entity with Entity API wrapper
+// wrapp book entity with Entity API wrapper
     $book_wrapper = entity_metadata_wrapper('node', $entity);
-    // book identifier
+// book identifier
     $identifier = $book_wrapper->field_identifier->value();
-    // set $identifier so that .tpl.php can use it
+// set $identifier so that .tpl.php can use it
     $entity->identifier = $identifier;
-    // book URL
-    $book_url = url('node/' . $entity->nid , array('absolute' => TRUE));
-    // set $url so that .tpl.php can use it
+// book URL
+    $book_url = url('node/' . $entity->nid, array('absolute' => TRUE));
+// set $url so that .tpl.php can use it
     $entity->url = $book_url;
-    // set language
+// set language
     _language_field($entity);
-    // check for type of request: 1) book page or 2) display pane
+// check for type of request: 1) book page or 2) display pane
     if (!is_array($arg) && $arg == 'display') {
-        // type of request
+// type of request
         $display_type = 'book_metadata';
         if ($is_pjax) {
             $display_type = 'book_metadata_pjax';
         }
-    }
-    else {
-        // type of request
+    } else {
+// type of request
         $display_type = 'book_page';
         if ($is_pjax) {
             $display_type = 'book_page_pjax';
         }
-        // we assume single page view
+// we assume single page view
         $is_single_page = TRUE;
         $thumbnails_rows_per_page = 10;
         $sequence = $arg['sequence'];
@@ -237,15 +244,14 @@ function dlts_viewer_dispatcher($entity, $arg) {
             if (count($sequence) > 1) {
                 $is_single_page = FALSE;
             }
-        }
-        else {
+        } else {
             /** get the first page of the requested sequence */
             $page = $sequence_max = $sequence_min = $sequence;
             $is_single_page = TRUE;
         }
         $sequence_count = $book_wrapper->field_sequence_count->value();
         $int_read_order = 0;
-        if(isset($book_wrapper->field_read_order)) {
+        if (isset($book_wrapper->field_read_order)) {
             $int_read_order = $book_wrapper->field_read_order->value();
         }
         $entity->read_order = ($int_read_order == 1) ? 'rtl' : 'ltr';
@@ -284,7 +290,7 @@ function dlts_viewer_dispatcher($entity, $arg) {
             'id' => 'toggle-page',
             'type' => 'dlts_book_page',
             'text' => t('Toggle between single or double page'),
-            'url' => $book_url . '/' . $sequence_min . (($is_single_page ) ? '?page_view=double' : ''),
+            'url' => $book_url . '/' . $sequence_min . (($is_single_page) ? '?page_view=double' : ''),
             'classes' => array('toggle', 'active', ($is_single_page) ? ' page-double' : ' page-single'),
         );
         $button_metadata_options = array(
@@ -358,7 +364,7 @@ function dlts_viewer_dispatcher($entity, $arg) {
         $entity->button_next = $button_next;
         $entity->button_previous = $button_previous;
         $entity->button_togglepage = $button_togglepage;
-        $entity->loading = theme('dlts_viewer_loading', $loading_options); 
+        $entity->loading = theme('dlts_viewer_loading', $loading_options);
         $entity->pane_metadata_hidden = $is_mobile;
         $entity->sequence = $page;
         $entity->sequence_count = $sequence_count;
@@ -383,7 +389,7 @@ function dlts_viewer_dispatcher($entity, $arg) {
         $entity->book_page = theme('dlts_viewer_openlayers_image', $book_page_options);
         $entity->slider = theme('dlts_viewer_slider', $slider_options);
     }
-    // types of returns
+// types of returns
     switch ($display_type) {
         case 'book_page':
             return dlts_viewer_full_book_view($entity);
@@ -404,7 +410,8 @@ function dlts_viewer_dispatcher($entity, $arg) {
  * Route callback for books edit page
  * http://{site}/books/{identifier}/edit
  */
-function _dlts_viewer_book_edit_redirect($node) {
+function _dlts_viewer_book_edit_redirect($node)
+{
     if (is_object($node)) {
         $wrapper = entity_metadata_wrapper('node', $node);
         $identifier = $wrapper->field_identifier->value();
@@ -418,14 +425,16 @@ function _dlts_viewer_book_edit_redirect($node) {
     drupal_not_found();
 }
 
-function dlts_viewer_book_metadata_display($node) {
-    return node_view($node , 'metadata' , $node->language);
+function dlts_viewer_book_metadata_display($node)
+{
+    return node_view($node, 'metadata', $node->language);
 }
 
 /**
  * Menu callback; prints the loaded structure of the current node/user.
  */
-function dlts_viewer_load_object($type, $object, $name = NULL) {
+function dlts_viewer_load_object($type, $object, $name = NULL)
+{
     $out = '';
     $name = isset($name) ? $name : $type;
     $entity = entity_metadata_wrapper('node', $object);
@@ -441,16 +450,16 @@ function dlts_viewer_load_object($type, $object, $name = NULL) {
         }
         if (file_exists($document)) {
             $result->document = basename($result->document);
-            $result->created = date('F jS, Y h:i:s A',$result->created);
-            $rows[] = (array) $result;
+            $result->created = date('F jS, Y h:i:s A', $result->created);
+            $rows[] = (array)$result;
         }
     }
     $out .= theme('table', array('header' => $header, 'rows' => $rows));
     $out .= '<h1>' . t('Node object') . '</h1>';
-    $out .= kdevel_print_object($object, '$'. $name .'->');
-    $out .= '<h1>' . t('JSON document (@hash)', array('@hash'=>$hash)) . '</h1>';
+    $out .= kdevel_print_object($object, '$' . $name . '->');
+    $out .= '<h1>' . t('JSON document (@hash)', array('@hash' => $hash)) . '</h1>';
     $json = json_decode($json_str, true);
-    $out .= kdevel_print_object($json, '$'. $name .'->');
+    $out .= kdevel_print_object($json, '$' . $name . '->');
     $series_book = dlts_viewer_series_book($object->nid);
     if (!empty($series_book)) {
         $out .= '<h1>' . t('Series book') . '</h1>';
@@ -464,7 +473,7 @@ function dlts_viewer_load_object($type, $object, $name = NULL) {
             foreach ($collection as $item) {
                 $collections[] = l($item->title, 'node/' . $item->nid);
             }
-            $rows[] = array($book->nid,$book->title,l($series->title, 'node/' . $series->nid), implode(', ',$collections));
+            $rows[] = array($book->nid, $book->title, l($series->title, 'node/' . $series->nid), implode(', ', $collections));
         }
         $out .= theme('table', array('header' => $header, 'rows' => $rows));
     }
@@ -481,9 +490,201 @@ function dlts_viewer_load_object($type, $object, $name = NULL) {
             foreach ($collection as $item) {
                 $collections[] = l($item->title, 'node/' . $item->nid);
             }
-            $rows[] = array($book->nid,$book->title,l($book->title, 'node/' . $book->nid), implode(', ',$collections));
+            $rows[] = array($book->nid, $book->title, l($book->title, 'node/' . $book->nid), implode(', ', $collections));
         }
         $out .= theme('table', array('header' => $header, 'rows' => $rows));
     }
     return $out;
+}
+
+function dlts_utilities_content_types_type($type)
+{
+    $out = $fields = array();
+    $content_type = node_type_get_type($type);
+    if (!$content_type) return;
+    $field_info_instances = field_info_instances('node', $content_type->type);
+    foreach ($field_info_instances as $field_name => $field_info_instance) {
+        $info = field_info_field($field_name);
+        $fields[] = array(
+            'label' => $field_info_instance['label'],
+            'field_name' => $field_info_instance['field_name'],
+            'type' => $field_info_instance['widget']['type'],
+            'cardinality' => (string)$info['cardinality'],
+            'settings' => array(
+                'allowed_values' => isset ($info['settings']['allowed_values']) ? $info['settings']['allowed_values'] : null
+            ),
+        );
+    }
+    return array(
+        'typeInfo' => $content_type,
+        'fields' => $fields,
+    );
+}
+
+function _dlts_viewer_book_json($entity, $add_pages = TRUE)
+{
+
+    header("Access-Control-Allow-Origin: *");
+
+    header('Content-Type: application/json;charset=utf-8');
+
+    module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.book');
+
+    module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
+
+// wrapp book entity with Entity API wrapper
+    $book = entity_metadata_wrapper('node', $entity);
+
+// book identifier
+    $identifier = $book->field_identifier->value();
+
+    $title = $entity->title;
+
+    $type = dlts_utilities_content_types_type($entity->type);
+
+    $fields =
+    $series =
+    $volume =
+    $collections =
+    $pages = array();
+
+    $multivolume_books = dlts_viewer_multivolume_book($entity->nid);
+    $series_books = dlts_viewer_series_book($entity->nid);
+
+
+    foreach ($type['fields'] as $field) {
+        $name = str_replace('field_', '', $field['field_name']);
+        $raw_value = $book->$field['field_name']->value();
+
+        if ($field['label'] != 'Representative Image') {
+            if ($field['type'] == 'options_buttons') {
+                $value = $field['settings']['allowed_values'][$raw_value];
+            } elseif ($field['type'] == 'link_field' && isset($raw_value['url'])) {
+                $value = $raw_value['url'];
+            } elseif ($field['type'] == 'field_fileserver_link') {
+                $value = array();
+                foreach ((array)$raw_value as $pdf_file) {
+                    $value[] = ($pdf_file['uri']);
+                }
+            } elseif ($field['type'] == 'date_text') {
+                $raw_value['value'];
+            } elseif ($field['type'] == 'taxonomy_autocomplete') {
+                $value = array();
+                foreach ($raw_value as $taxonomy) {
+                    $value[] = $taxonomy->name;
+                }
+            } elseif ($field['label'] == 'Collection') {
+                $collections = $raw_value;
+                $value = dlts_viewer_collection_json($collections);
+
+            } elseif ($field['label'] == 'Provider') {
+                $value = array();
+                foreach ($raw_value as $partner) {
+                    $partner_wrapper= entity_metadata_wrapper('node', $partner);
+                    $value[] = array('title' => $partner_wrapper->title->value(),
+                        'identifier' => $partner_wrapper->field_identifier->value(),
+                        'code' => $partner_wrapper->field_code->value(),
+                        'name' => $partner_wrapper->field_name->value(),
+                        'type' => 'dlts_partner',
+                        'language' => 'und');
+
+                }
+            } else {
+                $value = $raw_value;
+            }
+            $fields[$name] = array('label' => $field['label'], 'value' => (array)$value);
+        } else {
+            $fields[$name] = array('isPartOf' => $identifier,
+                'sequence' => array(1),
+                'realPageNumber' => 1,
+                'cm' => array('uri' => $raw_value['uri']));
+        }
+    }
+    if (!empty($multivolume_books)) {
+        foreach ($multivolume_books as $multivolume_book) {
+            $multivol_wrapper = entity_metadata_wrapper('node', $multivolume_book);
+            $parent_multivol = $multivol_wrapper->field_multivol->value();
+            $parent_wrapper = entity_metadata_wrapper('node',$parent_multivol);
+            $volume = array('volume' => array(array('identifier' => $multivol_wrapper->field_identifier->value(),
+                'title'=> $multivol_wrapper->title->value(),
+                'volume_number' => $multivol_wrapper->field_volume_number->value(),
+                'volume_number_str' => $multivol_wrapper->field_volume_number_str->value(),
+                'collection' => dlts_viewer_collection_json($collections),
+                'isPartOf' => array('title' => $parent_wrapper->title->value(), 'type' => 'dlts_multivol', 'language' => 'und',
+                'identifier' => $parent_wrapper->field_identifier->value(), 'ri' => null))));
+        }
+    }
+
+
+    if (!empty($series_books)) {
+        foreach ($series_books as $series_book) {
+            $series_wrapper = entity_metadata_wrapper('node', $series_book);
+            $parent_series = $series_wrapper->field_series->value();
+            $parent_wrapper = entity_metadata_wrapper('node',$parent_series);
+            $series[] = array('identifier' => $series_wrapper->field_identifier->value(),
+                'type' => 'dlts_series_book',
+                'title' => $series_wrapper->title->value(),
+                'volume_number' => $series_wrapper->field_volume_number->value(),
+                'volume_number_str' => $series_wrapper->field_volume_number_str->value(),
+                'collection' => dlts_viewer_collection_json($collections),
+                'isPartOf' => array('title' => $parent_wrapper->title->value(), 'type' => 'dlts_series', 'language' => 'und',
+                 'identifier' => $parent_wrapper->field_identifier->value(),'ri' => null));
+        }
+    }
+
+    if ($add_pages) {
+        $pages_raw = dlts_viewer_mongodb_load_by_item_identifier($identifier, 'dlts_books_page');
+        foreach ($pages_raw as $page_raw) {
+            $page = array('page' => array('isPartOf' => $identifier,
+                'realPageNumber' => $page_raw['realPageNumber'],
+                'sequence' => $page_raw['sequence'],
+                'cm' => array(
+                    'uri' => ($page_raw['cm']['uri']),
+                    'width' => $page_raw['cm']['width'],
+                    'height' => $page_raw['cm']['height'],
+                    'levels' => $page_raw['cm']['levels'],
+                    'dwtLevels' => $page_raw['cm']['dwtLevels'],
+                    'compositingLayerCount' => $page_raw['cm']['compositingLayerCount'],
+                    'timestamp' => $page_raw['cm']['timestamp'],
+                )));
+            $pages[] = $page;
+        }
+    }
+    echo json_encode(array(
+        'entity_title' => !empty($title) ? $title : $entity->title,
+        'identifier' => $identifier,
+        'entity_path' => url('maps/' . $identifier . '/1', array('absolute' => TRUE)),
+        'base_url' => url('', array('absolute' => TRUE)),
+        'entity_language' => $entity->language,
+        'entity_status' => $entity->status,
+        'entity_type' => $entity->type,
+        'metadata' => $fields,
+        'multivolume' => $volume,
+        'series' => $series,
+        'pages' => $pages
+    ));
+
+}
+
+function dlts_viewer_collection_json($collections)
+{
+    $value = array();
+    foreach ($collections as $collection) {
+        $collection_wrapper= entity_metadata_wrapper('node', $collection);
+        $col_partner = $collection_wrapper->field_partner->value();
+        $partner_wrapper= entity_metadata_wrapper('node', $col_partner[0]);
+        $value[] = array('title' => $collection_wrapper->title->value(),
+            'identifier' => $collection_wrapper->field_identifier->value(),
+            'code' => $collection_wrapper->field_code->value(),
+            'name' => $collection_wrapper->field_name->value(),
+            'type' => 'dlts_collection',
+            'language' => 'und',
+            'partner' => array('title' => $partner_wrapper->title->value(),
+                'type' => 'dlts_partner',
+                'language' => 'und',
+                'identifier' => $partner_wrapper->field_identifier->value(),
+                'code' => $partner_wrapper->field_code->value(),
+                'name' => $partner_wrapper->field_name->value()));
+    }
+    return $value;
 }

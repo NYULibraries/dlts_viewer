@@ -1,6 +1,26 @@
 <?php
 
-function dlts_viewer_content_by_field($field_name) {
+function dlts_viewer_pdf_is_searchable ($entity = NULL) {
+  $is_searchable = &drupal_static('is_searchable');
+  if (!isset($is_searchable)) {
+    $is_searchable = FALSE;
+    if (!$entity) return $is_searchable;
+    try {
+      $wrapper = entity_metadata_wrapper('node', $entity);
+      foreach ($wrapper->field_collection->value() as $node) {
+        $cw = entity_metadata_wrapper('node', $node);
+        if ($cw->field_searchable_pdf->value()) {
+          $is_searchable = TRUE;
+        }
+      }
+    } catch (Exception $e) {
+      watchdog_exception('dlts_viewer', $e);
+    }
+  }
+  return $is_searchable;
+}
+
+function dlts_viewer_content_by_field ($field_name) {
     $out = array();
     $field_name = filter_xss($field_name);
     $info = field_info_field($field_name);

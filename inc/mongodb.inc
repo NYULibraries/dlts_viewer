@@ -38,6 +38,13 @@ function dlts_viewer_mongodb_load_by_identifier($identifier, $collection_name) {
     return $result;
 }
 
+function dlts_viewer_mongodb_load_by_item_identifier($identifier, $collection_name) {
+    $query = (object) array('isPartOf' => $identifier);
+    $cursor = mongodb_collection($collection_name);
+    $result = $cursor->find($query);
+    return $result;
+}
+
 function dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection_name = 'dlts_books_page') {
 	// make sure we have a number
 	$sequence = (int) $sequence;

@@ -290,36 +290,36 @@ function dlts_utilities_content_by_field ( $field_name ) {
   
 }
 
-function dlts_utilities_content_types_type( $type ) {
+// function dlts_utilities_content_types_type( $type ) {
 
-  $out = $fields = array();
+//   $out = $fields = array();
   
-  $content_type = node_type_get_type( $type );
+//   $content_type = node_type_get_type( $type );
   
-  if (!$content_type) return;
+//   if (!$content_type) return;
   
-  $field_info_instances = field_info_instances('node', $content_type->type);
+//   $field_info_instances = field_info_instances('node', $content_type->type);
     
-  foreach ( $field_info_instances as $field_name => $field_info_instance ) {
+//   foreach ( $field_info_instances as $field_name => $field_info_instance ) {
       
-      $info = field_info_field( $field_name );
+//       $info = field_info_field( $field_name );
       
-      $fields[] = array(
-        'label' => $field_info_instance['label'],
-        'field_name' => $field_info_instance['field_name'],
-        'type' => $field_info_instance['widget']['type'],
-        'cardinality' => (string) $info['cardinality'],
-        'settings' => array(
-          'allowed_values' => isset ( $info['settings']['allowed_values'] ) ? $info['settings']['allowed_values'] : null
+//       $fields[] = array(
+//         'label' => $field_info_instance['label'],
+//         'field_name' => $field_info_instance['field_name'],
+//         'type' => $field_info_instance['widget']['type'],
+//         'cardinality' => (string) $info['cardinality'],
+//         'settings' => array(
+//           'allowed_values' => isset ( $info['settings']['allowed_values'] ) ? $info['settings']['allowed_values'] : null
           
-        ),
-    );
+//         ),
+//     );
         
-  }  
+//   }  
 
-  return array ('typeInfo' => $content_type, 'fields' => $fields );
+//   return array ('typeInfo' => $content_type, 'fields' => $fields );
   
-}
+// }
 
 function dlts_utilities_content_types() {
   
