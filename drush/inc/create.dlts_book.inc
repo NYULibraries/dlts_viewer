@@ -628,10 +628,10 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
       	  // do we have a valid extension
       	  if (!in_array($ext,$valid_extensions)) continue;
       	  if (strpos($pdf_file, '_hi')) {
-      		$pdf_files[] = array('file' => $pdf_file, 'label' => 'High resolution');
+      		$pdf_files[] = array('file' => $pdf_file, 'label' => 'High-resolution');
       	  }
       	  elseif (strpos($pdf_file, '_lo')) {
-      		$pdf_files[] = array('file' => $pdf_file, 'label' => 'Low resolution');
+      		$pdf_files[] = array('file' => $pdf_file, 'label' => 'Low-resolution');
       	  }
       	  else {
       		$pdf_files[] = array('file' => $pdf_file);
@@ -644,10 +644,10 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
       	  // check that the URI is not bigger than the allowed MySQL size for varchar with index
       	  if (strlen($pdf_uri) > 255) continue;
       	  if (strpos($pdf_uri, '_hi')) {
-      	  	$pdf_files[] = array('file' => $pdf_uri, 'label' => 'High resolution');
+      	  	$pdf_files[] = array('file' => $pdf_uri, 'label' => 'High-resolution');
       	  }
       	  elseif (strpos($pdf_uri, '_lo')) {
-      	  	$pdf_files[] = array('file' => $pdf_uri, 'label' => 'Low resolution');
+      	  	$pdf_files[] = array('file' => $pdf_uri, 'label' => 'Low-resolution');
       	  }
       	  else {
       	  	$pdf_files[] = array('file' => $pdf_uri);

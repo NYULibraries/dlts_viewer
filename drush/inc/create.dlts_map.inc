@@ -627,10 +627,10 @@ function create_dlts_map_from_json($maps, $cretePages = FALSE, $legacy = FALSE) 
                     // do we have a valid extension
                     if (!in_array($ext,$valid_extensions)) continue;
                     if (strpos($pdf_file, '_hi')) {
-                        $pdf_files[] = array('file' => $pdf_file, 'label' => 'High resolution');
+                        $pdf_files[] = array('file' => $pdf_file, 'label' => 'High-resolution');
                     }
                     elseif (strpos($pdf_file, '_lo')) {
-                        $pdf_files[] = array('file' => $pdf_file, 'label' => 'Low resolution');
+                        $pdf_files[] = array('file' => $pdf_file, 'label' => 'Low-resolution');
                     }
                     else {
                         $pdf_files[] = array('file' => $pdf_file);
