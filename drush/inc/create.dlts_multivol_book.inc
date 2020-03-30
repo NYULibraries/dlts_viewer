@@ -111,11 +111,10 @@ function create_dlts_multivol_book($node) {
         $multivol_exist = multivol_nid($node->isPartOf->identifier);
     }
 
+
     if ($multivol_exist) {
-        $ewrapper->field_multivol->set($multivol_exist);
-    }
-  if ($multivol_exist) {
-    $ewrapper->field_multivol->set($multivol_exist);
+
+       $ewrapper->field_multivol->set($multivol_exist);
   }
 
   $ewrapper->save();
