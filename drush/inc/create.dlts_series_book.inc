@@ -31,8 +31,7 @@ function create_dlts_series_book($node) {
     // Load the node by NID
     $entity = node_load($exist);
     // Wrap it with Entity API
-
-      $ewrapper = entity_metadata_wrapper('node', $entity);
+    $ewrapper = entity_metadata_wrapper('node', $entity);
   }
   else {
     $values = array(
@@ -93,7 +92,7 @@ function create_dlts_series_book($node) {
   if ($node->book) {
     $book_exist = book_nid($node->book, 'en');
     if ($book_exist) {
-      $ewrapper->	field_book->set($book_exist);
+      $ewrapper->field_book->set($book_exist);
     }
   }
   $series_exist = series_nid($node->isPartOf->identifier);
