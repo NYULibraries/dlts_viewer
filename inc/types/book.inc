@@ -138,10 +138,10 @@ function _language_field(&$entity)
     $languages = $languages[1];
     $entity->lang_dir = (!isset($languages[$entity->language]->direction) || isset($languages[$entity->language]->direction) && $languages[$entity->language]->direction == 0) ? 'ltr' : 'rtl';
     $entity->lang_language = isset($languages[$entity->language]->language) ? $languages[$entity->language]->language : 'en';
-    $entity->lang_name = isset($languages[$entity->language]->name) ? $languages[$entity->language]->name : 'English';
+    $entity->lang_name = isset($languages[$entity->language]->name) ? $languages[$entity->language]->name : t('English');
     $translations = translation_path_get_translations('node/' . $entity->nid);
     if (count($translations) > 1) {
-        $entity->lang_options = array('#type' => 'markup', '#prefix' => '<select class="language" aria-label="Choose Language for Metadata">', '#suffix' => '</select>', '#markup' => '');
+        $entity->lang_options = array('#type' => 'markup', '#prefix' => '<select class="language" aria-label="' . t('Choose Language for Metadata') . '">', '#suffix' => '</select>', '#markup' => '');
         foreach ($translations as $key => $index) {
             $url = url('books/' . $entity->identifier . '/display', array('absolute' => true, 'query' => array('lang' => $key)));
             $markup = array(
@@ -171,7 +171,11 @@ function dlts_viewer_dispatcher($entity, $arg)
     $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
 // test if resource
     $is_resource = dlts_viewer_is_resource();
-// check request type
+
+    if ($is_resource) {
+      dlts_viewer_resource_language_code($entity);
+    }
+    // check request type
     $is_pjax = dlts_viewer_is_pjax();
 // check for mobile devices
     $is_mobile = dlts_viewer_is_mobile();
@@ -188,20 +192,20 @@ function dlts_viewer_dispatcher($entity, $arg)
 // change entity title
         $entity->title = t('@title @volume', array('@title' => $multivolume_book->title, '@volume' => $volume_number_str));
     }
-// check if this books is part of a series
-// $series_book = dlts_viewer_is_series_book($entity);
-// not sure if this is right. the book can part of multiple series book
-// figure out the right way to pick the title
-// maybe we can do something along the lines of: Book Title (also known as Series book title 1, Series book title 2)
-//if ($entity->isSeriesBook) {
-//dpm($entity->seriesBook);
-//foreach ($entity->seriesBook as $series_book) {
-// for now just get the last one (since we just have one for now)
-// talk about this with the group and fix later.
-//$entity->title = $series_book['volume_label'];
-//}
-//}
-// set entity title
+
+    // check if this books is part of a series
+    // $series_book = dlts_viewer_is_series_book($entity);
+    // not sure if this is right. the book can part of multiple series book
+    // figure out the right way to pick the title
+    // maybe we can do something along the lines of: Book Title (also known as Series book title 1, Series book title 2)
+    //if ($entity->isSeriesBook) {
+    //foreach ($entity->seriesBook as $series_book) {
+    // for now just get the last one (since we just have one for now)
+    // talk about this with the group and fix later.
+    //$entity->title = $series_book['volume_label'];
+    //}
+    //}
+    // set entity title
     drupal_set_title($entity->title);
 // wrapp book entity with Entity API wrapper
     $book_wrapper = entity_metadata_wrapper('node', $entity);

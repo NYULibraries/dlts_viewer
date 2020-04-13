@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html dir="<?php print $language_dir ?>" class="<?php print $classes; ?>">
+<html lang="<?php print $resource_language_code ?>" dir="<?php print $language_dir ?>" class="<?php print $classes; ?>">
 <head>
     <?php print $head ?>
     <title><?php print $head_title ?></title>
@@ -21,4 +21,3 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <?php print $page_bottom ?>
 </body>
 </html>
-

@@ -95,7 +95,14 @@ function create_dlts_series_book($node) {
       $ewrapper->field_book->set($book_exist);
     }
   }
-  $series_exist = series_nid($node->isPartOf->identifier);
+
+  if (is_array($node->isPartOf)) {
+        $series_exist = series_nid($node->isPartOf[0]->identifier);
+  }
+  else {
+        $series_exist = series_nid($node->isPartOf->identifier);
+  }
+
 
   if ($series_exist) {
     $ewrapper->field_series->set($series_exist);

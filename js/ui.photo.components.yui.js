@@ -15,19 +15,9 @@ YUI().use(
         Y.io.header('X-PJAX', 'true');
         var PJAX_INVALID = -1;
         var PJAX_UNKNOWN_ERROR = -2;
-        var html = Y.one('html');
-        var top = Y.one('#top');
-        var pagemeta = Y.one('.pane.pagemeta');
-        var display = Y.one('#display');
-        var displayData = display.getData();
-        var photoUrl = displayData['url'];
-        var sequenceCount = parseInt(displayData['sequence-count'] , 10);
-        var sequence = parseInt(displayData['sequence'] , 10);
-        var pager=Y.one('#pager');
+        var html = Y.one('html');        
 
         /** nodes */
-
-
         function on_button_click(e) {
             e.preventDefault();
             var self = this;
@@ -74,13 +64,10 @@ YUI().use(
             Y.fire(event_prefix + ':toggle', e);
         }
 
-
         function pjax_navigate(e) {
-            Y.one('body').addClass('openlayers-loading')
-            var msg = e.url.replace(photoUrl, '' ).replace('/' , '');
-            if (/(^[\d]+$){1}/.test(msg ) || /(^[\d]+-[\d]+$){1}/.test(msg)) {
-                this.one('.current_page').set('text', msg);
-            }
+            Y.one('body').addClass('openlayers-loading');
+            var parts = e.url.split('/');
+            this.one('.current_page').set('text', parts[parts.length - 1]);
             this.addClass('loading').show();
         }
 
@@ -168,7 +155,6 @@ YUI().use(
 
         function fullscreenOn(e) {
             var docElm = document.documentElement;
-            var metadata = Y.one('.pagemeta');
             var top = Y.one('.top');
             var button = Y.one('#button-metadata');
             if (button) {
@@ -216,7 +202,6 @@ YUI().use(
             Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-fullscreen:off'}));
         }
 
-
         function change_page(config) {
             var map;
             var service;
@@ -240,7 +225,6 @@ YUI().use(
             }, '#' + config.id);
         }
 
-
         function openLayersTilesLoading() {
             if (Y.one('body').hasClass('openlayers-loading')) {
                 Y.later(200, Y.one('.pane.load'), openLayersTilesLoading);
@@ -250,27 +234,14 @@ YUI().use(
             }
         }
 
-
-        function onButtonThumbnailsOnIOStart(e) {
-            var thumbnails = Y.one('#thumbnails');
-            if (thumbnails) {
-                thumbnails.removeClass('hidden');
-            }
-        }
-
         function onButtonThumbnailsOn(e) {
-
-            e.halt();
-               var node = Y.one('.node.pjax');
-               var dataSequence = Math.round(parseInt(sequence), 10) /20;
-               var container = Y.one('.pjax-container');
-               location.href = e.currentTarget.get('href') + '?page=' +0 ;
+          e.halt();
+          window.location.href = e.currentTarget.get('href') + '?page=' + 0;
         }
-
 
         function onThumbnailsContainerPagerClick(e) {
-            e.preventDefault();
-            pjax.navigate(e.currentTarget.get('href'));
+          e.preventDefault();
+         pjax.navigate(e.currentTarget.get('href'));
         }
 
         function onThumbnailsPagePagerClick(e) {
@@ -318,22 +289,21 @@ YUI().use(
             Y.one('.thumbnails-container').removeClass('io-loading');
         }
 
-        function onThumbnailsPageSuccess(id, response) {
-            Y.one('.thumbnails-container').set('innerHTML', response.response);
+        function onThumbnailsPageSuccess(_id, response) {
+          Y.one('.thumbnails-container').set('innerHTML', response.response);
         }
 
-        function onThumbnailsPageFailure(id, request)  {
-            Y.log('failure');
+        function onThumbnailsPageFailure()  {
+          Y.log('failure');
         }
 
-        function onThumbnailsOnSuccess(id, request) {
-            var node = Y.one('#thumbnails');
-            if (node) {
-                node.set('innerHTML', request.response);
-                node.addClass('active');
-            }
+        function onThumbnailsOnSuccess(_id, request) {
+          var node = Y.one('#thumbnails');
+          if (node) {
+            node.set('innerHTML', request.response);
+            node.addClass('active');
+          }
         }
-
 
         /** events listeners */
 
@@ -362,8 +332,6 @@ YUI().use(
         /** Thumbnails related events */
         Y.on('button:button-thumbnails:on', onButtonThumbnailsOn);
 
-        //Y.on('button:button-thumbnails:off', onButtonThumbnailsOff);
-
         Y.delegate('click', onThumbnailsContainerPagerClick, 'body', '.thumbnails .views-row a');
 
         Y.one('body').delegate('click', onThumbnailsPagePagerClick, '#thumbnails .pager a');
@@ -375,12 +343,17 @@ YUI().use(
             var currentTarget = e.currentTarget;
             var value = currentTarget.one(':checked').get('value');
             var url = value.substring(value.indexOf('::') + 2, value.length);
-            var data = { url : url };
+            var data = { 
+              url : url
+            };
             if (window.self === window.top) {
-                window.location.replace(url);
+              window.location.replace(url);
             }
             else {
-                Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'change:option:multivolume', data: $data }));
+              Y.CrossFrame.postMessage('parent', JSON.stringify({ 
+                fire: 'change:option:multivolume',
+                data: data
+              }));
             }
         }
 
