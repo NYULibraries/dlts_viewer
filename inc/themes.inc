@@ -314,14 +314,16 @@ function theme_dlts_viewer_openlayers_image($variables) {
 
   drupal_add_js($js_inline, $js_options);
 
-  if(!isset($file['thumbnailsUrl'])) {
-      $file['thumbnailsUrl'] = 'undefined';
+  if (!isset($file['thumbnailsUrl'])) {
+    $file['thumbnailsUrl'] = 'undefined';
   }
-  if(!isset($file['thumbnailsRows'])) {
-        $file['thumbnailsRows'] = 0;
+
+  if (!isset($file['thumbnailsRows'])) {
+    $file['thumbnailsRows'] = 0;
   }
-  if(!isset($file['thumbnailsPage'])) {
-        $file['thumbnailsPage'] = 0;
+
+  if (!isset($file['thumbnailsPage'])) {
+    $file['thumbnailsPage'] = 0;
   }
 
   $options = array(
@@ -470,18 +472,27 @@ function theme_thumbnails_photo_pager($vars) {
 
 // See ticker https://jira.nyu.edu/jira/browse/DLTSVIEWER-95
 function theme_field__field_pdf_file (&$variables) {
-  
   $out = '';
-
   $dir = dlts_viewer_viewer_language((array)$variables['element']['#object']);
-
   if ($variables['element']['#view_mode'] == 'metadata') {
     $out .= '<div dir="' . $dir . '" class="field field-name-field-pdf clearfix">';
     $out .= '<div dir="' . $dir . '" class="field-label">' . locale('Download', NULL, $variables['element']['#object']->language) . ':</div>';
     foreach ($variables['items'] as $key => $item) {
+      $filesize = 0;
+      if (isset($variables['element']['#items'][$key]['data'])) {
+        $data = unserialize($variables['element']['#items'][$key]['data']);
+        if (isset($data['filesize'])) {
+          $filesize = $data['filesize'];
+        } else {
+          $filesize = field_fileserver_get_pdf_filesize($data);
+        }
+      }
+
       $out .= '<div class="pdf-items" dir="' . $dir . '">';
       $out .= '<div class="pdf-item" dir="' . $dir . '">
-      <a href="' . $variables['items'][$key]['#attributes']['href'] . '" class="' . implode(' ', $variables['items'][$key]['#attributes']['class']) . '">';
+
+      <a data-filesize="' . $filesize . '" href="' . $variables['items'][$key]['#attributes']['href'] . '" class="' . implode(' ', $variables['items'][$key]['#attributes']['class']) . '">';
+      
       $out .= '<span class="icon" aria-hidden="true" role="presentation">
             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" fill="#9f2226" width="14" height="17" viewBox="0 0 30 40" style="enable-background:new 0 0 30 40;" xml:space="preserve">
             <path d="M14.2,20c-0.4-1.2-0.4-3.7-0.2-3.7C14.7,16.3,14.6,19.2,14.2,20z M14.1,23.7c-0.6,1.6-1.4,3.4-2.2,4.9
@@ -493,16 +504,19 @@ function theme_field__field_pdf_file (&$variables) {
                 C30,9,29.8,8.6,29.5,8.2z M23.7,28.1c0.3-0.2-0.2-0.9-3.3-0.7C23.2,28.7,23.7,28.1,23.7,28.1z"></path>
             </svg></span>';
 
-       $out .= locale($variables['items'][$key]['#value'], NULL, $variables['element']['#object']->language) . ' ' . locale('PDF', NULL, $variables['element']['#object']->language);
+      $out .= locale($variables['items'][$key]['#value'], NULL, $variables['element']['#object']->language) . ' ' . locale('PDF', NULL, $variables['element']['#object']->language) . ' <span class="filesize">' .  $filesize . '</span>';
 
-       if (dlts_viewer_pdf_is_searchable()) {
+      if (dlts_viewer_pdf_is_searchable()) {
         $out .= '  <span class="is-searchable" dir="' . $dir . '">(' . locale('searchable', NULL, $variables['element']['#object']->language) . ')</span>';
       }
+
       $out .= '</a></div></div>';
     }
 
     $out .= '</div>';
-
+    
     return $out;
+
   }
 }
+ 
