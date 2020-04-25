@@ -65,18 +65,32 @@ function dlts_viewer_drush_command() {
             'legacy' => dt('Create book using legacy JSON documents.'),
         ),
     );
-    $items['import-free-queue'] = array(
-        'callback' => 'dlts_viewer_free_json_documents_queue',
-        'description' => dt('Import book from a git repository'),
-        'options' => array(
-            'pages' => dt('Create pages.'),
-        ),
-    );
-     $items['update-book-topic'] = array(
-        'callback' => 'dlts_viewer_update_book_topic',
-        'description' => dt('Update book topic from call number'),
-    );
-    return $items;
+
+  $items['import-free-queue'] = array(
+    'callback' => 'dlts_viewer_free_json_documents_queue',
+    'description' => dt('Import book from a git repository'),
+    'options' => array(
+      'pages' => dt('Create pages.'),
+    ),
+  );
+
+  $items['init-pdf-filesize'] = array(
+    'callback' => 'dlts_viewer_drush_init_pdf_filesize',
+    'description' => dt('Init PDF filesize'),
+  );
+
+  $items['update-pdf-filesize'] = array(
+    'callback' => 'dlts_viewer_drush_update_pdf_filesize',
+    'description' => dt('Update PDF filesize'),
+  );
+
+  $items['update-book-topic'] = array(
+    'callback' => 'dlts_viewer_update_book_topic',
+    'description' => dt('Update book topic from call number'),
+  );  
+
+  return $items;
+
 }
 
 /**
@@ -96,6 +110,85 @@ function dlts_viewer_drush_help($section) {
     case 'drush:import-book':
       return dt("Some day someone will document this module");
       break;
+  }
+}
+
+function dlts_viewer_list_nodes_pdf() {
+  $query = db_query("SELECT * FROM {dlts_viewer_pdf_node_map} WHERE status = 0 LIMIT 1");
+  if ($query->rowCount() > 0) {
+    return $query->fetchAll();
+  }
+  return false;
+}
+
+function dlts_viewer_drush_init_pdf_filesize() {
+  $table = 'dlts_viewer_pdf_node_map';
+  if (!db_table_exists($table)) {
+    db_create_table(
+      $table, 
+      array(
+        'description' => 'Table map to save nodes that need to be update per ticket DLTSACO-771.',
+        'fields' => array(
+          'nid' => array(
+            'type' => 'int', 
+            'unsigned' => TRUE, 
+            'not null' => TRUE
+          ),
+          'status' => array(
+            'type' => 'int', 
+            'unsigned' => TRUE, 
+            'not null' => TRUE, 
+            'default' => '0'
+          ),
+        ),
+      )
+    );
+  }    
+  foreach (dlts_viewer_list_books() as $nid) {
+    db_insert('dlts_viewer_pdf_node_map')->fields(array('nid' => $nid))->execute();
+  }
+}
+
+function dlts_viewer_drush_update_pdf_node($nodes, $edit) {
+  global $base_url;
+  $en_nid = $nodes[0]->nid;
+  foreach ($nodes as $node) {
+    $url = url("$base_url/node/$node->nid");
+    drush_log($url . ' - ' . $node->language . ' - ' . $node->title, 'ok');
+    try {
+      $wrapper = entity_metadata_wrapper('node', $node);
+      $wrapper->field_pdf_file->set($edit);
+      $wrapper->save();
+    } catch (Exception $e) {
+      drush_log('Caught exception: ' . $e->getMessage(), 'error');
+    }
+  }
+  db_merge('dlts_viewer_pdf_node_map')->key(array('nid' => $en_nid))->fields(array('status' => 1))->execute();
+}
+
+function dlts_viewer_drush_update_pdf_filesize() {
+  $results = dlts_viewer_list_nodes_pdf();
+  if (!$results) {
+    exit(1);
+  }
+  foreach ($results as $result) {
+    $nodes = array();      
+    $entity = node_load($result->nid);
+    $wrapper = entity_metadata_wrapper('node', $entity);
+    $items = $wrapper->field_pdf_file->value();
+    $edit = array();
+    $ar_nid = book_nid($wrapper->field_identifier->value(), 'ar');
+    $nodes[] = $entity;
+    if ($ar_nid) {
+      $nodes[] = node_load($ar_nid);
+    }
+    foreach ($items as $item) {
+      $data = unserialize($item['data']);
+      $data['filesize'] = field_fileserver_get_pdf_filesize($data);
+      $item['data'] = serialize($data);
+      $edit[] = $item;
+    }
+    dlts_viewer_drush_update_pdf_node($nodes, $edit);
   }
 }
 
