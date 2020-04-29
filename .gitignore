@@ -9,7 +9,7 @@
 js/node_modules
 *.sql
 *.json
-
+!filesize-from-csv.json
 # Ignore editor backup files
 *~
 *#
