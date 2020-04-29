@@ -336,9 +336,12 @@ function field_fileserver_field_widget_info() {
  */
 function field_fileserver_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
 	$new_node = (isset($entity->nid)) ? true : false;
+  // Wrap it with Entity API
+  $ewrapper = entity_metadata_wrapper('node', $entity);
+	$isPartOf = $ewrapper->field_identifier->value();
 	if ($instance['widget']['module'] == 'field_fileserver') {
 	  foreach ($items as $key => $item) {
-      //check for web-safe file extentions
+      // check for web-safe file extentions
 		  $pathinfo = pathinfo($item['uri']);
 		  $basename = str_replace('fileserver://', '', $pathinfo['basename']);
 		  $ext = pathinfo($items[$key]['uri'], PATHINFO_EXTENSION);
@@ -371,10 +374,53 @@ function field_fileserver_field_presave($entity_type, $entity, $field, $instance
 		      	$new_data['height'] = 230;
 		      }
 		      break;
-		  }
+			}
+			// aof1
+			// Not ideal, but we plan to migrate.
+			// Check if this is the pdf_file instance. If so,
+			// We need to check if we have the file size information.
+			// At this moment I still don't have the R* endpoint 
+			// to gather this information. If we have the size 
+			// information, add this data to the 'data' property 
+			// of the field.
+			// See: https://jira.nyu.edu/jira/browse/DLTSACO-771
+			if ($instance['field_name'] == 'field_pdf_file') {
+			  $new_data['filesize'] = field_fileserver_get_pdf_filesize($items[$key]);
+			}
 		  $items[$key]['data'] = serialize($new_data);
 		}
 	}
+}
+
+// https://www.php.net/manual/de/function.filesize.php
+function field_fileserver_human_filesize($bytes, $decimals = 2) {
+  $sz = 'BKMGTP';
+  $factor = floor((strlen($bytes) - 1) / 3);
+  return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$sz[$factor] . 'b';
+}
+
+function field_fileserver_get_pdf_filesize($item) {
+	$pathinfo = pathinfo($item['uri']);
+	$basename = $pathinfo['basename'];
+	preg_match('/(.*)_(lo|hi)\.pdf/', $basename, $matches);
+	if ($matches && isset($matches[1]) && isset($matches[2])) {
+		$identifier = $matches[1];
+		$kind = $matches[2];
+		$datasource_filepath = drupal_get_path('module', 'dlts_viewer') . '/datasource/filesize-from-csv.json';
+		if (
+			file_exists($datasource_filepath)
+	  ) {
+			$datasource = json_decode(file_get_contents($datasource_filepath));
+			if (
+				isset($datasource->$identifier) &&
+				isset($datasource->$identifier->files->$basename) &&
+				isset($datasource->$identifier->files->$basename->sizeInBytes)
+			) {
+				return $datasource->$identifier->files->$basename->sizeInBytes;
+			}				
+		}
+	}
+	return 0;
 }
 
 /**
@@ -388,6 +434,7 @@ function field_fileserver_field_presave($entity_type, $entity, $field, $instance
  *
  */
 function field_fileserver_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+
 	$uri_value = isset($items[$delta]['uri']) ? trim($items[$delta]['uri']) : '';
 	$data_value = isset($items[$delta]['data']) ? unserialize($items[$delta]['data']) : null;
 	$uri_widget = $element;
@@ -420,7 +467,7 @@ function field_fileserver_field_widget_form(&$form, &$form_state, $field, $insta
   $data_widget += array(
     '#type' => 'hidden',
     '#default_value' => $data_value
-  );
+	);
 
   $element['label'] = $label_widget;
   $element['uri'] = $uri_widget;
