@@ -176,7 +176,7 @@ function dlts_viewer_list_collections($start = 0, $length = 100) {
 }
 
 // list books and return array ('title', 'identifier')
-function dlts_viewer_list_books($start = 0, $length = 15, $requestedLang = 'en') {
+function dlts_viewer_api_list_books($start = 0, $length = 15, $requestedLang = 'en') {
 
   $availableLanguages = array_keys(language_list());
 

@@ -68,7 +68,7 @@ function _dlts_viewer_menu_api() {
   // JSON
   $items['api/v1/books'] = array(
     'access arguments' => array('access content'),
-    'page callback' => 'dlts_viewer_list_books',
+    'page callback' => 'dlts_viewer_api_list_books',
     'delivery callback' => 'dlts_viewer_deliver_json',
     'file' => 'inc/endpoints.inc',
   );
