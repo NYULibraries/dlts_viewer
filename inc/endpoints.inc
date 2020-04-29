@@ -303,7 +303,7 @@ function _dlts_viewer_book_loader($identifier) {
     echo file_get_contents($realpath);
     exit(0);
   } else {
-    return _dlts_viewer_book_json(
+    return dlts_viewer_api_book_json(
       dlts_book_load($identifier)
     );
   }
@@ -399,7 +399,7 @@ function _dlts_viewer_book_thumbnails_loader($identifier, $page = 0, $per_page =
 // return a book JSON object with it's metadata
 // used by:
 // - menu_hook: 'api/v1/books/%'
-function _dlts_viewer_book_json($entity, $requestedLang = 'en') {
+function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
   // Books to test:
   // http://sites.dlib.nyu.edu/viewer/books/brill_awdl000076/1
