@@ -480,15 +480,22 @@ function theme_field__field_pdf_file (&$variables) {
     foreach ($variables['items'] as $key => $item) {
       $filesize = 0;
       $humanFilesizeReadable = null;
-      if (isset($variables['element']['#items'][$key]['data'])) {
-        $data = unserialize($variables['element']['#items'][$key]['data']);
-        if (isset($data['filesize'])) {
-          $filesize = $data['filesize'];
-        } else {
-          $filesize = field_fileserver_get_pdf_filesize($data);
-          if ($filesize > 0) {
-            $humanFilesizeReadable = field_fileserver_human_filesize($filesize);
+      if (
+        isset($variables['element']['#items'][$key]['data']) && 
+        dlts_viewer_is_serialized($variables['element']['#items'][$key]['data'])
+      ) {
+        try {
+          $data = unserialize($variables['element']['#items'][$key]['data']);
+          if (isset($data['filesize'])) {
+            $filesize = $data['filesize'];
+          } else {
+            $filesize = field_fileserver_get_pdf_filesize($data);
+            if ($filesize > 0) {
+              $humanFilesizeReadable = field_fileserver_human_filesize($filesize);
+            }
           }
+        } catch (Exception $e) {
+          // dpr($e);
         }
       }
 
