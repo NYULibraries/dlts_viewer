@@ -286,6 +286,8 @@ function _dlts_viewer_book_loader($identifier) {
 
   $requestedLang = 'en';
 
+  $type = 'books';
+
   // need to make sure lang exists
   if (isset($query_parameters['lang'])) {
     $requestedLang = $query_parameters['lang'];
