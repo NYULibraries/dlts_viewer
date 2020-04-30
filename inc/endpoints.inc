@@ -279,14 +279,12 @@ function dlts_viewer_api_list_books($start = 0, $length = 15, $requestedLang = '
   return $response;
 }
 
-function _dlts_viewer_book_loader($identifier) {
+function _dlts_viewer_book_loader($type, $identifier) {
 
   // get query parameters
   $query_parameters = drupal_get_query_parameters();
 
   $requestedLang = 'en';
-
-  $type = 'books';
 
   // need to make sure lang exists
   if (isset($query_parameters['lang'])) {
