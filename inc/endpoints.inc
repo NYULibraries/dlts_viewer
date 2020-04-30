@@ -279,7 +279,7 @@ function dlts_viewer_api_list_books($start = 0, $length = 15, $requestedLang = '
   return $response;
 }
 
-function _dlts_viewer_book_loader($type, $identifier) {
+function _dlts_viewer_book_loader($type, $identifier, $reset = false) {
 
   // get query parameters
   $query_parameters = drupal_get_query_parameters();
@@ -299,6 +299,7 @@ function _dlts_viewer_book_loader($type, $identifier) {
 
   if (file_exists($realpath) && !$reset) {
     header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET');
     header('Content-Type: application/json;charset=utf-8');
     echo file_get_contents($realpath);
     exit(0);
