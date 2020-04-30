@@ -203,7 +203,7 @@ function dlts_viewer_api_list_books($start = 0, $length = 15, $requestedLang = '
     }    
     $cnid = dlts_viewer_collection_nids_by_code($query_parameters['collection'], $partner);
   }
-  
+
   $filter = '';
   
   if (isset($query_parameters['filter'])) {
@@ -630,15 +630,17 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
       break;
       
       case 'partner':
+        $partner_value = array();
         foreach ($raw_value as $partner) {
           $partner_wrapper = entity_metadata_wrapper('node', $partner);
-          $value[] = array(
+          $partner_value[] = array(
             'identifier' => $partner_wrapper->field_identifier->value(),
             'code' => $partner_wrapper->field_code->value(),
             'name' => locale($partner_wrapper->field_name->value(), NULL, $requestedLang),
           );
         }
-        $fields[$name]['value'] = $value;
+        $fields[$name]['value'] = $partner_value;
+        unset($partner_value);
       break;
 
       case 'pdf_file':
