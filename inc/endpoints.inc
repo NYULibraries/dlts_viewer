@@ -643,7 +643,11 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
           'lo' => array(),
         );
         foreach ($raw_value as $value) {
-          $data = unserialize($value['data']);
+          $data = array(
+            'uri' => $value['uri'],
+            'label' => $value['label'],
+          );
+          $data['size'] = field_fileserver_get_pdf_filesize($data);
           $data['uri'] = file_create_url($data['uri']);
           $filename = pathinfo($data['uri'], PATHINFO_FILENAME);
           preg_match('/_(hi|lo)/', $filename, $matches);
@@ -654,7 +658,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
                   'label' => locale('High-resolution', NULL, $requestedLang),
                   'uri' => $data['uri'],
                   'searchable' => false, // for now, will use R* API to get this information
-                  'size' => 1, // for now, will use R* API to get this information
+                  'size' => $data['size'], // for now, will use R* API to get this information
                 );
               break;
               case 'lo':
@@ -662,7 +666,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
                   'label' => locale('Low-resolution', NULL, $requestedLang),
                   'uri' => $data['uri'],
                   'searchable' => false, // for now, will use R* API to get this information
-                  'size' => 1, // for now, will use R* API to get this information
+                  'size' => $data['size'], // for now, will use R* API to get this information
                 );
               break;
             }
