@@ -6,7 +6,7 @@ function _dlts_viewer_menu_api() {
     'title' => 'Cotent types',
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_content_by_field',
-    'delivery callback' => 'dlts_viewer_deliver_json',
+    'delivery callback' => 'drupal_json_output',
     'page arguments' => array(2),
   );
 
@@ -39,7 +39,7 @@ function _dlts_viewer_menu_api() {
   $items['api/v1/books/%'] = array(
     'access arguments' => array('access content'),
     'page callback' => '_dlts_viewer_book_loader',
-    'delivery callback' => 'dlts_viewer_deliver_json',
+    'delivery callback' => 'drupal_json_output',
     'page arguments' => array(2, 3),
     'file' => 'inc/endpoints.inc',
   );
@@ -49,7 +49,7 @@ function _dlts_viewer_menu_api() {
   $items['api/v1/books/%/thumbnails'] = array(
     'access arguments' => array('access content'),
     'page callback' => '_dlts_viewer_book_thumbnails_loader',
-    'delivery callback' => 'dlts_viewer_deliver_json',
+    'delivery callback' => 'drupal_json_output',
     'page arguments' => array(3),
     'file' => 'inc/endpoints.inc',
   );
@@ -61,7 +61,7 @@ function _dlts_viewer_menu_api() {
     'access arguments' => array('access content'),
     'page callback' => '_dlts_viewer_book_page_loader',
     'page arguments' => array(2, 3),
-    'delivery callback' => 'dlts_viewer_deliver_json',
+    'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
   );
 
@@ -77,7 +77,7 @@ function _dlts_viewer_menu_api() {
   $items['api/v1/collections'] = array(
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_list_collections',
-    'delivery callback' => 'dlts_viewer_deliver_json',
+    'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
   );
 
@@ -88,7 +88,7 @@ function _dlts_viewer_menu_api() {
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_iiif_data',
     'page arguments' => array(2, 3, 4),
-    'delivery callback' => 'dlts_viewer_deliver_json',
+    'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
   );
   
