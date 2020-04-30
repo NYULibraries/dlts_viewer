@@ -120,11 +120,11 @@ function dlts_viewer_list_collections($start = 0, $length = 100) {
 
   // get query parameters
   $query_parameters = drupal_get_query_parameters();
-  
+
   if (isset($query_parameters['rows']) && is_numeric($query_parameters['rows'])) {
     $length = $query_parameters['rows'];
   }
-  
+
   if (isset($query_parameters['start']) && is_numeric($query_parameters['start'])) {
     $start = $query_parameters['start'];
   }
@@ -158,13 +158,14 @@ function dlts_viewer_list_collections($start = 0, $length = 100) {
     $entity = node_load('node', $node->nid);
     $wrapper = entity_metadata_wrapper('node', $entity);
     $partners = array();
-    foreach ($wrapper->field_partner->value() as $p) {
-      $pw = entity_metadata_wrapper('node', $p);
-      $partners[] = array(
-        'name' => $pw->field_name->value(),
-        'code' => $pw->field_code->value(),
-      );
-    } 
+    foreach ($wrapper->field_partner->getIterator() as $delta => $partner_wrapper) {
+      if ($partner_wrapper->getBundle() == 'dlts_partner') {
+        $partners[] = array(
+          'name' => $partner_wrapper->field_name->value(),
+          'code' => $partner_wrapper->field_code->value(),
+        );
+      }
+    }
     $response['response']['docs'][] = array(
       'title' => trim($wrapper->field_name->value()),
       'identifier' => $wrapper->field_identifier->value(),
@@ -172,7 +173,9 @@ function dlts_viewer_list_collections($start = 0, $length = 100) {
       'partners' => $partners,
     );
   }
+
   return $response;
+
 }
 
 // list books and return array ('title', 'identifier')
