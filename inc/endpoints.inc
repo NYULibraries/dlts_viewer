@@ -809,3 +809,69 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   return $response;
 
 }
+
+function dlts_viewer_djakota_book_page_loader($identifier, $sequence) {
+  $data = dlts_viewer_mongodb_load_sequence($sequence, $identifier, 'dlts_books_page');
+  if (isset($data['cm'])) {
+    if (isset($data['cm']['identifier'])) {
+      return $data['cm'];
+    } elseif (isset($data['cm']['uri'])) {
+      /**
+       * Load djatoka helper
+       */
+      module_load_include('inc', 'dlts_viewer', 'inc/djatoka');      
+      return dlts_viewer_djatoka_request(
+        array(
+          'uri' => $data['cm']['uri'],
+        )
+      );
+    }
+  }
+  exit(1);
+}
+
+// e.g., http://localhost:9000/viewer/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
+function dlts_viewer_djakota_stream_book_page() {
+  
+  // get query parameters
+  $query_parameters = drupal_get_query_parameters();
+
+  if (isset($query_parameters['id'])) {
+    $id = rawurlencode($query_parameters['id']);
+  } else {
+    die('Request must include id');
+  }
+
+  if (isset($query_parameters['level'])) {
+    $level = $query_parameters['level'];
+  } else {
+    die('Request must include level');
+  }
+
+  if (isset($query_parameters['region'])) {
+    $region = $query_parameters['region'];
+  } else {
+    die('Request must include region');
+  }
+
+  header('Content-type: image/jpeg');
+  header('Access-Control-Allow-Origin: *');
+  header('Access-Control-Allow-Methods: GET');
+  header("Content-Transfer-Encoding: binary");  
+
+  $resolver = 'http://dl-img.home.nyu.edu/adore-djatoka/resolver';  
+  
+  $url_ver = 'Z39.88-2004';
+  
+  $svc_id = 'info:lanl-repo/svc/getRegion';
+  
+  $svc_val_fmt = 'info:ofi/fmt:kev:mtx:jpeg2000';
+  
+  $url = $resolver . '?url_ver=' . $url_ver . '&rft_id=' . $id . '&svc_id=' . $svc_id . '&svc_val_fmt=' . $svc_val_fmt . '&svc.region=' . $region . '&svc.level=' . $level;
+
+  echo file_get_contents($url);
+  
+  exit(0);
+
+}
+

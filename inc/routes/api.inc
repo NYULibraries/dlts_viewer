@@ -59,11 +59,20 @@ function _dlts_viewer_menu_api() {
   $items['api/v1/books/%/%'] = array(
     'title' => 'JSON representation of the book',
     'access arguments' => array('access content'),
-    'page callback' => '_dlts_viewer_book_page_loader',
-    'page arguments' => array(2, 3),
+    'page callback' => 'dlts_viewer_djakota_book_page_loader',
+    'page arguments' => array(3, 4),
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
   );
+
+  // stream_book_page
+  // identifier, region, level
+  $items['api/v1/tile'] = array(
+    'title' => 'Stream image tile',
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_djakota_stream_book_page',
+    'file' => 'inc/endpoints.inc',
+  );  
 
   // JSON
   $items['api/v1/books'] = array(
