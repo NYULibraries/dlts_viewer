@@ -481,18 +481,26 @@ function theme_field__field_pdf_file (&$variables) {
       $filesize = 0;
       $humanFilesizeReadable = null;
       if (
-        isset($variables['element']['#items'][$key]['data']) && 
-        dlts_viewer_is_serialized($variables['element']['#items'][$key]['data'])
+        isset($variables['element']['#items'][$key]['data'])
       ) {
-        $data = unserialize($variables['element']['#items'][$key]['data']);
-        if (isset($data['filesize']) && $data['filesize'] > 0) {
-          $filesize = $data['filesize'];
-          $humanFilesizeReadable = field_fileserver_human_filesize($filesize);
-        } else {
-          $filesize = field_fileserver_get_pdf_filesize($data);
-          if ($filesize > 0) {
+        if (dlts_viewer_is_serialized($variables['element']['#items'][$key]['data'])) {
+          $data = unserialize($variables['element']['#items'][$key]['data']);
+          if (isset($data['filesize']) && $data['filesize'] > 0) {
+            $filesize = $data['filesize'];
             $humanFilesizeReadable = field_fileserver_human_filesize($filesize);
+          } else {
+            $filesize = field_fileserver_get_pdf_filesize($data);
+            if ($filesize > 0) {
+              $humanFilesizeReadable = field_fileserver_human_filesize($filesize);
+            }
           }
+        } else {
+          $filesize = field_fileserver_get_pdf_filesize(
+            array(
+              'uri' => $variables['element']['#items'][$key]['uri']
+            )
+          );
+          $humanFilesizeReadable = field_fileserver_human_filesize($filesize);
         }
       }
       $out .= '<div class="pdf-items" dir="' . $dir . '">';
