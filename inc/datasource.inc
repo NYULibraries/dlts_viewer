@@ -277,3 +277,71 @@ function map_nid($identifier, $language = LANGUAGE_NONE) {
   $keys = array_keys($result['node']);
 	return (int)$keys[0];
 }
+
+function dlts_viewer_partner_nid_by_code($code) {
+	$query = new EntityFieldQuery;
+	$result = $query
+	  ->entityCondition('entity_type', 'node')
+	  ->entityCondition('bundle', 'dlts_partner')
+		->fieldCondition('field_code', 'value', $code, '=')
+		->addMetaData('account', user_load(0))
+		->execute();
+	if (empty($result['node'])) {
+		return FALSE;
+	}
+	return array_keys($result['node']);
+}
+
+function dlts_viewer_collection_nids_by_code($code, $partnerCode = null) {
+
+	$partnerNid = dlts_viewer_partner_nid_by_code($partnerCode);
+	
+	$query = new EntityFieldQuery;
+
+	$query->entityCondition('entity_type', 'node')
+	  ->entityCondition('bundle', 'dlts_collection')
+		->fieldCondition('field_code', 'value', $code, '=');
+
+  if ($partnerCode) {
+    $query->fieldCondition('field_partner', 'nid', $partnerNid, '=');
+	}
+
+	$query->addMetaData('account', user_load(0));
+		
+	$result = $query->execute();
+
+	if (empty($result['node'])) {
+		return FALSE;
+	} else {
+		return array_keys($result['node']);	
+	}
+}
+
+function dlts_viewer_books_isPartof_multivolume($nid) {
+	$query = new EntityFieldQuery;
+	$result = $query ->entityCondition('entity_type', 'node')
+	  ->entityCondition('bundle', 'dlts_multivol_book')
+	  ->fieldCondition('field_multivol', 'nid', $nid, '=')
+		->execute();
+	if (empty($result['node'])) {
+		return FALSE;
+	} else {
+		$keys = array_keys($result['node']);
+		return node_load_multiple($keys);	
+	}
+}
+
+function dlts_viewer_books_isPartof_series($nid) {
+	$query = new EntityFieldQuery;
+	$result = $query ->entityCondition('entity_type', 'node')
+	  ->entityCondition('bundle', 'dlts_series_book')
+	  ->fieldCondition('field_series', 'nid', $nid, '=')
+		->execute();
+	if (empty($result['node'])) {
+		return FALSE;
+	} else {
+		$keys = array_keys($result['node']);
+		return node_load_multiple($keys);	
+	}
+}
+
