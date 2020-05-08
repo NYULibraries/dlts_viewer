@@ -396,7 +396,7 @@ function field_fileserver_field_presave($entity_type, $entity, $field, $instance
 function field_fileserver_human_filesize($bytes, $decimals = 2) {
   $sz = 'BKMGTP';
   $factor = floor((strlen($bytes) - 1) / 3);
-  return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$sz[$factor] . 'b';
+  return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$sz[$factor] . 'B';
 }
 
 function field_fileserver_get_pdf_filesize($item) {
