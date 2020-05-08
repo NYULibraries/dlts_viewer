@@ -404,6 +404,7 @@ function _dlts_viewer_book_thumbnails_loader($identifier, $page = 0, $per_page =
 // used by:
 // - menu_hook: 'api/v1/books/%'
 function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
+
   drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
   // Books to test:
   // http://sites.dlib.nyu.edu/viewer/books/brill_awdl000076/1
@@ -439,6 +440,9 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   // Entity API wrapper
   $book = entity_metadata_wrapper('node', $entity);
 
+  // book identifier
+  $identifier = $book->field_identifier->value();
+
   $language_code = mapLanguageCode(
     array_pop(
       $book->field_language_code->value()
@@ -446,26 +450,36 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   );
 
   foreach ($availableLanguages as $code => $lang) {
-    if ($availableLanguages[$code]->enabled) {
-      $availableLanguages[$code]->direction = ($availableLanguages[$code]->direction == 0) ?  'ltr' : 'rtl';
-      $availableLanguages[$code]->default = ($code == $requestedLang) ? 1 : 0;
-      // we don't have any use for this properties
-      unset($availableLanguages[$code]->enabled);
-      unset($availableLanguages[$code]->prefix);
-      unset($availableLanguages[$code]->plurals);
-      unset($availableLanguages[$code]->formula);
-      unset($availableLanguages[$code]->domain);
-      unset($availableLanguages[$code]->weight);
-      unset($availableLanguages[$code]->javascript);
-    } 
-    // language is not enabled
-    else {
-      unset($availableLanguages[$code]);
-    }
+    if (
+      // MUST check if language is enable
+      $availableLanguages[$code]->enabled &&
+      // check if this books exists in the given language
+      // 2 different strategies to check
+      (        
+        // 1) check if loaded book language match the language
+        $code == $entity->language ||
+        // if not, 
+        // 2) This book is not the same language as $code,
+        // query the book using the identifier and $code
+        // if we have a nid, we have a book.
+        book_nid($identifier, $code)
+      )
+    ) {
+        $availableLanguages[$code]->direction = ($availableLanguages[$code]->direction == 0) ?  'ltr' : 'rtl';
+        $availableLanguages[$code]->default = ($code == $requestedLang) ? 1 : 0;
+        // we don't have any use for this properties
+        unset($availableLanguages[$code]->enabled);
+        unset($availableLanguages[$code]->prefix);
+        unset($availableLanguages[$code]->plurals);
+        unset($availableLanguages[$code]->formula);
+        unset($availableLanguages[$code]->domain);
+        unset($availableLanguages[$code]->weight);
+        unset($availableLanguages[$code]->javascript);
+      } else {
+        // language is not enabled
+        unset($availableLanguages[$code]);
+      }
   }
-
-  // book identifier
-  $identifier = $book->field_identifier->value();
 
   // field representative image
   $fri = $book->field_representative_image->value();
@@ -622,7 +636,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
       break;
       
       case 'language':
-        $fields[$name]['value'] = $availableLanguages[$language_code];
+        $fields[$name]['value'] = array_pop($raw_value);
       break;
       
       case 'language_code':
