@@ -485,13 +485,13 @@ function theme_field__field_pdf_file (&$variables) {
         dlts_viewer_is_serialized($variables['element']['#items'][$key]['data'])
       ) {
         $data = unserialize($variables['element']['#items'][$key]['data']);
-        if (isset($data['filesize'])) {
+        if (isset($data['filesize']) && $data['filesize'] > 0) {
           $filesize = $data['filesize'];
         } else {
           $filesize = field_fileserver_get_pdf_filesize($data);
           if ($filesize > 0) {
             $humanFilesizeReadable = field_fileserver_human_filesize($filesize);
-          }
+          }               
         }
       }
       $out .= '<div class="pdf-items" dir="' . $dir . '">';
