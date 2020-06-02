@@ -393,10 +393,34 @@ function field_fileserver_field_presave($entity_type, $entity, $field, $instance
 }
 
 // https://www.php.net/manual/de/function.filesize.php
-function field_fileserver_human_filesize($bytes, $decimals = 2) {
-  $sz = 'BKMGTP';
-  $factor = floor((strlen($bytes) - 1) / 3);
-  return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$sz[$factor] . 'B';
+// function field_fileserver_human_filesize($bytes, $decimals = 2) {
+//   $sz = 'BKMGTP';
+//   $factor = floor((strlen($bytes) - 1) / 3);
+//   return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$sz[$factor] . 'B';
+// }
+
+// https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string
+function field_fileserver_human_filesize($bytes) {
+
+  $list = array(
+    'B',
+    'kB',
+    'MB',
+    'GB',
+    'TB',
+  );
+
+  $thresh = 1024;
+
+  $i = floor(log($bytes)/log($thresh));
+
+  return ( field_fileserver_toFixed( $bytes / pow($thresh, $i), 2) * 1 ) . ' ' . $list[$i];
+
+};
+
+// https://stackoverflow.com/questions/20670114/what-is-the-exact-equivalent-of-js-something-tofixed-in-php
+function field_fileserver_toFixed($number, $decimals) {
+  return number_format($number, $decimals, '.', '');
 }
 
 function field_fileserver_get_pdf_filesize($item) {
