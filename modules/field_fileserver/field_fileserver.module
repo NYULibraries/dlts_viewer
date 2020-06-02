@@ -392,35 +392,25 @@ function field_fileserver_field_presave($entity_type, $entity, $field, $instance
   }
 }
 
-// https://www.php.net/manual/de/function.filesize.php
-// function field_fileserver_human_filesize($bytes, $decimals = 2) {
-//   $sz = 'BKMGTP';
-//   $factor = floor((strlen($bytes) - 1) / 3);
-//   return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$sz[$factor] . 'B';
-// }
+function field_fileserver_human_filesize($bytes, $si = true) {
 
-// https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string
-function field_fileserver_human_filesize($bytes) {
+  $thresh = $si ? 1000 : 1024;
 
-  $list = array(
-    'B',
-    'kB',
-    'MB',
-    'GB',
-    'TB',
-  );
+  if (abs($bytes) < $thresh) {
+    return $bytes . ' B';
+  }
 
-  $thresh = 1024;
+  $units = $si ? array('kB','MB','GB','TB','PB','EB','ZB','YB') : array('KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB');
 
-  $i = floor(log($bytes)/log($thresh));
+  $u = -1;
 
-  return ( field_fileserver_toFixed( $bytes / pow($thresh, $i), 2) * 1 ) . ' ' . $list[$i];
+  do {
+    $bytes /= $thresh;
+    ++$u;
+  } while (abs($bytes) >= $thresh && $u < count($units) - 1);
 
-};
+  return sprintf('%.02F', $bytes) . ' ' . $units[$u];
 
-// https://stackoverflow.com/questions/20670114/what-is-the-exact-equivalent-of-js-something-tofixed-in-php
-function field_fileserver_toFixed($number, $decimals) {
-  return number_format($number, $decimals, '.', '');
 }
 
 function field_fileserver_get_pdf_filesize($item) {
