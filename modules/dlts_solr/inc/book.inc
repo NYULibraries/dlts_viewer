@@ -377,11 +377,10 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
   	elseif ($pathinfo['extension'] == 'jp2') {
   		$ri = dlts_viewer_djatoka_url($representative_image,false,true);
   	}
-      $dirname = $pathinfo['dirname'];
-      $dir_path = pathinfo($dirname);
-      $basename = $dir_path['basename'];
-      $site_image = $basename.'/'.$pathinfo['filename'];
-
+    $dirname = $pathinfo['dirname'];
+    $dir_path = pathinfo($dirname);
+    $basename = $dir_path['basename'];
+    $site_image = $basename.'/'.$pathinfo['filename'];
   	$document->addField('ss_representative_image', $ri);
   	$document->addField('ss_site_image', $site_image);
   }
@@ -522,6 +521,65 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
   unset($subjects);
   unset($subject);
   /** Topic (field_topic) */
+
+  // PDF
+  // See: DLTSACO-775
+  $pdfs = array();
+  $field_pdf = $wrapper->field_pdf_file->value();
+  if ($field_pdf && !empty($field_pdf)) {
+    foreach ($field_pdf as $key => $pdf) {
+      $pdf_identifier = '';
+      $pdf_kind = 'und';
+      $pdf_pathinfo = pathinfo($pdf['uri']);
+      $pdf_basename = $pdf_pathinfo['basename'];
+      preg_match('/(.*)_(lo|hi)\.pdf/', $pdf_basename, $pdf_matches);
+      if ($pdf_matches && isset($pdf_matches[1]) && isset($pdf_matches[2])) {
+        $pdf_identifier = $pdf_matches[1];
+        $pdf_kind = $pdf_matches[2];
+      }
+
+      $pdfs[$pdf_kind] = array(
+        'kind' => $pdf_kind,
+      );
+
+      // Label
+      if (isset( $pdf['label'])) {
+        $pdfs[$pdf_kind]['label'] = $pdf['label'];
+      }
+      // URL
+      if (isset($pdf['uri'])) {
+        $pdfs[$pdf_kind]['uri'] = file_create_url($pdf['uri']);
+      }
+      // Filezise
+      if (!dlts_viewer_is_serialized($pdf['data'])) {
+        $pdf_data = unserialize($pdf['data']);  
+        if ($pdf_data['filesize'] && $pdf_data['filesize'] > 0) {
+          $pdfs[$pdf_kind]['filesize'] = $pdf_data['filesize'];
+        } else {
+          $pdfs[$pdf_kind]['filesize'] = field_fileserver_get_pdf_filesize(
+            array(
+              'uri' => $pdfs[$pdf_kind]['uri'],
+            )
+          );
+        }
+      } 
+      // no $data
+      else {
+        $pdfs[$pdf_kind]['filesize'] = field_fileserver_get_pdf_filesize(
+          array(
+            'uri' => $pdfs[$pdf_kind]['uri'],
+          )
+        );
+      }
+      $_fieldname = 'zm_pdf_' . $pdf_kind;
+      $document->addField($_fieldname, json_encode($pdfs[$pdf_kind]));
+    }
+  }
+
+  // $document->addField('zm_pdf', json_encode($pdfs));
+
+  unset($pdfs);
+
   /** multi-value field */
   $topics = $wrapper->field_topic->value();
   if (!empty($topics)) {

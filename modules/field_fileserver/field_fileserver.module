@@ -335,46 +335,106 @@ function field_fileserver_field_widget_info() {
  * Implements hook_field_presave().
  */
 function field_fileserver_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
-	$new_node = (isset($entity->nid)) ? true : false;
-	if ($instance['widget']['module'] == 'field_fileserver') {
-	  foreach ($items as $key => $item) {
-      //check for web-safe file extentions
-		  $pathinfo = pathinfo($item['uri']);
-		  $basename = str_replace('fileserver://', '', $pathinfo['basename']);
-		  $ext = pathinfo($items[$key]['uri'], PATHINFO_EXTENSION);
-		  $mimetype = file_get_mimetype($basename);
-		  $label = '';
-		  switch ($instance['widget']['type']) {
-		  	case 'field_fileserver_text':
-		  	case 'field_fileserver_link':
-		  		$new_data['uri'] = $items[$key]['uri'];
-		  		$new_data['label'] = $items[$key]['label'];
-		  		break;
-		    case 'field_fileserver_image':
-		      // valid JP2 or TIFF file extentions
-		      $valid_hires_extensions = array('jp2', 'tiff', 'jpg'); // test assumptions that our image server can read all JPG images
-		      // valid web-safe extentions
-		      $valid_websafe_extensions = array( 'jpeg', 'gif', 'png');
-		      $new_data['uri'] = $items[$key]['uri'];
-		      if (!empty($items[$key]['label'])) {
-			      $new_data['label'] = $items[$key]['label'];
-		      }
-		      if (isset($items[$key]['image_style'])) {
-		        $dimmensions = explode("x", $items[$key]['image_style']);
-		        if (count($dimmensions) == 2) {
-		          $new_data['width'] = $dimmensions[0];
-		          $new_data['height'] = $dimmensions[1];
-		        }
-		      }
-		      else {
-		      	$new_data['width'] = 0;
-		      	$new_data['height'] = 230;
-		      }
-		      break;
-		  }
-		  $items[$key]['data'] = serialize($new_data);
+  $new_node = (isset($entity->nid)) ? true : false;
+  // Wrap it with Entity API
+  $ewrapper = entity_metadata_wrapper('node', $entity);
+  $isPartOf = $ewrapper->field_identifier->value();
+  if ($instance['widget']['module'] == 'field_fileserver') {
+    foreach ($items as $key => $item) {
+      // check for web-safe file extentions
+      $pathinfo = pathinfo($item['uri']);
+      $basename = str_replace('fileserver://', '', $pathinfo['basename']);
+      $ext = pathinfo($items[$key]['uri'], PATHINFO_EXTENSION);
+      $mimetype = file_get_mimetype($basename);
+      $label = '';
+      switch ($instance['widget']['type']) {
+        case 'field_fileserver_text':
+        case 'field_fileserver_link':
+          $new_data['uri'] = $items[$key]['uri'];
+          $new_data['label'] = $items[$key]['label'];
+          break;
+        case 'field_fileserver_image':
+          // valid JP2 or TIFF file extentions
+          $valid_hires_extensions = array('jp2', 'tiff', 'jpg'); // test assumptions that our image server can read all JPG images
+          // valid web-safe extentions
+          $valid_websafe_extensions = array( 'jpeg', 'gif', 'png');
+          $new_data['uri'] = $items[$key]['uri'];
+          if (!empty($items[$key]['label'])) {
+            $new_data['label'] = $items[$key]['label'];
+          }
+          if (isset($items[$key]['image_style'])) {
+            $dimmensions = explode("x", $items[$key]['image_style']);
+            if (count($dimmensions) == 2) {
+              $new_data['width'] = $dimmensions[0];
+              $new_data['height'] = $dimmensions[1];
+            }
+          }
+          else {
+            $new_data['width'] = 0;
+            $new_data['height'] = 230;
+          }
+          break;
+      }
+      // aof1
+      // Not ideal, but we plan to migrate.
+      // Check if this is the pdf_file instance. If so,
+      // We need to check if we have the file size information.
+      // At this moment I still don't have the R* endpoint
+      // to gather this information. If we have the size
+      // information, add this data to the 'data' property
+      // of the field.
+      // See: https://jira.nyu.edu/jira/browse/DLTSACO-771
+      if ($instance['field_name'] == 'field_pdf_file') {
+        $new_data['filesize'] = field_fileserver_get_pdf_filesize($items[$key]);
+      }
+      $items[$key]['data'] = serialize($new_data);
+    }
+  }
+}
+
+function field_fileserver_human_filesize($bytes, $si = true) {
+
+  $thresh = $si ? 1000 : 1024;
+
+  if (abs($bytes) < $thresh) {
+    return $bytes . ' B';
+  }
+
+  $units = $si ? array('kB','MB','GB','TB','PB','EB','ZB','YB') : array('KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB');
+
+  $u = -1;
+
+  do {
+    $bytes /= $thresh;
+    ++$u;
+  } while (abs($bytes) >= $thresh && $u < count($units) - 1);
+
+  return sprintf('%.02F', $bytes) . ' ' . $units[$u];
+
+}
+
+function field_fileserver_get_pdf_filesize($item) {
+	$pathinfo = pathinfo($item['uri']);
+	$basename = $pathinfo['basename'];
+	preg_match('/(.*)_(lo|hi)\.pdf/', $basename, $matches);
+	if ($matches && isset($matches[1]) && isset($matches[2])) {
+		$identifier = $matches[1];
+		$kind = $matches[2];
+		$datasource_filepath = drupal_get_path('module', 'dlts_viewer') . '/datasource/filesize-from-csv.json';
+		if (
+			file_exists($datasource_filepath)
+	  ) {
+			$datasource = json_decode(file_get_contents($datasource_filepath));
+			if (
+				isset($datasource->$identifier) &&
+				isset($datasource->$identifier->files->$basename) &&
+				isset($datasource->$identifier->files->$basename->sizeInBytes)
+			) {
+				return $datasource->$identifier->files->$basename->sizeInBytes;
+			}				
 		}
 	}
+	return 0;
 }
 
 /**
@@ -388,33 +448,46 @@ function field_fileserver_field_presave($entity_type, $entity, $field, $instance
  *
  */
 function field_fileserver_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-	$uri_value = isset($items[$delta]['uri']) ? trim($items[$delta]['uri']) : '';
-	$data_value = isset($items[$delta]['data']) ? unserialize($items[$delta]['data']) : null;
-	$uri_widget = $element;
-	$data_widget = $element;
-  $widget['#delta'] = $delta;
+
+  $uri_value = isset($items[$delta]['uri']) ? trim($items[$delta]['uri']) : '';
+
   $label = (!empty($items[$delta]['label'])) ? $items[$delta]['label'] : '';
+
+  if (isset($items[$delta]['data']) && dlts_viewer_is_serialized($items[$delta]['data'])) {
+    $data_value = unserialize($items[$delta]['data']);
+  } else {
+    $data_value = array(
+      'uri' => $uri_value,
+      'label' => $label,
+    );
+  }
+
+  $uri_widget = $element;
+
+  $data_widget = $element;
+
+  $widget['#delta'] = $delta;
 
   $label_widget = array(
     '#title' => 'Label',
-  	'#suffix' => '<div class="field-fileserver-label"></div>',
-  	'#type' => 'textfield',
-  	'#default_value' => $label,
-  	'#attributes' => array('class' => array('edit-field-fileserver-label')),
-  	'#size' => 255,
-  	'#maxlength' => 255,
-  	'#description' => t('File label or title'),
+    '#suffix' => '<div class="field-fileserver-label"></div>',
+    '#type' => 'textfield',
+    '#default_value' => $label,
+    '#attributes' => array('class' => array('edit-field-fileserver-label')),
+    '#size' => 255,
+    '#maxlength' => 255,
+    '#description' => t('File label or title'),
   );
 
   $uri_widget += array(
-    '#title' => 'File identifier',
-  	'#suffix' => '<div class="field-fileserver-uri"></div>',
-  	'#type' => 'textfield',
-  	'#default_value' => $uri_value,
-  	'#attributes' => array('class' => array('edit-field-fileserver-uri')),
-  	'#size' => 255,
-  	'#maxlength' => 255,
-  	'#description' => t('File identifier (e.g., @identifier)', array(' @identifier' => 'fileserver://exmple.jpg')),
+    '#title' => 'File URI',
+    '#suffix' => '<div class="field-fileserver-uri"></div>',
+    '#type' => 'textfield',
+    '#default_value' => $uri_value,
+    '#attributes' => array('class' => array('edit-field-fileserver-uri')),
+    '#size' => 255,
+    '#maxlength' => 255,
+    '#description' => t('File uri (e.g., @uri)', array(' @uri' => 'fileserver://exmple.jpg')),
   );
 
   $data_widget += array(
@@ -423,7 +496,9 @@ function field_fileserver_field_widget_form(&$form, &$form_state, $field, $insta
   );
 
   $element['label'] = $label_widget;
+
   $element['uri'] = $uri_widget;
+
   $element['data'] = $data_widget;
 
   switch ($instance['widget']['type']) {
