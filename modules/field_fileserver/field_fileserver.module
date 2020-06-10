@@ -153,16 +153,28 @@ function field_fileserver_field_validate($entity_type, $entity, $field, $instanc
 	foreach ($items as $delta => $item) {
 		// item must have URI
 		if (!empty($item['uri'])) {
+      $allowed_protocols = array(
+        'fileserver',
+        'pdfserver',
+        'http',
+        'https',
+      );
     	$pathinfo = pathinfo($item['uri']);
-    	$basename = str_replace('fileserver://', '', $pathinfo['basename']);
-    	$ext = pathinfo($item['uri'], PATHINFO_EXTENSION);
-    	// check that we have a fileserver URI
-    	if (strpos($item['uri'], 'fileserver://') === false) {
+    	$basename = str_replace('fileserver://', '', $item['uri']);
+      $basename = str_replace('pdfserver://', '', $basename);
+      $protocol = str_replace($basename, '', $item['uri']);
+      $protocol = str_replace('://', '', $protocol);
+
+      $ext = pathinfo($item['uri'], PATHINFO_EXTENSION);
+      
+      // check that we have a fileserver URI
+    	if (!in_array($protocol, $allowed_protocols)) {
         $errors[$field['field_name']][$langcode][$delta][] = array(
           'error' => 'field_fileserver_invalid',
           'message' => t('Invalid scheme, make sure the URI include valid scheme (e.g., fileserver://example.jpg'),
         );
-    	}
+      }
+      
     	// check that the URI is not bigger than the allowed MySQL size for varchar with index
     	if (strlen($item['uri']) > 255) {
     		$errors[$field['field_name']][$langcode][$delta][] = array(
@@ -188,7 +200,7 @@ function field_fileserver_field_validate($entity_type, $entity, $field, $instanc
     		  	// see: https://api.drupal.org/api/drupal/includes%21file.inc/7
     		  	$valid_extensions = array('jpg', 'jpeg', 'gif', 'png', 'txt', 'doc', 'xls', 'pdf', 'ppt', 'pps', 'odt', 'ods', 'odp', 'jp2', 'tiff',);
     		  	// do we have a valid extension
-    		  	if (!in_array($ext,$valid_extensions)) {
+    		  	if (!in_array($ext, $valid_extensions)) {
     		  		$errors[$field['field_name']][$langcode][$delta][] = array(
     		  		  'error' => 'field_fileserver_invalid',
     		  			'message' => t('Invalid extension found @ext', array('@ext' => $ext)),
@@ -258,7 +270,7 @@ function field_fileserver_field_formatter_info() {
  * @see field_fileserver_field_formatter_info()
  */
 function field_fileserver_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-	$element = array();
+  $element = array();
   switch ($display['type']) {
     case 'field_fileserver_text':
       foreach ($items as $delta => $item) {
@@ -278,7 +290,7 @@ function field_fileserver_field_formatter_view($entity_type, $entity, $field, $i
     	break;
     case 'field_fileserver_link':
       foreach ($items as $delta => $item) {
-      	$uri = file_create_url($item['uri']);
+        $uri = file_create_url($item['uri']);
       	$label = (isset($item['label']) && !empty($item['label'])) ? $item['label'] : $uri;
     	  $zebra = ($delta % 2 ==  0) ? 'even' : 'odd';
     		$element[$delta] = array(
@@ -385,7 +397,10 @@ function field_fileserver_field_presave($entity_type, $entity, $field, $instance
       // of the field.
       // See: https://jira.nyu.edu/jira/browse/DLTSACO-771
       if ($instance['field_name'] == 'field_pdf_file') {
+        $items[$key]['uri'] = str_replace('fileserver://', 'pdfserver://', $items[$key]['uri']);
         $new_data['filesize'] = field_fileserver_get_pdf_filesize($items[$key]);
+        $new_data['uri'] = $items[$key]['uri'];        
+        $new_data['searchable'] = false;
       }
       $items[$key]['data'] = serialize($new_data);
     }

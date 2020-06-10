@@ -45,3 +45,22 @@ class FileFilesServerStreamWrapper extends DrupalPublicStreamWrapper {
     return self::getFileServerUrl() . '/' . drupal_encode_path($path);
   }
 }
+
+class PDFServerStreamWrapper extends DrupalPublicStreamWrapper {
+	/**
+	 * Return FileServer URL
+	 */
+	function getPDFServerUrl() {
+    $base_url = $GLOBALS['base_url'] . '/' . variable_get('file_public_path', conf_path() . '/files');
+    return variable_get('dlts_viewer_pdfserver_host', $base_url);
+  }
+  /**
+   * Overrides getExternalUrl().
+   *
+   * Return the HTML URI of a public file.
+   */
+  function getExternalUrl() {
+    $path = str_replace('\\', '/', $this->getTarget());
+    return self::getPDFServerUrl() . '/' . drupal_encode_path($path);
+  }
+}
