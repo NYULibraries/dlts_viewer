@@ -252,6 +252,12 @@ function dlts_viewer_stream_wrappers() {
       'description' => t('Access file from the FileServer.'),
       'type' => STREAM_WRAPPERS_WRITE_VISIBLE,
     ),
+    'pdfserver' => array(
+      'name' => t('PDFServer StreamWrapper'),
+      'class' => 'PDFServerStreamWrapper',
+      'description' => t('Access PDF file from the PDFServer.'),
+      'type' => STREAM_WRAPPERS_WRITE_VISIBLE,
+    ),
   ) ;
   return $wrappers;
 }
