@@ -136,20 +136,20 @@ function dlts_viewer_preprocess_html(&$vars) {
       $vars['pane_metadata_hidden'] = 'pagemeta-hidden';
     }
     else {
-      $vars['classes_array'][] = 'not_mobile';      
+      $vars['classes_array'][] = 'not_mobile';
     }
 
     // See: https://jira.nyu.edu/jira/browse/DLTSVIEWER-81
     $language_default = language_default();
     $vars['resource_language_code'] = $language_default->language;
     // We have access to $resource_language_code in the global context
-    // if the resource exist. 
+    // if the resource exist.
     // See: dlts_viewer_dispatcher()
     $resource_language_code = dlts_viewer_resource_language_code();
     if ($resource_language_code) {
       $vars['resource_language_code'] = $resource_language_code;
-    }    
-    
+    }
+
     /**
      * We use Drupal to render objects from MongoDB that don't have a record register
      * in Drupal's database. We don't want Drupal to manage this records. We need a
@@ -252,6 +252,12 @@ function dlts_viewer_stream_wrappers() {
       'description' => t('Access file from the FileServer.'),
       'type' => STREAM_WRAPPERS_WRITE_VISIBLE,
     ),
+    'pdfserver' => array(
+      'name' => t('PDFServer StreamWrapper'),
+      'class' => 'PDFServerStreamWrapper',
+      'description' => t('Access PDF file from the PDFServer.'),
+      'type' => STREAM_WRAPPERS_WRITE_VISIBLE,
+    ),
   ) ;
   return $wrappers;
 }
@@ -271,22 +277,127 @@ function dlts_viewer_metadata_display($node) {
 function dlts_viewer_flush_caches() {
 	// Translatables
 	// Included for use with string extractors like potx.
-	t('Author');
-	t('Place of publication');
-	t('Publisher');
-	t('Date of Publication');
-	t('Subject');
-	t('Collection');
-	t('Language');
-	t('Provider');
-	t('Permanent link');
-	t('PDF');
-	t('High-resolution');
-	t('Low-resolution');
-  t('Vol.');
-  t('Download');
+
+  // https://docs.google.com/spreadsheets/d/1LIwBMDOtuuaPqjx70CbqvygWF8MUVRmM7-gB1plE9kM/edit#gid=0
+
+  t('Author');
+
+  t('High-resolution');
+
+  t('Low-resolution');
+
+  t('High resolution');
+
+  t('Low resolution');
+
   t('High-resolution PDF');
-  t('Low-resolution PDF ');
+
+  t('Low-resolution PDF');
+
+  t('Vol.');
+
+  t('Download');
+
+  t('Author/Contributor');
+
+  t('Binding Orientation');
+
+  t('Call Number');
+  // رقم الاستدعاء
+
+  t('Collection');
+
+  t('Contributor');
+
+  t('Creator');
+
+  t('Description');
+
+  t('Dimensions');
+
+  t('Editor');
+
+  t('Geographic Coordinates');
+
+  t('Geographic Subject');
+
+  t('Permanent Link');
+
+  t('Identifier');
+
+  t('ISBN');
+
+  t('Language');
+
+  t('Language Code');
+
+  t('Number');
+
+  t('OCR Text');
+
+  t('Other Version');
+
+  t('Page Count');
+
+  t('Provider');
+  // ا لمزوِّد
+
+  t('PDF');
+
+  t('Date of Publication');
+
+  t('Place of Publication');
+
+  t('Publisher');
+
+  t('Read Order');
+
+  t('Representative Image');
+
+  t('Rights');
+
+  t('Scan Date');
+
+  t('Scan Order');
+
+  t('Scanning Notes');
+
+  t('Sequence Count');
+
+  t('Subject');
+
+  t('Subtitle');
+
+  t('Title');
+
+  t('Topic');
+
+  t('Volume');
+
+  t('Arabic collections online');
+  // المجموعات العربية على الانترنت
+
+  t('New York University Libraries');
+  // مكتبات جامعة نيويورك
+
+  t('Princeton University Libraries');
+  // مكتبات جامعة برينستون
+
+  t('Cornell University Libraries');
+  // مكتبات جامعة كورنيل
+
+  t('Columbia University Libraries');
+  // مكتبات جامعة كولومبيا
+
+  t('American University of Beirut');
+  // الجامعة الاميركية في بيروت
+
+  t('American University in Cairo');
+  // الجامعة الاميركية بالقاهرة
+
+  t('United Arab Emirates National Archives');
+  // الامارات العربية المتحدة - الارشيف الوطني
+
 }
 
 // here we need to make sure we delete the record from Apache Solr

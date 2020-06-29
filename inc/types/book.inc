@@ -177,20 +177,20 @@ function dlts_viewer_dispatcher($entity, $arg)
     }
     // check request type
     $is_pjax = dlts_viewer_is_pjax();
-// check for mobile devices
+    // check for mobile devices
     $is_mobile = dlts_viewer_is_mobile();
-// get query parameters
+    // get query parameters
     $query_parameters = drupal_get_query_parameters();
-// check if this books is part of a multi-volume
+    // check if this books is part of a multi-volume
     $multivolume_book = dlts_viewer_is_multivolume_book($entity);
-// if book is part of multi-volume; use append volume value to entity title
+    // if book is part of multi-volume; use append volume value to entity title
     if ($multivolume_book) {
-// wrapp multi-volume entity with Entity API wrapper
-        $wrapper = entity_metadata_wrapper('node', $multivolume_book);
-// get volume value
-        $volume_number_str = $wrapper->field_volume_number_str->value();
-// change entity title
-        $entity->title = t('@title @volume', array('@title' => $multivolume_book->title, '@volume' => $volume_number_str));
+      // wrapp multi-volume entity with Entity API wrapper
+      $wrapper = entity_metadata_wrapper('node', $multivolume_book);
+      // get volume value
+      $volume_number_str = $wrapper->field_volume_number_str->value();
+      // change entity title
+      $entity->title = t('@title @volume', array('@title' => $multivolume_book->title, '@volume' => $volume_number_str));
     }
 
     // check if this books is part of a series
@@ -207,32 +207,32 @@ function dlts_viewer_dispatcher($entity, $arg)
     //}
     // set entity title
     drupal_set_title($entity->title);
-// wrapp book entity with Entity API wrapper
+    // wrapp book entity with Entity API wrapper
     $book_wrapper = entity_metadata_wrapper('node', $entity);
-// book identifier
+    // book identifier
     $identifier = $book_wrapper->field_identifier->value();
-// set $identifier so that .tpl.php can use it
+    // set $identifier so that .tpl.php can use it
     $entity->identifier = $identifier;
-// book URL
+    // book URL
     $book_url = url('node/' . $entity->nid, array('absolute' => TRUE));
-// set $url so that .tpl.php can use it
+    // set $url so that .tpl.php can use it
     $entity->url = $book_url;
-// set language
+    // set language
     _language_field($entity);
-// check for type of request: 1) book page or 2) display pane
+    // check for type of request: 1) book page or 2) display pane
     if (!is_array($arg) && $arg == 'display') {
-// type of request
+    // type of request
         $display_type = 'book_metadata';
         if ($is_pjax) {
             $display_type = 'book_metadata_pjax';
         }
     } else {
-// type of request
+        // type of request
         $display_type = 'book_page';
         if ($is_pjax) {
             $display_type = 'book_page_pjax';
         }
-// we assume single page view
+        // we assume single page view
         $is_single_page = TRUE;
         $thumbnails_rows_per_page = 10;
         $sequence = $arg['sequence'];
@@ -554,7 +554,6 @@ function _dlts_viewer_book_json($entity, $add_pages = TRUE)
 
     $multivolume_books = dlts_viewer_multivolume_book($entity->nid);
     $series_books = dlts_viewer_series_book($entity->nid);
-
 
     foreach ($type['fields'] as $field) {
         $name = str_replace('field_', '', $field['field_name']);
