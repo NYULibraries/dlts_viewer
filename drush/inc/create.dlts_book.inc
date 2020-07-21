@@ -580,7 +580,7 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
     	  $language_codes[] = $language_code;
     	}
     }
-    if (isset($metadata->topic)) {
+		if (isset($metadata->topic) && isset($metadata->topic->value) && is_array($metadata->topic->value)) {
     	foreach ($metadata->topic->value as $topic) {
     	  $topics[] = $topic;
       }
