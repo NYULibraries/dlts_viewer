@@ -3,3 +3,4 @@ description = Allow for file in the File Server
 package = DLTS
 core = 7.x
 files[] = field_fileserver.test
+stylesheets[all][] = field_fileserver.css
