@@ -2,3 +2,12 @@
  * @file
  * CSS for Field FileServer.
  */
+.page-node-edit .edit-field-fileserver-uri, .page-node-edit .edit-field-fileserver-label, .page-node-edit .field-fileserver-filesize {
+  margin-top: .8em;
+
+}
+
+.page-node-edit .field-fileserver-label, .page-node-edit .field-fileserver-uri, .page-node-edit .field-fileserver-filesize {
+  margin-top: .5em;
+  margin-bottom: .5em;
+}

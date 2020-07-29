@@ -347,15 +347,13 @@ function field_fileserver_field_widget_info() {
  * Implements hook_field_presave().
  */
 function field_fileserver_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  $new_node = (isset($entity->nid)) ? true : false;
-  // Wrap it with Entity API
-  $ewrapper = entity_metadata_wrapper('node', $entity);
-  $isPartOf = $ewrapper->field_identifier->value();
   if ($instance['widget']['module'] == 'field_fileserver') {
     foreach ($items as $key => $item) {
+      $new_data = array();
       // check for web-safe file extentions
       $pathinfo = pathinfo($item['uri']);
       $basename = str_replace('fileserver://', '', $pathinfo['basename']);
+      $basename = str_replace('pdfserver://', '', $basename);
       $ext = pathinfo($items[$key]['uri'], PATHINFO_EXTENSION);
       $mimetype = file_get_mimetype($basename);
       $label = '';
@@ -398,9 +396,29 @@ function field_fileserver_field_presave($entity_type, $entity, $field, $instance
       // See: https://jira.nyu.edu/jira/browse/DLTSACO-771
       if ($instance['field_name'] == 'field_pdf_file') {
         $items[$key]['uri'] = str_replace('fileserver://', 'pdfserver://', $items[$key]['uri']);
-        $new_data['filesize'] = field_fileserver_get_pdf_filesize($items[$key]);
-        $new_data['uri'] = $items[$key]['uri'];        
-        $new_data['searchable'] = false;
+        $new_data['uri'] = $items[$key]['uri'];
+        // UI update
+        if (isset($item['filesize']) || isset($items[$key]['searchable'])) {
+          if (isset($item['filesize'])) {
+            $new_data['filesize'] = $items[$key]['filesize'];
+          } else {
+            $new_data['filesize'] = 0;
+          }
+          if (isset($item['searchable'])) {
+            $new_data['searchable'] = $items[$key]['searchable'];
+          } else {
+            $new_data['searchable'] = false;
+          }
+        }
+        // Drush update
+        elseif (isset($items[$key]['data']) && dlts_viewer_is_serialized($items[$key]['data'])) {
+          $data = unserialize($items[$key]['data']);
+          $new_data['filesize'] = isset($data['filesize']) ? $data['filesize'] : 0;
+          $new_data['searchable'] = isset($data['searchable']) ? $data['searchable'] : false;
+        } else {
+          $new_data['filesize'] = 0;
+          $new_data['searchable'] = false;
+        }
       }
       $items[$key]['data'] = serialize($new_data);
     }
@@ -439,7 +457,9 @@ function field_fileserver_get_pdf_filesize($item) {
 		if (
 			file_exists($datasource_filepath)
 	  ) {
-			$datasource = json_decode(file_get_contents($datasource_filepath));
+			$datasource = json_decode(
+        file_get_contents($datasource_filepath)
+      );
 			if (
 				isset($datasource->$identifier) &&
 				isset($datasource->$identifier->files->$basename) &&
@@ -463,7 +483,6 @@ function field_fileserver_get_pdf_filesize($item) {
  *
  */
 function field_fileserver_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-
   $uri_value = isset($items[$delta]['uri']) ? trim($items[$delta]['uri']) : '';
 
   $label = (!empty($items[$delta]['label'])) ? $items[$delta]['label'] : '';
@@ -475,6 +494,10 @@ function field_fileserver_field_widget_form(&$form, &$form_state, $field, $insta
       'uri' => $uri_value,
       'label' => $label,
     );
+    if ($instance['field_name'] == 'field_pdf_file') {
+      $data_value['filesize'] = 0;
+      $data_value['searchable'] = false;
+    }    
   }
 
   $uri_widget = $element;
@@ -492,9 +515,9 @@ function field_fileserver_field_widget_form(&$form, &$form_state, $field, $insta
     '#size' => 255,
     '#maxlength' => 255,
     '#description' => t('File label or title'),
-  );
-
-  $uri_widget += array(
+  ); 
+  
+  $uri_widget = array(
     '#title' => 'File URI',
     '#suffix' => '<div class="field-fileserver-uri"></div>',
     '#type' => 'textfield',
@@ -505,14 +528,40 @@ function field_fileserver_field_widget_form(&$form, &$form_state, $field, $insta
     '#description' => t('File uri (e.g., @uri)', array(' @uri' => 'fileserver://exmple.jpg')),
   );
 
+  if ($instance['field_name'] == 'field_pdf_file') {
+    $filesize_widget = array(
+      '#title' => 'File filesize',
+      '#suffix' => '<div class="field-fileserver-filesize"></div>',
+      '#type' => 'textfield',
+      '#default_value' => isset($data_value['filesize']) ? $data_value['filesize'] : '',
+      '#attributes' => array('class' => array('edit-field-fileserver-filesize')),
+      '#size' => 255,
+      '#maxlength' => 255,
+      '#description' => t('File filesize to be display next to the download link'),
+    );
+
+    $searchable_widget = array(
+      '#title' => 'Can this PDF be search?',
+      '#suffix' => '<div class="field-fileserver-searchable"></div>',
+      '#type' => 'checkbox',
+      '#default_value' => isset($data_value['searchable']) ? $data_value['searchable'] : false,
+      '#attributes' => array('class' => array('edit-field-fileserver-searchable')),
+    );      
+  }
+
   $data_widget += array(
     '#type' => 'hidden',
-    '#default_value' => $data_value
+    '#default_value' => serialize($data_value)
   );
 
   $element['label'] = $label_widget;
 
   $element['uri'] = $uri_widget;
+
+  if ($instance['field_name'] == 'field_pdf_file') {
+    $element['filesize'] = $filesize_widget;
+    $element['searchable'] = $searchable_widget;
+  }
 
   $element['data'] = $data_widget;
 
