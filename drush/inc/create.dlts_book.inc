@@ -55,7 +55,7 @@ function save_dlts_book($node, $language = 'en') {
 		$entity = node_load($book_exist);
     // Wrap it with Entity API
 		$ewrapper = entity_metadata_wrapper('node', $entity);
-
+    // check if this is a translation
 		if ($node_language != 'en') {
       // find if the English version of this book exist
       $tnid = book_nid($identifier, 'en');
@@ -102,8 +102,9 @@ function save_dlts_book($node, $language = 'en') {
         $source_node_ewrapper = entity_metadata_wrapper('node', $source_node);
         // set nid as tnid
         $source_node->tnid = $tnid;
-        // save source
-        $source_node_ewrapper->save();
+
+				node_save($source_node);
+
         // not sure why this is needed
         $new_node->translate = 0;
         // set source nid as the tnid for the translation
