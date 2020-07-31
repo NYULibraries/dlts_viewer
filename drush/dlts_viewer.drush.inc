@@ -113,6 +113,14 @@ function dlts_viewer_drush_command() {
     ),
   );  
 
+  $items['index-node-by-identifier'] = array(
+    'callback' => 'dlts_viewer_drush_index_node',
+    'description' => dt('Index node by identifier'),
+    'options' => array(
+      'identifier' => dt('Node identifier'),
+    ),
+  );
+
   return $items;
 
 }
@@ -137,9 +145,46 @@ function dlts_viewer_drush_help($section) {
   }
 }
 
+function dlts_viewer_drush_index_node() {
+  $language = 'en';
+  $type = 'node';
+  $identifier = drush_get_option('identifier', NULL);
+  // make this more generic, a way to get maps too
+  $nid = book_nid($identifier, $language);
+  if ($nid) {
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+  	$query = new EntityFieldQuery;
+    $keys = array();
+    $indexer_table = apachesolr_get_indexer_table($type);
+    db_merge($indexer_table)->key(
+      array(
+        'entity_type' => $type, 
+        'entity_id' => $nid,
+      )
+    )
+    // insertFields acts only on insert.
+    ->insertFields(
+      array(
+        'entity_type' => $type,
+        'entity_id' => $id,
+        'bundle' => $wrapper->getBundle(),
+        'status' => 1
+      )
+    )
+    /// fields acts on insert or update.
+    ->fields(
+      array(
+        'changed' => REQUEST_TIME
+      )
+    )
+    ->execute();
+  }
+}
+
 function dlts_viewer_drush_list_translation() {
   $query = new EntityFieldQuery;
-  $identifier = 'princeton_aco003757';
+  $identifier = drush_get_option('identifier', NULL);
   $result = $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_book')
     ->propertyCondition('status', 1) // only load books that are published
