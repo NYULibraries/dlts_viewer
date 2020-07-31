@@ -533,6 +533,7 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
       $pdf_pathinfo = pathinfo($pdf['uri']);
       $pdf_basename = $pdf_pathinfo['basename'];
       preg_match('/(.*)_(lo|hi)\.pdf/', $pdf_basename, $pdf_matches);
+      
       if ($pdf_matches && isset($pdf_matches[1]) && isset($pdf_matches[2])) {
         $pdf_identifier = $pdf_matches[1];
         $pdf_kind = $pdf_matches[2];
@@ -550,8 +551,9 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
       if (isset($pdf['uri'])) {
         $pdfs[$pdf_kind]['uri'] = file_create_url($pdf['uri']);
       }
+
       // Filezise
-      if (!dlts_viewer_is_serialized($pdf['data'])) {
+      if (dlts_viewer_is_serialized($pdf['data'])) {
         $pdf_data = unserialize($pdf['data']);  
         if ($pdf_data['filesize'] && $pdf_data['filesize'] > 0) {
           $pdfs[$pdf_kind]['filesize'] = $pdf_data['filesize'];
@@ -571,7 +573,9 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
           )
         );
       }
-      $_fieldname = 'zm_pdf_' . $pdf_kind;
+
+      $_fieldname = 'zm_pdf_' . $pdf_kind;      
+
       $document->addField($_fieldname, json_encode($pdfs[$pdf_kind]));
     }
   }
