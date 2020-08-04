@@ -139,7 +139,8 @@ function _language_field(&$entity)
     $entity->lang_dir = (!isset($languages[$entity->language]->direction) || isset($languages[$entity->language]->direction) && $languages[$entity->language]->direction == 0) ? 'ltr' : 'rtl';
     $entity->lang_language = isset($languages[$entity->language]->language) ? $languages[$entity->language]->language : 'en';
     $entity->lang_name = isset($languages[$entity->language]->name) ? $languages[$entity->language]->name : t('English');
-    $translations = translation_path_get_translations('node/' . $entity->nid);
+    // $translations = translation_path_get_translations('node/' . $entity->nid);
+    $translations =  dlts_viewer_list_translation($entity->identifier);
     if (count($translations) > 1) {
         $entity->lang_options = array('#type' => 'markup', '#prefix' => '<select class="language" aria-label="' . t('Choose Language for Metadata') . '">', '#suffix' => '</select>', '#markup' => '');
         foreach ($translations as $key => $index) {

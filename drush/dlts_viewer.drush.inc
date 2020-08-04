@@ -98,7 +98,28 @@ function dlts_viewer_drush_command() {
   $items['reset-pdf-filesize-table'] = array(
     'callback' => 'dlts_viewer_drush_reset_pdf_filesize_table',
     'description' => dt('Reset PDF filesize'),
+  );
+
+  $items['list-translation'] = array(
+    'callback' => 'dlts_viewer_drush_list_translation',
+    'description' => dt('List translation'),
+  );
+
+  $items['delete-book-by-identifier'] = array(
+    'callback' => 'dlts_viewer_delete_book_by_identifier',
+    'description' => dt('Delete book by identifier'),
+    'options' => array(
+      'identifier' => dt('Book identifier'),
+    ),
   );  
+
+  $items['index-node-by-identifier'] = array(
+    'callback' => 'dlts_viewer_drush_index_node',
+    'description' => dt('Index node by identifier'),
+    'options' => array(
+      'identifier' => dt('Node identifier'),
+    ),
+  );
 
   return $items;
 
@@ -121,6 +142,76 @@ function dlts_viewer_drush_help($section) {
     case 'drush:import-book':
       return dt("Some day someone will document this module");
       break;
+  }
+}
+
+function dlts_viewer_drush_index_node() {
+  $language = 'en';
+  $type = 'node';
+  $identifier = drush_get_option('identifier', NULL);
+  // make this more generic, a way to get maps too
+  $nid = book_nid($identifier, $language);
+  if ($nid) {
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+  	$query = new EntityFieldQuery;
+    $keys = array();
+    $indexer_table = apachesolr_get_indexer_table($type);
+    db_merge($indexer_table)->key(
+      array(
+        'entity_type' => $type, 
+        'entity_id' => $nid,
+      )
+    )
+    // insertFields acts only on insert.
+    ->insertFields(
+      array(
+        'entity_type' => $type,
+        'entity_id' => $id,
+        'bundle' => $wrapper->getBundle(),
+        'status' => 1
+      )
+    )
+    /// fields acts on insert or update.
+    ->fields(
+      array(
+        'changed' => REQUEST_TIME
+      )
+    )
+    ->execute();
+  }
+}
+
+function dlts_viewer_drush_list_translation() {
+  $query = new EntityFieldQuery;
+  $identifier = drush_get_option('identifier', NULL);
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_book')
+    ->propertyCondition('status', 1) // only load books that are published
+    ->fieldCondition('field_identifier', 'value', $identifier, '=')
+    ->execute();
+  $langs = array();
+  if (!empty($result['node'])) {
+    $keys = array_keys($result['node']);
+    $nodes = node_load_multiple($keys);
+    foreach ($nodes as $node) {
+      $langs[$node->language] = "node/$node->nid";
+    }
+  }
+  print_r($langs);
+}
+
+function dlts_viewer_delete_book_by_identifier() {
+  $identifier = drush_get_option('identifier', NULL);
+  $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
+  if (count($nids) > 0) {
+    drush_log("Removing nodes by identifier $identifier", 'ok');
+    foreach ($nids as $nid) {
+      node_delete($nid);
+      drush_log("Node $nid deleted", 'success');
+    }
+  } else {
+    drush_log("Not found - nodes by identifier $identifier", 'ok');
   }
 }
 

@@ -4,6 +4,29 @@
  * @file
  * Datasource
  */
+function dlts_viewer_list_translation($identifier) {
+  $langs = array();
+  $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
+  $nodes = node_load_multiple($nids);
+  foreach ($nodes as $node) {
+    $langs[$node->language] = "node/$node->nid";
+  }
+  return $langs;
+}
+
+function dlts_viewer_get_translations_nid_by_identifier($identifier) {
+  $keys = array();
+  $query = new EntityFieldQuery;
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_book')
+    ->propertyCondition('status', 1) // only load books that are published
+    ->fieldCondition('field_identifier', 'value', $identifier, '=')
+    ->execute();
+  if (!empty($result['node'])) {
+    $keys = array_keys($result['node']);
+  }
+  return $keys;
+}
 
 function dlts_viewer_list_books() {
 	$query = new EntityFieldQuery;
