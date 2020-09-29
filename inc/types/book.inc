@@ -176,6 +176,12 @@ function dlts_viewer_dispatcher($entity, $arg)
     if ($is_resource) {
       dlts_viewer_resource_language_code($entity);
     }
+
+    // wrapp book entity with Entity API wrapper
+    $book_wrapper = entity_metadata_wrapper('node', $entity);
+
+    $entity->title = $book_wrapper->field_title->value();
+
     // check request type
     $is_pjax = dlts_viewer_is_pjax();
     // check for mobile devices
@@ -184,6 +190,7 @@ function dlts_viewer_dispatcher($entity, $arg)
     $query_parameters = drupal_get_query_parameters();
     // check if this books is part of a multi-volume
     $multivolume_book = dlts_viewer_is_multivolume_book($entity);
+    
     // if book is part of multi-volume; use append volume value to entity title
     if ($multivolume_book) {
       // wrapp multi-volume entity with Entity API wrapper
@@ -208,8 +215,6 @@ function dlts_viewer_dispatcher($entity, $arg)
     //}
     // set entity title
     drupal_set_title($entity->title);
-    // wrapp book entity with Entity API wrapper
-    $book_wrapper = entity_metadata_wrapper('node', $entity);
     // book identifier
     $identifier = $book_wrapper->field_identifier->value();
     // set $identifier so that .tpl.php can use it
