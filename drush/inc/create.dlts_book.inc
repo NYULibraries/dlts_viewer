@@ -316,8 +316,8 @@ function save_dlts_book($node, $language = 'en') {
     $ewrapper->field_isbn->set($node['isbn']);
 	}
 
-  if (!empty($node['title_long'])) {
-    $ewrapper->field_title->set($node['title_long']);
+  if (!empty($node['title'])) {
+    $ewrapper->field_title->set($node['title']);
 	} elseif(!empty($node['entity_title'])) {
   	$ewrapper->field_title->set($node['entity_title']);
 	}
