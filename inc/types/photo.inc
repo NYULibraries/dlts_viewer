@@ -8,7 +8,8 @@ function dlts_viewer_full_photo_view(&$entity) {
     $js_common_config = array('type' => 'file', 'scope' => 'footer');
     $css_common_config = array('group' => CSS_DEFAULT, 'every_page' => TRUE);
     drupal_add_css($module_path . '/css/dlts_viewer.css', $css_common_config);
-    drupal_add_js('http://yui.yahooapis.com/3.18.1/build/yui/yui-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -100));
+    drupal_add_js('https://yui-s.yahooapis.com/3.18.1/build/yui/yui-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -100));
+    drupal_add_js('https://yui-s.yahooapis.com/combo?gallery-2014.07.31-18-26/build/gallery-soon/gallery-soon-min.js', array('group' => JS_LIBRARY, 'weight' => -101));    
     drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
     drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
     drupal_add_js($module_path . '/js/ui.photo.components.yui.js', $js_common_config);
@@ -80,7 +81,8 @@ function dlts_viewer_photo_set_view(&$entity)
     $js_common_config = array('type' => 'file', 'scope' => 'footer');
     $css_common_config = array('group' => CSS_DEFAULT, 'every_page' => TRUE);
     drupal_add_css($module_path . '/css/dlts_viewer.css', $css_common_config);
-    drupal_add_js('http://yui.yahooapis.com/3.18.1/build/yui/yui-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -100));
+    drupal_add_js('https://yui-s.yahooapis.com/3.18.1/build/yui/yui-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -100));
+    drupal_add_js('https://yui-s.yahooapis.com/combo?gallery-2014.07.31-18-26/build/gallery-soon/gallery-soon-min.js', array('group' => JS_LIBRARY, 'weight' => -101));
     drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
     drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
     drupal_add_js($module_path . '/js/ui.photo.components.yui.js', $js_common_config);
