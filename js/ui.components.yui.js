@@ -45,7 +45,7 @@ YUI().use(
       e.preventDefault();
       Y.io(data_target, {
         on: {
-          complete: function(id, e) {
+          complete: function(_id, e) {
             var node = Y.one('#pagemeta');
             var dir;
             var titlebar = Y.one('#titlebar');
@@ -160,7 +160,6 @@ YUI().use(
     /** callback for the slide end event */
     function slide_end(e) {
       e.preventDefault();
-      var target = e.target;
       var map = Y.one('.dlts_viewer_map');
       var data = map.getData();
       var request = bookUrl + '/' + e.target.getValue() + '?page_view=' + data.pageview;
@@ -180,10 +179,17 @@ YUI().use(
 
     function pjax_navigate(e) {
       Y.one('body').addClass('openlayers-loading');
-      var msg = e.url.replace(bookUrl, '' ).replace('/' , '');
-      if (/(^[\d]+$){1}/.test(msg ) || /(^[\d]+-[\d]+$){1}/.test(msg)) {
-        this.one('.current_page').set('text', msg);
-      }
+      var url = new URL(e.url);
+      var to_page = parseInt(url.pathname.split('/').slice(-1).pop(), 10);
+      if (url.searchParams.get('page_view') === 'double') {
+        var pdir = to_page % 2;
+        if (pdir === 1) {
+          to_page = `${to_page}, ${to_page + 1}`
+        } else {
+          to_page = `${to_page - 1}, ${to_page}`
+        }
+      }      
+      this.one('.current_page').set('text', to_page);
       this.addClass('loading').show();
     }
 
@@ -273,9 +279,8 @@ YUI().use(
       }
     }
 
-    function fullscreenOn(e) {
+    function fullscreenOn() {
       var docElm = document.documentElement;
-      var metadata = Y.one('.pagemeta');
       var top = Y.one('.top');
       var button = Y.one('#button-metadata');
       if (button) {
@@ -299,7 +304,7 @@ YUI().use(
       Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-fullscreen:on'}));
     }
 
-    function fullscreenOff(e) {
+    function fullscreenOff() {
       var fullscreenButton = Y.one('a.fullscreen');
       var top = Y.one('.top');
       if (document.exitFullscreen) {
@@ -320,11 +325,10 @@ YUI().use(
       if (top) {
         top.removeClass('hidden');
       }
-      Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-fullscreen:off'}));
+      Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'button:button-fullscreen:off'}));
     }
 
     function change_page(config) {
-
       var map;
       var service;
       var zoom;
@@ -347,10 +351,12 @@ YUI().use(
       }, '#' + config.id);
     }
 
-    function onButtonMetadataOn(e) {
+    function onButtonMetadataOn() {
       this.removeClass('hidden');
       this.ancestor('.pane-body').removeClass('pagemeta-hidden');
-      Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-metadata:on'}));
+      Y.CrossFrame.postMessage('parent', JSON.stringify({
+        fire: 'button:button-metadata:on'
+      }));
     }
 
     function onButtonMetadataOff(e) {
@@ -458,14 +464,13 @@ YUI().use(
     	  start: onThumbnailsPageStart,
     	  end: onThumbnailsPageEnd,
     	  complete: onThumbnailsPageComplete,
-    	  success: onThumbnailsPageSuccess,
-    	  failure: onThumbnailsPageFailure
+    	  success: onThumbnailsPageSuccess
     	}
       });
     }
 
     // remove content
-    function onThumbnailsPageComplete(id, response, args) {
+    function onThumbnailsPageComplete() {
       Y.one('.thumbnails-container').empty();
     }
 
@@ -479,15 +484,11 @@ YUI().use(
       Y.one('.thumbnails-container').removeClass('io-loading');
     }
 
-    function onThumbnailsPageSuccess(id, response) {
+    function onThumbnailsPageSuccess(_id, response) {
       Y.one('.thumbnails-container').set('innerHTML', response.response);
     }
 
-    function onThumbnailsPageFailure(id, request)  {
-      Y.log('failure');
-    }
-
-    function onThumbnailsOnSuccess(id, request) {
+    function onThumbnailsOnSuccess(_id, request) {
       var node = Y.one('#thumbnails');
       if (node) {
         node.set('innerHTML', request.response);
@@ -574,10 +575,13 @@ YUI().use(
       var displayData = display.getData();
       Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: displayData}));
     }
+
     function resizeSlider() {
       slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
     }
+
     Y.on('windowresize', resizeSlider);
+
     Y.once('contentready', onDisplayContentReady, '#display');
 
 });
