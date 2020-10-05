@@ -83,7 +83,8 @@ function dlts_viewer_full_book_view(&$entity)
     $js_common_config = array('type' => 'file', 'scope' => 'footer');
     $css_common_config = array('group' => CSS_DEFAULT, 'every_page' => TRUE);
     drupal_add_css($module_path . '/css/dlts_viewer.css', $css_common_config);
-    drupal_add_js('http://yui.yahooapis.com/3.18.1/build/yui/yui-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -100));
+    drupal_add_js('https://yui-s.yahooapis.com/3.18.1/build/yui/yui-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -100));
+    drupal_add_js('https://yui-s.yahooapis.com/combo?gallery-2014.07.31-18-26/build/gallery-soon/gallery-soon-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -101));
     drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
     drupal_add_js($module_path . '/js/modules/slider-base.js', $js_common_config);
     drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
@@ -176,6 +177,12 @@ function dlts_viewer_dispatcher($entity, $arg)
     if ($is_resource) {
       dlts_viewer_resource_language_code($entity);
     }
+
+    // wrapp book entity with Entity API wrapper
+    $book_wrapper = entity_metadata_wrapper('node', $entity);
+
+    $entity->title = $book_wrapper->field_title->value();
+
     // check request type
     $is_pjax = dlts_viewer_is_pjax();
     // check for mobile devices
@@ -184,6 +191,7 @@ function dlts_viewer_dispatcher($entity, $arg)
     $query_parameters = drupal_get_query_parameters();
     // check if this books is part of a multi-volume
     $multivolume_book = dlts_viewer_is_multivolume_book($entity);
+    
     // if book is part of multi-volume; use append volume value to entity title
     if ($multivolume_book) {
       // wrapp multi-volume entity with Entity API wrapper
@@ -208,8 +216,6 @@ function dlts_viewer_dispatcher($entity, $arg)
     //}
     // set entity title
     drupal_set_title($entity->title);
-    // wrapp book entity with Entity API wrapper
-    $book_wrapper = entity_metadata_wrapper('node', $entity);
     // book identifier
     $identifier = $book_wrapper->field_identifier->value();
     // set $identifier so that .tpl.php can use it
