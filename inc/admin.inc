@@ -90,9 +90,8 @@ function dlts_viewer_admin_list_topics($start = 0, $length = 25, $requestedLang 
     $sql_count = "
       SELECT 
       COUNT(node.nid) as count
-      FROM dlts_viewer_books_json document 
-      LEFT JOIN node ON document.nid = node.nid
-      LEFT JOIN field_data_field_collection collection ON document.nid = collection.entity_id
+      FROM node
+      LEFT JOIN field_data_field_collection collection ON node.nid = collection.entity_id
       INNER JOIN field_data_field_code code ON collection.field_collection_nid = code.entity_id AND code.field_code_value = :collection_code
       WHERE node.language = :language " .
       (($filter_date != 0) ? "AND DATE_FORMAT(FROM_UNIXTIME(node.created), '%d-%m-%Y') = :date" : "")     
@@ -102,8 +101,7 @@ function dlts_viewer_admin_list_topics($start = 0, $length = 25, $requestedLang 
     $sql_dates = "
       SELECT 
       DISTINCT DATE_FORMAT(FROM_UNIXTIME(node.created), '%d-%m-%Y') created
-      FROM dlts_viewer_books_json document 
-      LEFT JOIN node ON document.nid = node.nid
+      FROM node
       LEFT JOIN field_data_field_collection collection ON node.nid = collection.entity_id
       INNER JOIN field_data_field_code code ON collection.field_collection_nid = code.entity_id AND code.field_code_value = :collection_code
       WHERE node.language = :language
@@ -112,8 +110,8 @@ function dlts_viewer_admin_list_topics($start = 0, $length = 25, $requestedLang 
   
     $sql = "
       SELECT 
-        DISTINCT document.nid, 
-        document.identifier, 
+        DISTINCT node.nid, 
+        field_identifier.field_identifier_value identifier, 
         node.title, 
         node.created, 
         DATE_FORMAT(FROM_UNIXTIME(node.created), '%d-%m-%Y') date, 
@@ -121,18 +119,24 @@ function dlts_viewer_admin_list_topics($start = 0, $length = 25, $requestedLang 
         field_data_field_call_number.field_call_number_value,
         collection.field_collection_nid,
         code.field_code_value code
-      FROM dlts_viewer_books_json document 
-      LEFT JOIN node ON document.nid = node.nid 
-      LEFT JOIN field_data_field_topic topic ON document.nid = topic.entity_id
-      LEFT JOIN field_data_field_call_number ON document.nid = field_data_field_call_number.entity_id
-      LEFT JOIN field_data_field_collection collection ON document.nid = collection.entity_id
-      INNER JOIN field_data_field_code code ON collection.field_collection_nid = code.entity_id AND code.field_code_value = :collection_code
+      FROM node
+      LEFT JOIN field_data_field_identifier field_identifier
+        ON node.nid = field_identifier.entity_id
+      LEFT JOIN field_data_field_topic topic 
+        ON node.nid = topic.entity_id
+      LEFT JOIN field_data_field_call_number 
+        ON node.nid = field_data_field_call_number.entity_id
+      LEFT JOIN field_data_field_collection collection 
+        ON node.nid = collection.entity_id
+      INNER JOIN field_data_field_code code 
+        ON collection.field_collection_nid = code.entity_id 
+        AND code.field_code_value = :collection_code
       WHERE node.language = :language " . 
       (($filter_date != 0) ? "AND DATE_FORMAT(FROM_UNIXTIME(node.created), '%d-%m-%Y') = :date" : "") 
       . " AND node.status = :status
-      GROUP BY document.identifier 
+      GROUP BY field_identifier.field_identifier_value 
       ORDER BY node.created DESC";
-    
+
     $sql_args = array(
       ':language' => $requestedLang, 
       ':collection_code' => $collection_code,
@@ -164,7 +168,7 @@ function dlts_viewer_admin_list_topics($start = 0, $length = 25, $requestedLang 
         $selected = $filter_date;
       }
     }
-  
+
     $render_array = array(
       '#id' => 'date-selection',
       '#theme' => 'select',
