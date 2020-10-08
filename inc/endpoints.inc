@@ -204,6 +204,19 @@ function dlts_viewer_api_list_topics($start = 0, $length = 50, $requestedLang = 
     $requestedLang = $query_parameters['lang'];
   }
 
+  $sql_dates = "
+    SELECT 
+      DISTINCT DATE_FORMAT(FROM_UNIXTIME(node.created), '%Y-%m-%d') created
+      FROM node
+      LEFT JOIN field_data_field_collection collection 
+        ON node.nid = collection.entity_id
+      INNER JOIN field_data_field_code code 
+        ON collection.field_collection_nid = code.entity_id 
+        AND code.field_code_value = :collection_code
+    WHERE node.language = :language
+    AND node.status = :status
+    ORDER BY node.created DESC";
+
   $sql = "
     SELECT 
       topic.field_topic_value topic, 
@@ -218,6 +231,7 @@ function dlts_viewer_api_list_topics($start = 0, $length = 50, $requestedLang = 
       AND code.field_code_value = :collection_code
     WHERE node.language = :language
     AND node.created <= UNIX_TIMESTAMP(:date)
+    AND node.status = :status
     GROUP BY topic.field_topic_value 
     ORDER BY count DESC"; 
 
@@ -229,8 +243,22 @@ function dlts_viewer_api_list_topics($start = 0, $length = 50, $requestedLang = 
       ':language' => $requestedLang,
       ':collection_code' => 'aco',
       ':date' => $filter_date,
+      'status' => 1,
     )
   )->fetchAll();
+
+  $dates = db_query($sql_dates, array(
+    ':language' => $requestedLang, 
+    ':collection_code' => 'aco', 
+    ':status' => 1,
+    )
+  )->fetchAll();
+
+  $filter_dates = array();
+
+  foreach ($dates as $date) {
+    $filter_dates[] = $date->created;
+  }
 
   // try to mimic Apache Solr response
   $response = array(
@@ -238,6 +266,9 @@ function dlts_viewer_api_list_topics($start = 0, $length = 50, $requestedLang = 
       'numFound' => count($result),
       'start' => $start,
       'docs' => $result,
+      'facets' => array(
+        'date' => $filter_dates,
+      ),
     ),
   );
 
