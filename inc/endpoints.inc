@@ -178,6 +178,73 @@ function dlts_viewer_list_collections($start = 0, $length = 100) {
 
 }
 
+function dlts_viewer_api_list_topics($start = 0, $length = 50, $requestedLang = 'en') {
+  
+  $availableLanguages = array_keys(language_list());
+
+  // get query parameters
+  $query_parameters = drupal_get_query_parameters();
+
+  $filter_date = date('Y-m-d');  
+  
+  if (isset($query_parameters['rows']) && is_numeric($query_parameters['rows'])) {
+    $length = $query_parameters['rows'];
+  }
+  
+  if (isset($query_parameters['start']) && is_numeric($query_parameters['start'])) {
+    $start = $query_parameters['start'];
+  }
+
+  if (isset($query_parameters['date'])) {
+    $filter_date = filter_xss($query_parameters['date']);
+  }   
+  
+  // need to make sure lang exists
+  if (isset($query_parameters['lang']) && in_array($query_parameters['lang'], $availableLanguages)) {
+    $requestedLang = $query_parameters['lang'];
+  }
+
+  $sql = "
+    SELECT 
+      topic.field_topic_value topic, 
+      COUNT(topic.field_topic_value) count 
+    FROM node
+    LEFT JOIN field_data_field_collection collection 
+      ON node.nid = collection.entity_id
+    INNER JOIN field_data_field_topic topic 
+      ON node.nid = topic.entity_id
+    INNER JOIN field_data_field_code code 
+      ON collection.field_collection_nid = code.entity_id 
+      AND code.field_code_value = :collection_code
+    WHERE node.language = :language
+    AND node.created <= UNIX_TIMESTAMP(:date)
+    GROUP BY topic.field_topic_value 
+    ORDER BY count DESC"; 
+
+  $result = db_query_range(
+    $sql, 
+    $start, 
+    $length, 
+    array(
+      ':language' => $requestedLang,
+      ':collection_code' => 'aco',
+      ':date' => $filter_date,
+    )
+  )->fetchAll();
+
+  // try to mimic Apache Solr response
+  $response = array(
+    'response' => array(
+      'numFound' => count($result),
+      'start' => $start,
+      'docs' => $result,
+    ),
+  );
+
+  return $response;
+
+}
+
 // list books and return array ('title', 'identifier')
 function dlts_viewer_api_list_books($start = 0, $length = 15, $requestedLang = 'en') {
 
@@ -889,3 +956,190 @@ function dlts_viewer_djakota_stream_book_page() {
 
 }
 
+function dlts_viewer_api_v1_dlts_book_objects($source) {
+  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_book');
+
+  $apiVersion = 'v1';
+
+  try {
+
+    if ($source->entity_type !== 'dlts_book') {
+      throw new Exception('Wrong entity type.');
+    }
+
+    // check if request has all the keys we required.
+    if (
+      isset($source->entity_type) &&
+      isset($source->identifier) &&
+      isset($source->entity_language) &&
+      isset($source->entity_status) &&
+      isset($source->entity_type) &&
+      isset($source->metadata)
+    ) {
+
+      if (!isset($source->entity_title)) {
+        throw new Exception('Field entity_title can not be empty.');
+      }
+
+      if (!isset($source->identifier)) {
+        throw new Exception('Field identifier can not be empty.');
+      }
+
+      $entity = create_dlts_book_from_json($source);
+
+      if ($entity) {
+        return array(
+          'data' => $entity,
+        );
+      }
+
+    }
+  } catch (Exception $e) {
+    watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
+    die($e->getMessage());
+  }
+
+}
+
+function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
+
+  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_photo_set');
+
+  $apiVersion = 'v1';  
+
+  /** Define metadata fields */
+  $partners = array();
+
+  $collections = array();
+
+  $title = NULL;
+
+  $page_count = NULL;
+  
+  $sequence_count = NULL;
+  
+  $handle = NULL;
+
+  $metadata = (object) array();
+
+  $expected_keys = array(
+    'entity_title',
+    'identifier',
+    'entity_language',
+    'entity_status',
+    'entity_type',
+    'metadata',
+    'pages',
+  );
+
+  $nodes = array(
+    'photo' => array(),
+    'collection' => '',
+    'partner' => '',
+  );
+
+  try {
+
+    if ($source['entity_type'] !== 'dlts_photo_set') {
+      throw new Exception('Wrong entity type.');
+    }
+
+    $keys = array_keys($source);
+    // https://stackoverflow.com/questions/9655687/php-check-if-array-contains-all-array-values-from-another-array
+    $containsSearch = !array_diff($expected_keys, $keys);
+    // check if request has all the keys we required.
+    if ($containsSearch && count($expected_keys) == count($keys)) {
+      
+      if (isset($source['entity_title'])) {
+        $entity_title = $source['entity_title'];
+      } else {
+        throw new Exception('Field entity_title can not be empty.');
+      }
+
+      if (isset($source['identifier'])) {
+        $entity_identifier = $source['identifier'];
+      } else {
+        throw new Exception('Field identifier can not be empty.');
+      }
+
+      if (isset($source['metadata'])) {
+        $metadata = $source['metadata'];
+      }
+
+      /** partners the book belong */
+      if (isset($metadata->partner)) {
+        foreach ($metadata->partner->value as $value) {
+          $partners[] =  array(
+            'title' => $value->title,
+            'language' => $value->language,
+            'identifier' => $value->identifier,
+            'code' => $value->code,
+            'name' => $value->name,
+          );
+        }
+      }
+      /** collections the book belong */
+      if (isset($metadata->collection)) {
+        foreach ($metadata->collection->value as $value) {
+          $collections[] =  array(
+            'title' => $value->title,
+            'language' => $value->language,
+            'identifier' => $value->identifier,
+            'code' => $value->code,
+            'name' => $value->name,
+            'partner' => $value->partner,
+          );
+        }
+      }
+      /** change title to string not array */
+      if (isset($metadata->title)) {
+        $title = $metadata->title->value[0];
+      }
+      if (isset($metadata->page_count) && !empty($metadata->page_count->value)) {
+        $page_count = $metadata->page_count->value[0];
+      }
+      if (isset($metadata->sequence_count) && !empty($metadata->sequence_count->value)) {
+        $sequence_count = $metadata->sequence_count->value[0];
+      }
+      if (isset($metadata->handle) && !empty($metadata->handle->value)) {
+        $handle = $metadata->handle->value[0];
+      }
+      $node = array(
+        'entity_title' => $entity_title,
+        'identifier' => $entity_identifier,
+        'partners' => $partners,
+        'collections' => $collections,
+        'title' => $title,
+        'page_count' => $page_count,
+        'handle' => $handle,
+        'sequence_count' => $sequence_count,
+      );
+      $entity = save_dlts_photo_set($node, $source['entity_language']);
+      if ($entity) {
+        return array(
+          'data' => $node,
+        );
+      }
+    } else {
+      throw new Exception('Keys: ' . implode($keys, ', ') . ' do not match the requierement: ' . implode($expected_keys, ', '));
+    }
+  } catch (Exception $e) {
+    watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
+    die($e->getMessage());
+  }
+}
+
+function dlts_viewer_api_v1_objects() {
+  if (!user_access('dlts create object')) {
+    $datasource = array();
+    $entity_types = array(
+      'dlts_book', 
+      'dlts_photo_set',
+    );
+    $datasource = (array) json_decode(
+      file_get_contents('php://input')
+    );
+    print_r($datasource);
+    die();
+  }
+}
