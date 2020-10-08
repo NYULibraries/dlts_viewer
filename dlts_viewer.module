@@ -76,6 +76,14 @@ function dlts_viewer_permission() {
       'title' => t('administer fileserver'),
       'description' => t('Administer the settings for the fileServer.'),
     ),
+    'dlts create object' => array(
+      'title' => t('Use DLTS Viewer API to create object'),
+      'description' => t('Allow user to create object using DLTS Viewer API.'),
+    ),
+    'dlts topic api' => array(
+      'title' => t('Allow user to see Topic API'),
+      'description' => t('Allow user to see Topic API'),
+    ),    
   );
 }
 
@@ -340,7 +348,6 @@ function dlts_viewer_flush_caches() {
   t('Page Count');
 
   t('Provider');
-  // ا لمزوِّد
 
   t('PDF');
 
