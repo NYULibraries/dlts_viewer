@@ -225,11 +225,4 @@ function dlts_viewer_admin_list_topics($start = 0, $length = 25, $requestedLang 
   
     return $output;
     
-    theme(
-      'table',
-      array(
-        'header' => $header, 
-        'rows' => $rows,
-      )
-    );
   }
