@@ -175,6 +175,19 @@ function book_nid($identifier, $language = LANGUAGE_NONE) {
   return (int)$keys[0];
 }
 
+function photoset_nid($identifier, $language = LANGUAGE_NONE) {
+	$query = new EntityFieldQuery;
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_photo_set')
+    ->propertyCondition('language', $language)
+    ->fieldCondition('field_identifier', 'value', $identifier, '=')
+    ->execute();
+  if (empty($result['node'])) return FALSE;
+  $keys = array_keys($result['node']);
+  return (int)$keys[0];
+}
+
 function series_nid($identifier) {
   $query = new EntityFieldQuery;
   $result = $query

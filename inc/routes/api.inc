@@ -34,6 +34,14 @@ function _dlts_viewer_menu_api() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['api/v1/objects'] = array(
+    'title' => 'Create object',
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_api_v1_objects',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints.inc',
+  );
+
   // type/identifier
   // e.g., api/v1/princeton_aco000102
   $items['api/v1/books/%'] = array(
@@ -41,6 +49,13 @@ function _dlts_viewer_menu_api() {
     'page callback' => '_dlts_viewer_book_loader',
     'delivery callback' => 'drupal_json_output',
     'page arguments' => array(2, 3),
+    'file' => 'inc/endpoints.inc',
+  );
+
+  $items['api/v1/topics'] = array(
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_api_list_topics',
+    'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
   );
 
