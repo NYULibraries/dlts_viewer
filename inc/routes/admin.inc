@@ -16,11 +16,20 @@ function _dlts_viewer_menu_admin() {
     'access arguments' => array('administer fileserver'),
     'file' => 'inc/admin.inc',
   );
-  
-  $items['admin/list/topics'] = array(
+
+  $items['admin/list/topics/%dlts_collection'] = array(
     'title' => 'List topics',
     'access arguments' => array('dlts topic api'),
     'page callback' => 'dlts_viewer_admin_list_topics',
+    'page arguments' => array(3),
+    'file' => 'inc/admin.inc',
+  );
+
+  $items['admin/list/topics/%dlts_collection/%'] = array(
+    'title' => 'List topics',
+    'access arguments' => array('dlts topic api'),
+    'page callback' => 'dlts_viewer_admin_list_topics_',
+    'page arguments' => array(3, 4),
     'file' => 'inc/admin.inc',
   );
   
