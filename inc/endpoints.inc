@@ -197,7 +197,7 @@ function dlts_viewer_api_list_topics($start = 0, $length = 50, $requestedLang = 
 
   if (isset($query_parameters['date'])) {
     $filter_date = filter_xss($query_parameters['date']);
-  }   
+  }
   
   // need to make sure lang exists
   if (isset($query_parameters['lang']) && in_array($query_parameters['lang'], $availableLanguages)) {
