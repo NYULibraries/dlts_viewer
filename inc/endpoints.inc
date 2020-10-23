@@ -1176,4 +1176,7 @@ function dlts_viewer_api_v1_objects() {
       }
     }
   }
+  return array(
+    'message' => 'User not allowed.',
+  );
 }
