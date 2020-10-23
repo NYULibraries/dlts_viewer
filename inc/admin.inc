@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Admin page.
@@ -61,6 +62,7 @@ function dlts_viewer_admin($form, &$form_state) {
     $form['#submit'][] = 'dlts_viewer_image_service_admin_settings_submit';
     return system_settings_form($form);
 }
+
 /**
  * Form submit handler for dlts_viewer admin settings form.
  */
@@ -98,6 +100,7 @@ function dlts_viewer_admin_list_topics($entity, $status = 1, $requestedLang = 'e
   return theme('table', array('header' => $header, 'rows' => $rows));
     
 }
+
 // $entity (collection entity) $date to filter by
 function dlts_viewer_admin_list_topics_($entity, $date, $requestedLang = 'en') {
   $wrapper = entity_metadata_wrapper('node', $entity);

@@ -3,17 +3,15 @@
 /**
  * @file
  */
-
 function dlts_viewer_book($node, $list_pages = TRUE) {
   $book = dlts_viewer_book_metadata($node);
   if ($list_pages) {
     $book = array_merge((array) $book, (array) dlts_viewer_book_pages($node));
   }
   return $book;
-} 
+}
 
 function dlts_viewer_books($start = 0, $length = 25) {
-  global $language;
   $request_uri = drupal_parse_url(request_uri());
   if (isset($request_uri['query'])) {
     if (isset($request_uri['query']['rows']) && is_numeric($request_uri['query']['rows'])) {
@@ -68,9 +66,6 @@ function dlts_viewer_book_metadata($book) {
 	module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
   $type = dlts_utilities_content_types_type($book->type);
   $fields = array();
-  $metadata = array();
-  $subjects = array();
-  $collections = array();
   $ewrapper = entity_metadata_wrapper('node', $book);
   foreach ($type['fields'] as $field) {
     $name = str_replace('field_', '', $field['field_name']);
@@ -989,41 +984,37 @@ function dlts_viewer_djakota_stream_book_page() {
 
 function dlts_viewer_api_v1_dlts_book_objects($source) {
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_book');
-
   $apiVersion = 'v1';
-
   try {
-
-    if ($source->entity_type !== 'dlts_book') {
-      throw new Exception('Wrong entity type.');
+    if (!user_access('dlts create object')) {
+      throw new Exception(__FUNCTION__ . ' user not allowed to run task');
     }
-
+    if ($source['entity_type'] !== 'dlts_book') {
+      throw new Exception('Wrong entity type ' . $source['entity_type'] .'.');
+    }
     // check if request has all the keys we required.
     if (
-      isset($source->entity_type) &&
-      isset($source->identifier) &&
-      isset($source->entity_language) &&
-      isset($source->entity_status) &&
-      isset($source->entity_type) &&
-      isset($source->metadata)
+      isset($source['entity_type']) &&
+      isset($source['identifier']) &&
+      isset($source['entity_language']) &&
+      isset($source['entity_status']) &&
+      isset($source['entity_type']) &&
+      isset($source['metadata'])
     ) {
-
-      if (!isset($source->entity_title)) {
+      if (!isset($source['entity_title'])) {
         throw new Exception('Field entity_title can not be empty.');
       }
-
-      if (!isset($source->identifier)) {
+      if (!isset($source['identifier'])) {
         throw new Exception('Field identifier can not be empty.');
       }
-
       $entity = create_dlts_book_from_json($source);
-
       if ($entity) {
         return array(
           'data' => $entity,
         );
+      } else {
+        throw new Exception('Unable to process entity with identifier ' . $source['identifier'] .'.');
       }
-
     }
   } catch (Exception $e) {
     watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
@@ -1070,6 +1061,10 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
   );
 
   try {
+    
+    if (!user_access('dlts create object')) {
+      throw new Exception(__FUNCTION__ . ' user not allowed to run task');
+    }
 
     if ($source['entity_type'] !== 'dlts_photo_set') {
       throw new Exception('Wrong entity type.');
@@ -1152,7 +1147,7 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
         );
       }
     } else {
-      throw new Exception('Keys: ' . implode($keys, ', ') . ' do not match the requierement: ' . implode($expected_keys, ', '));
+      throw new Exception('Keys: ' . implode(', ', $keys) . ' do not match the requierement: ' . implode(', ', $expected_keys));
     }
   } catch (Exception $e) {
     watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
@@ -1161,7 +1156,7 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
 }
 
 function dlts_viewer_api_v1_objects() {
-  if (!user_access('dlts create object')) {
+  if (user_access('dlts create object')) { // and allow hosts
     $datasource = array();
     $entity_types = array(
       'dlts_book', 
@@ -1170,7 +1165,15 @@ function dlts_viewer_api_v1_objects() {
     $datasource = (array) json_decode(
       file_get_contents('php://input')
     );
-    print_r($datasource);
-    die();
+    if (in_array($datasource['entity_type'], $entity_types)) {
+      switch ($datasource['entity_type']) {
+        case 'dlts_book':
+          return dlts_viewer_api_v1_dlts_book_objects($datasource);
+          break;
+        case 'dlts_photo_set':
+          return dlts_viewer_api_v1_dlts_photo_set_objects($datasource);
+          break;
+      }
+    }
   }
 }
