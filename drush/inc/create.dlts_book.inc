@@ -37,7 +37,7 @@ function save_dlts_book($node, $language = 'en') {
 	$node_language = (isset($node['entity_language']) ? $node['entity_language'] : $language);
  
   // make sure the language exists
-	$enabled_language = add_language($node_language);
+	$enabled_language = dlts_viewer_add_language($node_language);
 
 	// if language does not exists, do not add the book
   if (!$enabled_language) drush_die("Fail to run the script, language $language does not exists .");
