@@ -499,6 +499,7 @@ function _dlts_viewer_book_thumbnails_loader($identifier, $page = 0, $per_page =
 function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
   drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
+  
   // Books to test:
   // http://sites.dlib.nyu.edu/viewer/books/brill_awdl000076/1
   // http://sites.dlib.nyu.edu/viewer/books/columbia_aco001206/1
@@ -672,7 +673,6 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     );
 
     switch ($name) {
-      
       case 'author':
       case 'contributor': // test, empty?
       case 'creator': // test, empty?
@@ -920,9 +920,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 function dlts_viewer_djakota_book_page_loader($identifier, $sequence) {
   $data = dlts_viewer_mongodb_load_sequence($sequence, $identifier, 'dlts_books_page');
   if (isset($data['cm'])) {
-    if (isset($data['cm']['identifier'])) {
-      return $data['cm'];
-    } elseif (isset($data['cm']['uri'])) {
+    if (isset($data['cm']['uri'])) {
       /**
        * Load djatoka helper
        */
@@ -939,7 +937,7 @@ function dlts_viewer_djakota_book_page_loader($identifier, $sequence) {
 
 // e.g., http://localhost:9000/viewer/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
 function dlts_viewer_djakota_stream_book_page() {
-  
+
   // get query parameters
   $query_parameters = drupal_get_query_parameters();
 
@@ -964,7 +962,7 @@ function dlts_viewer_djakota_stream_book_page() {
   header('Content-type: image/jpeg');
   header('Access-Control-Allow-Origin: *');
   header('Access-Control-Allow-Methods: GET');
-  header("Content-Transfer-Encoding: binary");  
+  header("Content-Transfer-Encoding: binary");
 
   $resolver = 'http://dl-img.home.nyu.edu/adore-djatoka/resolver';  
   
@@ -1018,7 +1016,9 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
     }
   } catch (Exception $e) {
     watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
-    die($e->getMessage());
+    return array(
+      'error' => $e->getMessage(),
+    );     
   }
 
 }
@@ -1151,7 +1151,9 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
     }
   } catch (Exception $e) {
     watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
-    die($e->getMessage());
+    return array(
+      'error' => $e->getMessage(),
+    );    
   }
 }
 
@@ -1177,6 +1179,6 @@ function dlts_viewer_api_v1_objects() {
     }
   }
   return array(
-    'message' => 'User not allowed.',
+    'error' => 'User not allowed.',
   );
 }
