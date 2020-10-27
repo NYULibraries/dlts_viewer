@@ -43,7 +43,7 @@ function _dlts_viewer_menu_api() {
   );
 
   // type/identifier
-  // e.g., api/v1/princeton_aco000102
+  // e.g., api/v1/books/princeton_aco000102
   $items['api/v1/books/%'] = array(
     'access arguments' => array('access content'),
     'page callback' => '_dlts_viewer_book_loader',
