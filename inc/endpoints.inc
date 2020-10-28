@@ -941,29 +941,29 @@ function dlts_viewer_djakota_stream_book_page() {
   // get query parameters
   $query_parameters = drupal_get_query_parameters();
 
+  // $id Image URL
+  // e.g., http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
   if (isset($query_parameters['id'])) {
     $id = rawurlencode($query_parameters['id']);
   } else {
     die('Request must include id');
   }
 
+  // $level Image level
+  // e.g., 3
   if (isset($query_parameters['level'])) {
     $level = $query_parameters['level'];
   } else {
     die('Request must include level');
   }
 
+  // $region Tile region
+  // e.g., 0,2048,256,256 or 0 for full image
+  $region = false;
   if (isset($query_parameters['region'])) {
     $region = $query_parameters['region'];
-  } else {
-    die('Request must include region');
   }
-
-  header('Content-type: image/jpeg');
-  header('Access-Control-Allow-Origin: *');
-  header('Access-Control-Allow-Methods: GET');
-  header("Content-Transfer-Encoding: binary");
-
+  // use variable_get
   $resolver = 'http://dl-img.home.nyu.edu/adore-djatoka/resolver';  
   
   $url_ver = 'Z39.88-2004';
@@ -971,12 +971,36 @@ function dlts_viewer_djakota_stream_book_page() {
   $svc_id = 'info:lanl-repo/svc/getRegion';
   
   $svc_val_fmt = 'info:ofi/fmt:kev:mtx:jpeg2000';
-  
-  $url = $resolver . '?url_ver=' . $url_ver . '&rft_id=' . $id . '&svc_id=' . $svc_id . '&svc_val_fmt=' . $svc_val_fmt . '&svc.region=' . $region . '&svc.level=' . $level;
 
-  echo file_get_contents($url);
+  $url = $resolver . '?url_ver=' . $url_ver . '&rft_id=' . $id . '&svc_id=' . $svc_id . '&svc_val_fmt=' . $svc_val_fmt . '&svc.level=' . $level;
+
+  if ($region) {
+    $url = $url . '&svc.region=' . $region;
+  }
+
+  $content = file_get_contents($url);
+
+  $requestStatus = substr($http_response_header[0], 9, 3);
   
-  exit(0);
+  $responseType = substr($http_response_header[3], 14);
+
+  if ($content && $requestStatus === '200' && $responseType === 'image/jpeg') {
+    header('Content-type: image/jpeg');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET');
+    header("Content-Transfer-Encoding: binary");
+    echo $content;
+    exit(0);
+  } else {
+    if (isset($http_response_header)) {
+      header('HTTP/1.1 400 Bad Request', true, 400);
+      die('HTTP/1.1 400 Bad Request');
+    } else {
+      header('HTTP/1.1 400 Bad Request', true, 400);
+      die('HTTP/1.1 400 Bad Request');
+    }
+    exit(1);
+  }
 
 }
 
