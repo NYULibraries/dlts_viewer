@@ -50,7 +50,8 @@ function dlts_viewer_djatoka_request($file) {
 
 function dlts_viewer_djatoka_url($file, $embeded_tumb = false, $solr_index = false) {
 
-  $service = variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka');
+  // $service = variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka');
+  $service = $GLOBALS['base_url'] . '/api/v1/image';
 
   $arguments = array(
 	  'url_ver' => 'Z39.88-2004',
@@ -78,6 +79,12 @@ function dlts_viewer_djatoka_url($file, $embeded_tumb = false, $solr_index = fal
     }
   }
 
-  return url("$service/resolver", array('external' => true, 'query' => $arguments));
+  return url(
+    "$service/resolver", 
+    array(
+      'external' => TRUE,
+      'query' => $arguments
+    )
+  );
 
 }

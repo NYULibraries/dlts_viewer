@@ -68,7 +68,7 @@ function _dlts_viewer_menu_api() {
     'page arguments' => array(3),
     'file' => 'inc/endpoints.inc',
   );
-  
+
   // type/identifier/sequence
   // e.g., api/v1/princeton_aco000102/1
   $items['api/v1/books/%/%'] = array(
@@ -87,7 +87,14 @@ function _dlts_viewer_menu_api() {
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_djakota_stream_book_page',
     'file' => 'inc/endpoints.inc',
-  );  
+  );
+
+  $items['api/v1/image/resolver'] = array(
+    'title' => 'Image resolver',
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_djakota_resolver_stream',
+    'file' => 'inc/endpoints.inc',
+  );
 
   // JSON
   $items['api/v1/books'] = array(
@@ -115,7 +122,7 @@ function _dlts_viewer_menu_api() {
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
   );
-  
+
   return $items;
 
 }
