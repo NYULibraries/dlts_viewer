@@ -58,15 +58,6 @@ function _dlts_viewer_menu_book() {
             'type' => MENU_CALLBACK,
         ),
 
-        'iiif/2/%/%/%/info.json' => array(
-            'title' => 'IIIF API 2',
-            'access arguments' => array('access content'),
-            'page callback' => 'dlts_viewer_iiif_data',
-            'page arguments' => array(2, 3, 4),
-            'delivery callback' => 'dlts_viewer_deliver_json',
-            'type' => MENU_CALLBACK,
-        ),
-
         /**
          * JSON
          */
