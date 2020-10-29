@@ -1,6 +1,6 @@
 <?php
 
-function dlts_viewer_iiif_data ($type, $isPartOf, $sequence = 1) {
+function dlts_viewer_iiif_api($type, $isPartOf, $sequence = 1) {
 
   $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');  
 
