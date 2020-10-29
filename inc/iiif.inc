@@ -15,8 +15,6 @@ function dlts_viewer_iiif_data ($type, $isPartOf, $sequence = 1) {
 
   $image_metadata_uri = $image_server . '/iiif/2/' . $image_id . '/info.json';
 
-  die($image_metadata_uri);
-
   $response = drupal_http_request(
     $image_metadata_uri, 
     array(
