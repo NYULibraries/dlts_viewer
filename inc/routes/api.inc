@@ -113,7 +113,7 @@ function _dlts_viewer_menu_api() {
   );
 
   // request image
-  // e.g., http://localhost:9000/viewer/iiif/2/books/uaena_aco000016/1/info.json
+  // e.g., http://localhost:9000/iiif/2/books/uaena_aco000016/1/info.json
   $items['iiif/2/%/%/%/info.json'] = array(
     'title' => 'IIIF API 2',
     'access arguments' => array('access content'),
