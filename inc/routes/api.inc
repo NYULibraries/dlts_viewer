@@ -117,7 +117,7 @@ function _dlts_viewer_menu_api() {
   $items['iiif/2/%/%/%/info.json'] = array(
     'title' => 'IIIF API 2',
     'access arguments' => array('access content'),
-    'page callback' => 'dlts_viewer_iiif_data',
+    'page callback' => 'dlts_viewer_iiif_api',
     'page arguments' => array(2, 3, 4),
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
