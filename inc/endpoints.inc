@@ -1225,23 +1225,20 @@ function dlts_viewer_djakota_resolver_stream() {
 
   // $level Image level
   // e.g., 3
+  $level = FALSE;
   if (isset($query_parameters['svc_level'])) {
     $level = $query_parameters['svc_level'];
   } elseif (isset($query_parameters['svc.level'])) {
     $level = $query_parameters['svc.level'];
-  } else {
-    die('Request must include level');
   }
 
   // $region Tile region
   // e.g., 0,2048,256,256 or 0 for full image
-  $region = false;
+  $region = FALSE;
   if (isset($query_parameters['svc_region'])) {
     $region = $query_parameters['svc_region'];
   } elseif (isset($query_parameters['svc.region'])) {
     $region = $query_parameters['svc.region'];
-  } else {
-    die('Request must include region.');
   }
 
   $rotate = 0;
@@ -1268,7 +1265,11 @@ function dlts_viewer_djakota_resolver_stream() {
   
   $svc_val_fmt = 'info:ofi/fmt:kev:mtx:jpeg2000';
 
-  $url = $resolver . '?url_ver=' . $url_ver . '&rft_id=' . $id . '&svc_id=' . $svc_id . '&svc_val_fmt=' . $svc_val_fmt . '&svc.level=' . $level;
+  $url = $resolver . '?url_ver=' . $url_ver . '&rft_id=' . $id . '&svc_id=' . $svc_id . '&svc_val_fmt=' . $svc_val_fmt;
+
+  if ($level) {
+    $url = $url . '&svc.level=' . $level;
+  }
 
   if ($region) {
     $url = $url . '&svc.region=' . $region;
