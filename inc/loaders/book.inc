@@ -53,7 +53,7 @@ function dlts_book_load($identifier) {
  *
  * @return object MongoDB book page object
  */
-function dlts_book_page_load($sequence) {
+function dlts_book_page_load($sequence, $isPartOf = FALSE) {
 
     /**
      * Load MongoDB helper
@@ -63,7 +63,9 @@ function dlts_book_page_load($sequence) {
     // I don't like this. Can we find a better solution for this?
     // investigate a way to pass this from hook_menu
     // @TODO: Make it so that it can be call as API
-    $isPartOf = arg(1);
+    if (!$isPartOf) {
+      $isPartOf = arg(1);
+    }
 
     // view modes, we map the views with their machine names in MongoDB
     $collections = array(
@@ -155,4 +157,47 @@ function dlts_book_page_load($sequence) {
 
     // if $result is empty, retrun FALSE so that hook_menu can 404 redirect
     return FALSE;
+}
+
+function dlts_book_canvas_page_load($sequence) {
+  preg_match('/^p{1}([\d]+)$/', $sequence, $matches);
+  if (!empty($matches)) {
+    return dlts_book_page_load(
+      $matches[1], 
+      arg(3)
+    );
+  }
+  return FALSE;
+}
+
+function type_load($type) {
+  $types = array(
+    'books',
+  );
+
+  if (in_array($type, $types)) {
+    return $type;
+  }
+
+  return FALSE;
+}
+
+function item_load($item) {
+  return $item;
+}
+
+function page_item_load($item) {
+  preg_match('/^([\d]+)/', $item, $matches);
+  // http://localhost:9000/iiif/2/books/princeton_aco000102/1/info.json
+  if ($matches) {
+    $sequence = (int)$matches[1];
+    return dlts_book_page_load($sequence, arg(3));
+  } else {
+    preg_match('/^p{1}([\d]+)-image/', $item, $matches);
+    if (!empty($matches)) {
+      $sequence = (int)$matches[1];
+      return dlts_book_page_load($sequence, arg(3));
+    }
+  }
+  return FALSE;
 }
