@@ -1,14 +1,16 @@
 <?php
 
 function dlts_viewer_iiif_api($type, $isPartOf, $sequence = 1) {
+  
+  $wrapper = entity_metadata_wrapper('node', $isPartOf);
+
+  $identifier = $wrapper->field_identifier->value();
 
   $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');  
 
-  $result = dlts_viewer_mongodb_load_sequence($sequence, $isPartOf);
+  $image_id = str_replace(file_create_url('fileserver://'), '', $sequence['uri']);
 
-  $image_id = urlencode(str_replace('fileserver://', '', $result['cm']['uri']));
-
-  $uri = urlencode(file_create_url($result['cm']['uri']));
+  $uri = urlencode($image_id);
 
   // $uri if httpSource
   // $image_id if local
