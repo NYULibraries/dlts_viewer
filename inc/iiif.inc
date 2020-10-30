@@ -72,3 +72,77 @@ function dlts_viewer_iiif_tile($type, $isPartOf, $sequence = 1, $region = 'full'
   }
 
 }
+
+function dlts_viewer_iiif_book_page_canvas($type, $book, $page) {
+  global $base_url;
+  
+  $sequence = $page['sequence'][0];
+  
+  $item = 1;
+
+  $wrapper = entity_metadata_wrapper('node', $book);
+  
+  $identifier = $wrapper->field_identifier->value();
+  
+  return array(
+    'id' => "$base_url/api/v1/$type/$identifier/canvas/p$sequence",
+    'type' => 'Canvas',
+    'label' => array(
+      'en' => array(
+        (string) $sequence,
+      ),
+    ),
+    'width' => $page['width'],
+    'height' => $page['height'],
+    'items' => array(
+      dlts_viewer_iiif_book_page_annotation_page($type, $book, $page, $item)
+    ),
+  );
+}
+
+# https://iiif.io/api/presentation/3.0/#overview-annotationpage
+# http://localhost:9000/api/v1/books/princeton_aco000102/canvas/p193/1
+function dlts_viewer_iiif_book_page_annotation_page($type, $book, $page, $item) {
+  global $base_url;
+  // wrapp book entity with Entity API wrapper
+  $wrapper = entity_metadata_wrapper('node', $book);
+  $identifier = $wrapper->field_identifier->value();
+  $sequence = $page['sequence'][0];
+  return array(
+    'id' => "$base_url/api/v1/$type/$identifier/page/p$sequence/$item",
+    'type' => 'AnnotationPage',
+    'items' => array(
+      dlts_viewer_iiif_annotation($type, $book, $page),
+    ),
+  );
+}
+
+// http://localhost:9000/api/v1/books/princeton_aco000102/annotation/p11-image
+function dlts_viewer_iiif_annotation($type, $book, $item) {
+  global $base_url;
+  // wrapp book entity with Entity API wrapper
+  $wrapper = entity_metadata_wrapper('node', $book);  
+  $identifier = $wrapper->field_identifier->value();
+  $sequence = $item['sequence'][0];
+  $image = "$base_url/iiif/2/$type/$identifier/$sequence";
+  return array(
+    'id' => "$base_url/api/v1/$type/$identifier/annotation/p$sequence-image",
+    'type' => 'Annotation',
+    'motivation' => 'painting',
+    'body' => array(
+      'id' => "$image/full/max/0/default.jpg",
+      'type' => 'Image',
+      'format' => 'image/jpeg',
+      'height' => $item['height'],
+      'width' => $item['width'],
+      'service' => array(
+        array(
+          'id' =>  "$image/info.json",
+          'type' => 'ImageService3',
+          'profile' => 'level1',
+        ),
+      ),
+      'target' => "$base_url/api/v1/$type/$identifier/canvas/p$sequence",
+    ),
+  );
+}
