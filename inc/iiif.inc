@@ -144,7 +144,7 @@ function dlts_viewer_iiif_annotation($type, $book, $item) {
           'profile' => 'level1',
         ),
       ),
-      'target' => "$base_url/api/v1/$type/$identifier/canvas/p$sequence",
     ),
+    'target' => "$base_url/api/v1/$type/$identifier/canvas/p$sequence",
   );
 }
