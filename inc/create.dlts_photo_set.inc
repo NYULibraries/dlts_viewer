@@ -135,4 +135,3 @@ function save_dlts_photo_set($node, $node_language = 'en') {
   return $ewrapper->save();
 
 }
-
