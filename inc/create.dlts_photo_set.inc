@@ -17,6 +17,11 @@
  *   Photo.
  */
 function save_dlts_photo_set($node, $node_language = 'en') {
+
+  if (!user_access('dlts create object')) {
+    die('Not allowed.');
+  }
+
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_collection');
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_partner');
   global $user;
