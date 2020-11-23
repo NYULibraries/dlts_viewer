@@ -1160,17 +1160,32 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
   }
 }
 
+/**
+ * API callback.
+ */
 function dlts_viewer_api_v1_objects() {
-  if (!user_access('dlts create object')) {
+  // @todo Also filter by hosts with access
+  if (user_access('dlts create object')) {
     $datasource = array();
     $entity_types = array(
-      'dlts_book', 
+      'dlts_book',
       'dlts_photo_set',
     );
     $datasource = (array) json_decode(
       file_get_contents('php://input')
     );
-    print_r($datasource);
-    die();
+    if (in_array($datasource['entity_type'], $entity_types)) {
+      switch ($datasource['entity_type']) {
+        case 'dlts_book':
+          return dlts_viewer_api_v1_dlts_book_objects($datasource);
+
+        case 'dlts_photo_set':
+          return dlts_viewer_api_v1_dlts_photo_set_objects($datasource);
+      }
+    }
   }
+  return array(
+    'error' => 'User not allowed.',
+  );
 }
+
