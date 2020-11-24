@@ -181,7 +181,7 @@ function save_dlts_book($node, $language = 'en') {
         $ewrapper->field_call_number->set($node['call_number']);
       }
       if (!empty($node['representative_image'])) {
-        $label = (isset($node['representative_image']['label'])) ? $node['representative_image']['label'] : null;
+        $label = (isset($node['representative_image']['label'])) ? $node['representative_image']['label'] : NULL;
         $serialize_data = serialize(
           array(
             'label' => $label,
@@ -209,7 +209,7 @@ function save_dlts_book($node, $language = 'en') {
                 'label' => $label,
                 'uri' => $pdf['uri'],
                 'filesize' => $pdf['filesize'],
-                'searchable' => (isset($pdf['searchable']) && $pdf['searchable']) ? $pdf['searchable'] : false,
+                'searchable' => (isset($pdf['searchable']) && $pdf['searchable']) ? $pdf['searchable'] : FALSE,
               )
             ),
           );
