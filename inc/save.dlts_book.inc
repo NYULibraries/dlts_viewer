@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * API callbacks.
+ */
+
+/**
  * API callback.
  *
  * @todo Support for fields: publication_date, geographic_coordinates, geographic_subject
