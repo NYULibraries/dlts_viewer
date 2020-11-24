@@ -15,7 +15,7 @@ function dlts_viewer_iiif_api($type, $isPartOf, $sequence = 1) {
   // $uri if httpSource
   // $image_id if local
 
-  $image_metadata_uri = $image_server . '/iiif/2/' . $image_id . '/info.json';
+  $image_metadata_uri = $image_server . '/iiif/2/' . $uri . '/info.json';
 
   $response = drupal_http_request(
     $image_metadata_uri, 
