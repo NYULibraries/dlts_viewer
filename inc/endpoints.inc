@@ -922,15 +922,20 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
 }
 
-function dlts_viewer_djakota_book_page_loader($identifier, $sequence) {
+function dlts_viewer_djakota_book_page($entity, int $sequence) {
+  // Entity API wrapper.
+  $book = entity_metadata_wrapper('node', $entity);
+  // Book identifier.
+  $identifier = $book->field_identifier->value();
+  // Prevent cross-site-scripting.
+  $sequence = filter_xss($sequence);
   $data = dlts_viewer_mongodb_load_sequence($sequence, $identifier, 'dlts_books_page');
   if (isset($data['cm'])) {
     if (isset($data['cm']['identifier'])) {
       return $data['cm'];
-    } elseif (isset($data['cm']['uri'])) {
-      /**
-       * Load djatoka helper
-       */
+    }
+    elseif (isset($data['cm']['uri'])) {
+      // Load djatoka helper.
       module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
       return dlts_viewer_djatoka_request(
         array(

@@ -69,12 +69,11 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   );
 
-  // type/identifier/sequence
-  // e.g., api/v1/princeton_aco000102/1
-  $items['api/v1/books/%/%'] = array(
+  // @link api/v1/books/princeton_aco000102/1
+  $items['api/v1/books/%dlts_book/%'] = array(
     'title' => 'JSON representation of the book',
     'access arguments' => array('access content'),
-    'page callback' => 'dlts_viewer_djakota_book_page_loader',
+    'page callback' => 'dlts_viewer_djakota_book_page',
     'page arguments' => array(3, 4),
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
