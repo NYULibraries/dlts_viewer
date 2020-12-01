@@ -1,10 +1,21 @@
 <?php
 
+/**
+ * @file
+ * Admin callbacks.
+ */
+
+/**
+ * Register Admin routes.
+ *
+ * @return array
+ *   Items to register in the menu system.
+ */
 function _dlts_viewer_menu_admin() {
-  
+
   $items = array();
 
-  /**
+  /*
    * Admin page to administer the fileServer and the
    * fileServer stream wrapper
    */
@@ -32,6 +43,6 @@ function _dlts_viewer_menu_admin() {
     'page arguments' => array(3, 4),
     'file' => 'inc/admin.inc',
   );
-  
+
   return $items;
 }
