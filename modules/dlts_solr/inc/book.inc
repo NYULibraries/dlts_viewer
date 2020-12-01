@@ -580,19 +580,18 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
     }
   }
 
-  // $document->addField('zm_pdf', json_encode($pdfs));
-
   unset($pdfs);
 
   /** multi-value field */
   $topics = $wrapper->field_topic->value();
   if (!empty($topics)) {
   	foreach ($topics as $topic) {
+      $topic = trim($topic);
   		$searchableFields[] =  $topic;
   		$document->addField('sm_topic', $topic);
   		$document->addField('tkm_topic', $topic);
-  		$document->addField('tum_topic', str_replace('.','',$topic));
-  		$document->addField('tm_topic', str_replace('.','',$topic));
+  		$document->addField('tum_topic', str_replace('.', '', $topic));
+  		$document->addField('tm_topic', str_replace('.', '', $topic));
   	}
   }
   unset($topics);

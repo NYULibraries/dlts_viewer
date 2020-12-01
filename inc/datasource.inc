@@ -381,6 +381,36 @@ function dlts_viewer_books_isPartof_series($nid) {
 	}
 }
 
+function dlts_viewer_subject_tid($subject, $vid) {
+	$global_subjects = &drupal_static('global_subjects');
+	if (empty($global_subjects)) {
+		$global_subjects = array();
+	}
+	if (!empty($subject)) {
+		$this_subject = trim(preg_replace('/\s\s+/', ' ', str_replace("\n", " ", $subject)));
+		if (!array_key_exists($this_subject, $global_subjects)) {
+			$term = taxonomy_get_term_by_name($this_subject);
+			if ($term) {
+				$this_term = array_pop($term);
+				$tid = $this_term->tid;
+			}
+			else {
+				$tid = create_taxonomy_term($this_subject, $vid);
+			}
+			$global_subjects[$this_subject] = $tid;
+		}
+	}
+	return $global_subjects;
+}
+
+function dlts_viewer_subject_vocabulary_vid() {
+	$global_vocabulary_vid = &drupal_static('global_vocabulary_vid');
+	if (empty($global_vocabulary_vid)) {
+		$global_vocabulary_vid = taxonomy_vocabulary_machine_name_load('subjects')->vid;
+	}
+	return $global_vocabulary_vid;
+}
+
 // Return a list of created %d-%m-%Y. Usuful to select batch of nodes
 // that were publish in a specific day.
 function dlts_viewer_batch_days($collectionCode = NULL, $status = 1, $requestedLang = 'en') {

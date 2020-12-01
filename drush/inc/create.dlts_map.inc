@@ -48,7 +48,7 @@ function save_dlts_map($node, $language = 'en') {
             $tnid = map_nid($node['identifier'], 'en');
             if ($tnid) {
                 // make sure the language exists
-                $enabled_language = add_language($node_language);
+                $enabled_language = dlts_viewer_add_language($node_language);
                 // if language does not exists, do not add the map
                 if (!$enabled_language) return FALSE;
                 // load the source

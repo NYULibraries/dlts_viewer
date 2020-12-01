@@ -36,14 +36,14 @@ function _dlts_viewer_menu_api() {
 
   $items['api/v1/objects'] = array(
     'title' => 'Create object',
-    'access arguments' => array('access content'),
+    'access arguments' => array('dlts create object'),
     'page callback' => 'dlts_viewer_api_v1_objects',
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
   );
 
   // type/identifier
-  // e.g., api/v1/princeton_aco000102
+  // e.g., api/v1/books/princeton_aco000102
   $items['api/v1/books/%'] = array(
     'access arguments' => array('access content'),
     'page callback' => '_dlts_viewer_book_loader',
@@ -68,13 +68,12 @@ function _dlts_viewer_menu_api() {
     'page arguments' => array(3),
     'file' => 'inc/endpoints.inc',
   );
-  
-  // type/identifier/sequence
-  // e.g., api/v1/princeton_aco000102/1
-  $items['api/v1/books/%/%'] = array(
+
+  // @link api/v1/books/princeton_aco000102/1
+  $items['api/v1/books/%dlts_book/%'] = array(
     'title' => 'JSON representation of the book',
     'access arguments' => array('access content'),
-    'page callback' => 'dlts_viewer_djakota_book_page_loader',
+    'page callback' => 'dlts_viewer_djakota_book_page',
     'page arguments' => array(3, 4),
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
@@ -87,7 +86,14 @@ function _dlts_viewer_menu_api() {
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_djakota_stream_book_page',
     'file' => 'inc/endpoints.inc',
-  );  
+  );
+
+  $items['api/v1/image/resolver'] = array(
+    'title' => 'Image resolver',
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_djakota_resolver_stream',
+    'file' => 'inc/endpoints.inc',
+  );
 
   // JSON
   $items['api/v1/books'] = array(
@@ -105,17 +111,6 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   );
 
-  // request image
-  // e.g., http://localhost:9000/viewer/iiif/2/books/uaena_aco000016/1/info.json
-  $items['iiif/2/%/%/%/info.json'] = array(
-    'title' => 'IIIF API 2',
-    'access arguments' => array('access content'),
-    'page callback' => 'dlts_viewer_iiif_data',
-    'page arguments' => array(2, 3, 4),
-    'delivery callback' => 'drupal_json_output',
-    'file' => 'inc/iiif.inc',
-  );
-  
   return $items;
 
 }

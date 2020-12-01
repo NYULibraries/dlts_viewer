@@ -167,8 +167,7 @@ function _language_field(&$entity)
     }
 }
 
-function dlts_viewer_dispatcher($entity, $arg)
-{
+function dlts_viewer_book_dispatcher($entity, $arg) {
 // check if this collection has searchable PDFs
     $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
 // test if resource
@@ -191,7 +190,7 @@ function dlts_viewer_dispatcher($entity, $arg)
     $query_parameters = drupal_get_query_parameters();
     // check if this books is part of a multi-volume
     $multivolume_book = dlts_viewer_is_multivolume_book($entity);
-    
+
     // if book is part of multi-volume; use append volume value to entity title
     if ($multivolume_book) {
       // wrapp multi-volume entity with Entity API wrapper

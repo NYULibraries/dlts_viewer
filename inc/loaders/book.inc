@@ -53,7 +53,7 @@ function dlts_book_load($identifier) {
  *
  * @return object MongoDB book page object
  */
-function dlts_book_page_load($sequence) {
+function dlts_book_page_load($sequence, $isPartOf = FALSE) {
 
     /**
      * Load MongoDB helper
@@ -63,7 +63,15 @@ function dlts_book_page_load($sequence) {
     // I don't like this. Can we find a better solution for this?
     // investigate a way to pass this from hook_menu
     // @TODO: Make it so that it can be call as API
-    $isPartOf = arg(1);
+    if (!$isPartOf) {
+      $identifier = arg(1);
+    }
+    else {
+      // Entity API wrapper.
+      $book = entity_metadata_wrapper('node', $isPartOf[1]);
+      // Book identifier.
+      $identifier = $book->field_identifier->value();
+    }
 
     // view modes, we map the views with their machine names in MongoDB
     $collections = array(
@@ -84,7 +92,7 @@ function dlts_book_page_load($sequence) {
         }
     }
 
-    $result = dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection_name);
+    $result = dlts_viewer_mongodb_load_sequence($sequence, $identifier, $collection_name);
 
     if ($result && isset($result['cm']) && !empty($result['cm']['uri'])) {
         /**
@@ -149,10 +157,53 @@ function dlts_book_page_load($sequence) {
         }
     }
 
-    drupal_set_message(t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.', array('@sequence' => $sequence, '@identifier' => $isPartOf)), 'error');
+    drupal_set_message(t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.', array('@sequence' => $sequence, '@identifier' => $identifier)), 'error');
 
-    watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', array('%identifier' => $isPartOf, '%sequence' => $sequence), WATCHDOG_NOTICE);
+    watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', array('%identifier' => $identifier, '%sequence' => $sequence), WATCHDOG_NOTICE);
 
     // if $result is empty, retrun FALSE so that hook_menu can 404 redirect
     return FALSE;
+}
+
+function dlts_book_canvas_page_load($sequence) {
+  preg_match('/^p{1}([\d]+)$/', $sequence, $matches);
+  if (!empty($matches)) {
+    return dlts_book_page_load(
+      $matches[1],
+      arg(3)
+    );
+  }
+  return FALSE;
+}
+
+function type_load($type) {
+  $types = array(
+    'books',
+  );
+
+  if (in_array($type, $types)) {
+    return $type;
+  }
+
+  return FALSE;
+}
+
+function item_load($item) {
+  return $item;
+}
+
+function page_item_load($item) {
+  preg_match('/^([\d]+)/', $item, $matches);
+  // http://localhost:9000/iiif/2/books/princeton_aco000102/1/info.json
+  if ($matches) {
+    $sequence = (int)$matches[1];
+    return dlts_book_page_load($sequence, arg(3));
+  } else {
+    preg_match('/^p{1}([\d]+)-image/', $item, $matches);
+    if (!empty($matches)) {
+      $sequence = (int)$matches[1];
+      return dlts_book_page_load($sequence, arg(3));
+    }
+  }
+  return FALSE;
 }

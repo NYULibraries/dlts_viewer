@@ -292,10 +292,11 @@ function theme_dlts_viewer_openlayers_image($variables) {
     if ($detect->isMobile() && !$detect->isTablet()) {
       $zoom = 0;
     }
-  }  
+  }
 
   $openlayers_options = array(
-    'service' => variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka'),
+    // 'service' => variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka'),
+    'service' => $GLOBALS['base_url'] . '/api/v1/image',
     'imgMetadata' => array(
       'width' => $file['width'],
       'height' => $file['height'],
@@ -305,7 +306,7 @@ function theme_dlts_viewer_openlayers_image($variables) {
     ),
     'zoom' => $zoom,
   );
-  
+
   $json_data = json_encode($openlayers_options);
 
   $js_inline = '(function(O){O.DLTS.Page("' . $fid . '","' .  $file_uri . '",' . $json_data . ')})(OpenLayers);';

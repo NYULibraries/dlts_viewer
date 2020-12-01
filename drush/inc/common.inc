@@ -1,11 +1,6 @@
 <?php
 
-/**
- * @file
- * DLTS Viewer drush
- */
-
-function add_language($requested_language) {
+function dlts_viewer_add_language($requested_language) {
   $list_enabled_languages = locale_language_list();
   $enabled_languages = array_keys($list_enabled_languages);
   if (in_array($requested_language, $enabled_languages)) {
