@@ -1,25 +1,43 @@
 <?php
 
+/**
+ * @file
+ * DLTS Viewer Create Photo resource.
+ */
+
+/**
+ * Save photo object.
+ *
+ * @param string $node
+ *   Entity.
+ * @param string $node_language
+ *   Lang of resource.
+ *
+ * @return object
+ *   Photo.
+ */
 function save_dlts_photo_set($node, $node_language = 'en') {
+
+  if (!user_access('dlts create object')) {
+    die('Not allowed.');
+  }
+
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_collection');
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_partner');
-  // Get the current user
-  // --user=uid OR --user=1 for super user
   global $user;
-  /** force EN language */
+  // Force EN language.
   if ($node_language == LANGUAGE_NONE) {
     $node_language = 'en';
   }
   $photo_set_exist = photoset_nid($node['identifier'], $node_language);
 
   if ($photo_set_exist) {
-    // Load the node by NID
+    // Load the node by NID.
     $entity = node_load($photo_set_exist);
-    // Wrap it with Entity API
+    // Wrap it with Entity API.
     $ewrapper = entity_metadata_wrapper('node', $entity);
-  } else {
-    // entity_create replaces the procedural steps in the first example of
-    // creating a new object $node and setting its 'type' and uid property
+  }
+  else {
     $entity = entity_create('node', array(
       'type' => 'dlts_photo_set',
       'uid' => $user->uid,
@@ -28,9 +46,6 @@ function save_dlts_photo_set($node, $node_language = 'en') {
       'promote' => 0,
       'language' => $node_language,
     ));
-    // The entity is now created, but we have not yet simplified use of it.
-    // Now create an entity_metadata_wrapper around the new node entity
-    // to make getting and setting values easier
     $ewrapper = entity_metadata_wrapper('node', $entity);
   }
 
@@ -43,13 +58,15 @@ function save_dlts_photo_set($node, $node_language = 'en') {
       $substr_title = substr($node['entity_title'], 0, 200);
     }
     $ewrapper->title->set($substr_title);
-  } else {
+  }
+  else {
     $ewrapper->title->set('Untitled');
   }
 
   if (!empty($node['identifier'])) {
     $ewrapper->field_identifier->set($node['identifier']);
-  } else {
+  }
+  else {
     die('Node identifier must not be empty');
   }
 
@@ -73,7 +90,7 @@ function save_dlts_photo_set($node, $node_language = 'en') {
   if (!empty($node['collections']) && is_array($node['collections']) && count($node['collections']) > 0) {
     foreach ($node['collections'] as $collection) {
       $nid = collection_nid($collection['identifier']);
-      // create collection
+      // Create collection.
       if (!$nid) {
         $collection_entity = create_dlts_collection($collection);
         if ($collection_entity) {
@@ -101,16 +118,17 @@ function save_dlts_photo_set($node, $node_language = 'en') {
   }
 
   if (!empty($node['page_count'])) {
-    $ewrapper->field_page_count->set((int)$node['page_count']);
+    $ewrapper->field_page_count->set((int) $node['page_count']);
   }
-  
+
   if (!empty($node['sequence_count'])) {
-    $ewrapper->field_sequence_count->set((int)$node['sequence_count']);
+    $ewrapper->field_sequence_count->set((int) $node['sequence_count']);
   }
 
   if (!empty($node['title_long'])) {
     $ewrapper->field_title->set($node['title_long']);
-  } elseif(!empty($node['entity_title'])) {
+  }
+  elseif (!empty($node['entity_title'])) {
     $ewrapper->field_title->set($node['entity_title']);
   }
 
