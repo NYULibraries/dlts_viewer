@@ -1193,3 +1193,109 @@ function dlts_viewer_api_v1_objects() {
   );
 }
 
+// e.g., http://localhost:9000/viewer/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
+function dlts_viewer_djakota_resolver_stream() {
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  // $id Image URL.
+  // e.g., http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
+  if (isset($query_parameters['rft_id'])) {
+    $id = rawurlencode($query_parameters['rft_id']);
+  }
+  else {
+    die('Request must include id.');
+  }
+
+  // Image level e.g., 3.
+  $level = FALSE;
+  if (isset($query_parameters['svc_level'])) {
+    $level = $query_parameters['svc_level'];
+  }
+  elseif (isset($query_parameters['svc.level'])) {
+    $level = $query_parameters['svc.level'];
+  }
+
+  // Tile region e.g., 0,2048,256,256 or 0 for full image.
+  $region = FALSE;
+  if (isset($query_parameters['svc_region'])) {
+    $region = $query_parameters['svc_region'];
+  }
+  elseif (isset($query_parameters['svc.region'])) {
+    $region = $query_parameters['svc.region'];
+  }
+
+  $rotate = 0;
+  if (isset($query_parameters['svc_rotate'])) {
+    $rotate = $query_parameters['svc_rotate'];
+  }
+  elseif (isset($query_parameters['svc.rotate'])) {
+    $rotate = $query_parameters['svc.rotate'];
+  }
+
+  $scale = FALSE;
+  if (isset($query_parameters['svc_scale'])) {
+    $scale = $query_parameters['svc_scale'];
+  }
+  elseif (isset($query_parameters['svc.scale'])) {
+    $scale = $query_parameters['svc.scale'];
+  }
+
+  $service = variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka');
+
+  $resolver = "$service/resolver";
+
+  $url_ver = 'Z39.88-2004';
+
+  $svc_id = 'info:lanl-repo/svc/getRegion';
+
+  $svc_val_fmt = 'info:ofi/fmt:kev:mtx:jpeg2000';
+
+  $url = $resolver . '?url_ver=' . $url_ver . '&rft_id=' . $id . '&svc_id=' . $svc_id . '&svc_val_fmt=' . $svc_val_fmt;
+
+  if ($level) {
+    $url = $url . '&svc.level=' . $level;
+  }
+
+  if ($region) {
+    $url = $url . '&svc.region=' . $region;
+  }
+
+  if ($rotate) {
+    $url = $url . '&svc.rotate=' . $rotate;
+  }
+
+  if ($scale) {
+    $url = $url . '&svc.scale=' . $scale;
+  }
+
+  $content = file_get_contents($url);
+
+  $requestStatus = substr($http_response_header[0], 9, 3);
+
+  $responseType = substr($http_response_header[3], 14);
+
+  if ($content && $requestStatus === '200' && $responseType === 'image/jpeg') {
+    $etag = md5($content);
+    header('Content-type: image/jpeg');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET');
+    header("Content-Transfer-Encoding: binary");
+    header("Etag: $etag");
+    echo $content;
+    exit(0);
+  }
+  else {
+    if (isset($http_response_header)) {
+      header('HTTP/1.1 400 Bad Request', TRUE, 400);
+      die('HTTP/1.1 400 Bad Request');
+    }
+    else {
+      header('HTTP/1.1 400 Bad Request', TRUE, 400);
+      die('HTTP/1.1 400 Bad Request');
+    }
+    exit(1);
+  }
+
+}
