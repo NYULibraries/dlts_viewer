@@ -13,6 +13,7 @@ function dlts_viewer_book($node, $list_pages = TRUE) {
 }
 
 function dlts_viewer_books($start = 0, $length = 25) {
+  global $language;
   $request_uri = drupal_parse_url(request_uri());
   if (isset($request_uri['query'])) {
     if (isset($request_uri['query']['rows']) && is_numeric($request_uri['query']['rows'])) {
@@ -72,6 +73,9 @@ function dlts_viewer_book_metadata($book) {
   module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
   $type = dlts_utilities_content_types_type($book->type);
   $fields = array();
+  $metadata = array();
+  $subjects = array();
+  $collections = array();
   $ewrapper = entity_metadata_wrapper('node', $book);
   foreach ($type['fields'] as $field) {
     $name = str_replace('field_', '', $field['field_name']);
@@ -203,7 +207,7 @@ function dlts_viewer_api_list_topics($start = 0, $length = 50, $requestedLang = 
     $filter_date = filter_xss($query_parameters['date']);
   }
 
-  // Need to make sure lang exists.
+  // need to make sure lang exists
   if (isset($query_parameters['lang']) && in_array($query_parameters['lang'], $availableLanguages)) {
     $requestedLang = $query_parameters['lang'];
   }
@@ -251,12 +255,10 @@ function dlts_viewer_api_list_topics($start = 0, $length = 50, $requestedLang = 
     )
   )->fetchAll();
 
-  $dates = db_query(
-    $sql_dates,
-    array(
-      ':language' => $requestedLang,
-      ':collection_code' => 'aco',
-      ':status' => 1,
+  $dates = db_query($sql_dates, array(
+    ':language' => $requestedLang,
+    ':collection_code' => 'aco',
+    ':status' => 1,
     )
   )->fetchAll();
 
@@ -505,7 +507,6 @@ function _dlts_viewer_book_thumbnails_loader($identifier, $page = 0, $per_page =
 function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
   drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
-
   // Books to test:
   // http://sites.dlib.nyu.edu/viewer/books/brill_awdl000076/1
   // http://sites.dlib.nyu.edu/viewer/books/columbia_aco001206/1
@@ -586,7 +587,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
   $representative_image = file_create_url($fri['uri']);
 
-  // Default title of the book.
+  // default title of the book
   $title = $entity->title;
 
   $type = dlts_utilities_content_types_type($entity->type);
@@ -603,12 +604,10 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     $wrapper = entity_metadata_wrapper('node', $multivolume_book);
     // Get volume value.
     $volume_number_str = $wrapper->field_volume_number_str->value();
-    // Change entity title.
-    $title = t(
-      '@title @volume',
-      array(
-        '@title' => $multivolume_book->title,
-        '@volume' => $volume_number_str,
+    // change entity title
+    $title = t('@title @volume', array(
+      '@title' => $multivolume_book->title,
+      '@volume' => $volume_number_str,
       )
     );
     $multivolume_books = dlts_viewer_books_isPartof_multivolume($wrapper->field_multivol->value()->nid);
@@ -621,11 +620,9 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
       $volumes[$volume] = array(
         'identifier' => $bs_wrapper->field_identifier->value(),
         'selected' => ($bs_wrapper->nid->value() == $entity->nid),
-        'title' => t(
-          '@title @volume',
-          array(
-            '@title' => $mb->title,
-            '@volume' => $mb_wrapper->field_volume_number_str->value(),
+        'title' => t('@title @volume', array(
+          '@title' => $mb->title,
+          '@volume' => $mb_wrapper->field_volume_number_str->value(),
           )
         ),
       );
@@ -679,10 +676,11 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     $raw_value = $book->$field['field_name']->value();
     $fields[$name] = array(
       'label' => locale($field['label'], NULL, $requestedLang),
-      'value' => NULL,
+      'value' => null,
     );
 
     switch ($name) {
+
       case 'author':
       case 'contributor':
       case 'creator':
@@ -723,28 +721,28 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
           $collection['partner']['name'] = locale($collection['partner']['name'], NULL, $requestedLang);
           $fields[$name]['value'][] = $collection;
         }
-        break;
+      break;
 
       case 'geographic_subject':
         // @todo Find out how to deal with this.
         unset($fields[$name]);
-        break;
+      break;
 
       case 'handle':
         $fields[$name]['value'] = $raw_value['url'];
-        break;
+      break;
 
       case 'identifier':
         unset($fields[$name]);
-        break;
+      break;
 
       case 'language':
         $fields[$name]['value'] = array_pop($raw_value);
-        break;
+      break;
 
       case 'language_code':
         $fields[$name]['value'] = array_pop($raw_value);
-        break;
+      break;
 
       case 'partner':
         $partner_value = array();
@@ -796,11 +794,11 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
             }
           }
         }
-        break;
+      break;
 
       case 'publication_date':
         $fields[$name]['value'] = $raw_value['value'];
-        break;
+      break;
 
       case 'read_order':
         // [0] => Left to right
@@ -811,15 +809,15 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
         );
         $worldDirection = $fields[$name]['value'] = $map[$raw_value];
         unset($map);
-        break;
+      break;
 
       case 'representative_image':
         unset($fields[$name]);
-        break;
+      break;
 
       case 'rights':
         $fields[$name]['value'] = trim($raw_value);
-        break;
+      break;
 
       case 'scan_order':
         // [0] => Left to right
@@ -830,11 +828,11 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
         );
         $fields[$name]['value'] = $map[$raw_value];
         unset($map);
-        break;
+      break;
 
       case 'sequence_count':
         $fields[$name]['value'] = (int) $raw_value;
-        break;
+      break;
 
       case 'subject':
         $subjects = array();
@@ -846,11 +844,11 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
         }
         $fields[$name]['value'] = $subjects;
         unset($subjects);
-        break;
+      break;
 
       case 'title':
         unset($fields[$name]);
-        break;
+      break;
 
       case 'topic':
         $topics = array();
@@ -859,7 +857,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
         }
         $fields[$name]['value'] = $topics;
         unset($topics);
-        break;
+      break;
 
       case 'volume':
         $fields['volumes'] = $volumes;
@@ -932,7 +930,9 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 function dlts_viewer_djakota_book_page_loader($identifier, $sequence) {
   $data = dlts_viewer_mongodb_load_sequence($sequence, $identifier, 'dlts_books_page');
   if (isset($data['cm'])) {
-    if (isset($data['cm']['uri'])) {
+    if (isset($data['cm']['identifier'])) {
+      return $data['cm'];
+    } elseif (isset($data['cm']['uri'])) {
       /**
        * Load djatoka helper
        */
@@ -953,8 +953,6 @@ function dlts_viewer_djakota_stream_book_page() {
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
-  // $id Image URL
-  // e.g., http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
   if (isset($query_parameters['id'])) {
     $id = rawurlencode($query_parameters['id']);
   }
@@ -962,8 +960,6 @@ function dlts_viewer_djakota_stream_book_page() {
     die('Request must include id');
   }
 
-  // $level Image level
-  // e.g., 3
   if (isset($query_parameters['level'])) {
     $level = $query_parameters['level'];
   }
@@ -971,11 +967,10 @@ function dlts_viewer_djakota_stream_book_page() {
     die('Request must include level');
   }
 
-  // $region Tile region
-  // e.g., 0,2048,256,256 or 0 for full image
-  $region = FALSE;
   if (isset($query_parameters['region'])) {
     $region = $query_parameters['region'];
+  } else {
+    die('Request must include region');
   }
 
   header('Content-type: image/jpeg');
@@ -1001,45 +996,46 @@ function dlts_viewer_djakota_stream_book_page() {
 
 function dlts_viewer_api_v1_dlts_book_objects($source) {
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_book');
+
   $apiVersion = 'v1';
+
   try {
-    if (!user_access('dlts create object')) {
-      throw new Exception(__FUNCTION__ . ' user not allowed to run task');
+
+    if ($source->entity_type !== 'dlts_book') {
+      throw new Exception('Wrong entity type.');
     }
-    if ($source['entity_type'] !== 'dlts_book') {
-      throw new Exception('Wrong entity type ' . $source['entity_type'] . '.');
-    }
-    // Check if request has all the keys we required.
+
+    // check if request has all the keys we required.
     if (
-      isset($source['entity_type']) &&
-      isset($source['identifier']) &&
-      isset($source['entity_language']) &&
-      isset($source['entity_status']) &&
-      isset($source['entity_type']) &&
-      isset($source['metadata'])
+      isset($source->entity_type) &&
+      isset($source->identifier) &&
+      isset($source->entity_language) &&
+      isset($source->entity_status) &&
+      isset($source->entity_type) &&
+      isset($source->metadata)
     ) {
-      if (!isset($source['entity_title'])) {
+
+      if (!isset($source->entity_title)) {
         throw new Exception('Field entity_title can not be empty.');
       }
-      if (!isset($source['identifier'])) {
+
+      if (!isset($source->identifier)) {
         throw new Exception('Field identifier can not be empty.');
       }
+
       $entity = create_dlts_book_from_json($source);
+
       if ($entity) {
         return array(
           'data' => $entity,
         );
       }
-      else {
-        throw new Exception('Unable to process entity with identifier ' . $source['identifier'] .'.');
-      }
+
     }
   }
   catch (Exception $e) {
     watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
-    return array(
-      'error' => $e->getMessage(),
-    );
+    die($e->getMessage());
   }
 
 }
@@ -1082,10 +1078,6 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
   );
 
   try {
-
-    if (!user_access('dlts create object')) {
-      throw new Exception(__FUNCTION__ . ' user not allowed to run task');
-    }
 
     if ($source['entity_type'] !== 'dlts_photo_set') {
       throw new Exception('Wrong entity type.');
@@ -1176,9 +1168,7 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
   }
   catch (Exception $e) {
     watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
-    return array(
-      'error' => $e->getMessage(),
-    );
+    die($e->getMessage());
   }
 }
 
@@ -1209,4 +1199,111 @@ function dlts_viewer_api_v1_objects() {
   return array(
     'error' => 'User not allowed.',
   );
+}
+
+// e.g., http://localhost:9000/viewer/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
+function dlts_viewer_djakota_resolver_stream() {
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  // $id Image URL.
+  // e.g., http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
+  if (isset($query_parameters['rft_id'])) {
+    $id = rawurlencode($query_parameters['rft_id']);
+  }
+  else {
+    die('Request must include id.');
+  }
+
+  // Image level e.g., 3.
+  $level = FALSE;
+  if (isset($query_parameters['svc_level'])) {
+    $level = $query_parameters['svc_level'];
+  }
+  elseif (isset($query_parameters['svc.level'])) {
+    $level = $query_parameters['svc.level'];
+  }
+
+  // Tile region e.g., 0,2048,256,256 or 0 for full image.
+  $region = FALSE;
+  if (isset($query_parameters['svc_region'])) {
+    $region = $query_parameters['svc_region'];
+  }
+  elseif (isset($query_parameters['svc.region'])) {
+    $region = $query_parameters['svc.region'];
+  }
+
+  $rotate = 0;
+  if (isset($query_parameters['svc_rotate'])) {
+    $rotate = $query_parameters['svc_rotate'];
+  }
+  elseif (isset($query_parameters['svc.rotate'])) {
+    $rotate = $query_parameters['svc.rotate'];
+  }
+
+  $scale = FALSE;
+  if (isset($query_parameters['svc_scale'])) {
+    $scale = $query_parameters['svc_scale'];
+  }
+  elseif (isset($query_parameters['svc.scale'])) {
+    $scale = $query_parameters['svc.scale'];
+  }
+
+  $service = variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka');
+
+  $resolver = "$service/resolver";
+
+  $url_ver = 'Z39.88-2004';
+
+  $svc_id = 'info:lanl-repo/svc/getRegion';
+
+  $svc_val_fmt = 'info:ofi/fmt:kev:mtx:jpeg2000';
+
+  $url = $resolver . '?url_ver=' . $url_ver . '&rft_id=' . $id . '&svc_id=' . $svc_id . '&svc_val_fmt=' . $svc_val_fmt;
+
+  if ($level) {
+    $url = $url . '&svc.level=' . $level;
+  }
+
+  if ($region) {
+    $url = $url . '&svc.region=' . $region;
+  }
+
+  if ($rotate) {
+    $url = $url . '&svc.rotate=' . $rotate;
+  }
+
+  if ($scale) {
+    $url = $url . '&svc.scale=' . $scale;
+  }
+
+  $content = file_get_contents($url);
+
+  $requestStatus = substr($http_response_header[0], 9, 3);
+
+  $responseType = substr($http_response_header[3], 14);
+
+  if ($content && $requestStatus === '200' && $responseType === 'image/jpeg') {
+    $etag = md5($content);
+    header('Content-type: image/jpeg');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET');
+    header("Content-Transfer-Encoding: binary");
+    header("Etag: $etag");
+    echo $content;
+    exit(0);
+  }
+  else {
+    if (isset($http_response_header)) {
+      header('HTTP/1.1 400 Bad Request', TRUE, 400);
+      die('HTTP/1.1 400 Bad Request');
+    }
+    else {
+      header('HTTP/1.1 400 Bad Request', TRUE, 400);
+      die('HTTP/1.1 400 Bad Request');
+    }
+    exit(1);
+  }
+
 }
