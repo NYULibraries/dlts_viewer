@@ -1,24 +1,21 @@
 <?php
 
 function dlts_viewer_iiif_api($type, $isPartOf, $sequence = 1) {
-  
+
   $wrapper = entity_metadata_wrapper('node', $isPartOf);
 
   $identifier = $wrapper->field_identifier->value();
 
-  $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');  
+  $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');
 
   $image_id = str_replace(file_create_url('fileserver://'), '', $sequence['uri']);
 
   $uri = urlencode($image_id);
 
-  // $uri if httpSource
-  // $image_id if local
-
   $image_metadata_uri = $image_server . '/iiif/2/' . $uri . '/info.json';
 
   $response = drupal_http_request(
-    $image_metadata_uri, 
+    $image_metadata_uri,
     array(
       'method' => 'GET',
       'timeout' => 15,
@@ -30,18 +27,18 @@ function dlts_viewer_iiif_api($type, $isPartOf, $sequence = 1) {
       return drupal_json_decode($response->data);
     }
   }
-  
+
 }
 
 # Region https://iiif.io/api/image/3.0/#4-image-requests
 # http://localhost:9000/iiif/2/books/uaena_aco000016/1/full/max/0/default.jpg
 function dlts_viewer_iiif_tile($type, $isPartOf, $sequence = 1, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
-  $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');  
+  $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');
 
   $result = dlts_viewer_mongodb_load_sequence($sequence, $isPartOf);
 
   $image_id = urlencode(str_replace('fileserver://', '', $result['cm']['uri']));
-  
+
   $uri = urlencode(file_create_url($result['cm']['uri']));
 
   $image = "$image_server/iiif/2/$image_id/$region/$size/$rotation/$quality";
@@ -49,7 +46,7 @@ function dlts_viewer_iiif_tile($type, $isPartOf, $sequence = 1, $region = 'full'
   $content = file_get_contents($image);
 
   $requestStatus = substr($http_response_header[0], 9, 3);
-  
+
   $responseType = substr($http_response_header[7], 14);
 
   if ($content && $requestStatus === '200' && $responseType === 'image/jpeg') {
@@ -63,11 +60,12 @@ function dlts_viewer_iiif_tile($type, $isPartOf, $sequence = 1, $region = 'full'
     exit(0);
   } else {
     if (isset($http_response_header)) {
-      
-      header('HTTP/1.1 400 Bad Request', true, 400);
+
+      header('HTTP/1.1 400 Bad Request', TRUE, 400);
       die('HTTP/1.1 400 Bad Request');
-    } else {
-      header('HTTP/1.1 400 Bad Request', true, 400);
+    }
+    else {
+      header('HTTP/1.1 400 Bad Request', TRUE, 400);
       die('HTTP/1.1 400 Bad Request');
     }
     exit(1);
@@ -77,15 +75,15 @@ function dlts_viewer_iiif_tile($type, $isPartOf, $sequence = 1, $region = 'full'
 
 function dlts_viewer_iiif_book_page_canvas($type, $book, $page) {
   global $base_url;
-  
+
   $sequence = $page['sequence'][0];
-  
+
   $item = 1;
 
   $wrapper = entity_metadata_wrapper('node', $book);
-  
+
   $identifier = $wrapper->field_identifier->value();
-  
+
   return array(
     'id' => "$base_url/api/v1/$type/$identifier/canvas/p$sequence",
     'type' => 'Canvas',
@@ -106,7 +104,7 @@ function dlts_viewer_iiif_book_page_canvas($type, $book, $page) {
 # http://localhost:9000/api/v1/books/princeton_aco000102/canvas/p193/1
 function dlts_viewer_iiif_book_page_annotation_page($type, $book, $page, $item) {
   global $base_url;
-  // wrapp book entity with Entity API wrapper
+  // Wrapp book entity with Entity API wrapper.
   $wrapper = entity_metadata_wrapper('node', $book);
   $identifier = $wrapper->field_identifier->value();
   $sequence = $page['sequence'][0];
@@ -122,8 +120,8 @@ function dlts_viewer_iiif_book_page_annotation_page($type, $book, $page, $item) 
 // http://localhost:9000/api/v1/books/princeton_aco000102/annotation/p11-image
 function dlts_viewer_iiif_annotation($type, $book, $item) {
   global $base_url;
-  // wrapp book entity with Entity API wrapper
-  $wrapper = entity_metadata_wrapper('node', $book);  
+  // Wrapp book entity with Entity API wrapper.
+  $wrapper = entity_metadata_wrapper('node', $book);
   $identifier = $wrapper->field_identifier->value();
   $sequence = $item['sequence'][0];
   $image = "$base_url/iiif/2/$type/$identifier/$sequence";
@@ -139,7 +137,7 @@ function dlts_viewer_iiif_annotation($type, $book, $item) {
       'width' => $item['width'],
       'service' => array(
         array(
-          'id' =>  "$image/info.json",
+          'id' => "$image/info.json",
           'type' => 'ImageService3',
           'profile' => 'level1',
         ),

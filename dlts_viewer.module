@@ -83,7 +83,7 @@ function dlts_viewer_permission() {
     'dlts topic api' => array(
       'title' => t('Allow user to see Topic API'),
       'description' => t('Allow user to see Topic API'),
-    ),    
+    ),
   );
 }
 
@@ -152,7 +152,7 @@ function dlts_viewer_preprocess_html(&$vars) {
     $vars['resource_language_code'] = $language_default->language;
     // We have access to $resource_language_code in the global context
     // if the resource exist.
-    // See: dlts_viewer_dispatcher()
+    // See: dlts_viewer_book_dispatcher()
     $resource_language_code = dlts_viewer_resource_language_code();
     if ($resource_language_code) {
       $vars['resource_language_code'] = $resource_language_code;
