@@ -538,13 +538,13 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   // and the language map from $availableLanguages
   $worldDirection = 'rtl';
 
-  // Entity API wrapper
+  // Entity API wrapper.
   $book = entity_metadata_wrapper('node', $entity);
 
-  // book identifier
+  // Book identifier.
   $identifier = $book->field_identifier->value();
 
-  $language_code = mapLanguageCode(
+  $language_code = dlts_viewer_map_language_code(
     array_pop(
       $book->field_language_code->value()
     )
@@ -1006,25 +1006,25 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
 
   try {
 
-    if ($source->entity_type !== 'dlts_book') {
+    if ($source['entity_type'] !== 'dlts_book') {
       throw new Exception('Wrong entity type.');
     }
 
-    // check if request has all the keys we required.
+    // Check if request has all the keys we required.
     if (
-      isset($source->entity_type) &&
-      isset($source->identifier) &&
-      isset($source->entity_language) &&
-      isset($source->entity_status) &&
-      isset($source->entity_type) &&
-      isset($source->metadata)
+      isset($source['entity_type']) &&
+      isset($source['identifier']) &&
+      isset($source['entity_language']) &&
+      isset($source['entity_status']) &&
+      isset($source['entity_type']) &&
+      isset($source['metadata'])
     ) {
 
-      if (!isset($source->entity_title)) {
+      if (!isset($source['entity_title'])) {
         throw new Exception('Field entity_title can not be empty.');
       }
 
-      if (!isset($source->identifier)) {
+      if (!isset($source['identifier'])) {
         throw new Exception('Field identifier can not be empty.');
       }
 

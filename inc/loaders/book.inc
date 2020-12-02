@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Wildcard loaders
+ * Wildcard loaders.
  */
 
 /**
