@@ -535,13 +535,13 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   // and the language map from $availableLanguages
   $worldDirection = 'rtl';
 
-  // Entity API wrapper
+  // Entity API wrapper.
   $book = entity_metadata_wrapper('node', $entity);
 
-  // book identifier
+  // Book identifier.
   $identifier = $book->field_identifier->value();
 
-  $language_code = mapLanguageCode(
+  $language_code = dlts_viewer_map_language_code(
     array_pop(
       $book->field_language_code->value()
     )

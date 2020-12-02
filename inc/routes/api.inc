@@ -15,6 +15,7 @@ function _dlts_viewer_menu_api() {
     'page callback' => 'return_nodeid_json',
     'page arguments' => array(1),
     'access arguments' => array('access content'),
+    'delivery callback' => 'drupal_json_output',
     'type' => MENU_CALLBACK,
   );
 
@@ -23,14 +24,7 @@ function _dlts_viewer_menu_api() {
     'page callback' => 'return_nodeid_json',
     'page arguments' => array(1, 3),
     'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['content/%/page_nodeids'] = array(
-    'title' => 'Return page nodeids for book',
-    'page callback' => 'return_page_nodeids_json',
-    'page arguments' => array(1),
-    'access arguments' => array('access content'),
+    'delivery callback' => 'drupal_json_output',
     'type' => MENU_CALLBACK,
   );
 
