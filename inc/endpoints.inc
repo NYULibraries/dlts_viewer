@@ -999,25 +999,25 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
 
   try {
 
-    if ($source->entity_type !== 'dlts_book') {
+    if ($source['entity_type'] !== 'dlts_book') {
       throw new Exception('Wrong entity type.');
     }
 
-    // check if request has all the keys we required.
+    // Check if request has all the keys we required.
     if (
-      isset($source->entity_type) &&
-      isset($source->identifier) &&
-      isset($source->entity_language) &&
-      isset($source->entity_status) &&
-      isset($source->entity_type) &&
-      isset($source->metadata)
+      isset($source['entity_type']) &&
+      isset($source['identifier']) &&
+      isset($source['entity_language']) &&
+      isset($source['entity_status']) &&
+      isset($source['entity_type']) &&
+      isset($source['metadata'])
     ) {
 
-      if (!isset($source->entity_title)) {
+      if (!isset($source['entity_title'])) {
         throw new Exception('Field entity_title can not be empty.');
       }
 
-      if (!isset($source->identifier)) {
+      if (!isset($source['identifier'])) {
         throw new Exception('Field identifier can not be empty.');
       }
 
@@ -1030,7 +1030,8 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
       }
 
     }
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
     watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
     die($e->getMessage());
   }
