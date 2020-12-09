@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Utils.
+ */
+
+/**
  * Set JSON-LD header with IIIF Presentation profile.
  * @link https://iiif.io/api/presentation/3.0/#63-responses
  */
@@ -42,6 +47,12 @@ function dlts_viewer_pdf_is_searchable($entity = NULL) {
   return $is_searchable;
 }
 
+/**
+ * Content by field.
+ *
+ * @return array
+ *   Return content by field.
+ */
 function dlts_viewer_content_by_field($field_name) {
   $out = array();
   $field_name = filter_xss($field_name);
@@ -100,8 +111,7 @@ function dlts_viewer_object_types() {
  * Check if DLTS Vierwer will render object.
  *
  * @return bool
- *   Return a boolean indicating whether object can be render
- *   by DLTS Vierwer.
+ *   Return a boolean indicating whether object can be render.
  */
 function dlts_viewer_is_resource() {
   $is_resource = &drupal_static('is_resource');
@@ -223,6 +233,9 @@ function dlts_viewer_resource_language_code($vars = NULL) {
         if ($field_language_code) {
           // @todo Field allows unlimited number of values. This seem wrong. Shifts the first value.
           // of the array off and returns it.
+          // Field allows unlimited number of values. This seem wrong.
+          // Shifts the first value of the array off and returns it.
+          // @link admin/structure/types/manage/dlts-book/fields/field_language_code
           $code = array_shift($field_language_code);
           $resource_language_code = dlts_viewer_map_language_code($code);
         }
@@ -266,6 +279,17 @@ function dlts_viewer_viewer_language($vars = NULL) {
   return $viewer_language;
 }
 
+/**
+ * Retruns nodeid.
+ *
+ * @param string $dlts_id
+ *   NOID.
+ * @param string $lang_code
+ *   Language code.
+ *
+ * @return array
+ *   ISO 639-1.
+ */
 function return_nodeid_json($dlts_id, $lang_code = NULL) {
   $langs = $lang_code ? array($lang_code) : array('und', 'en');
   $query = new EntityFieldQuery();
@@ -293,211 +317,201 @@ function return_nodeid_json($dlts_id, $lang_code = NULL) {
  *   ISO 639-1 string.
  */
 function dlts_viewer_map_language_code($lang = 'eng') {
-  $mapISO639 = array(
-    "aar" => "aa",
-    "abk" => "ab",
-    "afr" => "af",
-    "aka" => "ak",
-    "alb" => "sq",
-    "amh" => "am",
-    "ara" => "ar",
-    "arg" => "an",
-    "arm" => "hy",
-    "asm" => "as",
-    "ava" => "av",
-    "ave" => "ae",
-    "aym" => "ay",
-    "aze" => "az",
-    "bak" => "ba",
-    "bam" => "bm",
-    "baq" => "eu",
-    "bel" => "be",
-    "ben" => "bn",
-    "bih" => "bh",
-    "bis" => "bi",
-    "bos" => "bs",
-    "bre" => "br",
-    "bul" => "bg",
-    "bur" => "my",
-    "cat" => "ca",
-    "cha" => "ch",
-    "che" => "ce",
-    "chi" => "zh",
-    "chu" => "cu",
-    "chv" => "cv",
-    "cor" => "kw",
-    "cos" => "co",
-    "cre" => "cr",
-    "cze" => "cs",
-    "dan" => "da",
-    "div" => "dv",
-    "dut" => "nl",
-    "dzo" => "dz",
-    "eng" => "en",
-    "epo" => "eo",
-    "est" => "et",
-    "ewe" => "ee",
-    "fao" => "fo",
-    "fij" => "fj",
-    "fin" => "fi",
-    "fre" => "fr",
-    "fry" => "fy",
-    "ful" => "ff",
-    "geo" => "ka",
-    "ger" => "de",
-    "gla" => "gd",
-    "gle" => "ga",
-    "glg" => "gl",
-    "glv" => "gv",
-    "gre" => "el",
-    "grn" => "gn",
-    "guj" => "gu",
-    "hat" => "ht",
-    "hau" => "ha",
-    "heb" => "he",
-    "her" => "hz",
-    "hin" => "hi",
-    "hmo" => "ho",
-    "hrv" => "hr",
-    "hun" => "hu",
-    "ibo" => "ig",
-    "ice" => "is",
-    "ido" => "io",
-    "iii" => "ii",
-    "iku" => "iu",
-    "ile" => "ie",
-    "ina" => "ia",
-    "ind" => "id",
-    "ipk" => "ik",
-    "ita" => "it",
-    "jav" => "jv",
-    "jpn" => "ja",
-    "kal" => "kl",
-    "kan" => "kn",
-    "kas" => "ks",
-    "kau" => "kr",
-    "kaz" => "kk",
-    "khm" => "km",
-    "kik" => "ki",
-    "kin" => "rw",
-    "kir" => "ky",
-    "kom" => "kv",
-    "kon" => "kg",
-    "kor" => "ko",
-    "kua" => "kj",
-    "kur" => "ku",
-    "lao" => "lo",
-    "lat" => "la",
-    "lav" => "lv",
-    "lim" => "li",
-    "lin" => "ln",
-    "lit" => "lt",
-    "ltz" => "lb",
-    "lub" => "lu",
-    "lug" => "lg",
-    "mac" => "mk",
-    "mah" => "mh",
-    "mal" => "ml",
-    "mao" => "mi",
-    "mar" => "mr",
-    "may" => "ms",
-    "mlg" => "mg",
-    "mlt" => "mt",
-    "mon" => "mn",
-    "nau" => "na",
-    "nav" => "nv",
-    "nbl" => "nr",
-    "nde" => "nd",
-    "ndo" => "ng",
-    "nep" => "ne",
-    "nno" => "nn",
-    "nob" => "nb",
-    "nor" => "no",
-    "nya" => "ny",
-    "oci" => "oc",
-    "oji" => "oj",
-    "ori" => "or",
-    "orm" => "om",
-    "oss" => "os",
-    "pan" => "pa",
-    "per" => "fa",
-    "pli" => "pi",
-    "pol" => "pl",
-    "por" => "pt",
-    "pus" => "ps",
-    "que" => "qu",
-    "roh" => "rm",
-    "rum" => "ro",
-    "run" => "rn",
-    "rus" => "ru",
-    "sag" => "sg",
-    "san" => "sa",
-    "sin" => "si",
-    "slo" => "sk",
-    "slv" => "sl",
-    "sme" => "se",
-    "smo" => "sm",
-    "sna" => "sn",
-    "snd" => "sd",
-    "som" => "so",
-    "sot" => "st",
-    "spa" => "es",
-    "srd" => "sc",
-    "srp" => "sr",
-    "ssw" => "ss",
-    "sun" => "su",
-    "swa" => "sw",
-    "swe" => "sv",
-    "tah" => "ty",
-    "tam" => "ta",
-    "tat" => "tt",
-    "tel" => "te",
-    "tgk" => "tg",
-    "tgl" => "tl",
-    "tha" => "th",
-    "tib" => "bo",
-    "tir" => "ti",
-    "ton" => "to",
-    "tsn" => "tn",
-    "tso" => "ts",
-    "tuk" => "tk",
-    "tur" => "tr",
-    "twi" => "tw",
-    "uig" => "ug",
-    "ukr" => "uk",
-    "urd" => "ur",
-    "uzb" => "uz",
-    "ven" => "ve",
-    "vie" => "vi",
-    "vol" => "vo",
-    "wel" => "cy",
-    "wln" => "wa",
-    "wol" => "wo",
-    "xho" => "xh",
-    "yid" => "yi",
-    "yor" => "yo",
-    "zha" => "za",
-    "zul" => "zu",
+  $map_iso_636 = array(
+    'aar' => 'aa',
+    'abk' => 'ab',
+    'afr' => 'af',
+    'aka' => 'ak',
+    'alb' => 'sq',
+    'amh' => 'am',
+    'ara' => 'ar',
+    'arg' => 'an',
+    'arm' => 'hy',
+    'asm' => 'as',
+    'ava' => 'av',
+    'ave' => 'ae',
+    'aym' => 'ay',
+    'aze' => 'az',
+    'bak' => 'ba',
+    'bam' => 'bm',
+    'baq' => 'eu',
+    'bel' => 'be',
+    'ben' => 'bn',
+    'bih' => 'bh',
+    'bis' => 'bi',
+    'bos' => 'bs',
+    'bre' => 'br',
+    'bul' => 'bg',
+    'bur' => 'my',
+    'cat' => 'ca',
+    'cha' => 'ch',
+    'che' => 'ce',
+    'chi' => 'zh',
+    'chu' => 'cu',
+    'chv' => 'cv',
+    'cor' => 'kw',
+    'cos' => 'co',
+    'cre' => 'cr',
+    'cze' => 'cs',
+    'dan' => 'da',
+    'div' => 'dv',
+    'dut' => 'nl',
+    'dzo' => 'dz',
+    'eng' => 'en',
+    'epo' => 'eo',
+    'est' => 'et',
+    'ewe' => 'ee',
+    'fao' => 'fo',
+    'fij' => 'fj',
+    'fin' => 'fi',
+    'fre' => 'fr',
+    'fry' => 'fy',
+    'ful' => 'ff',
+    'geo' => 'ka',
+    'ger' => 'de',
+    'gla' => 'gd',
+    'gle' => 'ga',
+    'glg' => 'gl',
+    'glv' => 'gv',
+    'gre' => 'el',
+    'grn' => 'gn',
+    'guj' => 'gu',
+    'hat' => 'ht',
+    'hau' => 'ha',
+    'heb' => 'he',
+    'her' => 'hz',
+    'hin' => 'hi',
+    'hmo' => 'ho',
+    'hrv' => 'hr',
+    'hun' => 'hu',
+    'ibo' => 'ig',
+    'ice' => 'is',
+    'ido' => 'io',
+    'iii' => 'ii',
+    'iku' => 'iu',
+    'ile' => 'ie',
+    'ina' => 'ia',
+    'ind' => 'id',
+    'ipk' => 'ik',
+    'ita' => 'it',
+    'jav' => 'jv',
+    'jpn' => 'ja',
+    'kal' => 'kl',
+    'kan' => 'kn',
+    'kas' => 'ks',
+    'kau' => 'kr',
+    'kaz' => 'kk',
+    'khm' => 'km',
+    'kik' => 'ki',
+    'kin' => 'rw',
+    'kir' => 'ky',
+    'kom' => 'kv',
+    'kon' => 'kg',
+    'kor' => 'ko',
+    'kua' => 'kj',
+    'kur' => 'ku',
+    'lao' => 'lo',
+    'lat' => 'la',
+    'lav' => 'lv',
+    'lim' => 'li',
+    'lin' => 'ln',
+    'lit' => 'lt',
+    'ltz' => 'lb',
+    'lub' => 'lu',
+    'lug' => 'lg',
+    'mac' => 'mk',
+    'mah' => 'mh',
+    'mal' => 'ml',
+    'mao' => 'mi',
+    'mar' => 'mr',
+    'may' => 'ms',
+    'mlg' => 'mg',
+    'mlt' => 'mt',
+    'mon' => 'mn',
+    'nau' => 'na',
+    'nav' => 'nv',
+    'nbl' => 'nr',
+    'nde' => 'nd',
+    'ndo' => 'ng',
+    'nep' => 'ne',
+    'nno' => 'nn',
+    'nob' => 'nb',
+    'nor' => 'no',
+    'nya' => 'ny',
+    'oci' => 'oc',
+    'oji' => 'oj',
+    'ori' => 'or',
+    'orm' => 'om',
+    'oss' => 'os',
+    'pan' => 'pa',
+    'per' => 'fa',
+    'pli' => 'pi',
+    'pol' => 'pl',
+    'por' => 'pt',
+    'pus' => 'ps',
+    'que' => 'qu',
+    'roh' => 'rm',
+    'rum' => 'ro',
+    'run' => 'rn',
+    'rus' => 'ru',
+    'sag' => 'sg',
+    'san' => 'sa',
+    'sin' => 'si',
+    'slo' => 'sk',
+    'slv' => 'sl',
+    'sme' => 'se',
+    'smo' => 'sm',
+    'sna' => 'sn',
+    'snd' => 'sd',
+    'som' => 'so',
+    'sot' => 'st',
+    'spa' => 'es',
+    'srd' => 'sc',
+    'srp' => 'sr',
+    'ssw' => 'ss',
+    'sun' => 'su',
+    'swa' => 'sw',
+    'swe' => 'sv',
+    'tah' => 'ty',
+    'tam' => 'ta',
+    'tat' => 'tt',
+    'tel' => 'te',
+    'tgk' => 'tg',
+    'tgl' => 'tl',
+    'tha' => 'th',
+    'tib' => 'bo',
+    'tir' => 'ti',
+    'ton' => 'to',
+    'tsn' => 'tn',
+    'tso' => 'ts',
+    'tuk' => 'tk',
+    'tur' => 'tr',
+    'twi' => 'tw',
+    'uig' => 'ug',
+    'ukr' => 'uk',
+    'urd' => 'ur',
+    'uzb' => 'uz',
+    'ven' => 've',
+    'vie' => 'vi',
+    'vol' => 'vo',
+    'wel' => 'cy',
+    'wln' => 'wa',
+    'wol' => 'wo',
+    'xho' => 'xh',
+    'yid' => 'yi',
+    'yor' => 'yo',
+    'zha' => 'za',
+    'zul' => 'zu',
   );
-  if (strlen($lang) == 3 && isset($mapISO639[$lang])) {
-    return $mapISO639[$lang];
+  if (strlen($lang) == 3 && isset($map_iso_636[$lang])) {
+    return $map_iso_636[$lang];
   }
   return 'en';
 }
 
 /**
- * Check if $data is serialized.
- * @link https://core.trac.wordpress.org/browser/tags/5.5.1/src/wp-includes/functions.php#L642
+ * Check if is_serialized.
  * @link https://developer.wordpress.org/reference/functions/is_serialized/
- *
- * @param string $data
- *   Value to check to see if was serialized.
- * @param bool $strict
- *   $strict Optional. Whether to be strict about the end of the string.
- *   Default true.
- *
- * @return bool
- *   bool False if not serialized and true if it was.
  */
 function dlts_viewer_is_serialized($data, $strict = TRUE) {
   // If it isn't a string, it isn't serialized.
@@ -522,7 +536,7 @@ function dlts_viewer_is_serialized($data, $strict = TRUE) {
   }
   else {
     $semicolon = strpos($data, ';');
-    $brace = strpos($data, '}');
+    $brace     = strpos($data, '}');
     // Either ; or } must exist.
     if (FALSE === $semicolon && FALSE === $brace) {
       return FALSE;
@@ -535,9 +549,7 @@ function dlts_viewer_is_serialized($data, $strict = TRUE) {
       return FALSE;
     }
   }
-
   $token = $data[0];
-
   switch ($token) {
     case 's':
       if ($strict) {

@@ -15,7 +15,7 @@ function _dlts_viewer_menu_api() {
 
   $items = array();
 
-  /* JSON */
+  /* JSON. */
   $items['books.json'] = array(
     'title' => 'All books in JSON format',
     'access arguments' => array('access content'),
@@ -38,6 +38,7 @@ function _dlts_viewer_menu_api() {
     'delivery callback' => 'drupal_json_output',
     'page arguments' => array(1),
     'access arguments' => array('access content'),
+    'delivery callback' => 'drupal_json_output',
     'type' => MENU_CALLBACK,
   );
 
@@ -109,6 +110,15 @@ function _dlts_viewer_menu_api() {
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
   );
+
+  // $items['api/v1/books/%dlts_book/%'] = array(
+  // 'title' => 'JSON representation of the book',
+  // 'access arguments' => array('access content'),
+  // 'page callback' => 'dlts_viewer_djakota_book_page',
+  // 'page arguments' => array(3, 4),
+  // 'delivery callback' => 'drupal_json_output',
+  // 'file' => 'inc/endpoints.inc',
+  // );
 
   // Stream tile from resource page.
   $items['api/v1/tile'] = array(

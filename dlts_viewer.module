@@ -79,10 +79,13 @@ function dlts_viewer_permission() {
       'title' => t('Allow user to see Topic API'),
       'description' => t('Allow user to see Topic API'),
     ),
+<<<<<<< HEAD
     'access iiif content' => array(
       'title' => t('Allow user to IIIF content'),
       'description' => t('Allow user to IIIF content'),
     ),
+=======
+>>>>>>> 34f43ebb854edf527efcfeafe2cca94d387ac5f9
   );
 }
 
