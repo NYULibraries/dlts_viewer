@@ -9,7 +9,7 @@ function dlts_iiif_region_load($region) {
   if (
     in_array($region, $valid_regions) ||
     preg_match('/^[0-9]*,{1}[0-9]*,{1}[0-9]*,{1}[0-9]*$/', $region) ||
-    preg_match('/^pct:[\.0-9]*,{1}[\.0-9]*,{1}[\.0-9]*,{1}[\.0-9]*$/', $region) 
+    preg_match('/^pct:[\.0-9]*,{1}[\.0-9]*,{1}[\.0-9]*,{1}[\.0-9]*$/', $region)
   ) {
     return $region;
   }
@@ -56,27 +56,6 @@ function dlts_canvas_page_load($sequence, $map) {
   preg_match('/^([\d]+)$/', $sequence, $matches);
   if (!empty($matches)) {
     return dlts_book_page_load($sequence, $map, 6);
-  }
-  return FALSE;
-}
-
-function item_load($item) {
-  die(__FUNCTION__);
-  return $item;
-}
-
-function page_item_load($item) {
-  preg_match('/^([\d]+)/', $item, $matches);
-  // http://localhost:9000/iiif/2/books/princeton_aco000102/1/info.json
-  if ($matches) {
-    $sequence = (int)$matches[1];
-    return dlts_book_page_load($sequence, arg(3));
-  } else {
-    preg_match('/^p{1}([\d]+)-image/', $item, $matches);
-    if (!empty($matches)) {
-      $sequence = (int)$matches[1];
-      return dlts_book_page_load($sequence, arg(3));
-    }
   }
   return FALSE;
 }

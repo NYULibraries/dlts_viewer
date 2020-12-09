@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Types.
+ */
+
 function type_load($type) {
   $types = array(
     'books',

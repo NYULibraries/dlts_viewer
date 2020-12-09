@@ -161,7 +161,7 @@ function dlts_book_page_load($sequence, $isPartOf = FALSE) {
 
     watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', array('%identifier' => $identifier, '%sequence' => $sequence), WATCHDOG_NOTICE);
 
-    // if $result is empty, retrun FALSE so that hook_menu can 404 redirect
+    // If $result is empty, retrun FALSE so that hook_menu can 404 redirect.
     return FALSE;
 }
 
@@ -176,32 +176,17 @@ function dlts_book_canvas_page_load($sequence) {
   return FALSE;
 }
 
-function type_load($type) {
-  $types = array(
-    'books',
-  );
-
-  if (in_array($type, $types)) {
-    return $type;
-  }
-
-  return FALSE;
-}
-
-function item_load($item) {
-  return $item;
-}
-
 function page_item_load($item) {
   preg_match('/^([\d]+)/', $item, $matches);
   // http://localhost:9000/iiif/2/books/princeton_aco000102/1/info.json
   if ($matches) {
-    $sequence = (int)$matches[1];
+    $sequence = (int) $matches[1];
     return dlts_book_page_load($sequence, arg(3));
-  } else {
+  }
+  else {
     preg_match('/^p{1}([\d]+)-image/', $item, $matches);
     if (!empty($matches)) {
-      $sequence = (int)$matches[1];
+      $sequence = (int) $matches[1];
       return dlts_book_page_load($sequence, arg(3));
     }
   }
