@@ -24,7 +24,7 @@ function save_dlts_book($node, $language = 'en') {
 	if (!empty($node['entity_title'])) {
 		$entity_title = trim($node['entity_title']);
 		if (strlen($entity_title) > 255) {
-		  $entity_title = substr($entity_title, 0, 255);
+		  $entity_title = $identifier;
 		}
 	} else {
 		drush_die("Title for book $identifier can not be empty.");
@@ -35,7 +35,7 @@ function save_dlts_book($node, $language = 'en') {
 	$subjects = array();
 
 	$node_language = (isset($node['entity_language']) ? $node['entity_language'] : $language);
- 
+
   // make sure the language exists
 	$enabled_language = dlts_viewer_add_language($node_language);
 
@@ -209,9 +209,9 @@ function save_dlts_book($node, $language = 'en') {
   		);
   		$ewrapper->field_representative_image->set($representative_image);
 		}
-		
+
 		$field_pdf_file = array();
-		
+
 		if (!empty($node['pdf_files'])) {
   		foreach ($node['pdf_files'] as $pdf) {
 				$label = (isset($pdf['label'])) ? $pdf['label'] : '';
@@ -220,8 +220,8 @@ function save_dlts_book($node, $language = 'en') {
   				'label' => $label,
   				'data' => serialize(
 						array(
-							'label' => $label, 
-							'uri' => $pdf['uri'], 
+							'label' => $label,
+							'uri' => $pdf['uri'],
 							'filesize' => $pdf['filesize'],
 							'searchable' => (isset($pdf['searchable']) && $pdf['searchable']) ? $pdf['searchable'] : false,
 						)
@@ -325,59 +325,59 @@ function save_dlts_book($node, $language = 'en') {
   if (!empty($node['subtitle'])) {
     $ewrapper->field_subtitle->set($node['subtitle']);
 	}
-	
+
   if (!empty($node['description'])) {
     $ewrapper->field_description->set($node['description']);
 	}
-	
+
   if (!empty($node['editor'])) {
     $ewrapper->field_editor->set($node['editor']);
 	}
-	
+
   if (!empty($node['creator'])) {
     $ewrapper->field_creator->set($node['creator']);
 	}
-	
+
   if (!empty($node['author'])) {
     $ewrapper->field_author->set($node['author']);
 	}
-	
+
   if (!empty($node['topic'])) {
     $ewrapper->field_topic->set($node['topic']);
 	}
-	
+
   if (!empty($node['publisher'])) {
     $ewrapper->field_publisher->set($node['publisher']);
 	}
-	
+
   if (!empty($node['contributor'])) {
     $ewrapper->field_contributor->set($node['contributor']);
 	}
-	
+
   if (!empty($node['dimensions'])) {
     $ewrapper->field_dimensions->set($node['dimensions']);
 	}
-	
+
   if (!empty($node['volume'])) {
     $ewrapper->field_volume->set($node['volume']);
 	}
-	
+
   if (!empty($node['other_version'])) {
     $ewrapper->field_other_version->set($node['other_version']);
 	}
-	
+
   if (!empty($node['publication_location'])) {
     $ewrapper->field_publication_location->set($node['publication_location']);
 	}
-	
+
   if (!empty($node['publisher'])) {
     $ewrapper->field_publisher->set($node['publisher']);
 	}
-	
+
   if (!empty($node['publication_date_text'])) {
     $ewrapper->field_publication_date_text->set($node['publication_date_text']);
 	}
-	
+
   if (!empty($node['publication_date'])) {
   	// we need to make sure the object looks like: 1879-01-01T00:00:00
   	// YYYY-MM-DDT00:00:00
@@ -398,7 +398,7 @@ function save_dlts_book($node, $language = 'en') {
   		}
   	}
 	}
-	
+
   if (!empty($node['language']) && is_array($node['language'])) {
   	$languages = array();
   	foreach ($node['language'] as $language) {
@@ -406,7 +406,7 @@ function save_dlts_book($node, $language = 'en') {
   	}
   	$ewrapper->field_language->set($languages);
 	}
-	
+
   if (!empty($node['language_code']) && is_array($node['language_code'])) {
   	$language_codes = array();
   	foreach ($node['language_code'] as $language_code) {
@@ -414,23 +414,23 @@ function save_dlts_book($node, $language = 'en') {
   	}
     $ewrapper->field_language_code->set($language_codes);
 	}
-	
+
   if (!empty($node['rights'])) {
     $ewrapper->field_rights->set($node['rights']);
 	}
-	
+
 	$saved = $ewrapper->save();
 
-	
+
 	if ($saved) {
 
 		$nid = $ewrapper->getIdentifier();
 
 		drush_log(
-			dt('@task - @language - @url', 
+			dt('@task - @language - @url',
 			array(
-				'@language' => $node_language, 
-				'@url' => "$base_url/books/$identifier/1", 
+				'@language' => $node_language,
+				'@url' => "$base_url/books/$identifier/1",
 				'@task'=> ($is_new) ? 'New' : 'Update'
 			)
 		), 'success');
@@ -467,73 +467,73 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
 
   foreach ($books as $value) {
   	if (!file_exists($value->uri)) continue;
-		
+
 		$json_document = $value->uri;
-		
+
 		$dimensions = null;
-		
+
 		$number = null;
-		
+
 		$scanning_notes = null;
-		
+
 		$volume = null;
-		
+
 		$publication_date = null;
-		
+
 		$scan_date = null;
-		
+
 		$call_number = null;
-		
+
 		$description = null;
-		
+
 		$page_count = null;
-		
+
 		$subtitle = null;
-		
+
 		$title = null;
 
   	$pages_array = array();
-		
+
 		$partners = array();
-		
+
 		$stitch_page_array = array();
-		
+
 		$multivols = array();
-		
+
 		$other_versions = array();
-		
+
 		$isbns = array();
-		
+
 		$authors = array();
-		
+
 		$topics = array();
-		
+
 		$languages = array();
-		
+
 		$collections = array();
-		
+
 		$contributors = array();
-		
+
 		$creators = array();
-		
+
 		$editors = array();
-		
+
 		$publishers = array();
-		
+
 		$pdf_files = array();
-		
+
 		$language_codes = array();
-		
+
 		$ocr_text_files = array();
-		
+
 		$subjects = array();
-		
+
 		$read_order = array();
-		
+
 		$scan_order = array();
-		
+
 		$binding_orientation = array();
-		
+
 		$series = array();
 
 		$json_string = file_get_contents($value->uri);
@@ -559,13 +559,13 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
     } else {
       $multivolume = $data->multivolume;
 		}
-		
+
     if (!isset($data->series)) {
     	$series = array();
     } else {
     	$series = $data->series;
 		}
-		
+
     /** partners the book belong */
     if (isset($metadata->partner)) {
       foreach ($metadata->partner->value as $value) {
@@ -658,7 +658,7 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
         $scan_order[] = 0;
       }
 		}
-		
+
     if (isset($metadata->scanning_notes) && !empty($metadata->scanning_notes->value)) {
     	$scanning_notes = $metadata->scanning_notes->value[0];
 		}
@@ -666,27 +666,27 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
     if (isset($metadata->scan_date) && !empty($metadata->scan_date->value)) {
     	$scan_date = $metadata->scan_date->value[0];
 		}
-		
+
     if (isset($metadata->rights) && !empty($metadata->rights->value)) {
     	$rights = trim($metadata->rights->value[0]);
 		}
-		
+
     if (isset($metadata->volume) && !empty($metadata->volume->value)) {
     	$volume = $metadata->volume->value[0];
 		}
-		
+
     if (isset($metadata->publication_location) && !empty($metadata->publication_location->value)) {
     	$publication_location = $metadata->publication_location->value[0];
 		}
-		
+
     if (isset($metadata->publication_date) && !empty($metadata->publication_date->value)) {
     	$publication_date = $metadata->publication_date->value[0];
 		}
-		
+
     if (isset($metadata->publication_date_text) && !empty($metadata->publication_date_text->value)) {
     	$publication_date_text = $metadata->publication_date_text->value[0];
 		}
-		
+
     if (isset($metadata->representative_image) && !empty($metadata->representative_image)) {
     	if (!$legacy) {
     	  $representative_image = array(
@@ -705,67 +705,67 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
     		}
     	}
 		}
-		
+
     if (isset($metadata->other_version)) {
     	foreach ($metadata->other_version->value as $other_version) {
     	  $other_versions[] = $other_version;
     	}
 		}
-		
+
     if (isset($metadata->isbn) && isset($metadata->isbn->value)) {
     	foreach ($metadata->isbn->value as $isbn) {
     	  $isbns[] = $isbn;
     	}
 		}
-		
+
     if (isset($metadata->language)) {
     	foreach ($metadata->language->value as $language) {
     	  $languages[] = $language;
     	}
 		}
-		
+
     if (isset($metadata->language_code)) {
     	foreach ($metadata->language_code->value as $language_code) {
     	  $language_codes[] = $language_code;
     	}
 		}
-		
+
 		if (isset($metadata->topic) && isset($metadata->topic->value) && is_array($metadata->topic->value)) {
     	foreach ($metadata->topic->value as $topic) {
     	  $topics[] = $topic;
       }
 		}
-		
+
     if (isset($metadata->author)) {
     	foreach ($metadata->author->value as $author) {
     	  $authors[] = $author;
       }
 		}
-		
+
     if (isset($metadata->creator)) {
     	foreach ($metadata->creator->value as $creator) {
     	  $creators[] = $creator;
     	}
 		}
-		
+
     if (isset($metadata->contributor)) {
       foreach ($metadata->contributor->value as $contributor) {
     	  $contributors[] = $contributor;
     	}
 		}
-		
+
     if (isset($metadata->editor)) {
     	foreach ($metadata->editor->value as $editor) {
     	  $editors[] = $editor;
     	}
 		}
-		
+
     if (isset($metadata->publisher)) {
     	foreach ($metadata->publisher->value as $publisher) {
     	  $publishers[] = $publisher;
     	}
 		}
-		
+
     if (isset($metadata->subject) && !empty($metadata->subject->value)) {
     	foreach ($metadata->subject->value as $subject) {
     	  $subjects[] = $subject;
@@ -880,7 +880,7 @@ function create_dlts_book_from_json($books, $cretePages = FALSE, $legacy = FALSE
 		);
 
 		$created = save_dlts_book($node);
-		
+
     if ($cretePages && $created && isset($created->nid)) {
    	  // we only create pages for books with languages English or Undetermined
    	  if ($entity_language == 'en' || $entity_language == LANGUAGE_NONE) {

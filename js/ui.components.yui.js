@@ -51,13 +51,14 @@ YUI().use(
             var titlebar = Y.one('#titlebar');
             var pagetitle = Y.one('#page-title');
             node.set('innerHTML', e.response);
+            document.title = node.one('.field-name-title h2').get('innerText');
             dir = node.one('.node-dlts-book').getAttribute('data-dir');
             Y.one('.pane.main').set('dir', dir);
             if (titlebar) {
             	titlebar.set('dir', dir);
             }
             if (pagetitle) {
-              pagetitle.set('innerHTML', node.one('.field-name-title .field-item').get('text'));
+              pagetitle.set('innerHTML', document.title);
             }
           }
         }
@@ -188,7 +189,7 @@ YUI().use(
         } else {
           to_page = `${to_page - 1}, ${to_page}`
         }
-      }      
+      }
       this.one('.current_page').set('text', to_page);
       this.addClass('loading').show();
     }
@@ -552,7 +553,7 @@ YUI().use(
       e.halt();
       var currentTarget = e.currentTarget;
       var value = currentTarget.one(':checked').get('value');
-      var lang = Y.one('.node-dlts-book').getAttribute('data-lang');      
+      var lang = Y.one('.node-dlts-book').getAttribute('data-lang');
       var url = value.substring(value.indexOf('::') + 2, value.length) + '/1?lang=' + lang;
       var data = { url : url };
       if (window.self === window.top) {

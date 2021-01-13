@@ -108,11 +108,10 @@ function dlts_viewer_object_types() {
 }
 
 /**
- * Check if DLTS Vierwer will render this object request.
+ * Check if DLTS Vierwer will render object.
  *
  * @return bool
- *   Return a boolean indicating whether this object request can be render
- *   by DLTS Vierwer.
+ *   Return a boolean indicating whether object can be render.
  */
 function dlts_viewer_is_resource() {
   $is_resource = &drupal_static('is_resource');
@@ -226,10 +225,14 @@ function dlts_viewer_resource_language_code($vars = NULL) {
   $resource_language_code = &drupal_static('resource_language_code');
   if (!isset($resource_language_code)) {
     if (!empty($vars) && gettype($vars) == 'object') {
+      // As of today, books are the only resource with the
+      // field `field_language_code`.
       if ($vars->type == 'dlts_book') {
         $wrapper = entity_metadata_wrapper('node', $vars);
         $field_language_code = $wrapper->field_language_code->value();
         if ($field_language_code) {
+          // @todo Field allows unlimited number of values. This seem wrong. Shifts the first value.
+          // of the array off and returns it.
           // Field allows unlimited number of values. This seem wrong.
           // Shifts the first value of the array off and returns it.
           // @link admin/structure/types/manage/dlts-book/fields/field_language_code
