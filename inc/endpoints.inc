@@ -81,11 +81,16 @@ function dlts_viewer_books(int $start = 0, int $length = 25) {
  *   A dlts_book node object.
  */
 function dlts_viewer_book_metadata($book) {
-	if (!is_object($book)) {
-    return array('argument' => $book, 'code' => 1, 'message' => t('Invalid book'), 'status' => t('fail') );
-	}
-	module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.book');
-	module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
+  if (!is_object($book)) {
+    return array(
+      'argument' => $book,
+      'code' => 1,
+      'message' => t('Invalid book'),
+      'status' => t('fail'),
+    );
+  }
+  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.book');
+  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
   $type = dlts_utilities_content_types_type($book->type);
   $fields = array();
   $metadata = array();
@@ -122,7 +127,10 @@ function dlts_viewer_book_metadata($book) {
     else {
       $value = $raw_value;
     }
-    $fields[$name] = array('label' => $field['label'], 'value' => (array) $value);
+    $fields[$name] = array(
+      'label' => $field['label'],
+      'value' => (array) $value,
+    );
   }
   return array(
     'entity_title' => !empty($title) ? $title : $book->title,
@@ -176,7 +184,7 @@ function dlts_viewer_list_collections(int $start = 0, int $length = 100) {
     ->range($start, $length)
     ->execute();
 
-  // try to mimic Apache Solr response
+  // Try to mimic Apache Solr response.
   $response = array(
     'response' => array(
       'numFound' => $count,
@@ -226,7 +234,7 @@ function dlts_viewer_api_list_topics(int $start = 0, int $length = 50, $requeste
 
   $availableLanguages = array_keys(language_list());
 
-  // get query parameters
+  // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
   $filter_date = date('Y-m-d');
@@ -304,7 +312,7 @@ function dlts_viewer_api_list_topics(int $start = 0, int $length = 50, $requeste
     $filter_dates[] = $date->created;
   }
 
-  // try to mimic Apache Solr response
+  // Try to mimic Apache Solr response.
   $response = array(
     'response' => array(
       'numFound' => count($result),
@@ -337,7 +345,7 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
 
   $availableLanguages = array_keys(language_list());
 
-  // get query parameters
+  // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
   if (isset($query_parameters['rows']) && is_numeric($query_parameters['rows'])) {
@@ -348,10 +356,10 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
     $start = $query_parameters['start'];
   }
 
-  $cnid = null;
+  $cnid = NULL;
 
   if (isset($query_parameters['collection'])) {
-    $partner = null;
+    $partner = NULL;
     if (isset($query_parameters['partner'])) {
       $partner = $query_parameters['partner'];
     }
@@ -364,7 +372,7 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
     $filter = $query_parameters['filter'];
   }
 
-  // need to make sure lang exists
+  // Need to make sure lang exists.
   if (isset($query_parameters['lang']) && in_array($query_parameters['lang'], $availableLanguages)) {
     $requestedLang = $query_parameters['lang'];
   }
@@ -384,9 +392,7 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
   }
 
   if ($filter) {
-    // Equal to "starts with"
-    // $count_query->fieldCondition('field_identifier', 'value', db_like($filter) . '%', 'LIKE');
-    // Equal to "contains"
+    // Equal to "contains".
     $count_query->fieldCondition('field_identifier', 'value', '%' . db_like($filter) . '%', 'like');
   }
 
@@ -405,9 +411,7 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
   }
 
   if ($filter) {
-    // Equal to "starts with"
-    // $entities_query->fieldCondition('field_identifier', 'value', db_like($filter) . '%', 'LIKE');
-    // Equal to "contains"
+    // Equal to "contains".
     $entities_query->fieldCondition('field_identifier', 'value', '%' . db_like($filter) . '%', 'like');
   }
 
@@ -792,7 +796,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
         break;
 
       case 'geographic_subject':
-        // @todo find out how to deal with this
+        // @todo Find out how to deal with this.
         unset($fields[$name]);
         break;
 
@@ -984,7 +988,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   foreach ($fields['collection']['value'] as $collection) {
     $dir_path = $realpath . '/books/' . $identifier;
     if (!file_exists($dir_path)) {
-      mkdir($dir_path, 0775, TRUE);
+      mkdir($dir_path, 0755, TRUE);
     }
     file_put_contents($dir_path . '/book.' . $requestedLang . '.json', json_encode($response), LOCK_EX);
   }
