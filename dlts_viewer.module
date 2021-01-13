@@ -102,6 +102,7 @@ function dlts_viewer_entity_info_alter(&$entity_info) {
  * https://api.drupal.org/api/drupal/includes%21theme.inc/function/template_preprocess_html/7
  */
 function dlts_viewer_preprocess_html(&$vars) {
+  $vars['head_title'] = $vars['head_title_array']['title'];
   /**
    * The X-Frame-Options HTTP response header can be used to indicate whether or not a
    * browser should be allowed to render a page in a <frame>, <iframe> or <object> .
