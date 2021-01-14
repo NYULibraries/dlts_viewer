@@ -503,6 +503,11 @@ function dlts_viewer_map_language_code($lang = 'eng') {
     'zha' => 'za',
     'zul' => 'zu',
   );
+
+  if (is_array($lang)) {
+    $lang = $lang[0];
+  }
+
   if (strlen($lang) == 3 && isset($map_iso_636[$lang])) {
     return $map_iso_636[$lang];
   }
