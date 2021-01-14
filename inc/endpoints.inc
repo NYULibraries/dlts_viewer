@@ -612,11 +612,9 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
   $field_language_code = $book->field_language_code->value();
 
-  $language_code = dlts_viewer_map_language_code(
-    array_pop(
-      $field_language_code
-    )
-  );
+  $field_language_code_pop = ($field_language_code);
+
+  $language_code = dlts_viewer_map_language_code($field_language_code_pop);
 
   foreach ($availableLanguages as $code => $lang) {
     if (
