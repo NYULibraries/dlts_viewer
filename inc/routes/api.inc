@@ -65,6 +65,16 @@ function _dlts_viewer_menu_api() {
     'access arguments' => array('dlts create object'),
     'page callback' => 'dlts_viewer_api_v1_objects',
     'delivery callback' => 'drupal_json_output',
+    'page arguments' => array(1),
+    'file' => 'inc/endpoints.inc',
+  );
+
+  $items['api/v1.0.1/objects'] = array(
+    'title' => 'Create object',
+    'access arguments' => array('dlts create object'),
+    'page callback' => 'dlts_viewer_api_v1_0_1_dlts_book_objects',
+    'delivery callback' => 'drupal_json_output',
+    'page arguments' => array(1),
     'file' => 'inc/endpoints.inc',
   );
 
