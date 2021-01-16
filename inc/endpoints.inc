@@ -655,7 +655,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   $representative_image = file_create_url($fri['uri']);
 
   // Default title of the book.
-  $title = $entity->title;
+  $title = trim($entity->title);
 
   $type = dlts_utilities_content_types_type($entity->type);
 
@@ -675,7 +675,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     $title = t(
       '@title @volume',
       array(
-        '@title' => $multivolume_book->title,
+        '@title' => trim($multivolume_book->title),
         '@volume' => $volume_number_str,
       )
     );
@@ -692,7 +692,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
         'title' => t(
           '@title @volume',
           array(
-            '@title' => $mb->title,
+            '@title' => trim($mb->title),
             '@volume' => $mb_wrapper->field_volume_number_str->value(),
           )
         ),
@@ -760,6 +760,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
       case 'geographic_coordinates':
       case 'isbn':
       case 'number':
+      case 'volume':
       case 'ocr_text':
       case 'other_version':
       case 'page_count':
@@ -970,6 +971,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
   $response = array(
     'title' => $title,
+    'type' => 'book',
     'identifier' => $identifier,
     'worldDirection' => $worldDirection,
     'requestedLanguage' => $availableLanguages[$requestedLang],
@@ -1120,6 +1122,69 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
 
 }
 
+function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
+
+  if (user_access('dlts create object')) {
+    module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_book.1.0.1');
+    $apiVersion = 'v1.0.1';
+
+    $datasource = array();
+
+    $entity_types = array(
+      'book',
+      'photo_set',
+    );
+
+    $datasource = (array) json_decode(
+      file_get_contents('php://input')
+    );
+
+    switch ($datasource['type']) {
+      case 'book':
+        try {
+          // Check if request has all the keys we required.
+          if (!isset($datasource['identifier'])) {
+            throw new Exception('Field identifier can not be empty.');
+          }
+          if (!isset($datasource['metadata'])) {
+            throw new Exception('Field metadata can not be empty.');
+          }
+          if (!isset($datasource['status'])) {
+            throw new Exception('Field status can not be empty.');
+          }
+          if (!isset($datasource['status'])) {
+            throw new Exception('Field status can not be empty.');
+          }
+          $entity = create_dlts_book_from_json_v1_0_1($datasource);
+          if ($entity) {
+            return array(
+              'data' => $entity,
+            );
+          }
+          else {
+            throw new Exception('Unexpected error.');
+          }
+        }
+        catch (Exception $e) {
+          watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
+          return array(
+            'error' => $e->getMessage(),
+          );
+        }
+        break;
+
+      default:
+        return array(
+          'error' => 'Type not ' . $datasource['type'] . ' supported.',
+        );
+    }
+
+    module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_book.1.0.1');
+
+  }
+
+}
+
 function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
 
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_photo_set');
@@ -1255,7 +1320,8 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
 /**
  * API callback.
  */
-function dlts_viewer_api_v1_objects() {
+function dlts_viewer_api_v1_objects($version = NULL) {
+
   // @todo Also filter by hosts with access
   if (user_access('dlts create object')) {
     $datasource = array();
@@ -1266,14 +1332,18 @@ function dlts_viewer_api_v1_objects() {
     $datasource = (array) json_decode(
       file_get_contents('php://input')
     );
-    if (in_array($datasource['entity_type'], $entity_types)) {
-      switch ($datasource['entity_type']) {
-        case 'dlts_book':
-          return dlts_viewer_api_v1_dlts_book_objects($datasource);
 
-        case 'dlts_photo_set':
-          return dlts_viewer_api_v1_dlts_photo_set_objects($datasource);
-      }
+    switch ($version) {
+      case 'v1':
+        if (in_array($datasource['entity_type'], $entity_types)) {
+          switch ($datasource['entity_type']) {
+            case 'dlts_book':
+              return dlts_viewer_api_v1_dlts_book_objects($datasource);
+
+            case 'dlts_photo_set':
+              return dlts_viewer_api_v1_dlts_photo_set_objects($datasource);
+          }
+        }
     }
   }
   return array(
