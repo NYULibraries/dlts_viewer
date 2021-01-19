@@ -472,6 +472,8 @@ function _dlts_viewer_book_loader($node, $reset = FALSE) {
     $reset = TRUE;
   }
 
+  return dlts_viewer_api_book_json($node);
+
   $realpath = drupal_realpath('public://') . '/datasource/' . $type . '/' . $identifier . '/book.' . $requestedLang . '.json';
 
   if (file_exists($realpath) && !$reset) {
@@ -683,11 +685,35 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     foreach ($multivolume_books as $mb) {
       // Wrapp multi-volume entity with Entity API wrapper.
       $mb_wrapper = entity_metadata_wrapper('node', $mb);
+      $wrapper_multivolume_book_multivol = entity_metadata_wrapper('node', $mb_wrapper->field_multivol->value());
       $volume = $mb_wrapper->field_volume_number->value();
       // The book we map to this multivolume.
       $bs_wrapper = entity_metadata_wrapper('node', $mb_wrapper->field_book->value());
+      $volume_ispartof_collections = $collections = dlts_viewer_collection_json($mb_wrapper->field_collection->value());
+      $volumes_collection = [];
+      foreach ($volume_ispartof_collections as $volume_ispartof_collection) {
+        $volume_ispartof_collection = (array) $volume_ispartof_collection;
+        unset($volume_ispartof_collection['title']);
+        unset($volume_ispartof_collection['type']);
+        unset($volume_ispartof_collection['language']);
+        unset($volume_ispartof_collection['partner']['title']);
+        unset($volume_ispartof_collection['partner']['type']);
+        unset($volume_ispartof_collection['partner']['language']);
+        $volume_ispartof_collection['name'] = locale($volume_ispartof_collection['name'], NULL, $requestedLang);
+        $volume_ispartof_collection['partner']['name'] = locale($volume_ispartof_collection['partner']['name'], NULL, $requestedLang);
+        $volumes_collection[] = $volume_ispartof_collection;
+      }
       $volumes[$volume] = array(
-        'identifier' => $bs_wrapper->field_identifier->value(),
+        'identifier' => $mb_wrapper->field_identifier->value(),
+        'volume_number' => $mb_wrapper->field_volume_number->value(),
+        'volume_number_str' => $mb_wrapper->field_volume_number_str->value(),
+        'collection' => $volumes_collection,
+        'isPartOf' => [
+          'language' => $wrapper_multivolume_book_multivol->language->value(),
+          'identifier' => $wrapper_multivolume_book_multivol->field_identifier->value(),
+          'title' => $wrapper_multivolume_book_multivol->title->value(),
+          'handle' => $wrapper_multivolume_book_multivol->field_handle->value()['url'],
+        ],
         'selected' => ($bs_wrapper->nid->value() == $entity->nid),
         'title' => t(
           '@title @volume',
@@ -701,6 +727,23 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     }
     unset($multivolume_books);
     asort($volumes);
+
+
+  //   "multivolume":{
+  //     "volume":[
+  //        {
+  //           "isPartOf":[
+  //              {
+  //                 "title":"Multi-Volume f4963702-24d9-4735-8350-b6dcc578ce46",
+  //                 "type":"dlts_multivol",
+  //                 "language":"und",
+  //                 "identifier":"f4963702-24d9-4735-8350-b6dcc578ce46",
+  //              }
+  //           ]
+  //        }
+  //     ]
+  //  },
+
   }
 
   $series_books = dlts_viewer_series_book($entity->nid);
@@ -938,6 +981,8 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     }
   }
 
+  $fields['multivolume'] = array_values($volumes);
+
   $fields['series'] = $series;
 
   // Check if we must include pages in the response.
@@ -984,7 +1029,9 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     'metadata' => $fields,
     'pages' => $pages,
   );
+
   $realpath = drupal_realpath('public://') . '/datasource';
+
   foreach ($fields['collection']['value'] as $collection) {
     $dir_path = $realpath . '/books/' . $identifier;
     if (!file_exists($dir_path)) {
@@ -992,7 +1039,9 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     }
     file_put_contents($dir_path . '/book.' . $requestedLang . '.json', json_encode($response), LOCK_EX);
   }
+
   return $response;
+
 }
 
 /**

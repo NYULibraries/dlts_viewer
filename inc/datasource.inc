@@ -16,7 +16,7 @@ function dlts_viewer_list_translation($identifier) {
 
 function dlts_viewer_get_translations_nid_by_identifier($identifier) {
   $keys = array();
-  $query = new EntityFieldQuery;
+  $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_book')
     ->propertyCondition('status', 1) // only load books that are published
@@ -29,7 +29,7 @@ function dlts_viewer_get_translations_nid_by_identifier($identifier) {
 }
 
 function dlts_viewer_list_books() {
-	$query = new EntityFieldQuery;
+	$query = new EntityFieldQuery();
 	$result = $query
 	->entityCondition('entity_type', 'node')
 	->entityCondition('bundle', 'dlts_book')
@@ -37,14 +37,14 @@ function dlts_viewer_list_books() {
 	->propertyCondition('status', 1)
 	->addMetaData('account', user_load(0))
 	->execute();
-	
+
 	if (empty($result['node'])) return FALSE;
 	return array_keys($result['node']);
 
 }
 
 function dlts_viewer_multivolume_book($nid) {
-	$query = new EntityFieldQuery;
+	$query = new EntityFieldQuery();
 	$result = $query
 	->entityCondition('entity_type', 'node')
 	->entityCondition('bundle', 'dlts_multivol_book')
@@ -56,7 +56,7 @@ function dlts_viewer_multivolume_book($nid) {
 }
 
 function dlts_viewer_is_multivolume_book($entity) {
-	$query = new EntityFieldQuery;
+	$query = new EntityFieldQuery();
 	$result = $query
 	->entityCondition('entity_type', 'node')
 	->entityCondition('bundle', 'dlts_multivol_book')
@@ -71,30 +71,30 @@ function dlts_viewer_is_multivolume_book($entity) {
 }
 
 function dlts_viewer_is_series_book(&$entity) {
-  
+
 	$is_part_of = array();
-	
+
 	$entity->isSeriesBook = false;
-	
+
 	$entity_type = 'node';
-	
+
 	$bundle = 'dlts_series_book';
-	
+
 	$book_nid = $entity->nid;
-	
+
 	$book_entity = $entity;
-	
+
 	$book_wrapper = entity_metadata_wrapper($entity_type, $entity);
-	
+
 	$book_long_title = $book_wrapper->field_title->value();
-	
+
 	$collections = $book_wrapper->field_collection->value(); // multi-value field
-	
+
 	foreach ($collections as $key => $collection) {
 		$collection_wrapper = entity_metadata_wrapper($entity_type, $collection);
 		$collection_label = $collection_wrapper->field_name->value(); // single-value field
 		$collection_code = $collection_wrapper->field_code->value(); // single-value field
-		$query = new EntityFieldQuery;
+		$query = new EntityFieldQuery();
 		$result = $query
 		  ->entityCondition('entity_type', $entity_type)
 		  ->entityCondition('bundle', $bundle)
@@ -108,24 +108,24 @@ function dlts_viewer_is_series_book(&$entity) {
 				$title = $book_long_title;
 				$series_book_node = node_load($nid);
 				$series_book_wrapper = entity_metadata_wrapper($entity_type, $series_book_node);
-				
+
 				$series = $series_book_wrapper->field_series->value(); // single-value field
-				
+
 				$volume_number = $series_book_wrapper->field_volume_number->value(); // single-value field
-				
+
 				$volume_number_str = $series_book_wrapper->field_volume_number_str->value(); // single-value field
-				
+
 				if (!empty($volume_number_str)) {
 					$title = $book_long_title . ' ' . $volume_number_str;
 				}
 				elseif (!empty($volume_number)) {
 					$title = $book_long_title . ' ' . $volume_number;
 				}
-				
+
 			  $series_wrapper = entity_metadata_wrapper($entity_type, $series);
-			  
+
 			  $series_identifier = $series_wrapper->field_identifier->value();
-				
+
 				$is_part_of[] = array(
 				  'series_identifier' => $series_identifier,
 				  'series' => $series->title,
@@ -144,7 +144,7 @@ function dlts_viewer_is_series_book(&$entity) {
 }
 
 function dlts_viewer_series_book($nid) {
-	$query = new EntityFieldQuery;
+	$query = new EntityFieldQuery();
 	$result = $query
 	->entityCondition('entity_type', 'node')
 	->entityCondition('bundle', 'dlts_series_book')
@@ -159,7 +159,7 @@ function dlts_viewer_series_book($nid) {
 
 function book_nid($identifier, $language = LANGUAGE_NONE) {
 
-	$query = new EntityFieldQuery;
+	$query = new EntityFieldQuery();
 
   $result = $query
     ->entityCondition('entity_type', 'node')
@@ -176,7 +176,7 @@ function book_nid($identifier, $language = LANGUAGE_NONE) {
 }
 
 function photoset_nid($identifier, $language = LANGUAGE_NONE) {
-	$query = new EntityFieldQuery;
+	$query = new EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_photo_set')
@@ -189,7 +189,7 @@ function photoset_nid($identifier, $language = LANGUAGE_NONE) {
 }
 
 function series_nid($identifier) {
-  $query = new EntityFieldQuery;
+  $query = new EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_series')
@@ -201,7 +201,7 @@ function series_nid($identifier) {
 }
 
 function series_book_nid($identifier) {
-    $query = new EntityFieldQuery;
+    $query = new EntityFieldQuery();
     $result = $query
         ->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'dlts_series_book')
@@ -221,7 +221,7 @@ function find_nodes($type) {
 
 function stitched_page_nid($identifier, $left, $right) {
   $book_nid = book_nid($identifier);
-  $query = new EntityFieldQuery;
+  $query = new EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_book_stitched_page')
@@ -235,7 +235,7 @@ function stitched_page_nid($identifier, $left, $right) {
 }
 
 function collection_nid($identifier) {
-  $query = new EntityFieldQuery;
+  $query = new EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_collection')
@@ -247,7 +247,7 @@ function collection_nid($identifier) {
 }
 
 function multivol_nid($identifier) {
-  $query = new EntityFieldQuery;
+  $query = new EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_multivol')
@@ -262,7 +262,7 @@ function multivol_nid($identifier) {
 // as the multivolume itself. We use volume number to
 // insure uniqueness
 function multivol_book_nid($multivol_identifier, $volume_number) {
-    $query = new EntityFieldQuery;
+    $query = new EntityFieldQuery();
     $multivol_nid = multivol_nid($multivol_identifier);
     $result = $query
         ->entityCondition('entity_type', 'node')
@@ -276,7 +276,7 @@ function multivol_book_nid($multivol_identifier, $volume_number) {
 }
 
 function book_page_nid($book_nid, $sequence_number) {
-  $query = new EntityFieldQuery;
+  $query = new EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_book_page')
@@ -290,7 +290,7 @@ function book_page_nid($book_nid, $sequence_number) {
 }
 
 function partner_nid($identifier) {
-  $query = new EntityFieldQuery;
+  $query = new EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_partner')
@@ -302,7 +302,7 @@ function partner_nid($identifier) {
 }
 
 function map_nid($identifier, $language = LANGUAGE_NONE) {
-  $query = new EntityFieldQuery;
+  $query = new EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_map')
@@ -315,7 +315,7 @@ function map_nid($identifier, $language = LANGUAGE_NONE) {
 }
 
 function dlts_viewer_partner_nid_by_code($code) {
-	$query = new EntityFieldQuery;
+	$query = new EntityFieldQuery();
 	$result = $query
 	  ->entityCondition('entity_type', 'node')
 	  ->entityCondition('bundle', 'dlts_partner')
@@ -331,8 +331,8 @@ function dlts_viewer_partner_nid_by_code($code) {
 function dlts_viewer_collection_nids_by_code($code, $partnerCode = null) {
 
 	$partnerNid = dlts_viewer_partner_nid_by_code($partnerCode);
-	
-	$query = new EntityFieldQuery;
+
+	$query = new EntityFieldQuery();
 
 	$query->entityCondition('entity_type', 'node')
 	  ->entityCondition('bundle', 'dlts_collection')
@@ -343,18 +343,18 @@ function dlts_viewer_collection_nids_by_code($code, $partnerCode = null) {
 	}
 
 	$query->addMetaData('account', user_load(0));
-		
+
 	$result = $query->execute();
 
 	if (empty($result['node'])) {
 		return FALSE;
 	} else {
-		return array_keys($result['node']);	
+		return array_keys($result['node']);
 	}
 }
 
 function dlts_viewer_books_isPartof_multivolume($nid) {
-	$query = new EntityFieldQuery;
+	$query = new EntityFieldQuery();
 	$result = $query ->entityCondition('entity_type', 'node')
 	  ->entityCondition('bundle', 'dlts_multivol_book')
 	  ->fieldCondition('field_multivol', 'nid', $nid, '=')
@@ -363,12 +363,12 @@ function dlts_viewer_books_isPartof_multivolume($nid) {
 		return FALSE;
 	} else {
 		$keys = array_keys($result['node']);
-		return node_load_multiple($keys);	
+		return node_load_multiple($keys);
 	}
 }
 
 function dlts_viewer_books_isPartof_series($nid) {
-	$query = new EntityFieldQuery;
+	$query = new EntityFieldQuery();
 	$result = $query ->entityCondition('entity_type', 'node')
 	  ->entityCondition('bundle', 'dlts_series_book')
 	  ->fieldCondition('field_series', 'nid', $nid, '=')
@@ -377,7 +377,7 @@ function dlts_viewer_books_isPartof_series($nid) {
 		return FALSE;
 	} else {
 		$keys = array_keys($result['node']);
-		return node_load_multiple($keys);	
+		return node_load_multiple($keys);
 	}
 }
 
@@ -414,18 +414,18 @@ function dlts_viewer_subject_vocabulary_vid() {
 // Return a list of created %d-%m-%Y. Usuful to select batch of nodes
 // that were publish in a specific day.
 function dlts_viewer_batch_days($collectionCode = NULL, $status = 1, $requestedLang = 'en') {
-	
+
 	$query = "
-    SELECT 
+    SELECT
     DISTINCT DATE_FORMAT(FROM_UNIXTIME(node.created), '%d-%m-%Y') created
 		FROM node ";
 
 	if ($collectionCode) {
 		$query .= "
-      LEFT JOIN field_data_field_collection collection 
+      LEFT JOIN field_data_field_collection collection
         ON node.nid = collection.entity_id
 		  INNER JOIN field_data_field_code code
-		    ON collection.field_collection_nid = code.entity_id 
+		    ON collection.field_collection_nid = code.entity_id
 		    AND code.field_code_value = :collection_code ";
 	}
 
@@ -435,7 +435,7 @@ function dlts_viewer_batch_days($collectionCode = NULL, $status = 1, $requestedL
 		ORDER BY node.created DESC";
 
 	$args = array(
-    ':language' => $requestedLang, 
+    ':language' => $requestedLang,
     ':status' => $status,
 	);
 
@@ -446,11 +446,11 @@ function dlts_viewer_batch_days($collectionCode = NULL, $status = 1, $requestedL
   $result = db_query($query, $args)->fetchAll();
 
 	$dates = array();
-	
+
 	foreach ($result as $date) {
 		$dates[] = $date->created;
 	}
-  
+
   return $dates;
 
 }
