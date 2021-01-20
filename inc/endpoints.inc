@@ -708,6 +708,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
         'volume_number' => $mb_wrapper->field_volume_number->value(),
         'volume_number_str' => $mb_wrapper->field_volume_number_str->value(),
         'collection' => $volumes_collection,
+        'sameAs' => $identifier,
         'isPartOf' => [
           'language' => $wrapper_multivolume_book_multivol->language->value(),
           'identifier' => $wrapper_multivolume_book_multivol->field_identifier->value(),
@@ -727,23 +728,6 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     }
     unset($multivolume_books);
     asort($volumes);
-
-
-  //   "multivolume":{
-  //     "volume":[
-  //        {
-  //           "isPartOf":[
-  //              {
-  //                 "title":"Multi-Volume f4963702-24d9-4735-8350-b6dcc578ce46",
-  //                 "type":"dlts_multivol",
-  //                 "language":"und",
-  //                 "identifier":"f4963702-24d9-4735-8350-b6dcc578ce46",
-  //              }
-  //           ]
-  //        }
-  //     ]
-  //  },
-
   }
 
   $series_books = dlts_viewer_series_book($entity->nid);
@@ -1174,7 +1158,6 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
 function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
 
   if (user_access('dlts create object')) {
-    module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_book.1.0.1');
     $apiVersion = 'v1.0.1';
 
     $datasource = array();
@@ -1204,6 +1187,7 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
           if (!isset($datasource['status'])) {
             throw new Exception('Field status can not be empty.');
           }
+          module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_book.1.0.1');
           $entity = create_dlts_book_from_json_v1_0_1($datasource);
           if ($entity) {
             return array(
@@ -1227,11 +1211,10 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
           'error' => 'Type not ' . $datasource['type'] . ' supported.',
         );
     }
-
-    module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_book.1.0.1');
-
   }
-
+  return array(
+    'error' => 'Not allowed.',
+  );
 }
 
 function dlts_viewer_api_v1_dlts_photo_set_objects($source) {

@@ -8,7 +8,7 @@
 /**
  * Given a JSON representation of a book, create DLTS Books.
  *
- *  @example curl -b ./cookie -X POST  --data "$(curl http://localhost:9000/api/v1/books/adl0962)" http://localhost:9000/api/v1.0.1/objects
+ *  @example curl -b ./cookie -X POST  --data "$(curl http://stage-sites.dlib.nyu.edu/viewer/api/v1/books/ifa_egypt000132)" http://localhost:9000/api/v1.0.1/objects
  */
 function create_dlts_book_from_json_v1_0_1($data) {
 
@@ -95,12 +95,12 @@ function create_dlts_book_from_json_v1_0_1($data) {
 
   $multivolume = array();
   if ($data['isMultivolume']) {
-    $multivolume = array();
+    $multivolume = $metadata->multivolume;
   }
 
   $series = array();
   if ($data['isSeries']) {
-    $series = array();
+    $series = $metadata->series;
   }
 
   // Partners the book belong.
