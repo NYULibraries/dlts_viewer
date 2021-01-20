@@ -157,7 +157,7 @@ function dlts_viewer_book_metadata($book) {
  */
 function dlts_viewer_list_collections(int $start = 0, int $length = 100) {
 
-  // get query parameters
+  // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
   if (isset($query_parameters['rows']) && is_numeric($query_parameters['rows'])) {
@@ -251,7 +251,7 @@ function dlts_viewer_api_list_topics(int $start = 0, int $length = 50, $requeste
     $filter_date = filter_xss($query_parameters['date']);
   }
 
-  // need to make sure lang exists
+  // Need to make sure lang exists.
   if (isset($query_parameters['lang']) && in_array($query_parameters['lang'], $availableLanguages)) {
     $requestedLang = $query_parameters['lang'];
   }
@@ -419,7 +419,7 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
     ->addMetaData('account', user_load(0))
     ->execute();
 
-  // try to mimic Apache Solr response
+  // Try to mimic Apache Solr response.
   $response = array(
     'response' => array(
       'numFound' => $count,
@@ -471,8 +471,6 @@ function _dlts_viewer_book_loader($node, $reset = FALSE) {
   if (isset($query_parameters['reset'])) {
     $reset = TRUE;
   }
-
-  return dlts_viewer_api_book_json($node);
 
   $realpath = drupal_realpath('public://') . '/datasource/' . $type . '/' . $identifier . '/book.' . $requestedLang . '.json';
 
@@ -556,16 +554,6 @@ function _dlts_viewer_book_thumbnails_loader($identifier, $page = 0, $per_page =
       'docs' => $items,
     ),
   );
-
-  // $image_metadata_uri = $image_server . '/iiif/2/' . urlencode($representative_image) . '/full/150,/0/default.jpg';
-  // foreach ($entities['node'] as $node) {
-  // $entity = node_load('node', $node->nid);
-  // $book = entity_metadata_wrapper('node', $entity);
-  // $response['response']['docs'][] = array(
-  // 'title' => trim($entity->title),
-  // 'identifier' => $book->field_identifier->value(),
-  // );
-  // }
 
   return $response;
 
@@ -705,10 +693,10 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
       }
       $volumes[$volume] = array(
         'identifier' => $mb_wrapper->field_identifier->value(),
+        'sameAs' => $bs_wrapper->field_identifier->value(),
         'volume_number' => $mb_wrapper->field_volume_number->value(),
         'volume_number_str' => $mb_wrapper->field_volume_number_str->value(),
         'collection' => $volumes_collection,
-        'sameAs' => $identifier,
         'isPartOf' => [
           'language' => $wrapper_multivolume_book_multivol->language->value(),
           'identifier' => $wrapper_multivolume_book_multivol->field_identifier->value(),
