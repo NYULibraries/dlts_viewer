@@ -645,7 +645,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   $representative_image = file_create_url($fri['uri']);
 
   // Default title of the book.
-  $title = trim($entity->title);
+  $displayTitle = $title = trim($book->field_title->value());
 
   $type = dlts_utilities_content_types_type($entity->type);
 
@@ -662,7 +662,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     // Get volume value.
     $volume_number_str = $wrapper->field_volume_number_str->value();
     // Change entity title.
-    $title = t(
+    $displayTitle = t(
       '@title @volume',
       array(
         '@title' => trim($multivolume_book->title),
@@ -988,6 +988,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
   $response = array(
     'title' => $title,
+    'displayTitle' => $displayTitle,
     'type' => 'book',
     'identifier' => $identifier,
     'worldDirection' => $worldDirection,

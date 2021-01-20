@@ -16,6 +16,8 @@ function save_dlts_book_v1_0_1($node, $language = 'en') {
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_multivol_book');
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_partner');
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_collection');
+  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_series_book');
+  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_series_book.inc');
   module_load_include('inc', 'dlts_viewer', 'inc/create.taxonomy');
   // Get the current user.
   global $base_url;
@@ -410,11 +412,13 @@ function save_dlts_book_v1_0_1($node, $language = 'en') {
       // If book language is EN check for  Multi volume and Series.
       if ($node_language == 'en') {
         // Multi volume book.
-        if (!empty($node['multivolume']) && !empty($node['multivolume']->volume)) {
-          foreach ($node['multivolume']->volume as $multivolume) {
-            $multivolume->title = (isset($node['title_long']) && !empty($node['title_long'])) ? $node['title_long'] : $node['title'];
-            $multivolume->book = $identifier;
-            create_dlts_multivol_book($multivolume);
+        if (!empty($node['multivolume'])) {
+          foreach ($node['multivolume'] as $multivolume) {
+            if ($multivolume->sameAs == $identifier) {
+              $multivolume->title = (isset($node['title_long']) && !empty($node['title_long'])) ? $node['title_long'] : $node['title'];
+              $multivolume->book = $identifier;
+              create_dlts_multivol_book($multivolume);
+            }
           }
         }
         // Series book.
