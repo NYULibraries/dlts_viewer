@@ -25,6 +25,7 @@ function _dlts_viewer_menu_iiif() {
     'file' => 'inc/iiif.inc',
   );
 
+  // @link http://localhost:9000/iiif/2/books/uaena_aco000016/1/full/150,/0/default.jpg
   // @link http://localhost:9000/iiif/2/books/uaena_aco000016/1/{region}/{size}/{rotation}/{quality}.{format}
   $items['iiif/2/%/%/%/%/%/%/%'] = array(
     'title' => 'IIIF API 2',

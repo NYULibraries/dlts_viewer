@@ -311,8 +311,16 @@ function create_dlts_book_from_json_v1_0_1($data) {
 
   if (isset($metadata->pdf_file) && isset($metadata->pdf_file->value)) {
     foreach ((array) $metadata->pdf_file->value as $pdf) {
-      $pdf->uri = str_replace(file_create_url('pdfserver://'), '', 'pdfserver://' . $pdf->uri);
-      $pdf_files[] = $pdf;
+      if (strstr($pdf->uri, 'http://') || strstr($pdf->uri, 'https://')) {
+        $parsedUrl = parse_url($pdf->uri);
+        if (strstr($parsedUrl['path'], '/files/')) {
+          $pdf->uri = str_replace('/files/', 'pdfserver://', $parsedUrl['path']);
+          $pdf_files[] = $pdf;
+        }
+      }
+      elseif (strstr($pdf->uri, 'pdfserver://')) {
+        $pdf_files[] = $pdf;
+      }
     }
   }
 
