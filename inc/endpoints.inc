@@ -1399,6 +1399,28 @@ function dlts_viewer_api_v1_objects($version = NULL) {
   );
 }
 
+/**
+ * Load sequence using Djakota as image server.
+ *
+ * @param object $sequence
+ *   Sequence page.
+ *
+ * @return array
+ *   Book sequence.
+ */
+function dlts_viewer_djakota_book_page_loader($sequence) {
+  if (isset($sequence['uri'])) {
+    // Load djatoka helper.
+    module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
+    return dlts_viewer_djatoka_request(
+      array(
+        'uri' => $sequence['uri'],
+      )
+    );
+  }
+  exit(1);
+}
+
 // e.g., http://localhost:9000/viewer/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
 function dlts_viewer_djakota_resolver_stream() {
 

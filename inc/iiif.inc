@@ -1,5 +1,23 @@
 <?php
 
+/**
+ * @file
+ * III API callbacks.
+ */
+
+/**
+ * Return IIIF Image v2 manifest.
+ *
+ * @param string $type
+ *   Type.
+ * @param string $isPartOf
+ *   isPartOf.
+ * @param int $sequence
+ *   Sequence number.
+ *
+ * @return array
+ *   Manifest.
+ */
 function dlts_viewer_iiif_api($type, $isPartOf, $sequence = 1) {
 
   $wrapper = entity_metadata_wrapper('node', $isPartOf);
