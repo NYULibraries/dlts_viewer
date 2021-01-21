@@ -7,9 +7,12 @@
 
 /**
  * Given a JSON representation of a book, create DLTS Books.
+ *
+ *  @example curl -b ./cookie -X POST  --data "$(curl http://stage-sites.dlib.nyu.edu/viewer/api/v1/books/ifa_egypt000132)" http://localhost:9000/api/v1.0.1/objects
  */
-function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE) {
-  module_load_include('inc', 'dlts_viewer', 'inc/save.dlts_book');
+function create_dlts_book_from_json_v1_0_1($data) {
+
+  module_load_include('inc', 'dlts_viewer', 'inc/save.dlts_book.1.0.1');
 
   $dimensions = NULL;
 
@@ -75,11 +78,13 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
 
   $series = array();
 
-  $entity_title = $data['entity_title'];
+  $entity_title = $data['title'];
 
-  $entity_language = $data['entity_language'];
+  $entity_language = $data['requestedLanguage']->language;
 
   $entity_identifier = $data['identifier'];
+
+  $ocr_text_files = [];
 
   if (!isset($data['metadata'])) {
     $metadata = array();
@@ -88,85 +93,90 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
     $metadata = $data['metadata'];
   }
 
-  if (!isset($data['multivolume'])) {
-    $multivolume = array();
-  }
-  else {
-    $multivolume = $data['multivolume'];
+  $multivolume = array();
+  if ($data['isMultivolume']) {
+    $multivolume = $metadata->multivolume;
   }
 
-  if (!isset($data['series'])) {
-    $series = array();
-  }
-  else {
-    $series = $data['series'];
+  $series = array();
+  if ($data['isSeries']) {
+    $series = $metadata->series;
   }
 
   // Partners the book belong.
   if (isset($metadata->partner)) {
     foreach ($metadata->partner->value as $value) {
       $partners[] = array(
-        'title' => $value->title,
-        'language' => $value->language,
+        'title' => !empty($value->title) ? $value->title : $value->name,
+        'language' => !empty($value->language) ? $value->language : LANGUAGE_NONE,
         'identifier' => $value->identifier,
         'code' => $value->code,
         'name' => $value->name,
       );
     }
   }
+
+  $value = NULL;
 
   // Collections the book belong.
   if (isset($metadata->collection)) {
     foreach ($metadata->collection->value as $value) {
       $collections[] = array(
-        'title' => $value->title,
-        'language' => $value->language,
+        'title' => !empty($value->title) ? $value->title : $value->name,
+        'language' => !empty($value->language) ? $value->language : LANGUAGE_NONE,
         'identifier' => $value->identifier,
         'code' => $value->code,
         'name' => $value->name,
-        'partner' => $value->partner,
+        'partner' => [
+          'title' => !empty($value->partner->title) ? $value->partner->title : $value->partner->name,
+          'language' => !empty($value->partner->language) ? $value->partner->language : LANGUAGE_NONE,
+          'identifier' => $value->partner->identifier,
+          'code' => $value->partner->code,
+          'name' => $value->partner->name,
+        ],
       );
     }
   }
 
-  if (isset($metadata->title)) {
-    $title = trim($metadata->title->value[0]);
+  if (isset($entity_title)) {
+    $title = trim($entity_title);
   }
 
   if (isset($metadata->subtitle) && !empty($metadata->subtitle->value)) {
-    $subtitle = $metadata->subtitle->value[0];
+    $subtitle = $metadata->subtitle->value;
   }
 
   if (isset($metadata->page_count) && !empty($metadata->page_count->value)) {
-    $page_count = $metadata->page_count->value[0];
+    $page_count = $metadata->page_count->value;
   }
 
   if (isset($metadata->sequence_count) && !empty($metadata->sequence_count->value)) {
-    $sequence_count = $metadata->sequence_count->value[0];
+    $sequence_count = $metadata->sequence_count->value;
   }
 
   if (isset($metadata->call_number) && !empty($metadata->call_number->value)) {
-    $call_number = $metadata->call_number->value[0];
+    $call_number = $metadata->call_number->value;
   }
 
   if (isset($metadata->description) && !empty($metadata->description->value)) {
-    $description = $metadata->description->value[0];
+    $description = $metadata->description->value;
   }
 
   if (isset($metadata->dimensions) && !empty($metadata->dimensions->value)) {
-    $dimensions = $metadata->dimensions->value[0];
+    $dimensions = $metadata->dimensions->value;
   }
 
   if (isset($metadata->handle) && !empty($metadata->handle->value)) {
-    $handle = $metadata->handle->value[0];
+    $handle = $metadata->handle->value;
   }
 
   if (isset($metadata->number) && !empty($metadata->number->value)) {
-    $number = $metadata->number->value[0];
+    $number = $metadata->number->value;
   }
 
+  // Only one value, why the [] for $binding_orientation?
   if (isset($metadata->binding_orientation) && !empty($metadata->binding_orientation->value)) {
-    $binding_orientation_raw = $metadata->binding_orientation->value[0];
+    $binding_orientation_raw = $metadata->binding_orientation->value;
     if ($binding_orientation_raw == 'Horizontal' || $binding_orientation_raw == '1') {
       $binding_orientation[] = 1;
     }
@@ -175,76 +185,69 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
     }
   }
 
+  // Only one value, why the [] for $read_order?
   if (isset($metadata->read_order) && !empty($metadata->read_order->value)) {
-    $read_order_raw = $metadata->read_order->value[0];
-    if ($read_order_raw == 'Right to left' || $read_order_raw == '1') {
+    $read_order_raw = $metadata->read_order->value;
+    if ($read_order_raw == 'rtl' || $read_order_raw == 'Right to left' || $read_order_raw == '1') {
       $read_order[] = 1;
     }
-    elseif ($read_order_raw == 'Left to right' || $read_order_raw == '0') {
+    elseif ($read_order_raw == 'ltr' || $read_order_raw == 'Left to right' || $read_order_raw == '0') {
       $read_order[] = 0;
     }
   }
 
+  // Only one value, why the [] for $scan_order?
   if (isset($metadata->scan_order) && !empty($metadata->scan_order->value)) {
     $scan_order_raw = $metadata->scan_order->value[0];
-    if ($scan_order_raw == 'Right to left' || $scan_order_raw == '1') {
+    if ($read_order_raw == 'rtl' || $scan_order_raw == 'Right to left' || $scan_order_raw == '1') {
       $scan_order[] = 1;
     }
-    elseif ($scan_order_raw == 'Left to right' || $scan_order_raw == '0') {
+    elseif ($read_order_raw == 'ltr' || $scan_order_raw == 'Left to right' || $scan_order_raw == '0') {
       $scan_order[] = 0;
     }
   }
 
   if (isset($metadata->scanning_notes) && !empty($metadata->scanning_notes->value)) {
-    $scanning_notes = $metadata->scanning_notes->value[0];
+    $scanning_notes = $metadata->scanning_notes->value;
   }
 
   if (isset($metadata->scan_date) && !empty($metadata->scan_date->value)) {
-    $scan_date = $metadata->scan_date->value[0];
+    $scan_date = $metadata->scan_date->value;
   }
 
   if (isset($metadata->rights) && !empty($metadata->rights->value)) {
-    $rights = trim($metadata->rights->value[0]);
+    $rights = trim($metadata->rights->value);
   }
 
   if (isset($metadata->volume) && !empty($metadata->volume->value)) {
-    $volume = $metadata->volume->value[0];
+    $volume = $metadata->volume->value;
   }
 
   if (isset($metadata->publication_location) && !empty($metadata->publication_location->value)) {
-    $publication_location = $metadata->publication_location->value[0];
+    $publication_location = $metadata->publication_location->value;
   }
 
   if (isset($metadata->publication_date) && !empty($metadata->publication_date->value)) {
-    $publication_date = $metadata->publication_date->value[0];
+    $publication_date = $metadata->publication_date->value;
   }
 
   if (isset($metadata->publication_date_text) && !empty($metadata->publication_date_text->value)) {
-    $publication_date_text = $metadata->publication_date_text->value[0];
+    $publication_date_text = $metadata->publication_date_text->value;
   }
 
-  if (isset($metadata->representative_image) && !empty($metadata->representative_image)) {
-    if (!$legacy) {
-      $representative_image = array(
-        'uri' => $metadata->representative_image->cm->uri,
-        'timestamp' => $metadata->representative_image->cm->timestamp,
-      );
-    }
-    else {
-      if (isset($metadata->representative_image->value)) {
-        $timestamp = (isset($metadata->representative_image->value->timestamp) ? $metadata->representative_image->value->timestamp : time());
-        $uri = $metadata->representative_image->value->fileserver;
-        $representative_image = array(
-          'uri' => $uri,
-          'timestamp' => $timestamp,
-        );
-      }
-    }
+  if (isset($data['representativeImage'])) {
+    $representative_image = array(
+      'uri' => str_replace(file_create_url('fileserver://'), '', 'fileserver://' . $data['representativeImage']),
+      'timestamp' => time(),
+    );
   }
 
   if (isset($metadata->other_version)) {
     foreach ($metadata->other_version->value as $other_version) {
-      $other_versions[] = $other_version;
+      $other_versions[] = [
+        'title' => $other_version->title,
+        'url' => $other_version->url,
+      ];
     }
   }
 
@@ -255,15 +258,11 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
   }
 
   if (isset($metadata->language)) {
-    foreach ($metadata->language->value as $language) {
-      $languages[] = $language;
-    }
+    $languages[] = $metadata->language->value;
   }
 
   if (isset($metadata->language_code)) {
-    foreach ($metadata->language_code->value as $language_code) {
-      $language_codes[] = $language_code;
-    }
+    $language_codes[] = $metadata->language_code->value;
   }
 
   if (isset($metadata->topic) && isset($metadata->topic->value) && is_array($metadata->topic->value)) {
@@ -304,90 +303,29 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
 
   if (isset($metadata->subject) && !empty($metadata->subject->value)) {
     foreach ($metadata->subject->value as $subject) {
-      $subject = trim($subject);
       if (!empty($subject)) {
         $subjects[] = $subject;
       }
     }
   }
 
-  if (isset($metadata->pdfs)) {
-    foreach ($metadata->pdfs->value as $pdf) {
-      $pdf_files[] = array(
-        'type' => $pdf->type,
-        'uri' => $pdf->uri,
-        'label' => $pdf->type == 'hi' ? 'High-resolution' : 'Low-resolution',
-        'searchable' => isset($pdf->searchable) ? $pdf->searchable : FALSE,
-        'filesize' => $pdf->filesize,
-      );
-    }
-  }
-  elseif (isset($metadata->pdf_file)) {
-    // Deals with JSON new documents.
-    if (!$legacy) {
-      foreach ($metadata->pdf_file->value as $pdf_file) {
-        $pathinfo = pathinfo($pdf_file);
-        $basename = str_replace('fileserver://', '', $pathinfo['basename']);
-        $ext = pathinfo($pdf_file, PATHINFO_EXTENSION);
-        // Check if we have a fileserver scheme.
-        if (strpos($pdf_file, 'fileserver://') === FALSE) {
-          continue;
-        }
-        // Check that the URI is not bigger than the allowed MySQL
-        // size for varchar with index.
-        if (strlen($pdf_file) > 255) {
-          continue;
-        }
-        // Check that the URI contain a file extension.
-        if (!$ext) {
-          continue;
-        }
-        // Do we have a valid extension.
-        if (!in_array($ext, array('pdf'))) {
-          continue;
-        }
-        if (strpos($pdf_file, '_hi')) {
-          $pdf_files[] = array(
-            'file' => $pdf_file,
-            'label' => 'High-resolution',
-          );
-        }
-        elseif (strpos($pdf_file, '_lo')) {
-          $pdf_files[] = array(
-            'file' => $pdf_file,
-            'label' => 'Low-resolution',
-          );
-        }
-        else {
-          $pdf_files[] = array('file' => $pdf_file);
+  if (isset($metadata->pdf_file) && isset($metadata->pdf_file->value)) {
+    foreach ((array) $metadata->pdf_file->value as $pdf) {
+      if (strstr($pdf->uri, 'http://') || strstr($pdf->uri, 'https://')) {
+        $parsedUrl = parse_url($pdf->uri);
+        if (strstr($parsedUrl['path'], '/files/')) {
+          $pdf->uri = str_replace('/files/', 'pdfserver://', $parsedUrl['path']);
+          $pdf_files[] = $pdf;
         }
       }
-    }
-    else {
-      foreach ($metadata->pdf_file->value as $pdf_file) {
-        $pdf_uri = $pdf_file->fileserver;
-        // Check that the URI is not bigger than the allowed MySQL
-        // size for varchar with index.
-        if (strlen($pdf_uri) > 255) {
-          continue;
-        }
-        if (strpos($pdf_uri, '_hi')) {
-          $pdf_files[] = array('file' => $pdf_uri, 'label' => 'High-resolution');
-        }
-        elseif (strpos($pdf_uri, '_lo')) {
-          $pdf_files[] = array('file' => $pdf_uri, 'label' => 'Low-resolution');
-        }
-        else {
-          $pdf_files[] = array('file' => $pdf_uri);
-        }
+      elseif (strstr($pdf->uri, 'pdfserver://')) {
+        $pdf_files[] = $pdf;
       }
     }
   }
 
-  if (isset($metadata->ocr_text)) {
-    foreach ($metadata->ocr_text->value as $ocr_text) {
-      $ocr_text_files[] = $ocr_text->fileserver;
-    }
+  if (isset($metadata->ocr_text) && isset($metadata->ocr_text->value)) {
+    $ocr_text_files = $metadata->ocr_text->value;
   }
 
   $node = array(
@@ -412,7 +350,6 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
     'read_order' => $read_order,
     'scan_order' => $scan_order,
     'scanning_notes' => $scanning_notes,
-    'volume' => $volume,
     'publication_date' => $publication_date,
     'publication_date_text' => $publication_date_text,
     'publication_location' => $publication_location,
@@ -436,34 +373,6 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
     'series' => $series,
   );
 
-  return save_dlts_book($node);
+  return save_dlts_book_v1_0_1($node, $entity_language);
 
-}
-
-/**
- * Given a JSON representation of a book, create DLTS Books pages.
- */
-function dlts_viewer_create_book_page($data) {
-  // We only create pages for books with languages English or Undetermined.
-  if ($entity_language == 'en' || $entity_language == LANGUAGE_NONE) {
-    // Load MongoDB util.
-    module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
-    // Check if the JSON document include pages.
-    if (isset($data->pages->page) && !empty($data->pages->page)) {
-      foreach ($data->pages->page as $key => $page) {
-        $sequence = $page->sequence;
-        if (!is_array($page->sequence)) {
-          $sequence = array($page->sequence);
-        }
-        $page->sequence = $sequence;
-        dlts_viewer_mongodb_new_sequence($page, 'dlts_books_page');
-      }
-    }
-    // Check if the JSON document include stitched pages.
-    if (isset($data->stitched->page) && !empty($data->stitched->page)) {
-      foreach ($data->stitched->page as $key => $page) {
-        dlts_viewer_mongodb_new_sequence($page, 'dlts_stitched_books_page');
-      }
-    }
-  }
 }

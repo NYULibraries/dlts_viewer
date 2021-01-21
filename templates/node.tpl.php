@@ -1,5 +1,7 @@
 <div id="navbar" class="pane navbar">
-  <?php if (isset($navbar)) print $navbar ?>
+  <?php if (isset($navbar)) : ?>
+    <?php print $navbar ?>
+  <?php endif; ?>
 </div>
 <div id="main" class="pane main" dir="<?php if (isset($lang_dir)) print $lang_dir; else print 'ltr' ?>">
   <div id="pagemeta" class="pane pagemeta">
@@ -7,7 +9,23 @@
       <?php if (isset($content)) print render($content); ?>
     </div>
   </div>
-  <div id="display" class="pane display" data-url="<?php print $url ?>" data-identifier="<?php print $identifier ?>" data-sequence-count="<?php print $sequence_count ?>" data-sequence="<?php print $book_page_sequence_number ?>" data-title="<?php print $title ?>">
+  <div
+    id="display"
+    class="pane display"
+    <?php if (isset($url)) : ?>
+      data-url="<?php print $url ?>"
+    <?php endif; ?>
+    <?php if (isset($identifier)) : ?>
+      data-identifier="<?php print $identifier ?>"
+    <?php endif; ?>
+    <?php if (isset($sequence_count)) : ?>
+      data-sequence-count="<?php print $sequence_count ?>"
+    <?php endif; ?>
+    <?php if (isset($book_page_sequence_number)) : ?>
+      data-sequence="<?php print $book_page_sequence_number ?>"
+    <?php endif; ?>
+    data-title="<?php print $title ?>"
+  >
     <?php if (isset($book_page)) : ?>
       <?php print $book_page ?>
     <?php endif; ?>

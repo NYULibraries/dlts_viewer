@@ -10,12 +10,14 @@
  *
  * @todo Support for fields: publication_date, geographic_coordinates, geographic_subject
  */
-function save_dlts_book($node, $language = 'en') {
+function save_dlts_book_v1_0_1($node, $language = 'en') {
   module_load_include('inc', 'node', 'node.pages');
   module_load_include('inc', 'dlts_viewer', 'drush/inc/common');
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_multivol_book');
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_partner');
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_collection');
+  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_series_book');
+  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_series');
   module_load_include('inc', 'dlts_viewer', 'inc/create.taxonomy');
   // Get the current user.
   global $base_url;
@@ -197,9 +199,11 @@ function save_dlts_book($node, $language = 'en') {
         );
         $ewrapper->field_representative_image->set($representative_image);
       }
+
       $field_pdf_file = array();
       if (!empty($node['pdf_files'])) {
         foreach ($node['pdf_files'] as $pdf) {
+          $pdf = (array) $pdf;
           $label = (isset($pdf['label'])) ? $pdf['label'] : '';
           $field_pdf_file[] = array(
             'uri' => $pdf['uri'],
@@ -218,13 +222,14 @@ function save_dlts_book($node, $language = 'en') {
         $ewrapper->field_pdf_file->set($field_pdf_file);
       }
       unset($field_pdf_file);
+
       if (!empty($node['subject'])) {
         $vid = dlts_viewer_subject_vocabulary_vid();
         $node_subjects = array();
         foreach ($node['subject'] as $subject) {
           if (!empty($subject)) {
-            $subject_list = dlts_viewer_subject_tid($subject, $vid);
-            $node_subjects[] = $subject_list[$subject];
+            $subject_list = dlts_viewer_subject_tid($subject->name, $vid);
+            $node_subjects[] = $subject_list[$subject->name];
           }
         }
         if (!empty($node_subjects)) {
@@ -293,57 +298,74 @@ function save_dlts_book($node, $language = 'en') {
         }
       }
     }
+
     if (!empty($node['isbn'])) {
       $ewrapper->field_isbn->set($node['isbn']);
     }
+
     if (!empty($node['title'])) {
       $ewrapper->field_title->set($node['title']);
     }
     elseif (!empty($node['entity_title'])) {
       $ewrapper->field_title->set($node['entity_title']);
     }
+
     if (!empty($node['subtitle'])) {
       $ewrapper->field_subtitle->set($node['subtitle']);
     }
+
     if (!empty($node['description'])) {
       $ewrapper->field_description->set($node['description']);
     }
+
     if (!empty($node['editor'])) {
       $ewrapper->field_editor->set($node['editor']);
     }
+
     if (!empty($node['creator'])) {
       $ewrapper->field_creator->set($node['creator']);
     }
+
     if (!empty($node['author'])) {
       $ewrapper->field_author->set($node['author']);
     }
+
     if (!empty($node['topic'])) {
       $ewrapper->field_topic->set($node['topic']);
     }
+
     if (!empty($node['publisher'])) {
       $ewrapper->field_publisher->set($node['publisher']);
     }
+
     if (!empty($node['contributor'])) {
       $ewrapper->field_contributor->set($node['contributor']);
     }
+
     if (!empty($node['dimensions'])) {
       $ewrapper->field_dimensions->set($node['dimensions']);
     }
+
     if (!empty($node['volume'])) {
       $ewrapper->field_volume->set($node['volume']);
     }
+
     if (!empty($node['other_version'])) {
       $ewrapper->field_other_version->set($node['other_version']);
     }
+
     if (!empty($node['publication_location'])) {
       $ewrapper->field_publication_location->set($node['publication_location']);
     }
+
     if (!empty($node['publisher'])) {
       $ewrapper->field_publisher->set($node['publisher']);
     }
+
     if (!empty($node['publication_date_text'])) {
       $ewrapper->field_publication_date_text->set($node['publication_date_text']);
     }
+
     if (!empty($node['publication_date'])) {
       /*
        * we need to make sure the object looks like:
@@ -390,11 +412,13 @@ function save_dlts_book($node, $language = 'en') {
       // If book language is EN check for  Multi volume and Series.
       if ($node_language == 'en') {
         // Multi volume book.
-        if (!empty($node['multivolume']) && !empty($node['multivolume']->volume)) {
-          foreach ($node['multivolume']->volume as $multivolume) {
-            $multivolume->title = (isset($node['title_long']) && !empty($node['title_long'])) ? $node['title_long'] : $node['title'];
-            $multivolume->book = $identifier;
-            create_dlts_multivol_book($multivolume);
+        if (!empty($node['multivolume'])) {
+          foreach ($node['multivolume'] as $multivolume) {
+            if ($multivolume->sameAs == $identifier) {
+              $multivolume->title = (isset($node['title_long']) && !empty($node['title_long'])) ? $node['title_long'] : $node['title'];
+              $multivolume->book = $identifier;
+              create_dlts_multivol_book($multivolume);
+            }
           }
         }
         // Series book.

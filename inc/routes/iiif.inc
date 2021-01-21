@@ -1,11 +1,21 @@
 <?php
 
+/**
+ * @file
+ * IIIF callbacks.
+ */
+
+/**
+ * Register IIIF routes.
+ *
+ * @return array
+ *   Items to register in the menu system.
+ */
 function _dlts_viewer_menu_iiif() {
 
   $items = array();
 
-  // request image
-  // e.g., http://localhost:9000/iiif/2/books/uaena_aco000016/1/info.json
+  // @link http://localhost:9000/iiif/2/books/uaena_aco000016/1/info.json
   $items['iiif/2/%type/%dlts_book/%page_item/info.json'] = array(
     'title' => 'IIIF API 2',
     'access arguments' => array('access content'),
@@ -15,8 +25,8 @@ function _dlts_viewer_menu_iiif() {
     'file' => 'inc/iiif.inc',
   );
 
-  // request image
-  // e.g., http://localhost:9000/iiif/2/books/uaena_aco000016/1/{region}/{size}/{rotation}/{quality}.{format}
+  // @link http://localhost:9000/iiif/2/books/uaena_aco000016/1/full/150,/0/default.jpg
+  // @link http://localhost:9000/iiif/2/books/uaena_aco000016/1/{region}/{size}/{rotation}/{quality}.{format}
   $items['iiif/2/%/%/%/%/%/%/%'] = array(
     'title' => 'IIIF API 2',
     'access arguments' => array('access content'),
@@ -24,10 +34,10 @@ function _dlts_viewer_menu_iiif() {
     'page arguments' => array(2, 3, 4, 5, 6, 7, 8),
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
-  );  
-  
-  // Canvas
-  // e.g., http://localhost:9000/api/v1/books/princeton_aco000102/canvas/p1
+  );
+
+  // Canvas.
+  // @link http://localhost:9000/api/v1/books/princeton_aco000102/canvas/p1
   $items['api/v1/%type/%dlts_book/canvas/%dlts_book_canvas_page'] = array(
     'title' => 'IIIF Canvas',
     'access arguments' => array('access content'),
