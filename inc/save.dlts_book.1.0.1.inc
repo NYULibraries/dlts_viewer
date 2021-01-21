@@ -17,7 +17,7 @@ function save_dlts_book_v1_0_1($node, $language = 'en') {
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_partner');
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_collection');
   module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_series_book');
-  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_series_book.inc');
+  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_series');
   module_load_include('inc', 'dlts_viewer', 'inc/create.taxonomy');
   // Get the current user.
   global $base_url;
