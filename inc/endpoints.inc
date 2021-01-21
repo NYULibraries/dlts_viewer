@@ -569,6 +569,8 @@ function _dlts_viewer_book_thumbnails_loader($identifier, $page = 0, $per_page =
  */
 function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
+  global $base_url;
+
   drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
 
   module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.book');
@@ -725,6 +727,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   if (!empty($series_books)) {
     $isSeries = TRUE;
     foreach ($series_books as $series_book) {
+      $series_collections = [];
       $series_wrapper = entity_metadata_wrapper('node', $series_book);
       $series_volume_number_str = trim($series_wrapper->field_volume_number_str->value());
       $series_title = t(
@@ -739,13 +742,37 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
       $parent_wrapper = entity_metadata_wrapper('node', $parent);
       $parent_title = trim($parent_wrapper->title->value());
       $parent_identifier = $parent_wrapper->field_identifier->value();
+      foreach ($series_wrapper->field_collection->value() as $series_collection) {
+        $series_collection_wrapper = entity_metadata_wrapper('node', $series_collection);
+        $series_collections_partners = [];
+        foreach ($series_collection_wrapper->field_partner->value() as $series_collections_partner) {
+          $series_collections_partner_wrapper = entity_metadata_wrapper('node', $series_collections_partner);
+          $series_collections_partners[] = [
+            'title' => $series_collections_partner->title,
+            'uuid' => $series_collections_partner->uuid,
+            'name' => $series_collections_partner_wrapper->field_name->value(),
+            'code' => locale($series_collections_partner_wrapper->field_code->value(), NULL, $requestedLang),
+            'identifier' => $series_collections_partner_wrapper->field_identifier->value(),
+          ];
+        }
+        $series_collections[] = [
+          'uuid' => $series_collection->uuid,
+          'name' => $series_collection_wrapper->field_name->value(),
+          'code' => locale($series_collection_wrapper->field_code->value(), NULL, $requestedLang),
+          'identifier' => $series_collection_wrapper->field_identifier->value(),
+          'partner' => $series_collections_partners,
+        ];
+      }
       $series[] = array(
         'title' => $series_title,
         'identifier' => $series_book_identifier,
+        'volumeNumber' => $series_wrapper->field_volume_number->value(),
+        'volumeDisplay' => 	$series_wrapper->field_volume_number_str->value(),
         'isPartOf' => array(
           'title' => $parent_title,
           'identifier' => $parent_identifier,
         ),
+        'collection' => $series_collections,
       );
     }
     unset($series_volume_number_str);
@@ -984,7 +1011,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     }
   }
 
-  $image_metadata_uri = $image_server . '/iiif/2/' . urlencode($representative_image) . '/full/150,/0/default.jpg';
+  $image_metadata_uri = "$base_url/iiif/2/books/$identifier/1/full/150,/0/default.jpg";
 
   $response = array(
     'title' => $title,

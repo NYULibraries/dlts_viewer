@@ -30,8 +30,8 @@ function dlts_viewer_iiif_api($type, $isPartOf, $sequence = 1) {
 
 }
 
-# Region https://iiif.io/api/image/3.0/#4-image-requests
-# http://localhost:9000/iiif/2/books/uaena_aco000016/1/full/max/0/default.jpg
+// Region https://iiif.io/api/image/3.0/#4-image-requests
+// @link http://localhost:9000/iiif/2/books/uaena_aco000016/1/full/max/0/default.jpg
 function dlts_viewer_iiif_tile($type, $isPartOf, $sequence = 1, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
   $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');
 
