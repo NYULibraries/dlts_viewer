@@ -1,170 +1,212 @@
 <?php
+
 /**
  * @file
- * Books
+ * All things related to Books.
  */
 
 /**
  * Implements "a version" template_preprocess_node().
- * https://api.drupal.org/api/drupal/modules%21node%21node.module/function/template_preprocess_node/7
- * THIS is not a default Drupal hook
+ * @link https://api.drupal.org/api/drupal/modules%21node%21node.module/function/template_preprocess_node/7
  */
-function dlts_viewer_preprocess_node_dlts_book(&$vars)
-{
-    /** We don't render a DLTS Book object, redirect to a "Book page" */
-    if ($vars['view_mode'] == 'full') {
-        $wrapper = entity_metadata_wrapper('node', $vars['node']);
-        $identifier = $wrapper->field_identifier->value();
-        drupal_goto('books/' . $identifier . '/1');
-    }
-    $vars['language_dir'] = dlts_viewer_viewer_language($vars);
-    if ($vars['view_mode'] == 'metadata') {
-        $args = arg();
-        $count = count($args);
-        if ($count === 3 && $args[2] == 'display') {
-            $vars['theme_hook_suggestions'][] = 'node__display';
-        }
-        if (dlts_viewer_is_pjax()) {
-            $vars['theme_hook_suggestions'][] = 'node__viewer_pjax';
-        }
-    }
-}
-
-function dlts_viewer_dispatch_thumbnails($identifier)
-{
-    /** Load helpers */
-    module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
-    /** hold query arguments */
-    $query_parameters = drupal_get_query_parameters();
-    if (isset($query_parameters['sequence'])) {
-        $sequence = $query_parameters['sequence'];
-    }
-// start page
-    $page = 0;
-// default amount of items to request
-    $per_page = 10;
-// page number can be part of the query parameter
-    if (isset($query_parameters['page'])) {
-        $page = filter_xss($query_parameters['page']);
-    }
-// app can overwrite the amount of items to display
-    if (isset($query_parameters['rows'])) {
-        $per_page = filter_xss($query_parameters['rows']);
-    }
-// request thumbnails from MondoDB
-    $thumbnails = dlts_viewer_mongodb_load_thumbnails($identifier, $page, $per_page, "dlts_books_page", "books");
-// no need to continue if request does not have items.
-    if ($thumbnails) {
-// count of thumbnails
-        $count = $thumbnails['count'];
-// Items
-        $items = $thumbnails['items'];
-// Initialise the pager
-        $current_page = pager_default_initialize($count, $per_page);
-// Pager
-        $pager = theme('thumbnails_pager', array('quantity' => $count));
-        $placeholder = $GLOBALS['base_url'] . '/' . drupal_get_path('module', 'dlts_viewer') . '/images/loadhold.png';
-        $output = theme('dlts_viewer_thumbnails', array(
-                'items' => $items,
-                'pager' => $pager,
-                'sequence' => $sequence,
-                'placeholder' => $placeholder,
-            )
-        );
-        return $output;
-    } else {
-        drupal_exit();
-    }
-}
-
-function dlts_viewer_full_book_view(&$entity)
-{
-    $module_path = drupal_get_path('module', 'dlts_viewer');
-    $js_common_config = array('type' => 'file', 'scope' => 'footer');
-    $css_common_config = array('group' => CSS_DEFAULT, 'every_page' => TRUE);
-    drupal_add_css($module_path . '/css/dlts_viewer.css', $css_common_config);
-    drupal_add_js('https://yui-s.yahooapis.com/3.18.1/build/yui/yui-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -100));
-    drupal_add_js('https://yui-s.yahooapis.com/combo?gallery-2014.07.31-18-26/build/gallery-soon/gallery-soon-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -101));
-    drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
-    drupal_add_js($module_path . '/js/modules/slider-base.js', $js_common_config);
-    drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
-    drupal_add_js($module_path . '/js/ui.components.yui.js', $js_common_config);
-    drupal_add_js(variable_get('dlts_viewer_openlayers_source', 'sites/all/libraries/openlayers/build/OpenLayers.js'), array('group' => JS_LIBRARY));
-    return node_view($entity, 'metadata', $entity->language);
-}
-
-function dlts_viewer_book_metadata_view($entity)
-{
-    $element = node_view($entity, 'metadata', $entity->language);
-    return drupal_render($element);
-}
-
-function dlts_viewer_process_node_dlts_book(&$vars)
-{
+function dlts_viewer_preprocess_node_dlts_book(&$vars) {
+  // We don't render a DLTS Book object, redirect to a "Book page".
+  if ($vars['view_mode'] == 'full') {
+    $wrapper = entity_metadata_wrapper('node', $vars['node']);
+    $identifier = $wrapper->field_identifier->value();
+    drupal_goto('books/' . $identifier . '/1');
+  }
+  $vars['language_dir'] = dlts_viewer_viewer_language($vars);
+  if ($vars['view_mode'] == 'metadata') {
     $args = arg();
     $count = count($args);
     if ($count === 3 && $args[2] == 'display') {
-        $vars['theme_hook_suggestions'][] = 'node__display';
+      $vars['theme_hook_suggestions'][] = 'node__display';
     }
+    if (dlts_viewer_is_pjax()) {
+      $vars['theme_hook_suggestions'][] = 'node__viewer_pjax';
+    }
+  }
 }
 
-function dlts_viewer_pjax_book_view(&$entity)
-{
-    $vars = array(
-        'button_next' => $entity->button_next,
-        'button_previous' => $entity->button_previous,
-        'button_togglepage' => $entity->button_togglepage,
-        'compositingLayerCount' => $entity->book_page_data['compositingLayerCount'],
-        'dwtLevels' => $entity->book_page_data['dwtLevels'],
-        'fid' => $entity->book_page_data['fid'],
-        'height' => $entity->book_page_data['height'],
-        'identifier' => $entity->identifier,
-        'levels' => $entity->book_page_data['levels'],
-        'sequence' => $entity->sequence,
-        'sequence_count' => $entity->sequence_count,
-        'thumbnailsPage' => $entity->thumbnailsPage,
-        'thumbnailsRows' => $entity->thumbnailsRows,
-        'thumbnailsURL' => $entity->thumbnailsURL,
-        'title' => $entity->title,
-        'uri' => $entity->book_page_data['uri'],
-        'width' => $entity->book_page_data['width'],
-        'pageView' => $entity->pageView,
+/**
+ * Dispatch thumbnails.
+ *
+ * @param string $identifier
+ *   Resorce identifier.
+ */
+function dlts_viewer_dispatch_thumbnails(string $identifier) {
+  // Load helpers.
+  module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
+  // Hold query arguments.
+  $query_parameters = drupal_get_query_parameters();
+  if (isset($query_parameters['sequence'])) {
+    $sequence = $query_parameters['sequence'];
+  }
+  // Start page.
+  $page = 0;
+  // Default amount of items to request.
+  $per_page = 10;
+  // Page number can be part of the query parameter.
+  if (isset($query_parameters['page'])) {
+    $page = filter_xss($query_parameters['page']);
+  }
+  // App can overwrite the amount of items to display.
+  if (isset($query_parameters['rows'])) {
+    $per_page = filter_xss($query_parameters['rows']);
+  }
+  // Request thumbnails from MondoDB.
+  $thumbnails = dlts_viewer_mongodb_load_thumbnails($identifier, $page, $per_page, "dlts_books_page", "books");
+  // No need to continue if request does not have items.
+  if ($thumbnails) {
+    // Count of thumbnails.
+    $count = $thumbnails['count'];
+    // Items.
+    $items = $thumbnails['items'];
+    // Initialise the pager.
+    $current_page = pager_default_initialize($count, $per_page);
+    // Pager.
+    $pager = theme('thumbnails_pager', array('quantity' => $count));
+    $placeholder = $GLOBALS['base_url'] . '/' . drupal_get_path('module', 'dlts_viewer') . '/images/loadhold.png';
+    $output = theme(
+      'dlts_viewer_thumbnails',
+      array(
+        'items' => $items,
+        'pager' => $pager,
+        'sequence' => $sequence,
+        'placeholder' => $placeholder,
+      )
     );
-    return theme('viewer_page', $vars);
+    return $output;
+  }
+  else {
+    drupal_exit();
+  }
 }
 
-function _language_field(&$entity)
-{
-    $languages = language_list('enabled');
-    $languages = $languages[1];
-    $entity->lang_dir = (!isset($languages[$entity->language]->direction) || isset($languages[$entity->language]->direction) && $languages[$entity->language]->direction == 0) ? 'ltr' : 'rtl';
-    $entity->lang_language = isset($languages[$entity->language]->language) ? $languages[$entity->language]->language : 'en';
-    $entity->lang_name = isset($languages[$entity->language]->name) ? $languages[$entity->language]->name : t('English');
-    // $translations = translation_path_get_translations('node/' . $entity->nid);
-    $translations =  dlts_viewer_list_translation($entity->identifier);
-    if (count($translations) > 1) {
-        $entity->lang_options = array('#type' => 'markup', '#prefix' => '<select class="language" aria-label="' . t('Choose Language for Metadata') . '">', '#suffix' => '</select>', '#markup' => '');
-        foreach ($translations as $key => $index) {
-            $url = url('books/' . $entity->identifier . '/display', array('absolute' => true, 'query' => array('lang' => $key)));
-            $markup = array(
-                '#tag' => 'option',
-                '#theme' => 'html_tag',
-                '#attributes' => array(
-                    'data-title' => t('@lang', array('@lang' => $languages[$key]->native)),
-                    'data-language' => $key,
-                    'title' => t('@lang', array('@lang' => $languages[$key]->native)),
-                    'class' => array('language', $key),
-                    'data-url' => $url,
-                    'value' => $url,
-                ),
-                '#value' => t('@lang', array('@lang' => $languages[$key]->native)),
-            );
-            if ($entity->lang_language == $key) {
-                $markup['#attributes']['selected'] = 'selected';
-            }
-            $entity->lang_options['#markup'] .= theme('html_tag', $markup);
-        }
+/**
+ * Render full view.
+ *
+ * @param object $entity
+ *   Entity to render.
+ */
+function dlts_viewer_full_book_view(&$entity) {
+  $module_path = drupal_get_path('module', 'dlts_viewer');
+  $js_common_config = array('type' => 'file', 'scope' => 'footer');
+  $css_common_config = array('group' => CSS_DEFAULT, 'every_page' => TRUE);
+  drupal_add_css($module_path . '/css/dlts_viewer.css', $css_common_config);
+  drupal_add_js('https://yui-s.yahooapis.com/3.18.1/build/yui/yui-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -100));
+  drupal_add_js('https://yui-s.yahooapis.com/combo?gallery-2014.07.31-18-26/build/gallery-soon/gallery-soon-min.js', 'external', array('group' => JS_LIBRARY, 'weight' => -101));
+  drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
+  drupal_add_js($module_path . '/js/modules/slider-base.js', $js_common_config);
+  drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
+  drupal_add_js($module_path . '/js/ui.components.yui.js', $js_common_config);
+  drupal_add_js(variable_get('dlts_viewer_openlayers_source', 'sites/all/libraries/openlayers/build/OpenLayers.js'), array('group' => JS_LIBRARY));
+  return node_view($entity, 'metadata', $entity->language);
+}
+
+/**
+ * Render metadata view.
+ *
+ * @param object $entity
+ *   Entity to render.
+ */
+function dlts_viewer_book_metadata_view($entity) {
+  $element = node_view($entity, 'metadata', $entity->language);
+  return drupal_render($element);
+}
+
+/**
+ * Implements process_node_hook.
+ */
+function dlts_viewer_process_node_dlts_book(&$vars) {
+  $args = arg();
+  $count = count($args);
+  // Set the correct template for this view.
+  if ($count === 3 && $args[2] == 'display') {
+    $vars['theme_hook_suggestions'][] = 'node__display';
+  }
+}
+
+/**
+ * Render PJAX view.
+ *
+ * @param object $entity
+ *   Entity to render.
+ */
+function dlts_viewer_pjax_book_view(&$entity) {
+  $vars = array(
+    'button_next' => $entity->button_next,
+    'button_previous' => $entity->button_previous,
+    'button_togglepage' => $entity->button_togglepage,
+    'compositingLayerCount' => $entity->book_page_data['compositingLayerCount'],
+    'dwtLevels' => $entity->book_page_data['dwtLevels'],
+    'fid' => $entity->book_page_data['fid'],
+    'height' => $entity->book_page_data['height'],
+    'identifier' => $entity->identifier,
+    'levels' => $entity->book_page_data['levels'],
+    'sequence' => $entity->sequence,
+    'sequence_count' => $entity->sequence_count,
+    'thumbnailsPage' => $entity->thumbnailsPage,
+    'thumbnailsRows' => $entity->thumbnailsRows,
+    'thumbnailsURL' => $entity->thumbnailsURL,
+    'title' => $entity->title,
+    'uri' => $entity->book_page_data['uri'],
+    'width' => $entity->book_page_data['width'],
+    'pageView' => $entity->pageView,
+  );
+  return theme('viewer_page', $vars);
+}
+
+/**
+ * Render language selection for metadata view.
+ *
+ * @param object $entity
+ *   Entity.
+ */
+function _language_field(&$entity) {
+  $languages = language_list('enabled');
+  $languages = $languages[1];
+  $entity->lang_dir = (!isset($languages[$entity->language]->direction) || isset($languages[$entity->language]->direction) && $languages[$entity->language]->direction == 0) ? 'ltr' : 'rtl';
+  $entity->lang_language = isset($languages[$entity->language]->language) ? $languages[$entity->language]->language : 'en';
+  $entity->lang_name = isset($languages[$entity->language]->name) ? $languages[$entity->language]->name : t('English');
+  $translations = dlts_viewer_list_translation($entity->identifier);
+  if (count($translations) > 1) {
+    $entity->lang_options = array(
+      '#type' => 'markup',
+      '#prefix' => '<select class="language" aria-label="' . t('Choose Language for Metadata') . '">',
+      '#suffix' => '</select>',
+      '#markup' => '',
+    );
+    foreach ($translations as $key => $index) {
+      $url = url(
+        'books/' . $entity->identifier . '/display',
+        array(
+          'absolute' => TRUE,
+          'query' => array(
+            'lang' => $key,
+          ),
+        )
+      );
+      $markup = array(
+        '#tag' => 'option',
+        '#theme' => 'html_tag',
+        '#attributes' => array(
+          'data-title' => t('@lang', array('@lang' => $languages[$key]->native)),
+          'data-language' => $key,
+          'title' => t('@lang', array('@lang' => $languages[$key]->native)),
+          'class' => array('language', $key),
+          'data-url' => $url,
+          'value' => $url,
+        ),
+        '#value' => t('@lang', array('@lang' => $languages[$key]->native)),
+      );
+      if ($entity->lang_language == $key) {
+        $markup['#attributes']['selected'] = 'selected';
+      }
+      $entity->lang_options['#markup'] .= theme('html_tag', $markup);
     }
+  }
 }
 
 function dlts_viewer_book_dispatcher($entity, $arg) {

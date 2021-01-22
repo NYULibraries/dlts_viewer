@@ -68,8 +68,8 @@ function dlts_viewer_books(int $start = 0, int $length = 25) {
       'docs' => array(),
     ),
   );
-  foreach ((array) $nodes as $node) {
-    $response['response']['docs'][] = dlts_viewer_book($node, FALSE);
+  foreach ($nodes as $node) {
+    $response['response']['docs'][] = dlts_viewer_api_book_json($node, $node->language);
   }
   return $response;
 }
@@ -98,12 +98,13 @@ function dlts_viewer_book_metadata($book) {
   $collections = array();
   $ewrapper = entity_metadata_wrapper('node', $book);
   foreach ($type['fields'] as $field) {
-    $name = str_replace('field_', '', $field['field_name']);
-    $raw_value = $ewrapper->$field['field_name']->value();
+    $field_name = $field['field_name'];
+    $name = str_replace('field_', '', $field_name);
+    $raw_value = $ewrapper->$field_name->value();
     if ($field['type'] == 'options_buttons') {
       $value = $field['settings']['allowed_values'][$raw_value];
     }
-    elseif ($field['type'] == 'link_field' && isset($raw_value['url'] )) {
+    elseif ($field['type'] == 'link_field' && isset($raw_value['url'])) {
       $value = $raw_value['url'];
     }
     elseif ($field['type'] == 'file_generic') {
@@ -135,7 +136,7 @@ function dlts_viewer_book_metadata($book) {
   return array(
     'entity_title' => !empty($title) ? $title : $book->title,
     'identifier' => $fields['identifier']['value'][0],
-    'entity_path' => url('books/' . $identifier . '/1', array('absolute' => TRUE)),
+    'entity_path' => url('books/' . $fields['identifier']['value'][0] . '/1', array('absolute' => TRUE)),
     'base_url' => url('', array('absolute' => TRUE)),
     'entity_language' => $book->language,
     'entity_status' => $book->status,
@@ -219,6 +220,7 @@ function dlts_viewer_list_collections(int $start = 0, int $length = 100) {
 
 /**
  * List topics.
+ * @link http://localhost:9000/api/v1/topics
  *
  * @param int $start
  *   Index to start.
@@ -255,6 +257,14 @@ function dlts_viewer_api_list_topics(int $start = 0, int $length = 50, $requeste
   if (isset($query_parameters['lang']) && in_array($query_parameters['lang'], $availableLanguages)) {
     $requestedLang = $query_parameters['lang'];
   }
+
+  // Status, default to published items.
+  $status = 1;
+  if (isset($query_parameters['status']) && is_numeric($query_parameters['status'])) {
+    $status = (int) $query_parameters['status'] < 1 ? 0 : 1;
+  }
+
+  $collectionCode = 'aco';
 
   $sql_dates = "
     SELECT
@@ -293,16 +303,18 @@ function dlts_viewer_api_list_topics(int $start = 0, int $length = 50, $requeste
     $length,
     array(
       ':language' => $requestedLang,
-      ':collection_code' => 'aco',
+      ':collection_code' => $collectionCode,
       ':date' => $filter_date,
-      'status' => 1,
+      'status' => $status,
     )
   )->fetchAll();
 
-  $dates = db_query($sql_dates, array(
-    ':language' => $requestedLang,
-    ':collection_code' => 'aco',
-    ':status' => 1,
+  $dates = db_query(
+    $sql_dates,
+    array(
+      ':language' => $requestedLang,
+      ':collection_code' => $collectionCode,
+      ':status' => $status,
     )
   )->fetchAll();
 
@@ -381,7 +393,7 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
 
   $entities_query = new EntityFieldQuery();
 
-  // https://www.drupal.org/docs/7/creating-custom-modules/howtos/how-to-use-entityfieldquery-for-drupal-7
+  // @link https://www.drupal.org/docs/7/creating-custom-modules/howtos/how-to-use-entityfieldquery-for-drupal-7
   $count_query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_book')
     ->propertyCondition('language', $requestedLang)
@@ -767,7 +779,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
         'title' => $series_title,
         'identifier' => $series_book_identifier,
         'volumeNumber' => $series_wrapper->field_volume_number->value(),
-        'volumeDisplay' => 	$series_wrapper->field_volume_number_str->value(),
+        'volumeDisplay' => $series_wrapper->field_volume_number_str->value(),
         'isPartOf' => array(
           'title' => $parent_title,
           'identifier' => $parent_identifier,
@@ -1045,39 +1057,18 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 }
 
 /**
- * Book page.
+ * Djakota Book page.
  *
- * @param object $entity
- *   Index to start.
- * @param int $sequence
- *   Sequence number.
+ * @link http://localhost:9000/api/v1/books/princeton_aco000102
+ *
+ * @param array $sequence
+ *   Sequence object from MongoDB.
  */
-function dlts_viewer_djakota_book_page($entity, int $sequence) {
-  // Entity API wrapper.
-  $book = entity_metadata_wrapper('node', $entity);
-  // Book identifier.
-  $identifier = $book->field_identifier->value();
-  // Prevent cross-site-scripting.
-  $sequence = filter_xss($sequence);
-  $data = dlts_viewer_mongodb_load_sequence($sequence, $identifier, 'dlts_books_page');
-  if (isset($data['cm'])) {
-    if (isset($data['cm']['identifier'])) {
-      return $data['cm'];
-    }
-    elseif (isset($data['cm']['uri'])) {
-      // Load djatoka helper.
-      module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
-      return dlts_viewer_djatoka_request(
-        array(
-          'uri' => $data['cm']['uri'],
-        )
-      );
-    }
-  }
-  exit(1);
+function dlts_viewer_djakota_book_page(array $sequence) {
+  return $sequence;
 }
 
-// e.g., http://localhost:9000/viewer/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
+// @link http://localhost:9000/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
 function dlts_viewer_djakota_stream_book_page() {
 
   // Get query parameters.
@@ -1397,28 +1388,6 @@ function dlts_viewer_api_v1_objects($version = NULL) {
   return array(
     'error' => 'User not allowed.',
   );
-}
-
-/**
- * Load sequence using Djakota as image server.
- *
- * @param object $sequence
- *   Sequence page.
- *
- * @return array
- *   Book sequence.
- */
-function dlts_viewer_djakota_book_page_loader($sequence) {
-  if (isset($sequence['uri'])) {
-    // Load djatoka helper.
-    module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
-    return dlts_viewer_djatoka_request(
-      array(
-        'uri' => $sequence['uri'],
-      )
-    );
-  }
-  exit(1);
 }
 
 // e.g., http://localhost:9000/viewer/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2

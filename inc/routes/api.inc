@@ -15,15 +15,6 @@ function _dlts_viewer_menu_api() {
 
   $items = array();
 
-  /* JSON. */
-  $items['books.json'] = array(
-    'title' => 'All books in JSON format',
-    'access arguments' => array('access content'),
-    'page callback' => 'dlts_viewer_books',
-    'delivery callback' => 'drupal_json_output',
-    'file' => 'inc/endpoints.inc',
-  );
-
   $items['sources/field/%'] = array(
     'title' => 'Cotent types',
     'access arguments' => array('access content'),
@@ -85,6 +76,15 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   );
 
+  // @link http://localhost:9000/books.json
+  $items['books.json'] = array(
+    'title' => 'All books in JSON format',
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_books',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints.inc',
+  );
+
   // JSON.
   $items['api/v1/books'] = array(
     'access arguments' => array('access content'),
@@ -93,12 +93,14 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   );
 
-  // @link api/v1/books/princeton_aco000102
-  $items['api/v1/books/%dlts_book'] = array(
+  // @link api/v1/books/princeton_aco000102/1
+  $items['api/v1/books/%dlts_book/%dlts_book_page'] = array(
+    'title' => 'JSON representation of the book',
     'access arguments' => array('access content'),
-    'page callback' => '_dlts_viewer_book_loader',
+    'page callback' => 'dlts_viewer_djakota_book_page',
+    'page arguments' => array(4),
+    'load arguments' => array('%map', '%index'),
     'delivery callback' => 'drupal_json_output',
-    'page arguments' => array(3),
     'file' => 'inc/endpoints.inc',
   );
 
@@ -111,24 +113,14 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   );
 
-  // @link api/v1/books/princeton_aco000102/1
-  $items['api/v1/books/%dlts_book/%djakota_book_page'] = array(
-    'title' => 'JSON representation of the book',
+  // @link api/v1/books/princeton_aco000102
+  $items['api/v1/books/%dlts_book'] = array(
     'access arguments' => array('access content'),
-    'page callback' => 'dlts_viewer_djakota_book_page_loader',
-    'page arguments' => array(4),
+    'page callback' => '_dlts_viewer_book_loader',
     'delivery callback' => 'drupal_json_output',
+    'page arguments' => array(3),
     'file' => 'inc/endpoints.inc',
   );
-
-  // $items['api/v1/books/%dlts_book/%'] = array(
-  // 'title' => 'JSON representation of the book',
-  // 'access arguments' => array('access content'),
-  // 'page callback' => 'dlts_viewer_djakota_book_page',
-  // 'page arguments' => array(3, 4),
-  // 'delivery callback' => 'drupal_json_output',
-  // 'file' => 'inc/endpoints.inc',
-  // );
 
   // Stream tile from resource page.
   $items['api/v1/tile'] = array(

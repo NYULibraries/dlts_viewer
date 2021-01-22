@@ -40,36 +40,34 @@ function dlts_book_load($identifier) {
 }
 
 /**
- * A wildcard loader for dlts_book pages data from MongoDB, using the book.
+ * A wildcard loader for dlts_book pages data from MongoDB.
  *
- * @param int $sequence
- *   Sequence page number to load.
- * @param string $isPartOf
- *   Book identifier.
+ * @param string $sequence
+ *   Item sequence.
+ * @param array $map
+ *   All elements of the path are converted to a keyed array.
+ *   This is also a variable reference.
+ * @param int $resource_index
+ *   The element of the path the wildcard loader is defined in.
  *
  * @return object
- *   MongoDB book page object
+ *   MongoDB object.
  */
-function dlts_book_page_load($sequence, $isPartOf = FALSE) {
+function dlts_book_page_load($sequence, array $map, $resource_index) {
 
-  // Load MongoDB helper.
+  $wrapper = entity_metadata_wrapper('node', $map[$resource_index - 1]);
+
+  $isPartOf = $wrapper->field_identifier->value();
+
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
-
-  if (!$isPartOf) {
-    $identifier = arg(1);
-  }
-  else {
-    // Entity API wrapper.
-    $book = entity_metadata_wrapper('node', $isPartOf[1]);
-    // Book identifier.
-    $identifier = $book->field_identifier->value();
-  }
 
   // View modes, we map the views with their machine names in MongoDB.
   $collections = array(
     'single' => 'dlts_books_page',
     'double' => 'dlts_stitched_books_page',
+    'photo' => 'dlts_photo',
   );
+
   // Viewer defaults to single page view.
   $collection_name = 'dlts_books_page';
 
@@ -84,15 +82,21 @@ function dlts_book_page_load($sequence, $isPartOf = FALSE) {
     }
   }
 
-  $result = dlts_viewer_mongodb_load_sequence($sequence, $identifier, $collection_name);
+  $result = dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection_name);
 
   if ($result && isset($result['cm']) && !empty($result['cm']['uri'])) {
-    // Request metadata from image server.
+    // Sequence exist in MongoDB but we need to request metadata
+    // from image server.
     if (empty($result['cm']['levels'])) {
       // Load connector.
       module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
       // Pass over $result['cm'] as $file argument.
       $djatoka = dlts_viewer_djatoka_request($result['cm']);
+      /*
+       * No error, update MongoDB record
+       * @todo Consider using Drupal queue to update the record.
+       * See: https://api.drupal.org/api/drupal/modules!system!system.queue.inc/class/DrupalQueue/7
+       */
       if (!isset($djatoka['error'])) {
         // Update $result reference with Image Server requested metadata.
         $result['cm'] = array_merge($result['cm'], $djatoka);
@@ -127,9 +131,9 @@ function dlts_book_page_load($sequence, $isPartOf = FALSE) {
     }
   }
 
-  drupal_set_message(t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.', array('@sequence' => $sequence, '@identifier' => $identifier)), 'error');
+  drupal_set_message(t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.', array('@sequence' => $sequence, '@identifier' => $isPartOf)), 'error');
 
-  watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', array('%identifier' => $identifier, '%sequence' => $sequence), WATCHDOG_NOTICE);
+  watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', array('%identifier' => $isPartOf, '%sequence' => $sequence), WATCHDOG_NOTICE);
 
   // If $result is empty, retrun FALSE so that hook_menu can 404 redirect.
   return FALSE;
@@ -161,4 +165,28 @@ function page_item_load($item) {
     }
   }
   return FALSE;
+}
+
+/**
+ * Load sequence using Djakota as image server.
+ *
+ * @param object $sequence
+ *   Sequence page.
+ *
+ * @return array
+ *   Book sequence.
+ */
+ function djakota_book_page_load(int $sequence, array $map) {
+  print_r($map);
+  die(__FUNCTION__);
+  if (isset($sequence['uri'])) {
+    // Load djatoka helper.
+    module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
+    return dlts_viewer_djatoka_request(
+      array(
+        'uri' => $sequence['uri'],
+      )
+    );
+  }
+  exit(1);
 }
