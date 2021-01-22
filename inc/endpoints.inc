@@ -639,7 +639,6 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
       $availableLanguages[$code]->direction = ($availableLanguages[$code]->direction == 0) ? 'ltr' : 'rtl';
       $availableLanguages[$code]->default = ($code == $requestedLang) ? 1 : 0;
       // We don't have any use for this properties.
-      unset($availableLanguages[$code]->enabled);
       unset($availableLanguages[$code]->prefix);
       unset($availableLanguages[$code]->plurals);
       unset($availableLanguages[$code]->formula);
