@@ -690,7 +690,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
       $volume = $mb_wrapper->field_volume_number->value();
       // The book we map to this multivolume.
       $bs_wrapper = entity_metadata_wrapper('node', $mb_wrapper->field_book->value());
-      $volume_ispartof_collections = $collections = dlts_viewer_collection_json($mb_wrapper->field_collection->value());
+      $volume_ispartof_collections = $collections = dlts_viewer_collections($mb_wrapper->field_collection->value());
       $volumes_collection = [];
       foreach ($volume_ispartof_collections as $volume_ispartof_collection) {
         $volume_ispartof_collection = (array) $volume_ispartof_collection;
@@ -833,7 +833,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
       case 'collection':
         $fields[$name]['value'] = array();
-        $collections = dlts_viewer_collection_json($raw_value);
+        $collections = dlts_viewer_collections($raw_value);
         foreach ($collections as $collection) {
           unset($collection['title']);
           unset($collection['type']);
@@ -995,33 +995,6 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
   $fields['series'] = $series;
 
-  // Check if we must include pages in the response.
-  if (isset($query_parameters['pages'])) {
-    $add_pages = TRUE;
-  }
-  else {
-    $add_pages = FALSE;
-  }
-
-  if ($add_pages) {
-    $pages_raw = dlts_viewer_mongodb_load_by_item_identifier($identifier, 'dlts_books_page');
-    foreach ($pages_raw as $page_raw) {
-      $page = array(
-        'page' => array(
-          'isPartOf' => $identifier,
-          'realPageNumber' => $page_raw['realPageNumber'],
-          'sequence' => $page_raw['sequence'],
-          'cm' => array(
-            'uri' => ($page_raw['cm']['uri']),
-            'width' => $page_raw['cm']['width'],
-            'height' => $page_raw['cm']['height'],
-          ),
-        ),
-      );
-      $pages[] = $page;
-    }
-  }
-
   $image_metadata_uri = "$base_url/iiif/2/books/$identifier/1/full/150,/0/default.jpg";
 
   $response = array(
@@ -1038,7 +1011,6 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     'representativeImage' => $representative_image,
     'thumbnail' => $image_metadata_uri,
     'metadata' => $fields,
-    'pages' => $pages,
   );
 
   $realpath = drupal_realpath('public://') . '/datasource';
@@ -1476,7 +1448,6 @@ function dlts_viewer_djakota_resolver_stream() {
     $etag = md5($content);
     header('Content-type: image/jpeg');
     header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET');
     header("Content-Transfer-Encoding: binary");
     header("Etag: $etag");
     echo $content;
