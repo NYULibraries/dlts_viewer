@@ -132,7 +132,6 @@ function dlts_viewer_is_series_book(&$entity) {
   $entity_type = 'node';
   $bundle = 'dlts_series_book';
   $book_nid = $entity->nid;
-  $book_entity = $entity;
   $book_wrapper = entity_metadata_wrapper($entity_type, $entity);
   $book_long_title = $book_wrapper->field_title->value();
   $collections = $book_wrapper->field_collection->value();
@@ -151,29 +150,38 @@ function dlts_viewer_is_series_book(&$entity) {
       $entity->isSeriesBook = TRUE;
       $nids = array_keys($result['node']);
       foreach ($nids as $nid) {
-        $title = $book_long_title;
+        $volume_title = $book_long_title;
         $series_book_node = node_load($nid);
-        $series_book_wrapper = entity_metadata_wrapper($entity_type, $series_book_node);
-        $series = $series_book_wrapper->field_series->value();
-        $volume_number = $series_book_wrapper->field_volume_number->value();
-        $volume_number_str = $series_book_wrapper->field_volume_number_str->value();
-        if (!empty($volume_number_str)) {
-          $title = $book_long_title . ' ' . $volume_number_str;
+        $series_book_wrapper = entity_metadata_wrapper('node', $series_book_node);
+        if ($series_book_wrapper->getIdentifier()) {
+          $field_series = $series_book_wrapper->field_series->value();
+          /*
+           * Check that the value still valid.
+           * A node can be deleted without using the proper Drupal API
+           * and this will not fire up the cleanup hooks
+           */
+          if ($field_series) {
+            $volume_number = $series_book_wrapper->field_volume_number->value();
+            $volume_number_str = $series_book_wrapper->field_volume_number_str->value();
+            if (!empty($volume_number_str)) {
+              $volume_title = $book_long_title . ' ' . $volume_number_str;
+            }
+            elseif (!empty($volume_number)) {
+              $volume_title = $book_long_title . ' ' . $volume_number;
+            }
+            $series_wrapper = entity_metadata_wrapper($entity_type, $field_series);
+            $series_identifier = $series_wrapper->field_identifier->value();
+            $is_part_of[] = array(
+              'series_identifier' => $series_identifier,
+              'series' => $series_book_node->title,
+              'volume_label' => $volume_title,
+              'volume_number' => $volume_number,
+              'volume_number_str' => $volume_number_str,
+              'collection_label' => $collection_label,
+              'collection_code' => $collection_code,
+            );
+          }
         }
-        elseif (!empty($volume_number)) {
-          $title = $book_long_title . ' ' . $volume_number;
-        }
-        $series_wrapper = entity_metadata_wrapper($entity_type, $series);
-        $series_identifier = $series_wrapper->field_identifier->value();
-        $is_part_of[] = array(
-          'series_identifier' => $series_identifier,
-          'series' => $series->title,
-          'volume_label' => $title,
-          'volume_number' => $volume_number,
-          'volume_number_str' => $volume_number_str,
-          'collection_label' => $collection_label,
-          'collection_code' => $collection_code,
-        );
       }
     }
   }

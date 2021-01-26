@@ -93,6 +93,13 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   );
 
+  $items['api/v1/maps'] = array(
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_api_list_maps',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints.inc',
+  );
+
   // @link api/v1/books/princeton_aco000102/1
   $items['api/v1/books/%dlts_book/%dlts_book_page'] = array(
     'title' => 'JSON representation of the book',

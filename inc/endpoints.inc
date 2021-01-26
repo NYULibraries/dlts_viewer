@@ -444,8 +444,119 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
     $entity = node_load('node', $node->nid);
     $book = entity_metadata_wrapper('node', $entity);
     $response['response']['docs'][] = array(
-      'title' => trim($entity->title),
+      'title' => trim($book->field_title->value()),
       'identifier' => $book->field_identifier->value(),
+    );
+  }
+
+  return $response;
+}
+
+/**
+ * List maps.
+ *
+ * @param int $start
+ *   Index to start.
+ * @param int $length
+ *   Length of items in request.
+ * @param string $requestedLang
+ *   Language code.
+ *
+ * @return json|array
+ *   A keyed array to be converted into JSON.
+ */
+function dlts_viewer_api_list_maps(int $start = 0, int $length = 15, $requestedLang = LANGUAGE_NONE) {
+
+  $availableLanguages = array_keys(language_list());
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  if (isset($query_parameters['rows']) && is_numeric($query_parameters['rows'])) {
+    $length = $query_parameters['rows'];
+  }
+
+  if (isset($query_parameters['start']) && is_numeric($query_parameters['start'])) {
+    $start = $query_parameters['start'];
+  }
+
+  $cnid = NULL;
+
+  if (isset($query_parameters['collection'])) {
+    $partner = NULL;
+    if (isset($query_parameters['partner'])) {
+      $partner = $query_parameters['partner'];
+    }
+    $cnid = dlts_viewer_collection_nids_by_code($query_parameters['collection'], $partner);
+  }
+
+  $filter = '';
+
+  if (isset($query_parameters['filter'])) {
+    $filter = $query_parameters['filter'];
+  }
+
+  // Need to make sure lang exists.
+  if (isset($query_parameters['lang']) && in_array($query_parameters['lang'], $availableLanguages)) {
+    $requestedLang = $query_parameters['lang'];
+  }
+
+  $count_query = new EntityFieldQuery();
+
+  $entities_query = new EntityFieldQuery();
+
+  $count_query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_map')
+    ->propertyCondition('language', $requestedLang)
+    ->propertyCondition('status', NODE_PUBLISHED);
+
+  if ($cnid) {
+    $count_query->fieldCondition('field_collection', 'nid', $cnid, 'IN');
+  }
+
+  if ($filter) {
+    // Equal to "contains".
+    $count_query->fieldCondition('field_identifier', 'value', '%' . db_like($filter) . '%', 'like');
+  }
+
+  // Run the query as user 0.
+  $count = $count_query->addMetaData('account', user_load(0))
+    ->count()
+    ->execute();
+
+  $entities_query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_map')
+    ->propertyCondition('status', NODE_PUBLISHED)
+    ->propertyCondition('language', $requestedLang);
+
+  if ($cnid) {
+    $entities_query->fieldCondition('field_collection', 'nid', $cnid, 'IN');
+  }
+
+  if ($filter) {
+    // Equal to "contains".
+    $entities_query->fieldCondition('field_identifier', 'value', '%' . db_like($filter) . '%', 'like');
+  }
+
+  $entities = $entities_query->range($start, $length)
+    ->addMetaData('account', user_load(0))
+    ->execute();
+
+  // Try to mimic Apache Solr response.
+  $response = array(
+    'response' => array(
+      'numFound' => $count,
+      'start' => $start,
+      'docs' => array(),
+    ),
+  );
+
+  foreach ($entities['node'] as $node) {
+    $entity = node_load('node', $node->nid);
+    $item = entity_metadata_wrapper('node', $entity);
+    $response['response']['docs'][] = array(
+      'title' => trim($item->field_title->value()),
+      'identifier' => $item->field_identifier->value(),
     );
   }
 
