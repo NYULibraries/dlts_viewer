@@ -79,6 +79,7 @@ function _dlts_viewer_menu_iiif() {
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
   );
+
   // Request image.
   // @link https://iiif.io/api/image/2.0
   // @link http://localhost:9000/api/image/books/princeton_aco000102/1/full/max/0/default.jpg
@@ -93,5 +94,6 @@ function _dlts_viewer_menu_iiif() {
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
   );
+
   return $items;
 }
