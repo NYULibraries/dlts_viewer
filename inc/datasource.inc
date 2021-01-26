@@ -6,6 +6,26 @@
  */
 
 /**
+ * Get nid by identifier.
+ *
+ * @param string $identifier
+ *   Identifier.
+ */
+function nid_by_identifier($identifier, $language = LANGUAGE_NONE) {
+  $query = new EntityFieldQuery();
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->propertyCondition('language', $language)
+    ->fieldCondition('field_identifier', 'value', $identifier, '=')
+    ->execute();
+  if (empty($result['node'])) {
+    return FALSE;
+  }
+  $keys = array_keys($result['node']);
+  return (int) $keys[0];
+}
+
+/**
  * List of translation.
  *
  * @param string $identifier
@@ -460,6 +480,11 @@ function dlts_viewer_collection_nids_by_code($code, $partnerCode = NULL) {
   }
 }
 
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
 function dlts_viewer_books_isPartof_multivolume($nid) {
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'node')
@@ -475,6 +500,11 @@ function dlts_viewer_books_isPartof_multivolume($nid) {
   }
 }
 
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
 function dlts_viewer_books_isPartof_series($nid) {
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'node')
@@ -490,6 +520,11 @@ function dlts_viewer_books_isPartof_series($nid) {
   }
 }
 
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
 function dlts_viewer_subject_tid($subject, $vid) {
   $global_subjects = &drupal_static('global_subjects');
   if (empty($global_subjects)) {
@@ -512,6 +547,11 @@ function dlts_viewer_subject_tid($subject, $vid) {
   return $global_subjects;
 }
 
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
 function dlts_viewer_subject_vocabulary_vid() {
   $global_vocabulary_vid = &drupal_static('global_vocabulary_vid');
   if (empty($global_vocabulary_vid)) {
@@ -520,8 +560,10 @@ function dlts_viewer_subject_vocabulary_vid() {
   return $global_vocabulary_vid;
 }
 
-// Return a list of created %d-%m-%Y. Usuful to select batch of nodes
-// that were publish in a specific day.
+/**
+ * Returns a list of created %d-%m-%Y. Usuful to select
+ * batch of nodes that were publish in a specific day.
+ */
 function dlts_viewer_batch_days($collectionCode = NULL, $status = 1, $requestedLang = 'en') {
   $dates = array();
   $query = "SELECT DISTINCT DATE_FORMAT(FROM_UNIXTIME(node.created), '%d-%m-%Y') created FROM node ";
@@ -548,6 +590,11 @@ function dlts_viewer_batch_days($collectionCode = NULL, $status = 1, $requestedL
   return $dates;
 }
 
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
 function dlts_viewer_collections($collections) {
   $value = array();
   foreach ($collections as $collection) {
@@ -572,4 +619,40 @@ function dlts_viewer_collections($collections) {
     );
   }
   return $value;
+}
+
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
+function dlts_viewer_multivolume_book_by_book_nid($entity) {
+  $volumes = array();
+  // Only with books.
+  if ($entity->type == 'dlts_book') {
+    $query = new EntityFieldQuery();
+    $keys = array();
+    $result = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'dlts_multivol_book')
+      ->fieldCondition('field_book', 'nid', array($entity->nid))
+      ->execute();
+    if (!empty($result['node'])) {
+      $keys = array_keys($result['node']);
+      $nodes = node_load_multiple($keys);
+      if ($nodes) {
+        foreach ($nodes as $node) {
+          $wrapper = entity_metadata_wrapper('node', $node);
+          $multivol = $wrapper->field_multivol->value();
+          $volume_number = $wrapper->field_volume_number->value();
+          $volume_number_str = $wrapper->field_volume_number_str->value();
+          $volumes[] = array(
+            'multivol' => $multivol->nid,
+            'volume_number' => $volume_number,
+            'volume_number_str' => $volume_number_str,
+          );
+        }
+      }
+    }
+  }
+  return $volumes;
 }

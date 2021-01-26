@@ -12,11 +12,3 @@
 function dlts_solr_enable() {
   db_update('apachesolr_environment')->fields(array('env_id' => 'solr', 'name' => 'Discovery Apache Solr 6.x server', 'url' => 'http://stagediscovery.dlib.nyu.edu:8080/solr3_discovery/viewer'))->execute();
 }
-
-/**
- * Implements hook_uninstall().
- */
-function dlts_solr_uninstall() {
-  // Remove variables.
-  variable_del('dlts_solr_field_nyu_collectionId');
-}

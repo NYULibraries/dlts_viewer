@@ -21,16 +21,13 @@ function dlts_book_load($identifier) {
     $language = array(filter_xss($query_parameters['lang']));
   }
   $query = new EntityFieldQuery();
-
   $identifier = filter_xss($identifier);
-
   $result = $query->entityCondition('entity_type', 'node')->entityCondition('bundle', 'dlts_book')
     // Only load books that are published.
     ->propertyCondition('status', 1)
     ->propertyCondition('language', $language)
     ->fieldCondition('field_identifier', 'value', $identifier, '=')
     ->execute();
-
   if (!empty($result['node'])) {
     $keys = array_keys($result['node']);
     $nid = array_pop($keys);
@@ -95,7 +92,7 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
       /*
        * No error, update MongoDB record
        * @todo Consider using Drupal queue to update the record.
-       * See: https://api.drupal.org/api/drupal/modules!system!system.queue.inc/class/DrupalQueue/7
+       * link: https://api.drupal.org/api/drupal/modules!system!system.queue.inc/class/DrupalQueue/7
        */
       if (!isset($djatoka['error'])) {
         // Update $result reference with Image Server requested metadata.
@@ -131,14 +128,37 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
     }
   }
 
-  drupal_set_message(t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.', array('@sequence' => $sequence, '@identifier' => $isPartOf)), 'error');
+  drupal_set_message(
+    t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.',
+    array(
+      '@sequence' => $sequence,
+      '@identifier' => $isPartOf,
+    )
+  ), 'error');
 
-  watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', array('%identifier' => $isPartOf, '%sequence' => $sequence), WATCHDOG_NOTICE);
+  watchdog(
+    'MongoDB sequence not found',
+    'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.',
+    array(
+      '%identifier' => $isPartOf,
+      '%sequence' => $sequence,
+    ),
+    WATCHDOG_NOTICE
+  );
 
   // If $result is empty, retrun FALSE so that hook_menu can 404 redirect.
   return FALSE;
 }
 
+/**
+ * Load sequence.
+ *
+ * @param string $sequence
+ *   Sequence.
+ *
+ * @return array
+ *   Sequence.
+ */
 function dlts_book_canvas_page_load($sequence) {
   preg_match('/^p{1}([\d]+)$/', $sequence, $matches);
   if (!empty($matches)) {
@@ -150,6 +170,15 @@ function dlts_book_canvas_page_load($sequence) {
   return FALSE;
 }
 
+/**
+ * Load sequence.
+ *
+ * @param object $item
+ *   Item.
+ *
+ * @return array
+ *   Item.
+ */
 function page_item_load($item) {
   preg_match('/^([\d]+)/', $item, $matches);
   // http://localhost:9000/iiif/2/books/princeton_aco000102/1/info.json
@@ -176,9 +205,7 @@ function page_item_load($item) {
  * @return array
  *   Book sequence.
  */
- function djakota_book_page_load(int $sequence, array $map) {
-  print_r($map);
-  die(__FUNCTION__);
+function djakota_book_page_load($sequence, array $map) {
   if (isset($sequence['uri'])) {
     // Load djatoka helper.
     module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
