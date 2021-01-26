@@ -84,11 +84,11 @@ function create_dlts_series_book($node) {
   else {
     $ewrapper->field_identifier->set(uniqid());
   }
-  if ($node->volume_number) {
-    $ewrapper->field_volume_number->set((int) $node->volume_number);
+  if ($node->volumeNumber) {
+    $ewrapper->field_volume_number->set((int) $node->volumeNumber);
   }
-  if ($node->volume_number_str) {
-    $ewrapper->field_volume_number_str->set($node->volume_number_str);
+  if ($node->volumeDisplay) {
+    $ewrapper->field_volume_number_str->set($node->volumeDisplay);
   }
   if ($node->book) {
     $book_exist = book_nid($node->book, 'en');

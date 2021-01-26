@@ -1,9 +1,21 @@
 <?php
+
+/**
+ * @file
+ * Photos callbacks.
+ */
+
+/**
+ * Register Photos routes.
+ *
+ * @return array
+ *   Items to register in the menu system.
+ */
 function _dlts_viewer_menu_photo() {
 
   $items = array();
-  
-  /** Render photo object */
+
+  // Render photo object.
   $items['photos/%dlts_photo_set/mode/embed'] = array(
     'title' => 'Book metadata display',
     'access arguments' => array('access content'),
@@ -21,7 +33,7 @@ function _dlts_viewer_menu_photo() {
     'delivery callback' => 'drupal_deliver_html_page',
     'type' => MENU_CALLBACK,
   );
-  
+
   $items['photos/%dlts_photo_set/%dlts_photo'] = array(
     'title' => 'Photo page',
     'access arguments' => array('access content'),
@@ -38,7 +50,7 @@ function _dlts_viewer_menu_photo() {
     'page arguments' => array(1, 2, 3),
     'type' => MENU_CALLBACK,
   );
-  
+
   $items['photos/%dlts_photo_set/set'] = array(
     'title' => 'Book metadata display',
     'access arguments' => array('access content'),
