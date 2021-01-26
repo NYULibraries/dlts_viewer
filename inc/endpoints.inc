@@ -554,11 +554,6 @@ function dlts_viewer_api_list_maps(int $start = 0, int $length = 15, $requestedL
   foreach ($entities['node'] as $node) {
     $entity = node_load('node', $node->nid);
     $response['response']['docs'][] = dlts_viewer_api_v1_map($entity);
-    // $item = entity_metadata_wrapper('node', $entity);
-    // array(
-    //   'title' => trim($item->field_title->value()),
-    //   'identifier' => $item->field_identifier->value(),
-    // );
   }
 
   return $response;
