@@ -272,7 +272,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
     $entity->title = t(
       '@title @volume',
       array(
-        '@title' => $multivolume_book->title,
+        '@title' => $entity->title,
         '@volume' => $volume_number_str,
       )
     );

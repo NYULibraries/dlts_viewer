@@ -1524,15 +1524,12 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
       if (!isset($source['identifier'])) {
         throw new Exception('Field identifier can not be empty.');
       }
-
       $entity = create_dlts_book_from_json($source);
-
       if ($entity) {
         return array(
           'data' => $entity,
         );
       }
-
     }
   }
   catch (Exception $e) {
