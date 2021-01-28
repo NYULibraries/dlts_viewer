@@ -84,10 +84,10 @@ function create_dlts_series_book($node) {
   else {
     $ewrapper->field_identifier->set(uniqid());
   }
-  if ($node->volumeNumber) {
+  if (isset($node->volumeNumber)) {
     $ewrapper->field_volume_number->set((int) $node->volumeNumber);
   }
-  if ($node->volumeDisplay) {
+  if (isset($node->volumeDisplay)) {
     $ewrapper->field_volume_number_str->set($node->volumeDisplay);
   }
   if ($node->book) {
