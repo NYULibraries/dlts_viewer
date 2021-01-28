@@ -28,10 +28,10 @@
  * @ingroup dlts_viewer
  */
 class FileFilesServerStreamWrapper extends DrupalPublicStreamWrapper {
-	/**
-	 * Return FileServer URL
-	 */
-	function getFileServerUrl() {
+  /**
+   * Return FileServer URL.
+   */
+  function getFileServerUrl() {
     $base_url = $GLOBALS['base_url'] . '/' . variable_get('file_public_path', conf_path() . '/files');
     return variable_get('dlts_viewer_fileserver_host', $base_url);
   }
@@ -48,7 +48,7 @@ class FileFilesServerStreamWrapper extends DrupalPublicStreamWrapper {
 
 class PDFServerStreamWrapper extends DrupalPublicStreamWrapper {
 	/**
-	 * Return FileServer URL
+	 * Return FileServer URL.
 	 */
 	function getPDFServerUrl() {
     $base_url = $GLOBALS['base_url'] . '/' . variable_get('file_public_path', conf_path() . '/files');

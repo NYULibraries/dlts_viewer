@@ -68,8 +68,8 @@ function dlts_viewer_books(int $start = 0, int $length = 25) {
       'docs' => array(),
     ),
   );
-  foreach ((array) $nodes as $node) {
-    $response['response']['docs'][] = dlts_viewer_book($node, FALSE);
+  foreach ($nodes as $node) {
+    $response['response']['docs'][] = dlts_viewer_api_book_json($node, $node->language);
   }
   return $response;
 }
@@ -98,12 +98,13 @@ function dlts_viewer_book_metadata($book) {
   $collections = array();
   $ewrapper = entity_metadata_wrapper('node', $book);
   foreach ($type['fields'] as $field) {
-    $name = str_replace('field_', '', $field['field_name']);
-    $raw_value = $ewrapper->$field['field_name']->value();
+    $field_name = $field['field_name'];
+    $name = str_replace('field_', '', $field_name);
+    $raw_value = $ewrapper->$field_name->value();
     if ($field['type'] == 'options_buttons') {
       $value = $field['settings']['allowed_values'][$raw_value];
     }
-    elseif ($field['type'] == 'link_field' && isset($raw_value['url'] )) {
+    elseif ($field['type'] == 'link_field' && isset($raw_value['url'])) {
       $value = $raw_value['url'];
     }
     elseif ($field['type'] == 'file_generic') {
@@ -135,7 +136,7 @@ function dlts_viewer_book_metadata($book) {
   return array(
     'entity_title' => !empty($title) ? $title : $book->title,
     'identifier' => $fields['identifier']['value'][0],
-    'entity_path' => url('books/' . $identifier . '/1', array('absolute' => TRUE)),
+    'entity_path' => url('books/' . $fields['identifier']['value'][0] . '/1', array('absolute' => TRUE)),
     'base_url' => url('', array('absolute' => TRUE)),
     'entity_language' => $book->language,
     'entity_status' => $book->status,
@@ -219,6 +220,7 @@ function dlts_viewer_list_collections(int $start = 0, int $length = 100) {
 
 /**
  * List topics.
+ * @link http://localhost:9000/api/v1/topics
  *
  * @param int $start
  *   Index to start.
@@ -255,6 +257,14 @@ function dlts_viewer_api_list_topics(int $start = 0, int $length = 50, $requeste
   if (isset($query_parameters['lang']) && in_array($query_parameters['lang'], $availableLanguages)) {
     $requestedLang = $query_parameters['lang'];
   }
+
+  // Status, default to published items.
+  $status = 1;
+  if (isset($query_parameters['status']) && is_numeric($query_parameters['status'])) {
+    $status = (int) $query_parameters['status'] < 1 ? 0 : 1;
+  }
+
+  $collectionCode = 'aco';
 
   $sql_dates = "
     SELECT
@@ -293,16 +303,18 @@ function dlts_viewer_api_list_topics(int $start = 0, int $length = 50, $requeste
     $length,
     array(
       ':language' => $requestedLang,
-      ':collection_code' => 'aco',
+      ':collection_code' => $collectionCode,
       ':date' => $filter_date,
-      'status' => 1,
+      'status' => $status,
     )
   )->fetchAll();
 
-  $dates = db_query($sql_dates, array(
-    ':language' => $requestedLang,
-    ':collection_code' => 'aco',
-    ':status' => 1,
+  $dates = db_query(
+    $sql_dates,
+    array(
+      ':language' => $requestedLang,
+      ':collection_code' => $collectionCode,
+      ':status' => $status,
     )
   )->fetchAll();
 
@@ -381,7 +393,7 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
 
   $entities_query = new EntityFieldQuery();
 
-  // https://www.drupal.org/docs/7/creating-custom-modules/howtos/how-to-use-entityfieldquery-for-drupal-7
+  // @link https://www.drupal.org/docs/7/creating-custom-modules/howtos/how-to-use-entityfieldquery-for-drupal-7
   $count_query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_book')
     ->propertyCondition('language', $requestedLang)
@@ -432,9 +444,116 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
     $entity = node_load('node', $node->nid);
     $book = entity_metadata_wrapper('node', $entity);
     $response['response']['docs'][] = array(
-      'title' => trim($entity->title),
+      'title' => trim($book->field_title->value()),
       'identifier' => $book->field_identifier->value(),
     );
+  }
+
+  return $response;
+}
+
+/**
+ * List maps.
+ *
+ * @param int $start
+ *   Index to start.
+ * @param int $length
+ *   Length of items in request.
+ * @param string $requestedLang
+ *   Language code.
+ *
+ * @return json|array
+ *   A keyed array to be converted into JSON.
+ */
+function dlts_viewer_api_list_maps(int $start = 0, int $length = 15, $requestedLang = 'en') {
+
+  $availableLanguages = array_keys(language_list());
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  if (isset($query_parameters['rows']) && is_numeric($query_parameters['rows'])) {
+    $length = $query_parameters['rows'];
+  }
+
+  if (isset($query_parameters['start']) && is_numeric($query_parameters['start'])) {
+    $start = $query_parameters['start'];
+  }
+
+  $cnid = NULL;
+
+  if (isset($query_parameters['collection'])) {
+    $partner = NULL;
+    if (isset($query_parameters['partner'])) {
+      $partner = $query_parameters['partner'];
+    }
+    $cnid = dlts_viewer_collection_nids_by_code($query_parameters['collection'], $partner);
+  }
+
+  $filter = '';
+
+  if (isset($query_parameters['filter'])) {
+    $filter = $query_parameters['filter'];
+  }
+
+  // Need to make sure lang exists.
+  if (isset($query_parameters['lang']) && in_array($query_parameters['lang'], $availableLanguages)) {
+    $requestedLang = $query_parameters['lang'];
+  }
+
+  $count_query = new EntityFieldQuery();
+
+  $entities_query = new EntityFieldQuery();
+
+  $count_query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_map')
+    ->propertyCondition('language', $requestedLang)
+    ->propertyCondition('status', NODE_PUBLISHED);
+
+  if ($cnid) {
+    $count_query->fieldCondition('field_collection', 'nid', $cnid, 'IN');
+  }
+
+  if ($filter) {
+    // Equal to "contains".
+    $count_query->fieldCondition('field_identifier', 'value', '%' . db_like($filter) . '%', 'like');
+  }
+
+  // Run the query as user 0.
+  $count = $count_query->addMetaData('account', user_load(0))
+    ->count()
+    ->execute();
+
+  $entities_query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_map')
+    ->propertyCondition('status', NODE_PUBLISHED)
+    ->propertyCondition('language', $requestedLang);
+
+  if ($cnid) {
+    $entities_query->fieldCondition('field_collection', 'nid', $cnid, 'IN');
+  }
+
+  if ($filter) {
+    // Equal to "contains".
+    $entities_query->fieldCondition('field_identifier', 'value', '%' . db_like($filter) . '%', 'like');
+  }
+
+  $entities = $entities_query->range($start, $length)
+    ->addMetaData('account', user_load(0))
+    ->execute();
+
+  // Try to mimic Apache Solr response.
+  $response = array(
+    'response' => array(
+      'numFound' => $count,
+      'start' => $start,
+      'docs' => array(),
+    ),
+  );
+
+  foreach ($entities['node'] as $node) {
+    $entity = node_load('node', $node->nid);
+    $response['response']['docs'][] = dlts_viewer_api_v1_map($entity);
   }
 
   return $response;
@@ -560,6 +679,308 @@ function _dlts_viewer_book_thumbnails_loader($identifier, $page = 0, $per_page =
 }
 
 /**
+ * Map.
+ *
+ * @param object $entity
+ *   Index to start.
+ * @param string $requestedLang
+ *   Language code.
+ */
+function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
+
+  global $base_url;
+
+  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
+
+  $image_server = variable_get('dlts_viewer_image_server', 'http://127.0.0.1:8182');
+
+  $fields = $series = $volumes = $collections = $pages = array();
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  // Need to make sure lang exists.
+  if (isset($query_parameters['lang'])) {
+    $requestedLang = $query_parameters['lang'];
+  }
+
+  $availableLanguages = language_list();
+
+  // Default to left-to-rigth.
+  // @todo will set later on using the book field "field_language_code"
+  // and the language map from $availableLanguages.
+  $worldDirection = 'rtl';
+
+  // Entity API wrapper.
+  $book = entity_metadata_wrapper('node', $entity);
+
+  // Identifier.
+  $identifier = $book->field_identifier->value();
+
+  $field_language_code = $book->field_language_code->value();
+
+  $field_language_code_pop = array_pop($field_language_code);
+
+  $language_code = dlts_viewer_map_language_code($field_language_code_pop);
+
+  foreach ($availableLanguages as $code => $lang) {
+    if (
+      // MUST check if language is enable.
+      $availableLanguages[$code]->enabled &&
+      // Check if this books exists in the given language.
+      // 2 different strategies to check.
+      (
+        // 1) check if loaded book language match the language
+        $code == $entity->language ||
+        // If not,
+        // 2) This book is not the same language as $code,
+        // query the book using the identifier and $code
+        // if we have a nid, we have a book.
+        map_nid($identifier, $code)
+      )
+    ) {
+      $availableLanguages[$code]->direction = ($availableLanguages[$code]->direction == 0) ? 'ltr' : 'rtl';
+      $availableLanguages[$code]->default = ($code == $requestedLang) ? 1 : 0;
+      // We don't have any use for this properties.
+      unset($availableLanguages[$code]->prefix);
+      unset($availableLanguages[$code]->plurals);
+      unset($availableLanguages[$code]->formula);
+      unset($availableLanguages[$code]->domain);
+      unset($availableLanguages[$code]->weight);
+      unset($availableLanguages[$code]->javascript);
+    }
+    else {
+      // Language is not enabled.
+      unset($availableLanguages[$code]);
+    }
+  }
+
+  // Field representative image.
+  $fri = $book->field_representative_image->value();
+
+  $representative_image = file_create_url($fri['uri']);
+
+  // Default title of the book.
+  $displayTitle = $title = trim($book->field_title->value());
+
+  $type = dlts_utilities_content_types_type($entity->type);
+
+  foreach ($type['fields'] as $field) {
+    $name = str_replace('field_', '', $field['field_name']);
+    $field_name = $field['field_name'];
+    // Get the raw value of the field.
+    $raw_value = $book->$field_name->value();
+    $fields[$name] = array(
+      'label' => locale($field['label'], NULL, $requestedLang),
+      'value' => NULL,
+    );
+    switch ($name) {
+      case 'author':
+      case 'contributor':
+      case 'creator':
+      case 'description':
+      case 'dimensions':
+      case 'editor':
+      case 'geographic_coordinates':
+      case 'isbn':
+      case 'number':
+      case 'volume':
+      case 'ocr_text':
+      case 'other_version':
+      case 'page_count':
+      case 'publication_date_text':
+      case 'publication_location':
+      case 'publisher':
+      case 'scan_date':
+      case 'scanning_notes':
+      case 'subtitle':
+      case 'call_number':
+        $fields[$name]['value'] = $raw_value;
+        break;
+
+      case 'binding_orientation':
+        $fields[$name]['value'] = $field['settings']['allowed_values'][$raw_value];
+        break;
+
+      case 'collection':
+        $fields[$name]['value'] = array();
+        $collections = dlts_viewer_collections($raw_value);
+        foreach ($collections as $collection) {
+          unset($collection['title']);
+          unset($collection['type']);
+          unset($collection['language']);
+          unset($collection['partner']['title']);
+          unset($collection['partner']['type']);
+          unset($collection['partner']['language']);
+          $collection['name'] = locale($collection['name'], NULL, $requestedLang);
+          $collection['partner']['name'] = locale($collection['partner']['name'], NULL, $requestedLang);
+          $fields[$name]['value'][] = $collection;
+        }
+        break;
+
+      case 'geographic_subject':
+        // @todo Find out how to deal with this.
+        unset($fields[$name]);
+        break;
+
+      case 'handle':
+        $fields[$name]['value'] = $raw_value['url'];
+        break;
+
+      case 'identifier':
+        unset($fields[$name]);
+        break;
+
+      case 'language':
+        $fields[$name]['value'] = array_pop($raw_value);
+        break;
+
+      case 'language_code':
+        $fields[$name]['value'] = array_pop($raw_value);
+        break;
+
+      case 'partner':
+        $partner_value = array();
+        foreach ($raw_value as $partner) {
+          $partner_wrapper = entity_metadata_wrapper('node', $partner);
+          $partner_value[] = array(
+            'identifier' => $partner_wrapper->field_identifier->value(),
+            'code' => $partner_wrapper->field_code->value(),
+            'name' => locale($partner_wrapper->field_name->value(), NULL, $requestedLang),
+          );
+        }
+        $fields[$name]['value'] = $partner_value;
+        unset($partner_value);
+        break;
+
+      case 'pdf_file':
+        $fields[$name]['value'] = array(
+          'hi' => array(),
+          'lo' => array(),
+        );
+        foreach ($raw_value as $value) {
+          $data = array(
+            'uri' => $value['uri'],
+            'label' => $value['label'],
+          );
+          $data['size'] = field_fileserver_get_pdf_filesize($data);
+          $data['uri'] = file_create_url($data['uri']);
+          $filename = pathinfo($data['uri'], PATHINFO_FILENAME);
+          preg_match('/_(hi|lo)/', $filename, $matches);
+          if (isset($matches) && isset($matches[1])) {
+            switch ($matches[1]) {
+              case 'hi':
+                $fields[$name]['value']['hi'] = array(
+                  'label' => locale('High-resolution', NULL, $requestedLang),
+                  'uri' => $data['uri'],
+                  'searchable' => FALSE,
+                  'size' => $data['size'],
+                );
+                break;
+
+              case 'lo':
+                $fields[$name]['value']['lo'] = array(
+                  'label' => locale('Low-resolution', NULL, $requestedLang),
+                  'uri' => $data['uri'],
+                  'searchable' => FALSE,
+                  'size' => $data['size'],
+                );
+                break;
+            }
+          }
+        }
+        break;
+
+      case 'publication_date':
+        $fields[$name]['value'] = $raw_value['value'];
+        break;
+
+      case 'read_order':
+        // [0] => Left to right
+        // [1] => Right to left
+        $map = array(
+          0 => 'ltr',
+          1 => 'rtl',
+        );
+        $worldDirection = $fields[$name]['value'] = $map[$raw_value];
+        unset($map);
+        break;
+
+      case 'representative_image':
+        unset($fields[$name]);
+        break;
+
+      case 'rights':
+        $fields[$name]['value'] = trim($raw_value);
+        break;
+
+      case 'scan_order':
+        // [0] => Left to right
+        // [1] => Right to left
+        $map = array(
+          0 => 'ltr',
+          1 => 'rtl',
+        );
+        $fields[$name]['value'] = $map[$raw_value];
+        unset($map);
+        break;
+
+      case 'sequence_count':
+        $fields[$name]['value'] = (int) $raw_value;
+        break;
+
+      case 'subject':
+        $subjects = array();
+        foreach ($raw_value as $subject) {
+          $subjects[] = array(
+            'uuid' => $subject->uuid,
+            'name' => $subject->name,
+          );
+        }
+        $fields[$name]['value'] = $subjects;
+        unset($subjects);
+        break;
+
+      case 'title':
+        unset($fields[$name]);
+        break;
+
+      case 'topic':
+        $topics = array();
+        foreach ($raw_value as $topic) {
+          $topics[] = locale($topic, NULL, $requestedLang);
+        }
+        $fields[$name]['value'] = $topics;
+        unset($topics);
+        break;
+
+      case 'volume':
+        $fields['volumes'] = $volumes;
+        unset($fields[$name]);
+        break;
+
+    }
+  }
+
+  $response = array(
+    'title' => $title,
+    'displayTitle' => $displayTitle,
+    'type' => 'map',
+    'identifier' => $identifier,
+    'worldDirection' => $worldDirection,
+    'requestedLanguage' => $availableLanguages[$requestedLang],
+    'availableLanguages' => $availableLanguages,
+    'status' => (int) $entity->status,
+    'representativeImage' => $representative_image,
+    'thumbnail' => "$base_url/iiif/2/maps/$identifier/1/full/150,/0/default.jpg",
+    'metadata' => $fields,
+  );
+
+  return $response;
+
+}
+
+/**
  * Book.
  *
  * @param object $entity
@@ -627,7 +1048,6 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
       $availableLanguages[$code]->direction = ($availableLanguages[$code]->direction == 0) ? 'ltr' : 'rtl';
       $availableLanguages[$code]->default = ($code == $requestedLang) ? 1 : 0;
       // We don't have any use for this properties.
-      unset($availableLanguages[$code]->enabled);
       unset($availableLanguages[$code]->prefix);
       unset($availableLanguages[$code]->plurals);
       unset($availableLanguages[$code]->formula);
@@ -679,7 +1099,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
       $volume = $mb_wrapper->field_volume_number->value();
       // The book we map to this multivolume.
       $bs_wrapper = entity_metadata_wrapper('node', $mb_wrapper->field_book->value());
-      $volume_ispartof_collections = $collections = dlts_viewer_collection_json($mb_wrapper->field_collection->value());
+      $volume_ispartof_collections = $collections = dlts_viewer_collections($mb_wrapper->field_collection->value());
       $volumes_collection = [];
       foreach ($volume_ispartof_collections as $volume_ispartof_collection) {
         $volume_ispartof_collection = (array) $volume_ispartof_collection;
@@ -767,7 +1187,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
         'title' => $series_title,
         'identifier' => $series_book_identifier,
         'volumeNumber' => $series_wrapper->field_volume_number->value(),
-        'volumeDisplay' => 	$series_wrapper->field_volume_number_str->value(),
+        'volumeDisplay' => $series_wrapper->field_volume_number_str->value(),
         'isPartOf' => array(
           'title' => $parent_title,
           'identifier' => $parent_identifier,
@@ -822,7 +1242,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
       case 'collection':
         $fields[$name]['value'] = array();
-        $collections = dlts_viewer_collection_json($raw_value);
+        $collections = dlts_viewer_collections($raw_value);
         foreach ($collections as $collection) {
           unset($collection['title']);
           unset($collection['type']);
@@ -984,33 +1404,6 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
   $fields['series'] = $series;
 
-  // Check if we must include pages in the response.
-  if (isset($query_parameters['pages'])) {
-    $add_pages = TRUE;
-  }
-  else {
-    $add_pages = FALSE;
-  }
-
-  if ($add_pages) {
-    $pages_raw = dlts_viewer_mongodb_load_by_item_identifier($identifier, 'dlts_books_page');
-    foreach ($pages_raw as $page_raw) {
-      $page = array(
-        'page' => array(
-          'isPartOf' => $identifier,
-          'realPageNumber' => $page_raw['realPageNumber'],
-          'sequence' => $page_raw['sequence'],
-          'cm' => array(
-            'uri' => ($page_raw['cm']['uri']),
-            'width' => $page_raw['cm']['width'],
-            'height' => $page_raw['cm']['height'],
-          ),
-        ),
-      );
-      $pages[] = $page;
-    }
-  }
-
   $image_metadata_uri = "$base_url/iiif/2/books/$identifier/1/full/150,/0/default.jpg";
 
   $response = array(
@@ -1027,7 +1420,6 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     'representativeImage' => $representative_image,
     'thumbnail' => $image_metadata_uri,
     'metadata' => $fields,
-    'pages' => $pages,
   );
 
   $realpath = drupal_realpath('public://') . '/datasource';
@@ -1045,39 +1437,18 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 }
 
 /**
- * Book page.
+ * Djakota Book page.
  *
- * @param object $entity
- *   Index to start.
- * @param int $sequence
- *   Sequence number.
+ * @link http://localhost:9000/api/v1/books/princeton_aco000102
+ *
+ * @param array $sequence
+ *   Sequence object from MongoDB.
  */
-function dlts_viewer_djakota_book_page($entity, int $sequence) {
-  // Entity API wrapper.
-  $book = entity_metadata_wrapper('node', $entity);
-  // Book identifier.
-  $identifier = $book->field_identifier->value();
-  // Prevent cross-site-scripting.
-  $sequence = filter_xss($sequence);
-  $data = dlts_viewer_mongodb_load_sequence($sequence, $identifier, 'dlts_books_page');
-  if (isset($data['cm'])) {
-    if (isset($data['cm']['identifier'])) {
-      return $data['cm'];
-    }
-    elseif (isset($data['cm']['uri'])) {
-      // Load djatoka helper.
-      module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
-      return dlts_viewer_djatoka_request(
-        array(
-          'uri' => $data['cm']['uri'],
-        )
-      );
-    }
-  }
-  exit(1);
+function dlts_viewer_djakota_book_page(array $sequence) {
+  return $sequence;
 }
 
-// e.g., http://localhost:9000/viewer/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
+// @link http://localhost:9000/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
 function dlts_viewer_djakota_stream_book_page() {
 
   // Get query parameters.
@@ -1153,15 +1524,12 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
       if (!isset($source['identifier'])) {
         throw new Exception('Field identifier can not be empty.');
       }
-
       $entity = create_dlts_book_from_json($source);
-
       if ($entity) {
         return array(
           'data' => $entity,
         );
       }
-
     }
   }
   catch (Exception $e) {
@@ -1486,7 +1854,6 @@ function dlts_viewer_djakota_resolver_stream() {
     $etag = md5($content);
     header('Content-type: image/jpeg');
     header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET');
     header("Content-Transfer-Encoding: binary");
     header("Etag: $etag");
     echo $content;

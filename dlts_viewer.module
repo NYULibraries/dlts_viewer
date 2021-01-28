@@ -2,46 +2,46 @@
 
 /**
  * @file
- * DLTS Viewer module
+ * DLTS Viewer module.
  */
 
 /**
- * Load MongoDB helper
+ * Load MongoDB helper.
  */
 include_once 'inc/mongodb.inc';
 
 /**
- * Include wildcard loaders
+ * Include wildcard loaders.
  */
 include_once 'inc/loaders.inc';
 
 /**
- * Include hook_menu and all the module routes
+ * Include hook_menu and all the module routes.
  */
 include_once 'inc/routes.inc';
 
 /**
- * Include types
+ * Include types.
  */
 include_once 'inc/types.inc';
 
 /**
- * Include Views hooks and Views helpers (all things Views (module))
+ * Include Views hooks and Views helpers.
  */
 include_once 'inc/views.inc';
 
 /**
- * Include datasource helpers
+ * Include datasource helpers.
  */
 include_once 'inc/datasource.inc';
 
 /**
- * Include helpers and others
+ * Include helpers and others.
  */
 include_once 'inc/utils.inc';
 
 /**
- * Include theme functions and hook_theme
+ * Include theme functions and hook_theme.
  */
 include_once 'inc/themes.inc';
 
