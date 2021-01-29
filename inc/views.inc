@@ -20,9 +20,11 @@ function dlts_viewer_views_pre_render(&$view) {
         $node = $result->_field_data['field_multivol_node_nid']['entity'];
         $wrapper = entity_metadata_wrapper('node', $node);
         $number = $wrapper->field_volume_number_str->value();
-        $markup = $result->field_field_book_1[0]['rendered']['#markup'];
-        if (!strpos($markup, $number) !== FALSE) {
-          $result->field_field_book_1[0]['rendered']['#markup'] = $markup . ' ' . $number;
+        $book = $wrapper->field_book->value();
+        $book_wrapper = entity_metadata_wrapper('node', $book);
+        $field_title = $book_wrapper->field_title->value();
+        if (!strpos($field_title, $number) !== FALSE) {
+          $result->field_field_book_1[0]['rendered']['#markup'] = $field_title . ' ' . $number;
         }
       }
     }
