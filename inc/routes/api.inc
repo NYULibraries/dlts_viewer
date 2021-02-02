@@ -15,6 +15,15 @@ function _dlts_viewer_menu_api() {
 
   $items = array();
 
+  $items['api/v1/search'] = array(
+    'title' => 'Search',
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_search_json',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/search.inc',
+    'type' => MENU_CALLBACK,
+  );
+
   $items['sources/field/%'] = array(
     'title' => 'Cotent types',
     'access arguments' => array('access content'),
@@ -109,6 +118,17 @@ function _dlts_viewer_menu_api() {
     'load arguments' => array('%map', '%index'),
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
+  );
+
+  // @link http://localhost:9000/api/iiif/photos/5tb2rnch/2/full/250,/0/default.jpg
+  $items['api/iiif/photos/%dlts_photo_handle/%dlts_photo_sequence/%dlts_iiif_region/%dlts_iiif_size/%dlts_iiif_rotation/%dlts_iiif_quality'] = array(
+    'title' => 'III Image Photo sequence.',
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_dlts_photo_sequence_image_iiif',
+    'page arguments' => array(3, 4, 5, 6, 7, 8),
+    'load arguments' => array('%map', '%index'),
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/photo.inc',
   );
 
   // @link api/v1/princeton_aco000102/thumbnails
