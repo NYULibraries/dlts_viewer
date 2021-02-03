@@ -1767,9 +1767,8 @@ function dlts_viewer_api_v1_objects($version = NULL) {
   );
 }
 
-// e.g., http://localhost:9000/viewer/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
+// @link https://stage-sites.dlib.nyu.edu/viewer/api/v1/image/resolver?rft_id=http://dlib.nyu.edu/washingtonsquare/2333.1/0000008x/wsp_ln_7_8_02d.tif&svc_level=3
 function dlts_viewer_djakota_resolver_stream() {
-
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
