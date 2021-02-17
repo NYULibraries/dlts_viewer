@@ -488,11 +488,11 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   if ($field_rights_raw) {
     $required_statement = [
       'label' => [
-        'en' => locale('Rights', NULL, 'en')
+        'en' => locale('Rights', NULL, 'en'),
       ],
       'value' => [
         'en' => [
-          $field_rights_raw
+          $field_rights_raw,
         ]
       ]
     ];
@@ -514,8 +514,8 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
       $entity,
       array(
         'sequence' => $page['sequence'],
-        'width' => $page['cm']['width'],
-        'height' => $page['cm']['height'],
+        'width' => (int) $page['cm']['width'],
+        'height' => (int) $page['cm']['height'],
       )
     );
   }
@@ -572,7 +572,8 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     //     ),
     //   ),
     // ),
-    'rendering' => $pdfs, // also add the HTML view
+    // also add the HTML view
+    'rendering' => $pdfs,
   );
 
   if (isset($fields['field_description']) && !empty($fields['field_description']['value'])) {
@@ -689,8 +690,8 @@ function dlts_viewer_iiif_book_page_canvas($type, $resource, $page) {
         (string) $sequence,
       ),
     ),
-    'width' => $page['width'],
-    'height' => $page['height'],
+    'width' => (int) $page['width'],
+    'height' => (int) $page['height'],
     'items' => array(
       dlts_viewer_iiif_book_page_annotation_page(
         $type,
@@ -739,8 +740,8 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
       'id' => $image,
       'format' => 'image/jpeg',
       'label' => 'Primary Colour',
-      'height' => $item['height'],
-      'width' => $item['width'],
+      'height' => (int) $item['height'],
+      'width' => (int) $item['width'],
       'service' => array(
         'type' => 'ImageService2',
         'profile' => 'level1',
