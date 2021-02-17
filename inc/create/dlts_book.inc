@@ -9,7 +9,7 @@
  * Given a JSON representation of a book, create DLTS Books.
  */
 function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE) {
-  module_load_include('inc', 'dlts_viewer', 'inc/save.dlts_book');
+  module_load_include('inc', 'dlts_viewer', 'inc/save/dlts_book');
 
   $dimensions = NULL;
 
@@ -223,6 +223,7 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
     $publication_date_text = $metadata->publication_date_text->value[0];
   }
 
+  $representative_image = [];
   if (isset($metadata->representative_image) && !empty($metadata->representative_image)) {
     if (!$legacy) {
       $representative_image = array(
@@ -372,13 +373,21 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
           continue;
         }
         if (strpos($pdf_uri, '_hi')) {
-          $pdf_files[] = array('file' => $pdf_uri, 'label' => 'High-resolution');
+          $pdf_files[] = array(
+            'file' => $pdf_uri,
+            'label' => 'High-resolution',
+          );
         }
         elseif (strpos($pdf_uri, '_lo')) {
-          $pdf_files[] = array('file' => $pdf_uri, 'label' => 'Low-resolution');
+          $pdf_files[] = array(
+            'file' => $pdf_uri,
+            'label' => 'Low-resolution',
+          );
         }
         else {
-          $pdf_files[] = array('file' => $pdf_uri);
+          $pdf_files[] = array(
+            'file' => $pdf_uri,
+          );
         }
       }
     }

@@ -1497,10 +1497,8 @@ function dlts_viewer_djakota_stream_book_page() {
 }
 
 function dlts_viewer_api_v1_dlts_book_objects($source) {
-  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_book');
-
+  module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book');
   $apiVersion = 'v1';
-
   try {
 
     if ($source['entity_type'] !== 'dlts_book') {
@@ -1549,6 +1547,7 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
     $entity_types = array(
       'book',
       'photo_set',
+      'postcard',
     );
 
     $datasource = (array) json_decode(
@@ -1556,6 +1555,37 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
     );
 
     switch ($datasource['type']) {
+      case 'postcard':
+        try {
+          // Check if request has all the keys we required.
+          if (!isset($datasource['identifier'])) {
+            throw new Exception('Field identifier can not be empty.');
+          }
+          if (!isset($datasource['metadata'])) {
+            throw new Exception('Field metadata can not be empty.');
+          }
+          if (!isset($datasource['status'])) {
+            throw new Exception('Field status can not be empty.');
+          }
+          module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_postcard');
+          $entity = create_dlts_dlts_postcard_from_json($datasource);
+          if ($entity) {
+            return array(
+              'data' => $entity,
+            );
+          }
+          else {
+            throw new Exception('Unexpected error.');
+          }
+        }
+        catch (Exception $e) {
+          watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
+          return array(
+            'error' => $e->getMessage(),
+          );
+        }
+        break;
+
       case 'book':
         try {
           // Check if request has all the keys we required.
@@ -1568,10 +1598,7 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
           if (!isset($datasource['status'])) {
             throw new Exception('Field status can not be empty.');
           }
-          if (!isset($datasource['status'])) {
-            throw new Exception('Field status can not be empty.');
-          }
-          module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_book.1.0.1');
+          module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book.1.0.1');
           $entity = create_dlts_book_from_json_v1_0_1($datasource);
           if ($entity) {
             return array(
@@ -1603,7 +1630,7 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
 
 function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
 
-  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_photo_set');
+  module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_photo_set');
 
   $apiVersion = 'v1';
 
@@ -1737,18 +1764,18 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
  * API callback.
  */
 function dlts_viewer_api_v1_objects($version = NULL) {
-
   // @todo Also filter by hosts with access
-  if (user_access('dlts create object')) {
+  if (user_access('dlts create object') && $_SERVER['REQUEST_METHOD'] == 'POST') {
     $datasource = array();
     $entity_types = array(
       'dlts_book',
       'dlts_photo_set',
+      'dlts_postcard',
+      'dlts_map',
     );
     $datasource = (array) json_decode(
       file_get_contents('php://input')
     );
-
     switch ($version) {
       case 'v1':
         if (in_array($datasource['entity_type'], $entity_types)) {
@@ -1758,6 +1785,10 @@ function dlts_viewer_api_v1_objects($version = NULL) {
 
             case 'dlts_photo_set':
               return dlts_viewer_api_v1_dlts_photo_set_objects($datasource);
+
+            case 'dlts_postcard':
+              module_load_include('inc', 'dlts_viewer', 'inc/endpoints/postcard');
+              return dlts_viewer_api_v1_dlts_postcard_objects($datasource);
           }
         }
     }

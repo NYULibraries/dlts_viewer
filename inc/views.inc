@@ -14,7 +14,12 @@
  */
 function dlts_viewer_views_pre_render(&$view) {
   if ($view->name == 'mv') {
+    $language = NULL;
     $results = $view->result;
+    $query_parameters = drupal_get_query_parameters();
+    if (isset($query_parameters['lang'])) {
+      $language = array(filter_xss($query_parameters['lang']));
+    }
     foreach ($results as $key => $result) {
       if (isset($result->_field_data['field_multivol_node_nid']['entity'])) {
         $node = $result->_field_data['field_multivol_node_nid']['entity'];
@@ -22,7 +27,15 @@ function dlts_viewer_views_pre_render(&$view) {
         $number = $wrapper->field_volume_number_str->value();
         $book = $wrapper->field_book->value();
         $book_wrapper = entity_metadata_wrapper('node', $book);
-        $field_title = $book_wrapper->field_title->value();
+        if ($book->language != $language) {
+          $field_identifier = $book_wrapper->field_identifier->value();
+          $lang_book = dlts_book_load($field_identifier);
+          $lang_book_wrapper = entity_metadata_wrapper('node', $lang_book);
+          $field_title = $lang_book_wrapper->field_title->value();
+        }
+        else {
+          $field_title = $book_wrapper->field_title->value();
+        }
         if (!strpos($field_title, $number) !== FALSE) {
           $result->field_field_book_1[0]['rendered']['#markup'] = $field_title . ' ' . $number;
         }

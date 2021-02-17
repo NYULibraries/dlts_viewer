@@ -182,3 +182,16 @@ function dlts_viewer_mongodb_load_thumbnails($isPartOf, int $page = 0, int $per_
   }
   return FALSE;
 }
+
+function dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name) {
+  $items = array();
+  // $query = array('isPartOf' => $identifier);
+  $query = array('isPartOf' => $identifier, 'sequence' => 1);
+  $cursor = mongodb_collection($collection_name)->find($query);
+  $count = $cursor->count();
+  if ($count > 0) {
+    $cursor->sort(array('sequence' => 1));
+    return $cursor->skip(0);
+  }
+  return $items;
+}

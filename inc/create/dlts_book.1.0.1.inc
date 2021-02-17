@@ -12,7 +12,7 @@
  */
 function create_dlts_book_from_json_v1_0_1($data) {
 
-  module_load_include('inc', 'dlts_viewer', 'inc/save.dlts_book.1.0.1');
+  module_load_include('inc', 'dlts_viewer', 'inc/save/dlts_book.1.0.1');
 
   $dimensions = NULL;
 
