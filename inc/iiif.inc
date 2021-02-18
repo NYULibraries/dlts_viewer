@@ -432,6 +432,19 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   // and the language map from $availableLanguages.
   $viewingDirection = 'left-to-right';
 
+  $lang_map = array(
+    0 => 'left-to-right',
+    1 => 'right-to-left',
+  );
+
+  $field_language_code_raw = $wrapper->field_language_code->value();
+  if ($field_language_code_raw) {
+    $language_code_raw = dlts_viewer_map_language_code($field_language_code_raw);
+    if (isset($availableLanguages[$language_code_raw])) {
+      $viewingDirection = $lang_map[$availableLanguages[$language_code_raw]->direction];
+    }
+  }
+
   $behavior = array('individuals');
 
   $isMultivolume = FALSE;
@@ -458,11 +471,6 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   $summary = array();
 
-  $lang_map = array(
-    0 => 'left-to-right',
-    1 => 'right-to-left',
-  );
-
   $values = [];
   $fields = [];
 
@@ -488,7 +496,9 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   if ($field_rights_raw) {
     $required_statement = [
       'label' => [
-        'en' => [ locale('Rights', NULL, 'en') ],
+        'en' => [
+          locale('Rights', NULL, 'en'),
+        ],
       ],
       'value' => [
         'en' => [
@@ -543,7 +553,6 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
         'format' => 'text/html',
       ),
     ),
-    'requiredStatement' => $required_statement,
     // 'logo' => array(
     //   array(
     //     'id' => '/full/256,/0/default.jpg',
@@ -565,19 +574,15 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     //     ),
     //   ),
     // ),
-    // 'requiredStatement' => array(
-    //   'value' => array(
-    //     'en' => array(
-    //       'Terms of use: http://digital.bodleian.ox.ac.uk/terms.html',
-    //     ),
-    //   ),
-    // ),
-    // also add the HTML view
     'rendering' => $pdfs,
   );
 
   if (isset($fields['field_description']) && !empty($fields['field_description']['value'])) {
     $res['summary'] = $fields['field_description']['value'];
+  }
+
+  if (isset($required_statement)) {
+    $res['requiredStatement'] = $required_statement;
   }
 
   // // check if this books is part of a multi-volume
