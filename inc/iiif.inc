@@ -157,12 +157,16 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
 }
 
 function dlts_viewer_iiif_resource_manifest($type, $entity) {
+  $query_parameters = drupal_get_query_parameters();
+  // Use cache?
+  $cache = TRUE;
+  if (isset($query_parameters['reset'])) {
+    $cache = FALSE;
+  }
   switch ($type) {
     case 'dlts_book':
-      return dlts_viewer_iiif_book_manifest($entity, FALSE);
-      break;
+      return dlts_viewer_iiif_book_manifest($entity, $cache);
   }
-  die();
 }
 
 # https://iiif.io/api/presentation/3.0/#metadata
