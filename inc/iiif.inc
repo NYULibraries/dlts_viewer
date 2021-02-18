@@ -479,7 +479,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
       if (!isset($fields[$name])) {
         $fields[$name] = [];
       }
-      $fields[$name]['label'][$lang] = $value['label'];
+      $fields[$name]['label'][$lang] = [$value['label']];
       $fields[$name]['value'][$lang] = $value['value'];
     }
   }
@@ -493,8 +493,8 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
       'value' => [
         'en' => [
           $field_rights_raw,
-        ]
-      ]
+        ],
+      ],
     ];
   }
 
@@ -526,7 +526,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     'id' => "$base_url/api/presentation/$type/$identifier/manifest.json",
     'type' => 'Manifest',
     'label' => $fields['field_title']['value'],
-    'behaviour' => $behavior,
+    'behavior' => $behavior,
     'items' => $items,
     'metadata' => array_values($fields),
     'viewingDirection' => $viewingDirection,
