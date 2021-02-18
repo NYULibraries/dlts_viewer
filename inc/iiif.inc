@@ -488,7 +488,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   if ($field_rights_raw) {
     $required_statement = [
       'label' => [
-        'en' => locale('Rights', NULL, 'en'),
+        'en' => [ locale('Rights', NULL, 'en') ],
       ],
       'value' => [
         'en' => [
