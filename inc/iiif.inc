@@ -530,7 +530,6 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     );
   }
 
-  // @link https://iiif.bodleian.ox.ac.uk/iiif/manifest/e32a277e-91e2-4a6d-8ba6-cc4bad230410.json
   $res = array(
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
     'id' => "$base_url/api/presentation/$type/$identifier/manifest.json",
@@ -542,7 +541,6 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     'viewingDirection' => $viewingDirection,
     'homepage' => array(
       array(
-        // I will have to figure out how to get the sites URL.
         'id' => "$base_url/$type/$identifier/1",
         'type' => 'Text',
         'label' => array(
@@ -574,8 +572,11 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     //     ),
     //   ),
     // ),
-    'rendering' => $pdfs,
   );
+
+  if (isset($pdfs)) {
+    $res['rendering'] = $pdfs;
+  }
 
   if (isset($fields['field_description']) && !empty($fields['field_description']['value'])) {
     $res['summary'] = $fields['field_description']['value'];

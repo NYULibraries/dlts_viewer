@@ -185,8 +185,7 @@ function dlts_viewer_mongodb_load_thumbnails($isPartOf, int $page = 0, int $per_
 
 function dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name) {
   $items = array();
-  // $query = array('isPartOf' => $identifier);
-  $query = array('isPartOf' => $identifier, 'sequence' => 1);
+  $query = array('isPartOf' => $identifier);
   $cursor = mongodb_collection($collection_name)->find($query);
   $count = $cursor->count();
   if ($count > 0) {
