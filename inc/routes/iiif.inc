@@ -17,7 +17,6 @@ function _dlts_viewer_menu_iiif() {
    * Canvas.
    *
    * @link http://localhost:9000/api/presentation/books/princeton_aco000102/canvas/1
-   * @link http://localhost:9000/api/presentation/books/princeton_aco000102/canvas/1
    */
   $items['api/presentation/%dlts_type/%dlts_resource/canvas/%dlts_canvas_page'] = array(
     'title' => 'IIIF Presentation API 3 - Canvas',

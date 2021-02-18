@@ -83,7 +83,9 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
       return drupal_json_decode($response->data);
     }
   }
-
+  else {
+    return $response;
+  }
 }
 
 /**
@@ -543,29 +545,27 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     'items' => $items,
     'metadata' => array_values($fields),
     'viewingDirection' => $viewingDirection,
-    'homepage' => array(
-      array(
+    'homepage' => [
+      [
         'id' => "$base_url/$type/$identifier/1",
         'type' => 'Text',
-        'label' => array(
-          'en' => array(
+        'label' => [
+          'en' => [
             'View on NYU DLTS Viewer',
-          ),
-        ),
+          ],
+        ],
         'format' => 'text/html',
-      ),
-    ),
-    // 'logo' => array(
-    //   array(
-    //     'id' => '/full/256,/0/default.jpg',
-    //     'type' => 'Image',
-    //     'service' => array(
-    //       'type' => 'ImageService2',
-    //       'profile' => 'level1',
-    //       'id' => '/',
-    //     ),
-    //   ),
-    // ),
+      ],
+    ],
+    'logo' => [
+      [
+        'id' => 'https://yt3.ggpht.com/-RZYi5isxH_M/AAAAAAAAAAI/AAAAAAAAAAA/rmWpoe2qZzI/s900-c-k-no/photo.jpg',
+        'type' => 'Image',
+        'format' => 'image/jpeg',
+        'height' => 100,
+        'width' => 120,
+      ],
+    ],
     // 'thumbnail' => array(
     //   array(
     //     '@id' => '/full/256,/0/default.jpg',
