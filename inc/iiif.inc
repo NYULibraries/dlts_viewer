@@ -82,9 +82,15 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
       );
       return drupal_json_decode($response->data);
     }
+    else {
+      return $response;
+    }
   }
   else {
-    return $response;
+    return [
+      'code' => 500,
+      'error' => 'Unexpected error occurred.',
+    ];
   }
 }
 
