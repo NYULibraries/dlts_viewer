@@ -8,7 +8,7 @@
 
 /**
  * Proxy Image service.
- * @link http://localhost:9000/api/image/books/uaena_aco000016/1/info.json
+ * @link http://localhost:9000/api/image/books/uaena_aco000016/1
  *
  * @param string $type
  *   Entity type.
@@ -745,7 +745,7 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
   $identifier = $wrapper->field_identifier->value();
   $sequence = $item['sequence'][0];
   $resource_type = dlts_viewer_resource_type($type);
-  $image = "$base_url/api/image/$resource_type/$identifier/$sequence/info.json";
+  $image = "$base_url/api/image/$resource_type/$identifier/$sequence";
   return array(
     'id' => "$base_url/api/presentation/$resource_type/$identifier/annotation/painting/$sequence",
     'type' => 'Annotation',
