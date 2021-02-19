@@ -62,8 +62,9 @@ function _dlts_viewer_menu_iiif() {
    */
 
   // Proxy Image service.
-  // @link http://localhost:9000/api/image/books/uaena_aco000016/1
-  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence'] = array(
+  // @link http://localhost:9000/api/image/books/uaena_aco000016/1/info.json
+  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence'] =
+  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/info.json'] = array(
     'title' => 'IIIF API - Request metadata',
     'access arguments' => array('access iiif content'),
     'page callback' => 'dlts_viewer_iiif_api',
