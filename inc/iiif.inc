@@ -416,7 +416,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
               'format' => 'application/pdf',
               'label' => [
                 'en' => [
-                  locale('High-resolution PDF rendering of Book', NULL, 'en') . ' (' . field_fileserver_human_filesize($data['size']) . ')'
+                  locale('High-resolution PDF rendering of Book', NULL, 'en') . ' (' . field_fileserver_human_filesize($data['size']) . ')',
                 ],
               ],
             );
@@ -429,7 +429,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
               'format' => 'application/pdf',
               'label' => [
                 'en' => [
-                  locale('Low-resolution PDF rendering of Book', NULL, 'en') . ' (' . field_fileserver_human_filesize($data['size']) . ')'
+                  locale('Low-resolution PDF rendering of Book', NULL, 'en') . ' (' . field_fileserver_human_filesize($data['size']) . ')',
                 ],
               ],
             );
@@ -484,6 +484,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   $summary = array();
 
   $values = [];
+
   $fields = [];
 
   // https://iiif.io/api/presentation/3.0/#metadata
@@ -542,14 +543,18 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     );
   }
 
-  $res = array(
+  $thumbnail = $items[0]['items'][0]['items'][0]['body'];
+
+  $logo = 'https://yt3.ggpht.com/-RZYi5isxH_M/AAAAAAAAAAI/AAAAAAAAAAA/rmWpoe2qZzI/s900-c-k-no/photo.jpg';
+
+  $res = [
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
     'id' => "$base_url/api/presentation/$type/$identifier/manifest.json",
     'type' => 'Manifest',
     'label' => $fields['field_title']['value'],
     'behavior' => $behavior,
     'items' => $items,
-    'metadata' => array_values($fields),
+    'metadata' => [$fields],
     'viewingDirection' => $viewingDirection,
     'homepage' => [
       [
@@ -565,24 +570,20 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     ],
     'logo' => [
       [
-        'id' => 'https://yt3.ggpht.com/-RZYi5isxH_M/AAAAAAAAAAI/AAAAAAAAAAA/rmWpoe2qZzI/s900-c-k-no/photo.jpg',
+        'id' => $logo,
         'type' => 'Image',
         'format' => 'image/jpeg',
         'height' => 100,
         'width' => 120,
       ],
     ],
-    // 'thumbnail' => array(
-    //   array(
-    //     '@id' => '/full/256,/0/default.jpg',
-    //     'service' => array(
-    //       'type' => 'ImageService2',
-    //       'profile' => 'level1',
-    //       '@id' => '/',
-    //     ),
-    //   ),
-    // ),
-  );
+    'thumbnail' => [
+      [
+        '@id' => $thumbnail['id'] . '/full/256,/0/default.jpg',
+        'service' => $thumbnail['service'],
+      ],
+    ],
+  ];
 
   if (isset($pdfs)) {
     $res['rendering'] = $pdfs;
@@ -596,7 +597,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $res['requiredStatement'] = $required_statement;
   }
 
-  // // check if this books is part of a multi-volume
+  // check if this books is part of a multi-volume
   // $multivolume_book = dlts_viewer_is_multivolume_book($resource);
 
   // // if book is part of multi-volume; append volume value to entity title
