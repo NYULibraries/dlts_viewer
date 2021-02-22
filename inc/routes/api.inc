@@ -180,6 +180,14 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   );
 
+  // List documents.
+  $items['api/v1/resources'] = array(
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_list_resource',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints.inc',
+  );
+
   return $items;
 
 }

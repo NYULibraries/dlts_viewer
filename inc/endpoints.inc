@@ -156,6 +156,65 @@ function dlts_viewer_book_metadata($book) {
  * @return json|array
  *   A keyed array to be converted into JSON.
  */
+ function dlts_viewer_list_resource(int $start = 0, int $length = 100) {
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  if (isset($query_parameters['rows']) && is_numeric($query_parameters['rows'])) {
+    $length = $query_parameters['rows'];
+  }
+
+  if (isset($query_parameters['start']) && is_numeric($query_parameters['start'])) {
+    $start = $query_parameters['start'];
+  }
+
+  $results = db_query("SELECT noid, identifier FROM dlts_viewer_resource WHERE proceed = 1 LIMIT 10")->fetchAll();
+
+  // Try to mimic Apache Solr response.
+  $response = array(
+    'response' => array(
+      // 'numFound' => $count,
+      // 'start' => $start,
+      'docs' => $results,
+    ),
+  );
+
+  foreach ($entities['node'] as $node) {
+    $entity = node_load('node', $node->nid);
+    $wrapper = entity_metadata_wrapper('node', $entity);
+    $partners = array();
+    foreach ($wrapper->field_partner->getIterator() as $delta => $partner_wrapper) {
+      if ($partner_wrapper->getBundle() == 'dlts_partner') {
+        $partners[] = array(
+          'name' => $partner_wrapper->field_name->value(),
+          'code' => $partner_wrapper->field_code->value(),
+        );
+      }
+    }
+    $response['response']['docs'][] = array(
+      'title' => trim($wrapper->field_name->value()),
+      'identifier' => $wrapper->field_identifier->value(),
+      'code' => $wrapper->field_code->value(),
+      'partners' => $partners,
+    );
+  }
+
+  return $response;
+
+}
+
+/**
+ * List collections.
+ *
+ * @param int $start
+ *   Index to start.
+ * @param int $length
+ *   Length of items in request.
+ *
+ * @return json|array
+ *   A keyed array to be converted into JSON.
+ */
 function dlts_viewer_list_collections(int $start = 0, int $length = 100) {
 
   // Get query parameters.
@@ -1792,6 +1851,9 @@ function dlts_viewer_api_v1_objects($version = NULL) {
           }
         }
     }
+  }
+  elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {
+    return dlts_viewer_list_resource();
   }
   return array(
     'error' => 'User not allowed.',
