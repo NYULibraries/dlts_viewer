@@ -487,9 +487,9 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $translations[] = entity_metadata_wrapper('node', $nid);
   }
 
-  $items = array();
+  $items = [];
 
-  $summary = array();
+  $summary = [];
 
   $values = [];
 
@@ -616,40 +616,43 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   //   ]
   // }
 
+  // @todo to implement we need to change partner content-type
+  // to include URI and logo.
+  $providers = FALSE;
   // $fields['field_partner'];
   // https://iiif.io/api/presentation/3.0/#provider
-  $providers = [
-    [
-      'id' => 'https://www.princeton.edu',
-      'type' => 'Agent',
-      'label' => [
-        'en' => [
-          'Princeton University Libraries',
-        ],
-      ],
-      'homepage' => [
-        [
-          'id' => 'https://www.princeton.edu/',
-          'type' => 'Text',
-          'label' => [
-            'en' => [
-              'Princeton University Libraries Homepage',
-            ],
-          ],
-          'format' => 'text/html',
-        ],
-      ],
-      'logo' => [
-        [
-          'id' => 'http://dlib.nyu.edu/aco/images/logos/princeton.png',
-          'type' => 'Image',
-          'format' => 'image/png',
-          'height' => 100,
-          'width' => 120,
-        ],
-      ],
-    ],
-  ];
+  // $providers = [
+  //   [
+  //     'id' => 'http://dlib.nyu.edu',
+  //     'type' => 'Agent',
+  //     'label' => [
+  //       'en' => [
+  //         'New York University',
+  //       ],
+  //     ],
+  //     'homepage' => [
+  //       [
+  //         'id' => 'http://dlib.nyu.edu/',
+  //         'type' => 'Text',
+  //         'label' => [
+  //           'en' => [
+  //             'New York University',
+  //           ],
+  //         ],
+  //         'format' => 'text/html',
+  //       ],
+  //     ],
+  //     'logo' => [
+  //       [
+  //         'id' => 'http://dlib.nyu.edu/aco/images/logos/nyu_short_color.png',
+  //         'type' => 'Image',
+  //         'format' => 'image/png',
+  //         'height' => 100,
+  //         'width' => 120,
+  //       ],
+  //     ],
+  //   ],
+  // ];
 
   $thumbnail = [];
   if ($sequences && !empty($sequences)) {
