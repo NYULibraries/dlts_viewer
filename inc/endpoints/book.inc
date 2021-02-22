@@ -34,7 +34,13 @@ function dlts_viewer_api_v1_update_book($entity) {
           }
           module_load_include('inc', 'dlts_viewer', 'inc/fields/edit_field_' . $name);
           if (function_exists('dlts_viewer_edit_field_' . $name)) {
-            call_user_func_array('dlts_viewer_edit_field_' . $name, [ $field, &$wrapper ]);
+            call_user_func_array(
+              'dlts_viewer_edit_field_' . $name,
+              [
+                $field,
+                &$wrapper,
+              ]
+            );
           }
         }
         $saved = $wrapper->save();
@@ -50,7 +56,7 @@ function dlts_viewer_api_v1_update_book($entity) {
       }
     }
     catch (Exception $e) {
-      return [ $e->getMessage() ];
+      return [$e->getMessage()];
     }
   }
 }
