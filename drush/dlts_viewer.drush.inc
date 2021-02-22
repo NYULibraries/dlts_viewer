@@ -159,7 +159,7 @@ function dlts_viewer_drush_list_resource_pages() {
         $page['cm']['levels'] = $metadata['levels'];
         $page['cm']['compositingLayerCount'] = $metadata['compositingLayerCount'];
         if (dlts_viewer_mongodb_update_sequence($page, $collection_name)) {
-          drush_log('Sequence updated', 'ok');
+          drush_log("Sequence $count part resource $identifier was updated.", 'ok');
           print_r($page);
         }
       }
