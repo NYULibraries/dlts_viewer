@@ -165,6 +165,7 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
 }
 
 function dlts_viewer_iiif_resource_manifest($type, $entity) {
+
   $query_parameters = drupal_get_query_parameters();
   // Use cache?
   $cache = TRUE;
@@ -357,6 +358,8 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   global $base_url;
 
+  $cache = FALSE;
+
   module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
 
   $wrapper = entity_metadata_wrapper('node', $entity);
@@ -459,8 +462,6 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   $behavior = array('individuals');
 
-  $isMultivolume = FALSE;
-
   $sequence_count = $wrapper->field_sequence_count->value();
 
   $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
@@ -543,7 +544,116 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     );
   }
 
-  $thumbnail = $items[0]['items'][0]['items'][0]['body'];
+  // Check if this books is part of a multivol.
+  $multivolume_book = dlts_viewer_is_multivolume_book($entity);
+  // If book is part of multi-volume; append volume value to entity title.
+  if ($multivolume_book) {
+    $wrapper = entity_metadata_wrapper('node', $multivolume_book);
+    // Get volume value.
+    $volume_number_str = $wrapper->field_volume_number_str->value();
+    // Change entity title.
+    foreach ($fields['field_title']['value'] as $key => $value) {
+      $fields['field_title']['value'][$key][0] = t('@title @volume', [
+        '@title' => $value[0],
+        '@volume' => $volume_number_str,
+      ]);
+    }
+    // $multivolume_books = dlts_viewer_books_isPartof_multivolume($wrapper->field_multivol->value()->nid);
+    // foreach ($multivolume_books as $mb) {
+    //   // wrapp multi-volume entity with Entity API wrapper
+    //   $mb_wrapper = entity_metadata_wrapper('node', $mb);
+    //   $volume = $mb_wrapper->field_volume_number->value();
+    //   // the book we map to this multivolume
+    //   $bs_wrapper = entity_metadata_wrapper('node', $mb_wrapper->field_book->value());
+    //   $volumes[$volume] = array(
+    //     'identifier' => $bs_wrapper->field_identifier->value(),
+    //     'selected' => ($bs_wrapper->nid->value() == $entity->nid),
+    //     'title' => t('@title @volume', array(
+    //       '@title' => $mb->title,
+    //       '@volume' => $mb_wrapper->field_volume_number_str->value(),
+    //       )
+    //     ),
+    //   );
+    //   unset($mb_wrapper);
+    // }
+    unset($multivolume_books);
+    asort($volumes);
+  }
+
+  // https://iiif.io/api/presentation/3.0/#partof
+
+  // https://iiif.io/api/presentation/3.0/#51-collection
+  // {
+  //   "@context": "http://iiif.io/api/presentation/3/context.json",
+  //   "id": "https://example.org/iiif/collection/top",
+  //   "type": "Collection",
+  //   "label": { "en": [ "Collection for Example Organization" ] },
+  //   "summary": { "en": [ "Short summary of the Collection" ] },
+  //   "requiredStatement": {
+  //     "label": { "en": [ "Attribution" ] },
+  //     "value": { "en": [ "Provided by Example Organization" ] }
+  //   },
+  //   "items": [
+  //     {
+  //       "id": "https://example.org/iiif/1/manifest",
+  //       "type": "Manifest",
+  //       "label": { "en": [ "Example Manifest 1" ] },
+  //       "thumbnail": [
+  //         {
+  //           "id": "https://example.org/manifest1/thumbnail.jpg",
+  //           "type": "Image",
+  //           "format": "image/jpeg"
+  //         }
+  //       ]
+  //     }
+  //   ]
+  // }
+
+  // $fields['field_partner'];
+  // https://iiif.io/api/presentation/3.0/#provider
+  $providers = [
+    [
+      'id' => 'https://www.princeton.edu',
+      'type' => 'Agent',
+      'label' => [
+        'en' => [
+          'Princeton University Libraries',
+        ],
+      ],
+      'homepage' => [
+        [
+          'id' => 'https://www.princeton.edu/',
+          'type' => 'Text',
+          'label' => [
+            'en' => [
+              'Princeton University Libraries Homepage',
+            ],
+          ],
+          'format' => 'text/html',
+        ],
+      ],
+      'logo' => [
+        [
+          'id' => 'http://dlib.nyu.edu/aco/images/logos/princeton.png',
+          'type' => 'Image',
+          'format' => 'image/png',
+          'height' => 100,
+          'width' => 120,
+        ],
+      ],
+    ],
+  ];
+
+  $thumbnail = [];
+  if ($sequences && !empty($sequences)) {
+    $thumbnail_raw = $items[0]['items'][0]['items'][0]['body'];
+    $thumbnail = [
+      [
+        '@id' => $thumbnail_raw['id'] . '/full/256,/0/default.jpg',
+        'service' => $thumbnail_raw['service'],
+      ],
+    ];
+  }
 
   $logo = 'https://yt3.ggpht.com/-RZYi5isxH_M/AAAAAAAAAAI/AAAAAAAAAAA/rmWpoe2qZzI/s900-c-k-no/photo.jpg';
 
@@ -577,12 +687,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
         'width' => 120,
       ],
     ],
-    'thumbnail' => [
-      [
-        '@id' => $thumbnail['id'] . '/full/256,/0/default.jpg',
-        'service' => $thumbnail['service'],
-      ],
-    ],
+    'thumbnail' => $thumbnail,
   ];
 
   if (isset($pdfs)) {
@@ -597,43 +702,9 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $res['requiredStatement'] = $required_statement;
   }
 
-  // check if this books is part of a multi-volume
-  // $multivolume_book = dlts_viewer_is_multivolume_book($resource);
-
-  // // if book is part of multi-volume; append volume value to entity title
-  // if ($multivolume_book) {
-  //   $isMultivolume = true;
-  //   // wrapp multi-volume entity with Entity API wrapper
-  //   $wrapper = entity_metadata_wrapper('node', $multivolume_book);
-  //   // get volume value
-  //   $volume_number_str = $wrapper->field_volume_number_str->value();
-  //   // change entity title
-  //   $title = t('@title @volume', array(
-  //     '@title' => $multivolume_book->title,
-  //     '@volume' => $volume_number_str,
-  //     )
-  //   );
-  //   $multivolume_books = dlts_viewer_books_isPartof_multivolume($wrapper->field_multivol->value()->nid);
-  //   foreach ($multivolume_books as $mb) {
-  //     // wrapp multi-volume entity with Entity API wrapper
-  //     $mb_wrapper = entity_metadata_wrapper('node', $mb);
-  //     $volume = $mb_wrapper->field_volume_number->value();
-  //     // the book we map to this multivolume
-  //     $bs_wrapper = entity_metadata_wrapper('node', $mb_wrapper->field_book->value());
-  //     $volumes[$volume] = array(
-  //       'identifier' => $bs_wrapper->field_identifier->value(),
-  //       'selected' => ($bs_wrapper->nid->value() == $entity->nid),
-  //       'title' => t('@title @volume', array(
-  //         '@title' => $mb->title,
-  //         '@volume' => $mb_wrapper->field_volume_number_str->value(),
-  //         )
-  //       ),
-  //     );
-  //     unset($mb_wrapper);
-  //   }
-  //   unset($multivolume_books);
-  //   asort($volumes);
-  // }
+  if (isset($providers)) {
+    $res['providers'] = $providers;
+  }
 
   // $series_books = dlts_viewer_series_book($entity->nid);
 
