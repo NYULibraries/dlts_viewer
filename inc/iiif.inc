@@ -844,7 +844,7 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
       'width' => (int) $item['width'],
       'service' => array(
         'type' => 'ImageService2',
-        'profile' => 'level1',
+        'profile' => 'level2',
         'id' => $image,
       ),
     ),

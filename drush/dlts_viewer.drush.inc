@@ -203,29 +203,32 @@ function dlts_viewer_drush_list_resource_by_type() {
       $parsed_url = parse_url($field_handle['url']);
       $noid = str_replace('/2333.1/', '', $parsed_url['path']);
       $pages = dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name);
+      $error = FALSE;
       foreach ($pages as $page) {
-        $uri = $page['uri'];
         $cm = $page['cm'];
         if (empty($cm['width']) || empty($cm['height'])) {
-          $metadata = dlts_viewer_djatoka_request($cm);
-          $page['cm']['width'] = $metadata['width'];
-          $page['cm']['height'] = $metadata['height'];
-          $page['cm']['dwtLevels'] = $metadata['dwtLevels'];
-          $page['cm']['levels'] = $metadata['levels'];
-          $page['cm']['compositingLayerCount'] = $metadata['compositingLayerCount'];
-          if (dlts_viewer_mongodb_update_sequence($page, $collection_name)) {
-            $realPageNumber = $page['realPageNumber'];
-            drush_log("Sequence $realPageNumber of $count part resource $identifier was updated.", 'ok');
+          $realPageNumber = $page['realPageNumber'];
+          $request_url = "http://dev-sites.dlib.nyu.edu/viewer/api/image/books/$identifier/$realPageNumber";
+          $response = drupal_http_request($request_url);
+          if ($response->code == '200' && isset($response->data)) {
+            $data = json_decode($response->data);
+            $page['cm']['width'] = $data->width;
+            $page['cm']['height'] = $data->height;
+            if (dlts_viewer_mongodb_update_sequence($page, $collection_name)) {
+              drush_log("Sequence $realPageNumber of $count part resource $identifier was updated.", 'ok');
+            }
           }
         }
       }
-      db_update('dlts_viewer_resource')
-        ->fields(array(
-          'identifier' => $identifier,
-          'noid' => $noid,
-          'proceed' => 1,
-        )
-      )->condition('nid', $result->nid, '=')->execute();
+      if (!$error) {
+        db_update('dlts_viewer_resource')
+          ->fields(array(
+            'identifier' => $identifier,
+            'noid' => $noid,
+            'proceed' => 1,
+          )
+        )->condition('nid', $result->nid, '=')->execute();
+      }
     }
   }
 }
