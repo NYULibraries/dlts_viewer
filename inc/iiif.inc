@@ -24,9 +24,6 @@
  */
 function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence, $cache = TRUE) {
 
-  // @todo While I develop.
-  $cache = FALSE;
-
   $wrapper = entity_metadata_wrapper('node', $resource);
 
   $identifier = $wrapper->field_identifier->value();
@@ -164,8 +161,15 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
 
 }
 
+/**
+ * Dispatch resource manifest.
+ *
+ * @param string $type
+ *   Resource type.
+ * @param object $entity
+ *   Node.
+ */
 function dlts_viewer_iiif_resource_manifest($type, $entity) {
-
   $query_parameters = drupal_get_query_parameters();
   // Use cache?
   $cache = TRUE;
@@ -178,7 +182,13 @@ function dlts_viewer_iiif_resource_manifest($type, $entity) {
   }
 }
 
-# https://iiif.io/api/presentation/3.0/#metadata
+/**
+ * Build metadata values to returs as metadata.
+ * @link https://iiif.io/api/presentation/3.0/#metadata
+ *
+ * @param string $wrapper
+ *   Resource Entity wrapper.
+ */
 function dlts_book_fields_values($wrapper) {
   // Entity language.
   $language = $wrapper->language->value();
@@ -190,7 +200,6 @@ function dlts_book_fields_values($wrapper) {
   }
   // Return the value of all the fields.
   $metadata = [];
-
   $translatable_fields = [
     'field_author',
     'field_contributor',
@@ -332,8 +341,8 @@ function dlts_book_fields_values($wrapper) {
     }
   }
 
-  // $field_geographic_coordinates_raw = $wrapper->field_geographic_coordinates->value();
   // Ask Rasan what I need to do here.
+  // $field_geographic_coordinates_raw = $wrapper->field_geographic_coordinates->value();
 
   return $metadata;
 
@@ -357,8 +366,6 @@ function dlts_book_fields_values($wrapper) {
 function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   global $base_url;
-
-  $cache = FALSE;
 
   module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
 
@@ -657,6 +664,8 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   $logo = 'https://yt3.ggpht.com/-RZYi5isxH_M/AAAAAAAAAAI/AAAAAAAAAAA/rmWpoe2qZzI/s900-c-k-no/photo.jpg';
 
+  $metadata = [array_values($fields)];
+
   $res = [
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
     'id' => "$base_url/api/presentation/$type/$identifier/manifest.json",
@@ -664,7 +673,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     'label' => $fields['field_title']['value'],
     'behavior' => $behavior,
     'items' => $items,
-    'metadata' => [$fields],
+    'metadata' => $metadata,
     'viewingDirection' => $viewingDirection,
     'homepage' => [
       [
