@@ -664,7 +664,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   $logo = 'https://yt3.ggpht.com/-RZYi5isxH_M/AAAAAAAAAAI/AAAAAAAAAAA/rmWpoe2qZzI/s900-c-k-no/photo.jpg';
 
-  $metadata = [array_values($fields)];
+  $metadata = array_values($fields);
 
   $res = [
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
