@@ -110,6 +110,14 @@ function dlts_viewer_drush_command() {
     'description' => dt('Create book bject'),
   );
 
+  $items['list-resource-pages'] = array(
+    'callback' => 'dlts_viewer_drush_list_resource_pages',
+    'description' => dt('List resource pages'),
+    'options' => array(
+      'identifier' => dt('Resource identifier'),
+    ),
+  );
+
   return $items;
 
 }
@@ -121,6 +129,41 @@ function dlts_viewer_drush_help($section) {
   switch ($section) {
     case 'drush:import-book':
       return dt('Some day someone will document this module');
+  }
+}
+
+/**
+ * List resource pages.
+ */
+function dlts_viewer_drush_list_resource_pages() {
+  include_once __DIR__ . '/../inc/djatoka.inc';
+  $type = 'node';
+  $identifier = drush_get_option('identifier', NULL);
+  $collection_name = 'dlts_books_page';
+  $language = 'en';
+  $nid = nid_by_identifier($identifier, $language);
+  if ($nid) {
+    $cursor = mongodb_collection($collection_name);
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $count = $wrapper->field_sequence_count->value();
+    $pages = dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name);
+    foreach ($pages as $page) {
+      $uri = $page['uri'];
+      $cm = $page['cm'];
+      if (empty($cm['width']) || empty($cm['height'])) {
+        $metadata = dlts_viewer_djatoka_request($cm);
+        $page['cm']['width'] = $metadata['width'];
+        $page['cm']['height'] = $metadata['height'];
+        $page['cm']['dwtLevels'] = $metadata['dwtLevels'];
+        $page['cm']['levels'] = $metadata['levels'];
+        $page['cm']['compositingLayerCount'] = $metadata['compositingLayerCount'];
+        if (dlts_viewer_mongodb_update_sequence($page, $collection_name)) {
+          drush_log('Sequence updated', 'ok');
+          print_r($page);
+        }
+      }
+    }
   }
 }
 

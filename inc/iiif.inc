@@ -714,7 +714,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $res['requiredStatement'] = $required_statement;
   }
 
-  if (isset($providers)) {
+  if ($providers) {
     $res['providers'] = $providers;
   }
 
