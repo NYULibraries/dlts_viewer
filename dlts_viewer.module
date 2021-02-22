@@ -419,3 +419,20 @@ function dlts_viewer_node_delete($node) {
   }
   db_delete('dlts_viewer_books_json')->condition('nid', $node->nid)->execute();
 }
+
+/**
+ * Create the table which was missing during early stage of module development.
+ */
+ function dlts_viewer_update_7102() {
+  $table = array(
+    'description' => 'Resource table',
+    'fields' => array(
+      'nid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
+      'noid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
+      'identifier' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
+      'document' => array('type' => 'text'),
+      'proceed' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+    )
+  );
+  db_create_table('dlts_viewer_resource', $table);
+}

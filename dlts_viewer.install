@@ -47,6 +47,16 @@ function dlts_viewer_schema() {
   		'legacy' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
   	)
   );
+  $schema['dlts_viewer_resource'] = array(
+    'description' => 'Resource table',
+  	'fields' => array(
+  	  'nid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
+  		'noid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
+      'identifier' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
+  		'document' => array('type' => 'text'),
+  		'proceed' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+  	)
+  );
   return $schema;
 }
 

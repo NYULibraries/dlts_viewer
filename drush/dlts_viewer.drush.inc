@@ -110,9 +110,25 @@ function dlts_viewer_drush_command() {
     'description' => dt('Create book bject'),
   );
 
-  $items['list-resource-pages'] = array(
-    'callback' => 'dlts_viewer_drush_list_resource_pages',
+  $items['list-resource-by-type'] = array(
+    'callback' => 'dlts_viewer_drush_list_resource_by_type',
     'description' => dt('List resource pages'),
+    'options' => array(
+      'type' => dt('Resource type'),
+    ),
+  );
+
+  $items['update-resource-pages'] = array(
+    'callback' => 'dlts_viewer_drush_update_resource_pages',
+    'description' => dt('Update resource pages'),
+    'options' => array(
+      'identifier' => dt('Resource identifier'),
+    ),
+  );
+
+  $items['generate-resource-record'] = array(
+    'callback' => 'dlts_viewer_drush_generate_resource_record',
+    'description' => dt('Update resource pages'),
     'options' => array(
       'identifier' => dt('Resource identifier'),
     ),
@@ -133,9 +149,9 @@ function dlts_viewer_drush_help($section) {
 }
 
 /**
- * List resource pages.
+ * Update resource pages.
  */
-function dlts_viewer_drush_list_resource_pages() {
+function dlts_viewer_drush_update_resource_pages() {
   include_once __DIR__ . '/../inc/djatoka.inc';
   $type = 'node';
   $identifier = drush_get_option('identifier', NULL);
@@ -164,6 +180,69 @@ function dlts_viewer_drush_list_resource_pages() {
         }
       }
     }
+  }
+}
+
+/**
+ * List resource pages.
+ */
+function dlts_viewer_drush_list_resource_by_type() {
+  include_once __DIR__ . '/../inc/djatoka.inc';
+  $type = 'node';
+  $collection_name = 'dlts_books_page';
+  $bundle = drush_get_option('type', NULL);
+  $results = db_query("SELECT * FROM dlts_viewer_resource WHERE proceed = 0 LIMIT 1")->fetchAll();
+  foreach ($results as $result) {
+    if ($result->nid) {
+      $cursor = mongodb_collection($collection_name);
+      $node = node_load($result->nid);
+      $wrapper = entity_metadata_wrapper('node', $node);
+      $identifier = $wrapper->field_identifier->value();
+      $count = $wrapper->field_sequence_count->value();
+      $field_handle = $wrapper->field_handle->value();
+      $parsed_url = parse_url($field_handle['url']);
+      $noid = str_replace('/2333.1/', '', $parsed_url['path']);
+      $pages = dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name);
+      foreach ($pages as $page) {
+        $uri = $page['uri'];
+        $cm = $page['cm'];
+        if (empty($cm['width']) || empty($cm['height'])) {
+          $metadata = dlts_viewer_djatoka_request($cm);
+          $page['cm']['width'] = $metadata['width'];
+          $page['cm']['height'] = $metadata['height'];
+          $page['cm']['dwtLevels'] = $metadata['dwtLevels'];
+          $page['cm']['levels'] = $metadata['levels'];
+          $page['cm']['compositingLayerCount'] = $metadata['compositingLayerCount'];
+          if (dlts_viewer_mongodb_update_sequence($page, $collection_name)) {
+            $realPageNumber = $page['realPageNumber'];
+            drush_log("Sequence $realPageNumber of $count part resource $identifier was updated.", 'ok');
+          }
+        }
+      }
+      db_update('dlts_viewer_resource')
+        ->fields(array(
+          'identifier' => $identifier,
+          'noid' => $noid,
+          'proceed' => 1,
+        )
+      )->condition('nid', $result->nid, '=')->execute();
+    }
+  }
+}
+
+/**
+ * Generate resource record.
+ */
+function dlts_viewer_drush_generate_resource_record() {
+  $type = 'node';
+  $bundle = drush_get_option('type', NULL);
+  $content_type = dlts_type_load($bundle);
+  $nids = dlts_viewer_list_books();
+  foreach ($nids as $nid) {
+    $nid = db_insert('dlts_viewer_resource')->fields([
+      'nid' => $nid,
+      'proceed' => 0,
+    ])->execute();
   }
 }
 
