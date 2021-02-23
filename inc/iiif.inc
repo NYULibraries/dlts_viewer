@@ -830,25 +830,27 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
   $sequence = $item['sequence'][0];
   $resource_type = dlts_viewer_resource_type($type);
   $image = "$base_url/api/image/$resource_type/$identifier/$sequence";
-  return array(
+  return [
+    '@context' => 'http://iiif.io/api/presentation/3/context.json',
     'id' => "$base_url/api/presentation/$resource_type/$identifier/annotation/painting/$sequence",
     'type' => 'Annotation',
     'motivation' => 'painting',
-    'target' => "$base_url/api/presentation/$resource_type/$identifier/canvas/$sequence",
-    'body' => array(
-      'type' => 'Image',
+    'body' => [
       'id' => $image,
+      'type' => 'Image',
       'format' => 'image/jpeg',
-      'label' => 'Primary Colour',
+      'service' => [
+        [
+          'id' => $image,
+          'type' => 'ImageService2',
+          'profile' => 'level1',
+        ],
+      ],
       'height' => (int) $item['height'],
       'width' => (int) $item['width'],
-      'service' => array(
-        'type' => 'ImageService2',
-        'profile' => 'level2',
-        'id' => $image,
-      ),
-    ),
-  );
+    ],
+    'target' => "$base_url/api/presentation/$resource_type/$identifier/canvas/$sequence",
+  ];
 }
 
 function dlts_viewer_cache_book_sequence($edit) {

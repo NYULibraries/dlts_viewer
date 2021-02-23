@@ -62,7 +62,7 @@ function _dlts_viewer_menu_api() {
 
   $items['api/v1/objects'] = array(
     'title' => 'Create object',
-    'access arguments' => array('dlts create object'),
+    'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_api_v1_objects',
     'delivery callback' => 'drupal_json_output',
     'page arguments' => array(1),

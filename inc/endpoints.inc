@@ -146,7 +146,7 @@ function dlts_viewer_book_metadata($book) {
 }
 
 /**
- * List collections.
+ * List resources.
  *
  * @param int $start
  *   Index to start.
@@ -156,7 +156,7 @@ function dlts_viewer_book_metadata($book) {
  * @return json|array
  *   A keyed array to be converted into JSON.
  */
- function dlts_viewer_list_resource(int $start = 0, int $length = 100) {
+function dlts_viewer_list_resource(int $start = 0, int $length = 25) {
 
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
@@ -169,39 +169,74 @@ function dlts_viewer_book_metadata($book) {
     $start = $query_parameters['start'];
   }
 
-  $results = db_query("SELECT noid, identifier FROM dlts_viewer_resource WHERE proceed = 1 LIMIT 10")->fetchAll();
+  if (isset($query_parameters['code'])) {
+    $code = $query_parameters['code'];
+  }
 
+  $query = "
+    SELECT
+      resource.nid,
+      resource.noid,
+      resource.identifier
+    FROM dlts_viewer_resource resource
+    LEFT JOIN node
+      ON resource.nid = node.nid
+    LEFT JOIN field_data_field_collection collection
+      ON resource.nid = collection.entity_id
+    INNER JOIN field_data_field_code code
+      ON collection.field_collection_nid = code.entity_id
+    WHERE resource.proceed = 1
+  ";
+
+  $count = db_select('dlts_viewer_resource', 'resource')
+    ->fields(NULL, array('nid'))
+    ->condition('resource.proceed', 1, '=')
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+
+  $results = db_query_range($query, $start, $length, [])->fetchAll();
+
+  $nodes = [];
+
+  foreach ($results as $result) {
+    $node = node_load($result->nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $collections = [];
+    $partners = [];
+    foreach ($wrapper->field_collection->value() as $collection) {
+      $collection_wrapper = entity_metadata_wrapper('node', $collection);
+      $collections[] = [
+        'code' => $collection_wrapper->field_code->value(),
+        'name' => $collection_wrapper->field_name->value(),
+      ];
+    }
+    foreach ($wrapper->field_partner->value() as $partner) {
+      $partner_wrapper = entity_metadata_wrapper('node', $partner);
+      $partners[] = [
+        'code' => $partner_wrapper->field_code->value(),
+        'name' => $partner_wrapper->field_name->value(),
+      ];
+    }
+    $nodes[] = [
+      'nid' => $node->nid,
+      'noid' => $result->noid,
+      'type' => str_replace('dlts_', '', $wrapper->getBundle()),
+      'identifier' => $result->identifier,
+      'title' => $wrapper->field_title->value(),
+      'collections' => $collections,
+      'partners' => $partners,
+    ];
+  }
   // Try to mimic Apache Solr response.
   $response = array(
     'response' => array(
-      // 'numFound' => $count,
-      // 'start' => $start,
-      'docs' => $results,
+      'numFound' => $count,
+      'start' => $start,
+      'docs' => $nodes,
     ),
   );
-
-  foreach ($entities['node'] as $node) {
-    $entity = node_load('node', $node->nid);
-    $wrapper = entity_metadata_wrapper('node', $entity);
-    $partners = array();
-    foreach ($wrapper->field_partner->getIterator() as $delta => $partner_wrapper) {
-      if ($partner_wrapper->getBundle() == 'dlts_partner') {
-        $partners[] = array(
-          'name' => $partner_wrapper->field_name->value(),
-          'code' => $partner_wrapper->field_code->value(),
-        );
-      }
-    }
-    $response['response']['docs'][] = array(
-      'title' => trim($wrapper->field_name->value()),
-      'identifier' => $wrapper->field_identifier->value(),
-      'code' => $wrapper->field_code->value(),
-      'partners' => $partners,
-    );
-  }
-
   return $response;
-
 }
 
 /**
