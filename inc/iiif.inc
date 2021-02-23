@@ -661,7 +661,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
       [
         'id' => $thumbnail_raw['id'] . '/full/256,/0/default.jpg',
         'type' => 'Image',
-        'format': 'image/jpeg',
+        'format' => 'image/jpeg',
         'service' => [
           $thumbnail_raw['service'],
         ]
