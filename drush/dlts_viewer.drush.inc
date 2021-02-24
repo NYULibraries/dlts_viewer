@@ -187,7 +187,6 @@ function dlts_viewer_drush_update_resource_pages() {
  * List resource pages.
  */
 function dlts_viewer_drush_list_resource_by_type() {
-  include_once __DIR__ . '/../inc/djatoka.inc';
   $type = 'node';
   $collection_name = 'dlts_books_page';
   $bundle = drush_get_option('type', NULL);

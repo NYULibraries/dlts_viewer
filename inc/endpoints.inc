@@ -169,8 +169,13 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
     $start = $query_parameters['start'];
   }
 
+  $proceed = 0;
+  if (isset($query_parameters['proceed']) && is_numeric($query_parameters['proceed'])) {
+    $proceed = 1;
+  }
+
   $placeholders = [
-    ':proceed' => 0,
+    ':proceed' => $proceed,
   ];
 
   $query = "
