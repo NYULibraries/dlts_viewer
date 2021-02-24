@@ -156,7 +156,7 @@ function dlts_viewer_book_metadata($book) {
  * @return json|array
  *   A keyed array to be converted into JSON.
  */
-function dlts_viewer_list_resource(int $start = 0, int $length = 25) {
+function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
 
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
@@ -169,33 +169,87 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 25) {
     $start = $query_parameters['start'];
   }
 
-  if (isset($query_parameters['code'])) {
-    $code = $query_parameters['code'];
-  }
+  $placeholders = [
+    ':proceed' => 0,
+  ];
 
   $query = "
     SELECT
-      resource.nid,
-      resource.noid,
-      resource.identifier
+      DISTINCT COUNT(resource.nid) numFound
     FROM dlts_viewer_resource resource
     LEFT JOIN node
       ON resource.nid = node.nid
+    LEFT JOIN field_data_field_title title
+      ON resource.nid = title.entity_id
+    LEFT JOIN field_data_field_handle handle
+      ON resource.nid = handle.entity_id
+    LEFT JOIN field_data_field_identifier identifier
+      ON resource.nid = identifier.entity_id
+    LEFT JOIN field_data_field_collection collection
+      ON resource.nid = collection.entity_id
+    INNER JOIN field_data_field_code collection_code
+      ON collection.field_collection_nid = collection_code.entity_id
+    LEFT JOIN field_data_field_partner partner
+      ON resource.nid = partner.entity_id
+    INNER JOIN field_data_field_code partner_code
+      ON partner.field_partner_nid = partner_code.entity_id
+    WHERE resource.proceed = :proceed";
+
+  if (isset($query_parameters['collection'])) {
+    $query = $query . ' AND collection_code.field_code_value = :collection';
+    $placeholders[':collection'] = filter_xss($query_parameters['collection']);
+  }
+
+  if (isset($query_parameters['partner'])) {
+    $query = $query . ' AND partner_code.field_code_value = :partner';
+    $placeholders[':partner'] = filter_xss($query_parameters['partner']);
+  }
+
+  if (isset($query_parameters['searchTerm'])) {
+    $query = $query . ' AND (title.field_title_value LIKE :search OR identifier.field_identifier_value LIKE :search OR handle.field_handle_url LIKE :search)';
+    $placeholders[':search'] = '%' . db_like(filter_xss($query_parameters['searchTerm'])) . '%';
+  }
+
+  $count = db_query_range($query, $start, $length, $placeholders)->fetchField();
+
+  $query = "
+    SELECT
+      resource.nid
+    FROM dlts_viewer_resource resource
+    LEFT JOIN node
+      ON resource.nid = node.nid
+    LEFT JOIN field_data_field_title title
+      ON resource.nid = title.entity_id
+    LEFT JOIN field_data_field_handle handle
+      ON resource.nid = handle.entity_id
+    LEFT JOIN field_data_field_identifier identifier
+      ON resource.nid = identifier.entity_id
     LEFT JOIN field_data_field_collection collection
       ON resource.nid = collection.entity_id
     INNER JOIN field_data_field_code code
       ON collection.field_collection_nid = code.entity_id
-    WHERE resource.proceed = 1
-  ";
+    LEFT JOIN field_data_field_partner partner
+      ON resource.nid = partner.entity_id
+    INNER JOIN field_data_field_code partner_code
+      ON partner.field_partner_nid = partner_code.entity_id
+    WHERE resource.proceed = :proceed";
 
-  $count = db_select('dlts_viewer_resource', 'resource')
-    ->fields(NULL, array('nid'))
-    ->condition('resource.proceed', 1, '=')
-    ->countQuery()
-    ->execute()
-    ->fetchField();
+  if (isset($query_parameters['collection'])) {
+    $query = $query . ' AND code.field_code_value = :collection';
+    $placeholders[':collection'] = filter_xss($query_parameters['collection']);
+  }
 
-  $results = db_query_range($query, $start, $length, [])->fetchAll();
+  if (isset($query_parameters['partner'])) {
+    $query = $query . ' AND partner_code.field_code_value = :partner';
+    $placeholders[':partner'] = filter_xss($query_parameters['partner']);
+  }
+
+  if (isset($query_parameters['searchTerm'])) {
+    $query = $query . ' AND (title.field_title_value LIKE :search OR identifier.field_identifier_value LIKE :search OR handle.field_handle_url LIKE :search)';
+    $placeholders[':search'] = '%' . db_like(filter_xss($query_parameters['searchTerm'])) . '%';
+  }
+
+  $results = db_query_range($query, $start, $length, $placeholders)->fetchAll();
 
   $nodes = [];
 
@@ -204,6 +258,8 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 25) {
     $wrapper = entity_metadata_wrapper('node', $node);
     $collections = [];
     $partners = [];
+    $handle_raw = $wrapper->field_handle->value();
+    $handle = explode('/', $handle_raw['url']);
     foreach ($wrapper->field_collection->value() as $collection) {
       $collection_wrapper = entity_metadata_wrapper('node', $collection);
       $collections[] = [
@@ -220,9 +276,9 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 25) {
     }
     $nodes[] = [
       'nid' => $node->nid,
-      'noid' => $result->noid,
+      'noid' => $handle[count($handle) - 1],
       'type' => str_replace('dlts_', '', $wrapper->getBundle()),
-      'identifier' => $result->identifier,
+      'identifier' => $wrapper->field_identifier->value(),
       'title' => $wrapper->field_title->value(),
       'collections' => $collections,
       'partners' => $partners,
@@ -231,8 +287,8 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 25) {
   // Try to mimic Apache Solr response.
   $response = array(
     'response' => array(
-      'numFound' => $count,
-      'start' => $start,
+      'numFound' => (int) $count,
+      'start' => (int) $start,
       'docs' => $nodes,
     ),
   );
