@@ -169,9 +169,9 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
     $start = $query_parameters['start'];
   }
 
-  $proceed = 0;
+  $proceed = 1
   if (isset($query_parameters['proceed']) && is_numeric($query_parameters['proceed'])) {
-    $proceed = 1;
+    $proceed = $query_parameters['proceed'];
   }
 
   $placeholders = [
@@ -215,7 +215,7 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
     $placeholders[':search'] = '%' . db_like(filter_xss($query_parameters['searchTerm'])) . '%';
   }
 
-  $count = db_query_range($query, $start, $length, $placeholders)->fetchField();
+  $count = db_query($query, $placeholders)->fetchField();
 
   $query = "
     SELECT
