@@ -30,6 +30,7 @@ function _dlts_viewer_menu_photo() {
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_photo_thumb',
     'page arguments' => array(1, 2),
+    'load arguments' => array('%map', '%index'),
     'delivery callback' => 'drupal_deliver_html_page',
     'type' => MENU_CALLBACK,
   );
@@ -39,6 +40,7 @@ function _dlts_viewer_menu_photo() {
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_photo_dispatcher',
     'page arguments' => array(1, 2, 3),
+    'load arguments' => array('%map', '%index'),
     'delivery callback' => 'drupal_deliver_html_page',
     'type' => MENU_CALLBACK,
   );

@@ -85,6 +85,13 @@ function dlts_iiif_annotation_painting_load($sequence, $map, $index = NULL) {
         return dlts_book_page_load($sequence, $map, $index - 2);
       }
       break;
+
+    case 'dlts_photo_set':
+      preg_match('/^([\d]+)$/', $sequence, $matches);
+      if (!empty($matches)) {
+        return dlts_photo_load($sequence, $map, $index - 2);
+      }
+      break;
   }
   return FALSE;
 }
@@ -105,6 +112,13 @@ function dlts_iiif_annotation_page_load($sequence, $map, $index = NULL) {
       preg_match('/^([\d]+)$/', $sequence, $matches);
       if (!empty($matches)) {
         return dlts_book_page_load($sequence, $map, $index - 1);
+      }
+      break;
+
+    case 'dlts_photo_set':
+      preg_match('/^([\d]+)$/', $sequence, $matches);
+      if (!empty($matches)) {
+        return dlts_photo_load($sequence, $map, $index - 1);
       }
       break;
   }
@@ -129,6 +143,13 @@ function dlts_canvas_page_load($sequence, $map, $index = NULL) {
         return dlts_book_page_load($sequence, $map, $index - 1);
       }
       break;
+
+    case 'dlts_photo_set':
+      preg_match('/^([\d]+)$/', $sequence, $matches);
+      if (!empty($matches)) {
+        return dlts_photo_load($sequence, $map, $index - 1);
+      }
+      break;
   }
   return FALSE;
 }
@@ -147,7 +168,7 @@ function dlts_canvas_page_load($sequence, $map, $index = NULL) {
  * @return object
  *   MongoDB object
  */
- function dlts_resource_sequence_load($sequence, array $map, $resource_index) {
+function dlts_resource_sequence_load($sequence, array $map, $resource_index) {
 
   $wrapper = entity_metadata_wrapper('node', $map[$resource_index - 1]);
 
@@ -157,25 +178,7 @@ function dlts_canvas_page_load($sequence, $map, $index = NULL) {
 
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
 
-  // View modes, we map the views with their machine names in MongoDB.
-  $collections = array(
-    'single' => 'dlts_books_page',
-    'double' => 'dlts_stitched_books_page',
-  );
-
-  // Viewer defaults to single page view.
-  $collection_name = 'dlts_books_page';
-
-  // User can requests a view modes, get query parameters and
-  // check if page_view is set.
-  $query_parameters = drupal_get_query_parameters();
-
-  if (isset($query_parameters['page_view'])) {
-    // Check if the requested view mode is valid.
-    if (array_key_exists($query_parameters['page_view'], $collections)) {
-      $collection_name = $collections[$query_parameters['page_view']];
-    }
-  }
+  $collection_name = dlts_viewer_mongodb_collections_by_type($type);
 
   $result = dlts_viewer_mongodb_load_sequence(
     $sequence,
@@ -199,19 +202,21 @@ function dlts_canvas_page_load($sequence, $map, $index = NULL) {
   }
 
   drupal_set_message(
-    t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.',
+    t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from @resource identify by identifier <strong>@identifier</strong> not found.',
     array(
       '@identifier' => $identifier,
       '@sequence' => $sequence,
+      '@resource' => $type,
     )
   ), 'error');
 
   watchdog(
     'MongoDB sequence not found',
-    'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.',
+    'Unable to find book sequence page <strong>%sequence</strong> from %resource <strong>%identifier</strong>.',
     array(
       '%identifier' => $identifier,
       '%sequence' => $sequence,
+      '%resource' => $type,
     ),
     WATCHDOG_NOTICE
   );

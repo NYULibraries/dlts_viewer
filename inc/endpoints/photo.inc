@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * API Photos endpoint.

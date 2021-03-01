@@ -6,6 +6,35 @@
  */
 
 /**
+ * MongoDB collection name by content type.
+ *
+ * @param string $type
+ *   Content type.
+ * @param string $view
+ *   Legacy.
+ *
+ * @return string
+ *   Collection name.
+ */
+function dlts_viewer_mongodb_collections_by_type($type, $view = '') {
+  // View modes, we map the views with their machine names in MongoDB.
+  $collections = array(
+    'dlts_book' => 'dlts_books_page',
+    'dlts_collection' => 'dlts_collection',
+    'dlts_map' => 'dlts_map_page',
+    'dlts_partner' => 'dlts_partner',
+    'dlts_photo_set' => 'dlts_photo',
+    'dlts_postcard' => 'dlts_postcard',
+  );
+  if (isset($collections[$type])) {
+    return $collections[$type];
+  }
+  else {
+    // Error.
+  }
+}
+
+/**
  * Update sequence.
  *
  * @param array $arguments
@@ -183,6 +212,17 @@ function dlts_viewer_mongodb_load_thumbnails($isPartOf, int $page = 0, int $per_
   return FALSE;
 }
 
+/**
+ * Load resource by identifier.
+ *
+ * @param string $identifier
+ *   Identifier.
+ * @param string $collection_name
+ *   Name of collection to table to query.
+ *
+ * @return array
+ *   Resource.
+ */
 function dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name) {
   $items = array();
   $query = array('isPartOf' => $identifier);

@@ -1246,7 +1246,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
         '@volume' => $volume_number_str,
       )
     );
-    $multivolume_books = dlts_viewer_books_isPartof_multivolume($wrapper->field_multivol->value()->nid);
+    $multivolume_books = dlts_viewer_books_is_partof_multivolume($wrapper->field_multivol->value()->nid);
     foreach ($multivolume_books as $mb) {
       // Wrapp multi-volume entity with Entity API wrapper.
       $mb_wrapper = entity_metadata_wrapper('node', $mb);

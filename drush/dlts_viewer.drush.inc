@@ -239,7 +239,19 @@ function dlts_viewer_drush_generate_resource_record() {
   $type = 'node';
   $bundle = drush_get_option('type', NULL);
   $content_type = dlts_type_load($bundle);
-  $nids = dlts_viewer_list_books();
+  switch ($content_type) {
+    case 'photos':
+      $nids = dlts_viewer_list_photos();
+      break;
+
+    case 'books':
+      $nids = dlts_viewer_list_books();
+      break;
+
+    case 'maps':
+      $nids = dlts_viewer_list_maps();
+      break;
+  }
   foreach ($nids as $nid) {
     $nid = db_insert('dlts_viewer_resource')->fields([
       'nid' => $nid,

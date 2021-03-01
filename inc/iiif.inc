@@ -179,11 +179,88 @@ function dlts_viewer_iiif_resource_manifest($type, $entity) {
   switch ($type) {
     case 'dlts_book':
       return dlts_viewer_iiif_book_manifest($entity, $cache);
+
+    case 'dlts_photo_set':
+      return dlts_viewer_iiif_photo_manifest($entity, $cache);
   }
 }
 
 /**
- * Build metadata values to returs as metadata.
+ * Build metadata values to return as metadata.
+ * @link https://iiif.io/api/presentation/3.0/#metadata
+ *
+ * @param string $wrapper
+ *   Resource Entity wrapper.
+ */
+function dlts_photo_fields_values($wrapper) {
+  // Entity language.
+  $language = $wrapper->language->value();
+  $content_type = node_type_get_type($wrapper->getBundle());
+  $fields = [];
+  $field_info_instances = field_info_instances('node', $content_type->type);
+  foreach ($field_info_instances as $field_name => $field_info_instance) {
+    $fields[$field_name] = locale($field_info_instance['label'], NULL, $language);
+  }
+  // Return the value of all the fields.
+  $metadata = [];
+  $translatable_fields = [
+    'field_page_count',
+    'field_sequence_count',
+  ];
+
+  foreach ($translatable_fields as $field_name) {
+    $field_value = $wrapper->$field_name->value();
+    if (!empty($field_value)) {
+      $metadata[$field_name] = [
+        'label' => $fields[$field_name],
+        'value' => is_array($field_value) ? $field_value : [$field_value],
+      ];
+    }
+  }
+
+  $field_collection_raw = $wrapper->field_collection->value();
+  if (!empty($field_collection_raw)) {
+    $metadata['field_collection'] = [
+      'label' => $fields['field_collection'],
+      'value' => [],
+    ];
+    foreach ($field_collection_raw as $field_collection) {
+      $wrapper_collection = entity_metadata_wrapper('node', $field_collection);
+      $metadata['field_collection']['value'][] = $wrapper_collection->field_name->value();
+    }
+  }
+
+  $field_handle_raw = $wrapper->field_handle->value();
+  if (!empty($field_handle_raw)) {
+    $metadata['field_handle'] = [
+      'label' => $fields['field_handle'],
+      'value' => [
+        $field_handle_raw['url'],
+      ],
+    ];
+  }
+
+  $lang_map = array(
+    0 => 'Left to right',
+    1 => 'Right to left',
+  );
+
+  $field_partner_raw = $wrapper->field_partner->value();
+  if (!empty($field_partner_raw)) {
+    $metadata['field_partner'] = [
+      'label' => $fields['field_partner'],
+      'value' => [],
+    ];
+    foreach ($field_partner_raw as $field_partner) {
+      $wrapper_partner = entity_metadata_wrapper('node', $field_partner);
+      $metadata['field_partner']['value'][] = $wrapper_partner->field_name->value();
+    }
+  }
+  return $metadata;
+}
+
+/**
+ * Build metadata values to return as metadata.
  * @link https://iiif.io/api/presentation/3.0/#metadata
  *
  * @param string $wrapper
@@ -340,11 +417,191 @@ function dlts_book_fields_values($wrapper) {
       $metadata['field_partner']['value'][] = $wrapper_partner->field_name->value();
     }
   }
-
-  // Ask Rasan what I need to do here.
-  // $field_geographic_coordinates_raw = $wrapper->field_geographic_coordinates->value();
-
   return $metadata;
+}
+
+/**
+ * IIIF Presentation API v3 - Photo manifest.
+ *
+ * @link https://manifests.sub.uni-goettingen.de/iiif/presentation/PPN857449303/manifest
+ * @link http://localhost:9000/api/3/presentation/books/princeton_aco000102/manifest.json
+ *
+ * @param object $entity
+ *   Book node.
+ * @param bool $cache
+ *   TRUE if is ok to return a cached (in-disk) version of the manifest. Set
+ *   to false if the manifest needs to be recreated from database.
+ *
+ * @return array
+ *   IIIF Presentation API v3 - Book manifest as array.
+ */
+function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
+
+  global $base_url;
+
+  $cache = FALSE;
+
+  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
+
+  $wrapper = entity_metadata_wrapper('node', $entity);
+
+  $identifier = $wrapper->field_identifier->value();
+
+  $realpath = drupal_realpath('public://');
+
+  $type = dlts_viewer_get_bundle_alias($wrapper->getBundle());
+
+  $dir_path = $realpath . '/iiif/' . $type . '/' . $identifier;
+
+  $file_destination = "$dir_path/manifest.json";
+
+  if ($cache && file_exists($file_destination)) {
+    // @todo Thinks about this, we are decoding a JSON file
+    // so that we can pass it to drupal_json_output
+    // and then json_encode it again...
+    // should we create another output callback?
+    return drupal_json_decode(
+      file_get_contents($file_destination)
+    );
+  }
+
+  $fields = [];
+
+  $rendering = [];
+
+  $items = [];
+
+  $summary = [];
+
+  $values = [];
+
+  $fields = [];
+
+  // Default to left-to-rigth.
+  $viewingDirection = 'left-to-right';
+
+  $lang_map = [
+    0 => 'left-to-right',
+    1 => 'right-to-left',
+  ];
+
+  $behavior = ['paged'];
+
+  $sequence_count = $wrapper->field_sequence_count->value();
+
+  $translations = [
+    $entity->language => $wrapper,
+  ];
+
+  // https://iiif.io/api/presentation/3.0/#metadata
+  foreach ($translations as $translation) {
+    $values[$translation->language->value()] = dlts_photo_fields_values($translation);
+  }
+
+  foreach ($values as $lang => $field) {
+    foreach ($field as $name => $value) {
+      if (empty($value['value'])) {
+        continue;
+      }
+      if (!isset($fields[$name])) {
+        $fields[$name] = [];
+      }
+      $fields[$name]['label'][$lang] = [$value['label']];
+      $fields[$name]['value'][$lang] = $value['value'];
+    }
+  }
+
+  if ($sequence_count > 1) {
+    $behavior = array('paged');
+  }
+
+  $collection_name = 'dlts_photo';
+
+  $sequences = dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name);
+
+  foreach ($sequences as $page) {
+    // This index is a hack until I figure out the MongoDB query to
+    // remove duplicates.
+    $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_book_page_canvas(
+      $wrapper->getBundle(),
+      $entity,
+      array(
+        'sequence' => $page['sequence'],
+        'width' => (int) $page['cm']['width'],
+        'height' => (int) $page['cm']['height'],
+      )
+    );
+  }
+
+  $thumbnail = [];
+  if ($sequences && !empty($sequences)) {
+    $thumbnail_raw = $items[0]['items'][0]['items'][0]['body'];
+    $thumbnail = [
+      [
+        'id' => $thumbnail_raw['id'] . '/full/256,/0/default.jpg',
+        'type' => 'Image',
+        'format' => 'image/jpeg',
+        'service' => $thumbnail_raw['service'],
+      ],
+    ];
+  }
+
+  $logo = 'https://yt3.ggpht.com/-RZYi5isxH_M/AAAAAAAAAAI/AAAAAAAAAAA/rmWpoe2qZzI/s900-c-k-no/photo.jpg';
+
+  $metadata = array_values($fields);
+
+  if (isset($fields['field_title']['value'])) {
+    $label = $fields['field_title']['value'];
+  }
+  else {
+    $label = [
+      $entity->language => [$entity->title],
+    ];
+  }
+
+  $res = [
+    '@context' => 'http://iiif.io/api/presentation/3/context.json',
+    'id' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+    'type' => 'Manifest',
+    'label' => $label,
+    'behavior' => $behavior,
+    'items' => $items,
+    'metadata' => $metadata,
+    'viewingDirection' => $viewingDirection,
+    'homepage' => [
+      [
+        'id' => "$base_url/$type/$identifier/1",
+        'type' => 'Text',
+        'label' => [
+          'en' => [
+            'View on NYU DLTS Viewer',
+          ],
+        ],
+        'format' => 'text/html',
+      ],
+    ],
+    'logo' => [
+      [
+        'id' => $logo,
+        'type' => 'Image',
+        'format' => 'image/jpeg',
+        'height' => 100,
+        'width' => 120,
+      ],
+    ],
+    'thumbnail' => $thumbnail,
+  ];
+
+  drupal_register_shutdown_function(
+    'dlts_viewer_cache_manifest',
+    array(
+      'type' => $type,
+      'resource' => $entity,
+      'data' => $res,
+    )
+  );
+
+  return $res;
 
 }
 
@@ -565,7 +822,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
         '@volume' => $volume_number_str,
       ]);
     }
-    // $multivolume_books = dlts_viewer_books_isPartof_multivolume($wrapper->field_multivol->value()->nid);
+    // $multivolume_books = dlts_viewer_books_is_partof_multivolume($wrapper->field_multivol->value()->nid);
     // foreach ($multivolume_books as $mb) {
     //   // wrapp multi-volume entity with Entity API wrapper
     //   $mb_wrapper = entity_metadata_wrapper('node', $mb);
@@ -759,7 +1016,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   // }
 
   drupal_register_shutdown_function(
-    'dlts_viewer_cache_book_manifest',
+    'dlts_viewer_cache_manifest',
     array(
       'type' => $type,
       'resource' => $entity,
@@ -771,7 +1028,13 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
 }
 
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
 function dlts_viewer_iiif_book_page_canvas($type, $resource, $page) {
+
   global $base_url;
 
   $sequence = $page['sequence'][0];
@@ -805,9 +1068,12 @@ function dlts_viewer_iiif_book_page_canvas($type, $resource, $page) {
   );
 }
 
-// AnnotationPage.
-// @link https://iiif.io/api/presentation/3.0/#overview-annotationpage
-// @link http://localhost:9000/api/v1/books/princeton_aco000102/canvas/p193/1
+/**
+ * AnnotationPage.
+ *
+ * @link https://iiif.io/api/presentation/3.0/#overview-annotationpage
+ * @link http://localhost:9000/api/v1/books/princeton_aco000102/canvas/p193/1
+ */
 function dlts_viewer_iiif_book_page_annotation_page($type, $resource, $page) {
   global $base_url;
   $wrapper = entity_metadata_wrapper('node', $resource);
@@ -823,8 +1089,11 @@ function dlts_viewer_iiif_book_page_annotation_page($type, $resource, $page) {
   );
 }
 
-// Annotation.
-// @link http://localhost:9000/api/3/presentation/books/princeton_aco000102/annotation/painting/1
+/**
+ * Annotation.
+ *
+ * @link http://localhost:9000/api/3/presentation/books/princeton_aco000102/annotation/painting/1
+ */
 function dlts_viewer_iiif_annotation($type, $resource, $item) {
   global $base_url;
   $wrapper = entity_metadata_wrapper('node', $resource);
@@ -855,6 +1124,11 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
   ];
 }
 
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
 function dlts_viewer_cache_book_sequence($edit) {
 
   $wrapper = entity_metadata_wrapper('node', $edit['resource']);
@@ -883,7 +1157,12 @@ function dlts_viewer_cache_book_sequence($edit) {
   ), WATCHDOG_INFO);
 }
 
-function dlts_viewer_cache_book_manifest($edit) {
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
+function dlts_viewer_cache_manifest($edit) {
 
   $wrapper = entity_metadata_wrapper('node', $edit['resource']);
 

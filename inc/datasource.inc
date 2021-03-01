@@ -62,6 +62,25 @@ function dlts_viewer_get_translations_nid_by_identifier($identifier) {
 }
 
 /**
+ * List of photos.
+ *
+ * @todo Use range query.
+ */
+function dlts_viewer_list_photos() {
+  $query = new EntityFieldQuery();
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_photo_set')
+    ->propertyCondition('status', 1)
+    ->addMetaData('account', user_load(0))
+    ->execute();
+  if (empty($result['node'])) {
+    return FALSE;
+  }
+  return array_keys($result['node']);
+}
+
+/**
  * List of books.
  */
 function dlts_viewer_list_books() {
@@ -493,7 +512,7 @@ function dlts_viewer_collection_nids_by_code($code, $partnerCode = NULL) {
  *
  * @todo document function
  */
-function dlts_viewer_books_isPartof_multivolume($nid) {
+function dlts_viewer_books_is_partof_multivolume($nid) {
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_multivol_book')
@@ -513,7 +532,7 @@ function dlts_viewer_books_isPartof_multivolume($nid) {
  *
  * @todo document function
  */
-function dlts_viewer_books_isPartof_series($nid) {
+function dlts_viewer_books_is_partof_series($nid) {
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_series_book')

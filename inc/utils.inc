@@ -113,9 +113,10 @@ function dlts_viewer_object_types() {
  * @return array
  *   Return Objects list that map the object type to it's route.
  */
- function dlts_viewer_resource_type($type = NULL) {
+function dlts_viewer_resource_type($type = NULL) {
   $resources = [
     'dlts_book' => 'books',
+    'dlts_photo_set' => 'photos',
     'dlts_photo' => 'photos',
     'dlts_map' => 'maps',
   ];
