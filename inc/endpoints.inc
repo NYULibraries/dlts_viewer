@@ -205,6 +205,11 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
     $placeholders[':collection'] = filter_xss($query_parameters['collection']);
   }
 
+  if (isset($query_parameters['type'])) {
+    $query = $query . ' AND node.type = :type';
+    $placeholders[':type'] = filter_xss($query_parameters['type']);
+  }
+
   if (isset($query_parameters['partner'])) {
     $query = $query . ' AND partner_code.field_code_value = :partner';
     $placeholders[':partner'] = filter_xss($query_parameters['partner']);
@@ -239,19 +244,20 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
       ON partner.field_partner_nid = partner_code.entity_id
     WHERE resource.proceed = :proceed";
 
+  if (isset($query_parameters['type'])) {
+    $query = $query . ' AND node.type = :type';
+  }
+
   if (isset($query_parameters['collection'])) {
     $query = $query . ' AND code.field_code_value = :collection';
-    $placeholders[':collection'] = filter_xss($query_parameters['collection']);
   }
 
   if (isset($query_parameters['partner'])) {
     $query = $query . ' AND partner_code.field_code_value = :partner';
-    $placeholders[':partner'] = filter_xss($query_parameters['partner']);
   }
 
   if (isset($query_parameters['searchTerm'])) {
     $query = $query . ' AND (title.field_title_value LIKE :search OR identifier.field_identifier_value LIKE :search OR handle.field_handle_url LIKE :search)';
-    $placeholders[':search'] = '%' . db_like(filter_xss($query_parameters['searchTerm'])) . '%';
   }
 
   $results = db_query_range($query, $start, $length, $placeholders)->fetchAll();

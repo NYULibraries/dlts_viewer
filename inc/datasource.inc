@@ -62,6 +62,25 @@ function dlts_viewer_get_translations_nid_by_identifier($identifier) {
 }
 
 /**
+ * List of maps.
+ *
+ * @todo Use range query.
+ */
+function dlts_viewer_list_map() {
+  $query = new EntityFieldQuery();
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_map')
+    ->propertyCondition('status', 1)
+    ->addMetaData('account', user_load(0))
+    ->execute();
+  if (empty($result['node'])) {
+    return FALSE;
+  }
+  return array_keys($result['node']);
+}
+
+/**
  * List of photos.
  *
  * @todo Use range query.
