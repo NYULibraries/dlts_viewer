@@ -169,7 +169,7 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
     $start = $query_parameters['start'];
   }
 
-  $proceed = 1
+  $proceed = 1;
   if (isset($query_parameters['proceed']) && is_numeric($query_parameters['proceed'])) {
     $proceed = $query_parameters['proceed'];
   }
