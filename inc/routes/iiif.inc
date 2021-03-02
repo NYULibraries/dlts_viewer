@@ -79,7 +79,7 @@ function _dlts_viewer_menu_iiif() {
   // @link https://iiif.io/api/image/2.0
   // @link http://localhost:9000/api/image/books/princeton_aco000102/1/full/max/0/default.jpg
   // http://localhost:9000/api/image/books/princeton_aco000102/1/{region}/{size}/{rotation}/{quality}.{format}
-  $items['api/image/books/%dlts_book/%dlts_book_page/%dlts_iiif_region/%dlts_iiif_size/%dlts_iiif_rotation/%dlts_iiif_quality'] = array(
+  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/%dlts_iiif_region/%dlts_iiif_size/%dlts_iiif_rotation/%dlts_iiif_quality'] = array(
     'title' => 'IIIF API - Request image',
     'access arguments' => array('access iiif content'),
     'page callback' => 'dlts_viewer_iiif_tile',

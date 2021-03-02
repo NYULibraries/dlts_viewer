@@ -47,6 +47,7 @@ function dlts_viewer_schema() {
   		'legacy' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
   	)
   );
+
   $schema['dlts_viewer_resource'] = array(
     'description' => 'Resource table',
   	'fields' => array(

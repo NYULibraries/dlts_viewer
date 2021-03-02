@@ -117,13 +117,17 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
 
   $static_source = variable_get('dlts_image_static_source', 'HttpSource');
 
+  $sequence_uri = $sequence['uri'];
+
+  $replace_string = file_create_url('fileserver://');
+
   switch ($static_source) {
     case 'FilesystemSource':
-      $image_id = str_replace(file_create_url('fileserver://'), '', $sequence['uri']);
+      $image_id = str_replace('fileserver://', '', $sequence_uri);
       break;
 
     case 'HttpSource':
-      $image_id = $sequence['uri'];
+      $image_id = $sequence_uri;
       break;
   }
 
