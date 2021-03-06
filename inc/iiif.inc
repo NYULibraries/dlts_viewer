@@ -534,7 +534,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
   foreach ($sequences as $page) {
     // This index is a hack until I figure out the MongoDB query to
     // remove duplicates.
-    $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_book_page_canvas(
+    $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_resource_page_canvas(
       $wrapper->getBundle(),
       $entity,
       array(
@@ -829,7 +829,7 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
   foreach ($sequences as $page) {
     // This index is a hack until I figure out the MongoDB query to
     // remove duplicates.
-    $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_book_page_canvas(
+    $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_resource_page_canvas(
       $wrapper->getBundle(),
       $entity,
       array(
@@ -1134,7 +1134,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   foreach ($sequences as $page) {
     // This index is a hack until I figure out the MongoDB query to
     // remove duplicates.
-    $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_book_page_canvas(
+    $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_resource_page_canvas(
       $wrapper->getBundle(),
       $entity,
       array(
@@ -1370,7 +1370,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
  *
  * @todo document function
  */
-function dlts_viewer_iiif_book_page_canvas($type, $resource, $page) {
+function dlts_viewer_iiif_resource_page_canvas($type, $resource, $page) {
 
   global $base_url;
 

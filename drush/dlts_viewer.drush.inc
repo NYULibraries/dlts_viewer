@@ -130,8 +130,17 @@ function dlts_viewer_drush_command() {
     'callback' => 'dlts_viewer_drush_generate_resource_record',
     'description' => dt('Update resource pages'),
     'options' => array(
-      'identifier' => dt('Resource identifier'),
+      'type' => dt('Resource type'),
     ),
+  );
+
+  /*
+   * https://jira.nyu.edu/jira/browse/DLPAS-274
+   * https://jira.nyu.edu/jira/secure/attachment/41481/se-list.txt
+   */
+  $items['ticket-dlpas-274'] = array(
+    'callback' => 'dlts_viewer_drush_ticket_dlpas_274',
+    'description' => dt('Make searchable the PDFs for The Fight Against War and Fascism.'),
   );
 
   return $items;
@@ -145,6 +154,37 @@ function dlts_viewer_drush_help($section) {
   switch ($section) {
     case 'drush:import-book':
       return dt('Some day someone will document this module');
+  }
+}
+
+/**
+ * FAWF Collection: make PDFs searchable.
+ */
+function dlts_viewer_drush_ticket_dlpas_274() {
+  $dir = drupal_get_path('module', 'dlts_viewer') . '/datasource';
+  include_once __DIR__ . '/../inc/fields/edit_field_pdf_file.inc';
+  $lines = file($dir . '/DLPAS-274-se-list.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  foreach ($lines as $identifier) {
+    $contents = file_get_contents($dir . '/dlts_viewer_content/books/' . htmlspecialchars($identifier) . '.en.json');
+    drush_log($identifier, 'ok');
+    $data = json_decode($contents);
+    foreach ($data->metadata->pdfs->value as $key => $pdf) {
+      if ($pdf->type == 'hi') {
+        $data->metadata->pdfs->value[$key]->label = 'High resolution';
+      }
+      if ($pdf->type == 'lo') {
+        $data->metadata->pdfs->value[$key]->label = 'Low resolution';
+      }
+      $data->metadata->pdfs->value[$key]->searchable = TRUE;
+    }
+    $nid = nid_by_identifier($identifier, 'en');
+    if ($nid) {
+      $node = node_load($nid);
+      $wrapper = entity_metadata_wrapper('node', $node);
+      dlts_viewer_edit_field_pdf_file($data->metadata->pdfs, $wrapper);
+      $wrapper->save();
+      node_save($node);
+    }
   }
 }
 

@@ -21,7 +21,7 @@ function _dlts_viewer_menu_iiif() {
   $items['api/presentation/%dlts_type/%dlts_resource/canvas/%dlts_canvas_page'] = array(
     'title' => 'IIIF Presentation API 3 - Canvas',
     'access arguments' => array('access iiif content'),
-    'page callback' => 'dlts_viewer_iiif_book_page_canvas',
+    'page callback' => 'dlts_viewer_iiif_resource_page_canvas',
     'page arguments' => array(2, 3, 5),
     'load arguments' => array('%map', '%index'),
     'type' => MENU_CALLBACK,

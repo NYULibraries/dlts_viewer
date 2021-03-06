@@ -26,7 +26,7 @@ function nid_by_identifier($identifier, $language = LANGUAGE_NONE) {
 }
 
 /**
- * List of translation.
+ * List of translation by identifier.
  *
  * @param string $identifier
  *   Identifier.
@@ -607,8 +607,7 @@ function dlts_viewer_subject_vocabulary_vid() {
 }
 
 /**
- * Returns a list of created %d-%m-%Y. Usuful to select
- * batch of nodes that were publish in a specific day.
+ * List of created %d-%m-%Y, usuful to select batch of nodes that were publish in a specific day.
  */
 function dlts_viewer_batch_days($collectionCode = NULL, $status = 1, $requestedLang = 'en') {
   $dates = array();

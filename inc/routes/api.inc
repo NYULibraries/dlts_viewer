@@ -95,6 +95,7 @@ function _dlts_viewer_menu_api() {
   );
 
   // @link http://localhost:9000/books.json
+  // @todo remove.
   $items['books.json'] = array(
     'title' => 'All books in JSON format',
     'access arguments' => array('access content'),
@@ -103,6 +104,7 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   );
 
+  // @todo remove.
   $items['api/v1/books'] = array(
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_api_list_books',

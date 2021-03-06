@@ -5,7 +5,7 @@
  * Admin page.
  */
 function dlts_viewer_admin($form, &$form_state) {
-    include_once 'djatoka.inc' ;
+    include_once 'djatoka.inc';
     $djatoka = dlts_viewer_djatoka_request(array('uri' => 'http://memory.loc.gov/gmd/gmd433/g4330/g4330/np000066.jp2'));
     if (isset($djatoka['error'])) {
         drupal_set_message(t('Djatoka: Unable to request metadata from Djakota Jpeg 2000 Image Server. See: @message(code: @code)', array('@message' => $djatoka['message'], '@code' => $djatoka['code'] ) ), 'error' ) ;
@@ -48,7 +48,7 @@ function dlts_viewer_admin($form, &$form_state) {
     );
     $available_files_lib = file_scan_directory(libraries_get_path('openlayers') . '/lib', '/.*\.js$/', array('recurse' => FALSE));
     $available_files_build = file_scan_directory(libraries_get_path('openlayers') . '/build', '/.*\.js$/', array('recurse' => FALSE));
-    $available_files = array_merge( (array)$available_files_lib, (array) $available_files_build);
+    $available_files = array_merge((array) $available_files_lib, (array) $available_files_build);
     $js = array();
     foreach ($available_files as $key => $value) {
         $js[$key] = $value->uri;
@@ -78,16 +78,16 @@ function dlts_viewer_admin_list_topics($entity, $status = 1, $requestedLang = 'e
   module_load_include('inc', 'dlts_viewer', 'inc/datasource');
 
   drupal_set_title("$entity->title items by published date");
-  
+
   $wrapper = entity_metadata_wrapper('node', $entity);
 
   $dates = dlts_viewer_batch_days($wrapper->field_code->value());
 
   $header = array(
-    'Date', 
+    'Date',
     'CSV',
   );
-    
+
   $rows = array();
 
   foreach ($dates as $date) {
@@ -96,9 +96,9 @@ function dlts_viewer_admin_list_topics($entity, $status = 1, $requestedLang = 'e
       l('view', '/admin/list/topics/' . $wrapper->field_code->value() . '/' . $date),
     );
   }
-  
+
   return theme('table', array('header' => $header, 'rows' => $rows));
-    
+
 }
 
 // $entity (collection entity) $date to filter by
@@ -106,55 +106,55 @@ function dlts_viewer_admin_list_topics_($entity, $date, $requestedLang = 'en') {
   $wrapper = entity_metadata_wrapper('node', $entity);
   $status = 1;
   $sql = "
-    SELECT 
+    SELECT
       DISTINCT field_identifier.field_identifier_value identifier,
       DATE_FORMAT(
-        FROM_UNIXTIME(node.created), 
+        FROM_UNIXTIME(node.created),
         '%d-%m-%Y'
-      ) date, 
+      ) date,
       GROUP_CONCAT(
-        DISTINCT topic.field_topic_value 
+        DISTINCT topic.field_topic_value
         SEPARATOR ' |*| '
-      ) topic, 
+      ) topic,
       field_data_field_call_number.field_call_number_value call_number
     FROM node
     LEFT JOIN field_data_field_identifier field_identifier
       ON node.nid = field_identifier.entity_id
-    LEFT JOIN field_data_field_topic topic 
+    LEFT JOIN field_data_field_topic topic
       ON node.nid = topic.entity_id
-    LEFT JOIN field_data_field_call_number 
+    LEFT JOIN field_data_field_call_number
       ON node.nid = field_data_field_call_number.entity_id
-    LEFT JOIN field_data_field_collection collection 
+    LEFT JOIN field_data_field_collection collection
       ON node.nid = collection.entity_id
-    INNER JOIN field_data_field_code code 
-      ON collection.field_collection_nid = code.entity_id 
+    INNER JOIN field_data_field_code code
+      ON collection.field_collection_nid = code.entity_id
       AND code.field_code_value = :collection_code
-    WHERE node.language = :language 
+    WHERE node.language = :language
     AND DATE_FORMAT(FROM_UNIXTIME(node.created), '%d-%m-%Y') = :date
     AND node.status = :status
-    GROUP BY field_identifier.field_identifier_value 
+    GROUP BY field_identifier.field_identifier_value
     ORDER BY node.created DESC";
 
   $sql_args = array(
-    ':language' => $requestedLang, 
+    ':language' => $requestedLang,
     ':collection_code' => $wrapper->field_code->value(),
     ':status' => $status,
     ':date' => $date,
   );
-  
+
   $results = db_query($sql, $sql_args)->fetchAll();
 
 
   // send response headers to the browser
   header( 'Content-Type: text/csv' );
   header( 'Content-Disposition: attachment;filename=' . $date . '.csv');
-  
+
   $fp = fopen('php://output', 'w');
-  
+
   fputs($fp, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
 
   fputcsv($fp, array('Identifier', 'Date', 'Topic', 'Call_number'));
-  
+
   foreach($results as $result) {
     fputcsv($fp, array_values((array) $result), ',');
   }
