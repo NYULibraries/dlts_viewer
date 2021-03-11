@@ -89,6 +89,16 @@ ol li {
           <td>postcards</td>
           <td>dlts_postcard</td>
         </tr>
+        <tr>
+          <th>Collection</th>
+          <td>collections</td>
+          <td>dlts_collection</td>
+        </tr>
+        <tr>
+          <th>Partner</th>
+          <td>partners</td>
+          <td>dlts_partner</td>
+        </tr>
       </tbody>
     </table>
   </article>
