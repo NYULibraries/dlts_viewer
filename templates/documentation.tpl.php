@@ -245,6 +245,12 @@ ol li {
     </table>
     <p>For more information about URI syntax and others, please refer to <a href="https://iiif.io/api/image/2.1">IIIF Image API 2.1.1</a></p>
   </article>
+  <article class="content">
+    <h3 class="title" id="app-demo">Demo app</h3>
+    <ul>
+      <li><a href="https://objective-johnson-b22e71.netlify.app/ "> https://objective-johnson-b22e71.netlify.app/</a></li>
+    </ul>
+  </article>
 </section>
 </div>
 <footer class="footer">
