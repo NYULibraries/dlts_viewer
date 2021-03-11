@@ -60,7 +60,7 @@ ol li {
   </article>
   <article class="content">
     <h3 class="title" id="dlts-resources">DLTS Resources</h3>
-    <table class="table">
+    <table class="table is-bordered is-striped">
       <thead>
         <tr>
           <th>Name</th>
@@ -102,7 +102,7 @@ ol li {
       <li><strike>Postcard</strike></li>
     </ul>
     <h5 class="title">Query parameters, which are supported by the DLTS Discovery API</h5>
-    <table class="table">
+    <table class="table is-bordered is-striped">
       <thead>
         <tr>
           <th>Parameter</th>
@@ -183,7 +183,7 @@ ol li {
         <em><?php echo $base_url ?>/api/image/resource-type/resource-identifier/resource-sequence/{resource-region}/{resource-size}/{resource-rotation}/{resource-quality}.{resource-format}</em>
       </div>
     </article>
-    <table class="table">
+    <table class="table is-bordered is-striped">
       <thead>
         <tr>
           <th>Parameter</th>
@@ -214,7 +214,7 @@ ol li {
       </tbody>
     </table>
     <h5 class="title">Sample URL</h5>
-    <table class="table">
+    <table class="table is-bordered is-striped">
       <thead>
         <tr>
           <th>Image</th>
