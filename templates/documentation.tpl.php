@@ -38,7 +38,7 @@ ol li {
   <ul>
     <li><a href="#apache-solr-proxy">Apache Solr Search</a></li>
     <li><a href="#dlts-resources">DLTS Resources</a></li>
-    <li><a href="#discovery">DLTS Discovery API</a></li>
+    <li><a href="#discovery-api">DLTS Discovery API</a></li>
     <li><a href="#iiif-presentation">IIIF Presentation API 3.0</a></li>
     <li><a href="#iiif-image">IIIF Image API 2.1.1</a></li>
   </ul>
@@ -64,36 +64,36 @@ ol li {
       <thead>
         <tr>
           <th>Name</th>
-          <th>Machine name</th>
           <th>Alias</th>
+          <th>Machine name</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <th>Book</th>
-          <td>dlts_book</td>
           <td>books</td>
+          <td>dlts_book</td>
         </tr>
         <tr>
           <th>Map</th>
-          <td>dlts_map</td>
           <td>maps</td>
+          <td>dlts_map</td>
         </tr>
         <tr>
           <th>Photo Set</th>
-          <td>dlts_photo_set</td>
           <td>photos</td>
+          <td>dlts_photo_set</td>
         </tr>
         <tr>
           <th>Postcard</th>
-          <td>dlts_postcard</td>
           <td>postcards</td>
+          <td>dlts_postcard</td>
         </tr>
       </tbody>
     </table>
   </article>
   <article class="content">
-    <h3 class="title">DLTS Discovery API</h3>
+    <h3 id="discovery-api" class="title">DLTS Discovery API</h3>
     <p>DLTS Discovery API can be use to find and filter by resource type, noid, identifier and others. <em>The following resource are available:</em></p>
     <ul>
       <li><a href="<?php echo $base_url ?>/api/v1/objects?type=dlts_book">Book</a></a></li>
