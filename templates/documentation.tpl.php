@@ -171,6 +171,12 @@ ol li {
         <em><?php echo $base_url ?>/api/image/resource-type/resource-identifier/resource-sequence/info.json</em>
       </div>
     </article>
+    <h5 class="title">Sample URL</h5>
+    <ul>
+      <li><a href="<?php echo $base_url ?>/api/image/books/tamwag_palante000011/1/info.json"><?php echo $base_url ?>/api/image/books/tamwag_palante000011/1/info.json</a></li>
+      <li><a href="<?php echo $base_url ?>/api/image/photos/AD-MC-016_ref52/1/info.json"><?php echo $base_url ?>/api/image/photos/AD-MC-016_ref52/1/info.json</a></li>
+      <li><a href="<?php echo $base_url ?>/api/image/maps/fales_io_map000031/1/info.json"><?php echo $base_url ?>/api/image/maps/fales_io_map000031/1/info.json</a></li>
+    </ul>
     <p>2. Request an image, which may be part of a larger image.</p>
     <article class="message is-info">
       <div class="message-body">
@@ -204,6 +210,29 @@ ol li {
         <tr>
           <td>resource-format</td>
           <td>The explicit format string is always required.</td>
+        </tr>
+      </tbody>
+    </table>
+    <h5 class="title">Sample URL</h5>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>URL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><img src="<?php echo $base_url ?>/api/image/books/tamwag_palante000011/1/full/150,/0/default.jpg"/></td>
+          <td><?php echo $base_url ?>/api/image/books/tamwag_palante000011/1/full/150,/0/default.jpg</td>
+        </tr>
+        <tr>
+          <td><img src="<?php echo $base_url ?>/api/image/photos/AD-MC-016_ref52/1/full/150,/0/default.jpg"/></td>
+          <td><?php echo $base_url ?>/api/image/photos/AD-MC-016_ref52/1/full/150,/0/default.jpg</td>
+        </tr>
+        <tr>
+          <td><img src="<?php echo $base_url ?>/api/image/maps/fales_io_map000031/1/full/150,/0/default.jpg"></td>
+          <td><?php echo $base_url ?>/api/image/maps/fales_io_map000031/1/full/150,/0/default.jpg</td>
         </tr>
       </tbody>
     </table>
