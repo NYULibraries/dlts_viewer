@@ -147,9 +147,6 @@ ol li {
     <h3 class="title" id="iiif-presentation">IIIF Presentation API 3.0</h3>
     <p>DLTS Viewer resources are available as <a href="https://iiif.io/api/presentation/3.0/">IIIF Presentation API 3.0</a> manifest via URI paths. URIs for DLTS Viewer API resource have the following structure.</p>
     <article class="message is-info">
-      <div class="message-header">
-        <p>Manifest URI structure</p>
-      </div>
       <div class="message-body">
         <em><?php echo $base_url ?>/api/presentation/resource-type/resource-identifier/manifest.json</em>
       </div>
