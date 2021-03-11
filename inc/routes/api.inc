@@ -15,8 +15,17 @@ function _dlts_viewer_menu_api() {
 
   $items = array();
 
+  $items['api/v1'] = array(
+    'title' => 'DLTS Viewer - Endpoints documentation',
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_api_v1_documentation',
+    'file' => 'inc/endpoints/documentation.inc',
+    'type' => MENU_CALLBACK,
+  );
+
   $items['api/v1/search'] = array(
-    'title' => 'Search',
+    'title' => 'Apache Solr Search',
+    'description' => '<p>Proxy Apache Solr full-text search. See [Common Query Parameters|https://solr.apache.org/guide/6_6/common-query-parameters.html#common-query-parameters] for documentation.</p>',
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_search_json',
     'delivery callback' => 'drupal_json_output',

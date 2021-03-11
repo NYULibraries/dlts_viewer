@@ -162,7 +162,6 @@ function dlts_viewer_drush_help($section) {
  */
 function dlts_viewer_drush_ticket_dlpas_274() {
   $dir = drupal_get_path('module', 'dlts_viewer') . '/datasource';
-  include_once __DIR__ . '/../inc/fields/edit_field_pdf_file.inc';
   $lines = file($dir . '/DLPAS-274-se-list.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
   foreach ($lines as $identifier) {
     $contents = file_get_contents($dir . '/dlts_viewer_content/books/' . htmlspecialchars($identifier) . '.en.json');
@@ -181,7 +180,22 @@ function dlts_viewer_drush_ticket_dlpas_274() {
     if ($nid) {
       $node = node_load($nid);
       $wrapper = entity_metadata_wrapper('node', $node);
-      dlts_viewer_edit_field_pdf_file($data->metadata->pdfs, $wrapper);
+      $update = [];
+      foreach ($data->metadata->pdfs->value as $value) {
+        $update[] = array(
+          'uri' => $value->uri,
+          'label' => $value->label,
+          'data' => serialize(
+            array(
+              'label' => $value->label,
+              'uri' => $value->uri,
+              'filesize' => $value->filesize,
+              'searchable' => (isset($value->searchable) && $value->searchable) ? $value->searchable : FALSE,
+            )
+          ),
+        );
+      }
+      $wrapper->field_pdf_file->set($update);
       $wrapper->save();
       node_save($node);
     }

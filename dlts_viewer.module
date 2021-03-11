@@ -60,6 +60,9 @@ function dlts_viewer_custom_theme() {
   if (dlts_viewer_is_resource()) {
     return 'tao';
   }
+  if (current_path() == 'api/v1') {
+    return 'tao';
+  }
 }
 
 /**
