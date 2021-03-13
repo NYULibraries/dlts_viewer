@@ -1699,7 +1699,6 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
 }
 
 function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
-
   if (user_access('dlts create object')) {
     $apiVersion = 'v1.0.1';
 
