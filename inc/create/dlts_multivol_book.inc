@@ -12,7 +12,7 @@
  */
 function create_dlts_multivol_book($node) {
   global $user;
-  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_multivol');
+  module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_multivol');
   // Make sure the parent relationship exist.
   if (is_array($node->isPartOf)) {
     foreach ($node->isPartOf as $isPartOf) {

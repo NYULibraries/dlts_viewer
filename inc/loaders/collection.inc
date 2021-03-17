@@ -1,11 +1,11 @@
 <?php
 
 function dlts_collection_load($code) {
-  $query = new EntityFieldQuery;
+  $query = new EntityFieldQuery();
   $code = filter_xss($code);
   $result = $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_collection')
-    ->propertyCondition('status', 1) // only load books that are published
+    ->propertyCondition('status', 1)
     ->fieldCondition('field_code', 'value', $code, '=')
     ->execute();
   if (!empty($result['node'])) {

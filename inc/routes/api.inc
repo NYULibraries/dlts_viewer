@@ -15,8 +15,17 @@ function _dlts_viewer_menu_api() {
 
   $items = array();
 
+  $items['api/v1'] = array(
+    'title' => 'DLTS Viewer - Endpoints documentation',
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_api_v1_documentation',
+    'file' => 'inc/endpoints/documentation.inc',
+    'type' => MENU_CALLBACK,
+  );
+
   $items['api/v1/search'] = array(
-    'title' => 'Search',
+    'title' => 'Apache Solr Search',
+    'description' => '<p>Proxy Apache Solr full-text search. See [Common Query Parameters|https://solr.apache.org/guide/6_6/common-query-parameters.html#common-query-parameters] for documentation.</p>',
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_search_json',
     'delivery callback' => 'drupal_json_output',
@@ -62,11 +71,20 @@ function _dlts_viewer_menu_api() {
 
   $items['api/v1/objects'] = array(
     'title' => 'Create object',
-    'access arguments' => array('dlts create object'),
+    'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_api_v1_objects',
     'delivery callback' => 'drupal_json_output',
     'page arguments' => array(1),
     'file' => 'inc/endpoints.inc',
+  );
+
+  $items['api/v1/objects/books/%dlts_book'] = array(
+    'title' => 'Update book',
+    'access arguments' => array('dlts create object'),
+    'page callback' => 'dlts_viewer_api_v1_update_book',
+    'delivery callback' => 'drupal_json_output',
+    'page arguments' => array(4),
+    'file' => 'inc/endpoints/book.inc',
   );
 
   $items['api/v1.0.1/objects'] = array(
@@ -86,6 +104,7 @@ function _dlts_viewer_menu_api() {
   );
 
   // @link http://localhost:9000/books.json
+  // @todo remove.
   $items['books.json'] = array(
     'title' => 'All books in JSON format',
     'access arguments' => array('access content'),
@@ -94,7 +113,7 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   );
 
-  // JSON.
+  // @todo remove.
   $items['api/v1/books'] = array(
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_api_list_books',
@@ -168,6 +187,14 @@ function _dlts_viewer_menu_api() {
   $items['api/v1/collections'] = array(
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_list_collections',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints.inc',
+  );
+
+  // List documents.
+  $items['api/v1/resources'] = array(
+    'access arguments' => array('access content'),
+    'page callback' => 'dlts_viewer_list_resource',
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
   );

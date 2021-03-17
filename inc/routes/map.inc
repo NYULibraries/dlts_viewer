@@ -3,18 +3,18 @@
 function _dlts_viewer_menu_map() {
 
   $items = array();
-  
-  /**
+
+  /*
    * Convinient way to edit a Map object
    * e.g., http://{{HOST}}/{{SITE}}/maps/{{IDENTIFIER}}/edit
    */
-  $items['maps/%dlts_map/edit'] = array(
-    'title' => 'Edit book',
-    'access arguments' => array('edit any dlts_book content'),
-    'page callback' => '_dlts_viewer_map_edit_redirect',
-    'page arguments' => array(1),
-    'type' => MENU_CALLBACK,
-  );
+  // $items['maps/%dlts_map/edit'] = array(
+  //   'title' => 'Edit book',
+  //   'access arguments' => array('edit any dlts_book content'),
+  //   'page callback' => '_dlts_viewer_map_edit_redirect',
+  //   'page arguments' => array(1),
+  //   'type' => MENU_CALLBACK,
+  // );
 
   $items['maps/%dlts_map/display'] = array(
     'title' => 'Book metadata display',
@@ -25,7 +25,7 @@ function _dlts_viewer_menu_map() {
     'type' => MENU_CALLBACK,
   );
 
-  /**
+  /*
    * Render map pages
    */
   $items['maps/%dlts_map/%dlts_map_page'] = array(

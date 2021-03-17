@@ -12,7 +12,7 @@
  *  The value of field_identifier for a dtls_book node.
  *
  * @return
- * A node object with the given value for field_identifier.
+ *   A node object with the given value for field_identifier.
  *
  * @todo
  * field_identifier is supposed to be unique across all books, but we do

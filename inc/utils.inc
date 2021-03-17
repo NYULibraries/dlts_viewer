@@ -108,6 +108,25 @@ function dlts_viewer_object_types() {
 }
 
 /**
+ * List objects type.
+ *
+ * @return array
+ *   Return Objects list that map the object type to it's route.
+ */
+function dlts_viewer_resource_type($type = NULL) {
+  $resources = [
+    'dlts_book' => 'books',
+    'dlts_photo_set' => 'photos',
+    'dlts_photo' => 'photos',
+    'dlts_map' => 'maps',
+  ];
+  if (isset($resources[$type])) {
+    return $resources[$type];
+  }
+  return $resources;
+}
+
+/**
  * Check if DLTS Vierwer will render object.
  *
  * @return bool
