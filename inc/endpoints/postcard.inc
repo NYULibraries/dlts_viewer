@@ -12,7 +12,7 @@
  *  Postcard metadata.
  *
  * @example @dlts_viewer_content/books/fales_io_card000419.en.json
- * @example curl -c ./cookie -vvv -X POST -H 'Content-Type: application/json' -d '{"username": "publisher","password": "sVpgdCZ7FCvYqBi"}' http://localhost:9000/api/v0/import/user/login.json -k
+ * @example curl -c ./cookie -vvv -X POST -H 'Content-Type: application/json' -d '{"username": "wsb","password": "apestrongtogether"}' http://localhost:9000/api/v0/import/user/login.json -k
  * @example curl -b ./cookie -X POST --data "@dlts_viewer_content/books/fales_io_card000419.en.json" http://localhost:9000/api/v1/objects | jq .
  *
  * @return array
