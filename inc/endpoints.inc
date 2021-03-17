@@ -169,36 +169,34 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
     $start = $query_parameters['start'];
   }
 
-  $proceed = 1;
-  if (isset($query_parameters['proceed']) && is_numeric($query_parameters['proceed'])) {
-    $proceed = $query_parameters['proceed'];
+  $status = 1;
+  if (isset($query_parameters['status']) && is_numeric($query_parameters['status'])) {
+    $status = $query_parameters['status'];
   }
 
   $placeholders = [
-    ':proceed' => $proceed,
+    ':status' => $status,
   ];
 
   $query = "
     SELECT
-      DISTINCT COUNT(resource.nid) numFound
-    FROM dlts_viewer_resource resource
-    LEFT JOIN node
-      ON resource.nid = node.nid
+      DISTINCT COUNT(node.nid) numFound
+    FROM node
     LEFT JOIN field_data_field_title title
-      ON resource.nid = title.entity_id
+      ON node.nid = title.entity_id
     LEFT JOIN field_data_field_handle handle
-      ON resource.nid = handle.entity_id
+      ON node.nid = handle.entity_id
     LEFT JOIN field_data_field_identifier identifier
-      ON resource.nid = identifier.entity_id
+      ON node.nid = identifier.entity_id
     LEFT JOIN field_data_field_collection collection
-      ON resource.nid = collection.entity_id
+      ON node.nid = collection.entity_id
     INNER JOIN field_data_field_code collection_code
       ON collection.field_collection_nid = collection_code.entity_id
     LEFT JOIN field_data_field_partner partner
-      ON resource.nid = partner.entity_id
+      ON node.nid = partner.entity_id
     INNER JOIN field_data_field_code partner_code
       ON partner.field_partner_nid = partner_code.entity_id
-    WHERE resource.proceed = :proceed";
+    WHERE node.status = :status";
 
   if (isset($query_parameters['collection'])) {
     $query = $query . ' AND collection_code.field_code_value = :collection';
@@ -220,29 +218,37 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
     $placeholders[':search'] = '%' . db_like(filter_xss($query_parameters['searchTerm'])) . '%';
   }
 
+  if (isset($query_parameters['identifier'])) {
+    $query = $query . ' AND (identifier.field_identifier_value = :identifier)';
+    $placeholders[':identifier'] = filter_xss($query_parameters['identifier']);
+  }
+
+  if (isset($query_parameters['noid'])) {
+    $query = $query . ' AND (handle.field_handle_url LIKE :noid)';
+    $placeholders[':noid'] = '%' . db_like(filter_xss($query_parameters['noid'])) . '%';
+  }
+
   $count = db_query($query, $placeholders)->fetchField();
 
   $query = "
     SELECT
-      resource.nid
-    FROM dlts_viewer_resource resource
-    LEFT JOIN node
-      ON resource.nid = node.nid
+      node.nid
+    FROM node
     LEFT JOIN field_data_field_title title
-      ON resource.nid = title.entity_id
+      ON node.nid = title.entity_id
     LEFT JOIN field_data_field_handle handle
-      ON resource.nid = handle.entity_id
+      ON node.nid = handle.entity_id
     LEFT JOIN field_data_field_identifier identifier
-      ON resource.nid = identifier.entity_id
+      ON node.nid = identifier.entity_id
     LEFT JOIN field_data_field_collection collection
-      ON resource.nid = collection.entity_id
+      ON node.nid = collection.entity_id
     INNER JOIN field_data_field_code code
       ON collection.field_collection_nid = code.entity_id
     LEFT JOIN field_data_field_partner partner
-      ON resource.nid = partner.entity_id
+      ON node.nid = partner.entity_id
     INNER JOIN field_data_field_code partner_code
       ON partner.field_partner_nid = partner_code.entity_id
-    WHERE resource.proceed = :proceed";
+    WHERE node.status = :status";
 
   if (isset($query_parameters['type'])) {
     $query = $query . ' AND node.type = :type';
@@ -258,6 +264,14 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
 
   if (isset($query_parameters['searchTerm'])) {
     $query = $query . ' AND (title.field_title_value LIKE :search OR identifier.field_identifier_value LIKE :search OR handle.field_handle_url LIKE :search)';
+  }
+
+  if (isset($query_parameters['identifier'])) {
+    $query = $query . ' AND (identifier.field_identifier_value = :identifier)';
+  }
+
+  if (isset($query_parameters['noid'])) {
+    $query = $query . ' AND (handle.field_handle_url LIKE :noid)';
   }
 
   $results = db_query_range($query, $start, $length, $placeholders)->fetchAll();
