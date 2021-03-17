@@ -1042,14 +1042,23 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
           $data['uri'] = file_create_url($data['uri']);
           $filename = pathinfo($data['uri'], PATHINFO_FILENAME);
           preg_match('/_(hi|lo)/', $filename, $matches);
+          if (isset($value['data'])) {
+            $serial = unserialize($value['data']);
+            if (isset($serial['filesize']) && $serial['filesize'] > 0) {
+              $data['size'] = $serial['filesize'];
+            }
+            if (isset($serial['searchable'])) {
+              $data['searchable'] = $serial['searchable'];
+            }
+          }
           if (isset($matches) && isset($matches[1])) {
             switch ($matches[1]) {
               case 'hi':
                 $fields[$name]['value']['hi'] = array(
                   'label' => locale('High-resolution', NULL, $requestedLang),
                   'uri' => $data['uri'],
-                  'searchable' => FALSE,
-                  'size' => $data['size'],
+                  'searchable' => $data['searchable'],
+                  'filesize' => $data['size'],
                 );
                 break;
 
@@ -1057,8 +1066,8 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
                 $fields[$name]['value']['lo'] = array(
                   'label' => locale('Low-resolution', NULL, $requestedLang),
                   'uri' => $data['uri'],
-                  'searchable' => FALSE,
-                  'size' => $data['size'],
+                  'searchable' => $data['searchable'],
+                  'filesize' => $data['size'],
                 );
                 break;
             }
@@ -1480,14 +1489,23 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
           $data['uri'] = file_create_url($data['uri']);
           $filename = pathinfo($data['uri'], PATHINFO_FILENAME);
           preg_match('/_(hi|lo)/', $filename, $matches);
+          if (isset($value['data'])) {
+            $serial = unserialize($value['data']);
+            if (isset($serial['filesize']) && $serial['filesize'] > 0) {
+              $data['size'] = $serial['filesize'];
+            }
+            if (isset($serial['searchable'])) {
+              $data['searchable'] = $serial['searchable'];
+            }
+          }
           if (isset($matches) && isset($matches[1])) {
             switch ($matches[1]) {
               case 'hi':
                 $fields[$name]['value']['hi'] = array(
                   'label' => locale('High-resolution', NULL, $requestedLang),
                   'uri' => $data['uri'],
-                  'searchable' => FALSE,
-                  'size' => $data['size'],
+                  'searchable' => $data['searchable'],
+                  'filesize' => $data['size'],
                 );
                 break;
 
@@ -1495,8 +1513,8 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
                 $fields[$name]['value']['lo'] = array(
                   'label' => locale('Low-resolution', NULL, $requestedLang),
                   'uri' => $data['uri'],
-                  'searchable' => FALSE,
-                  'size' => $data['size'],
+                  'searchable' => $data['searchable'],
+                  'filesize' => $data['size'],
                 );
                 break;
             }

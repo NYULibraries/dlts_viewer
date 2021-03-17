@@ -143,8 +143,72 @@ function dlts_viewer_drush_command() {
     'description' => dt('Make searchable the PDFs for The Fight Against War and Fascism.'),
   );
 
+  /*
+   * https://jira.nyu.edu/jira/browse/DLTSBOOKS-292
+   * https://jira.nyu.edu/jira/secure/attachment/41769/se-list.txt
+   */
+  $items['ticket-dltsbooks-292'] = array(
+    'callback' => 'dlts_viewer_drush_ticket_dltsbooks_292',
+    'description' => dt('Update PDF with missing filesize data.'),
+  );
+
+  /*
+   * https://jira.nyu.edu/jira/browse/DLTSBOOKS-292
+   * https://jira.nyu.edu/jira/secure/attachment/41769/se-list.txt
+   */
+  $items['apes-strong-together'] = array(
+    'callback' => 'dlts_viewer_gme',
+    'aliases' => ['gme'],
+    'description' => dt('Diamonds hands'),
+  );
+
   return $items;
 
+}
+
+/**
+ * Publish migrated items.
+ */
+function dlts_viewer_drush_ticket_dltsbooks_292() {
+  $dir = drupal_get_path('module', 'dlts_viewer') . '/datasource';
+  $lines = file($dir . '/DLTSBOOKS-292-se-list.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  foreach ($lines as $identifier) {
+    $contents = file_get_contents($dir . '/dlts_viewer_content/books/' . htmlspecialchars($identifier) . '.en.json');
+    $data = json_decode($contents);
+    foreach ($data->metadata->pdfs->value as $key => $pdf) {
+      if ($pdf->type == 'hi') {
+        $data->metadata->pdfs->value[$key]->label = 'High-resolution';
+      }
+      if ($pdf->type == 'lo') {
+        $data->metadata->pdfs->value[$key]->label = 'Low-resolution';
+      }
+      $data->metadata->pdfs->value[$key]->searchable = TRUE;
+    }
+    $nid = nid_by_identifier($identifier, 'en');
+    if ($nid) {
+      $node = node_load($nid);
+      $wrapper = entity_metadata_wrapper('node', $node);
+      $update = [];
+      foreach ($data->metadata->pdfs->value as $value) {
+        $update[] = array(
+          'uri' => $value->uri,
+          'label' => $value->label,
+          'data' => serialize(
+            array(
+              'label' => $value->label,
+              'uri' => $value->uri,
+              'filesize' => $value->size,
+              'searchable' => (isset($value->searchable) && $value->searchable) ? $value->searchable : FALSE,
+            )
+          ),
+        );
+      }
+      $wrapper->field_pdf_file->set($update);
+      $wrapper->save();
+      node_save($node);
+    }
+    drush_log(drupal_get_path_alias('node/' . $nid, 'en'), 'ok');
+  }
 }
 
 /**
@@ -165,7 +229,6 @@ function dlts_viewer_drush_ticket_dlpas_274() {
   $lines = file($dir . '/DLPAS-274-se-list.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
   foreach ($lines as $identifier) {
     $contents = file_get_contents($dir . '/dlts_viewer_content/books/' . htmlspecialchars($identifier) . '.en.json');
-    drush_log($identifier, 'ok');
     $data = json_decode($contents);
     foreach ($data->metadata->pdfs->value as $key => $pdf) {
       if ($pdf->type == 'hi') {
@@ -177,6 +240,7 @@ function dlts_viewer_drush_ticket_dlpas_274() {
       $data->metadata->pdfs->value[$key]->searchable = TRUE;
     }
     $nid = nid_by_identifier($identifier, 'en');
+
     if ($nid) {
       $node = node_load($nid);
       $wrapper = entity_metadata_wrapper('node', $node);
@@ -199,6 +263,7 @@ function dlts_viewer_drush_ticket_dlpas_274() {
       $wrapper->save();
       node_save($node);
     }
+    drush_log(drupal_get_path_alias('node/' . $nid, 'en'), 'ok');
   }
 }
 
@@ -1053,4 +1118,11 @@ function dlts_viewer_update_handle($identifier, $handle) {
     $binding = trim($binding[1]);
     drush_log("Binded $binding to $location", 'ok');
   }
+}
+
+/**
+ * Apes Strong Together.
+ */
+function dlts_viewer_gme() {
+  drush_log('💎 ✋ 🚀', 'ok');
 }

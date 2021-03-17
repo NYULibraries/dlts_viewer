@@ -1,5 +1,6 @@
 # Ignore configuration files that may contain sensitive information.
-
+*-se-list.txt
+datasource/dlts_viewer_content
 .sass-cache
 .vscode/
 
