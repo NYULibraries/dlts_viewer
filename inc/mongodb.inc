@@ -155,6 +155,8 @@ function dlts_viewer_mongodb_load_thumbnails($isPartOf, $page = 0, $per_page = 1
   $items = array();
   $query = array('isPartOf' => $isPartOf);
   $cursor = mongodb_collection($collection_name)->find($query);
+  $per_page = (int) $per_page;
+  $page = (int) $page;
   // No need to continue if request does not have items.
   $count = $cursor->count();
   if ($cursor->count() > 0) {
