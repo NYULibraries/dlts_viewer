@@ -16,3 +16,7 @@ js/node_modules
 #*
 .DS_Store
 cookie
+
+curl-pass
+dlts_viewer_content
+v.v

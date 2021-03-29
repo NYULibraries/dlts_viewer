@@ -149,7 +149,7 @@ function dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection_nam
  * @return array
  *   List of items and count.
  */
-function dlts_viewer_mongodb_load_thumbnails($isPartOf, int $page = 0, int $per_page = 10, $collection_name = NULL, $content_type = NULL, $embeded_thumb = FALSE) {
+function dlts_viewer_mongodb_load_thumbnails($isPartOf, $page = 0, $per_page = 10, $collection_name = NULL, $content_type = NULL, $embeded_thumb = FALSE) {
   // Load helpers.
   module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
   $items = array();
