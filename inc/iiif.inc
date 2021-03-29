@@ -1486,12 +1486,12 @@ function dlts_viewer_cache_book_sequence($edit) {
 
   file_unmanaged_save_data($edit['data'], $file_destination, FILE_EXISTS_REPLACE);
 
-  watchdog('dlts_viewer', 'Cached sequence %sequence for type %type with identifier equals to %identifier. See %uri', array(
-    '%identifier' => $identifier,
-    '%sequence' => $sequence,
-    '%type' => $type,
-    '%uri' => $file_destination,
-  ), WATCHDOG_INFO);
+  // watchdog('dlts_viewer', 'Cached sequence %sequence for type %type with identifier equals to %identifier. See %uri', array(
+  //   '%identifier' => $identifier,
+  //   '%sequence' => $sequence,
+  //   '%type' => $type,
+  //   '%uri' => $file_destination,
+  // ), WATCHDOG_INFO);
 }
 
 /**

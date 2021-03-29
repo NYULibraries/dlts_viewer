@@ -268,7 +268,7 @@ function dlts_viewer_drush_ticket_dlpas_274() {
 }
 
 /**
- * Update resource pages.
+ * Update resource pages by identifier.
  */
 function dlts_viewer_drush_update_resource_pages() {
   include_once __DIR__ . '/../inc/djatoka.inc';
@@ -303,12 +303,11 @@ function dlts_viewer_drush_update_resource_pages() {
 }
 
 /**
- * List resource pages.
+ * Update resource pages.
  */
 function dlts_viewer_drush_list_resource_by_type() {
   $type = 'node';
   $collection_name = 'dlts_books_page';
-  $bundle = drush_get_option('type', NULL);
   $results = db_query("SELECT * FROM dlts_viewer_resource WHERE proceed = 0 LIMIT 1")->fetchAll();
   foreach ($results as $result) {
     if ($result->nid) {
@@ -359,15 +358,15 @@ function dlts_viewer_drush_generate_resource_record() {
   $bundle = drush_get_option('type', NULL);
   $content_type = dlts_type_load($bundle);
   switch ($content_type) {
-    case 'photos':
+    case 'dlts_photo_set':
       $nids = dlts_viewer_list_photos();
       break;
 
-    case 'books':
+    case 'dlts_book':
       $nids = dlts_viewer_list_books();
       break;
 
-    case 'maps':
+    case 'dlts_map':
       $nids = dlts_viewer_list_maps();
       break;
   }
