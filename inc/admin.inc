@@ -61,10 +61,145 @@ function dlts_viewer_admin($form, &$form_state) {
     $form['#submit'][] = 'dlts_viewer_image_service_admin_settings_submit';
     return system_settings_form($form);
 }
+
 /**
  * Form submit handler for dlts_viewer admin settings form.
  */
 function dlts_viewer_image_service_admin_settings_submit($form, &$form_state) {
-    $form_state['values']['dlts_viewer_djatoka_service'] = rtrim($form_state['values']['dlts_viewer_djatoka_service'], '/');
-    $form_state['values']['dlts_viewer_fileserver_host'] = rtrim($form_state['values']['dlts_viewer_fileserver_host'], '/');
+  $form_state['values']['dlts_viewer_djatoka_service'] = rtrim($form_state['values']['dlts_viewer_djatoka_service'], '/');
+  $form_state['values']['dlts_viewer_fileserver_host'] = rtrim($form_state['values']['dlts_viewer_fileserver_host'], '/');
+}
+
+/**
+ * Undocumented function.
+ */
+function dlts_viewer_admin_list_topics($entity, $status = 1, $requestedLang = 'en') {
+  /*
+   * Include datasource helpers.
+   */
+  module_load_include('inc', 'dlts_viewer', 'inc/datasource');
+
+  $wrapper = entity_metadata_wrapper('node', $entity);
+
+  $sql = "
+    SELECT
+      DISTINCT field_identifier.field_identifier_value identifier,
+      GROUP_CONCAT(
+        DISTINCT topic.field_topic_value
+        SEPARATOR ' |*| '
+      ) topic
+    FROM node
+    LEFT JOIN field_data_field_identifier field_identifier
+      ON node.nid = field_identifier.entity_id
+    LEFT JOIN field_data_field_topic topic
+      ON node.nid = topic.entity_id
+    LEFT JOIN field_data_field_collection collection
+      ON node.nid = collection.entity_id
+    INNER JOIN field_data_field_code code
+      ON collection.field_collection_nid = code.entity_id
+      AND code.field_code_value = :collection_code
+    WHERE node.language = :language
+    AND node.status = :status
+    GROUP BY field_identifier.field_identifier_value
+    ORDER BY topic ASC
+    ";
+
+  $code = $wrapper->field_code->value();
+
+  $sql_args = array(
+    ':language' => $requestedLang,
+    ':collection_code' => $code,
+    ':status' => $status,
+  );
+
+  $results = db_query($sql, $sql_args)->fetchAll();
+
+  $header = [
+    'Identifier',
+    'Topic',
+  ];
+
+  header('Content-Type: text/csv');
+
+  header('Content-Disposition: attachment;filename=topics-' . $code . '.csv');
+
+  $fp = fopen('php://output', 'w');
+
+  fwrite($fp, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
+
+  fputcsv($fp, $header);
+
+  foreach ($results as $result) {
+    fputcsv($fp, array_values((array) $result), ',');
+  }
+
+  fclose($fp);
+
+  exit;
+
+}
+
+/**
+ * Undocumented function.
+ */
+function dlts_viewer_admin_list_topics_($entity, $date, $requestedLang = 'en') {
+  $wrapper = entity_metadata_wrapper('node', $entity);
+  $status = 1;
+  $sql = "
+    SELECT
+      DISTINCT field_identifier.field_identifier_value identifier,
+      DATE_FORMAT(
+        FROM_UNIXTIME(node.created),
+        '%d-%m-%Y'
+      ) date,
+      GROUP_CONCAT(
+        DISTINCT topic.field_topic_value
+        SEPARATOR ' |*| '
+      ) topic,
+      field_data_field_call_number.field_call_number_value call_number
+    FROM node
+    LEFT JOIN field_data_field_identifier field_identifier
+      ON node.nid = field_identifier.entity_id
+    LEFT JOIN field_data_field_topic topic
+      ON node.nid = topic.entity_id
+    LEFT JOIN field_data_field_call_number
+      ON node.nid = field_data_field_call_number.entity_id
+    LEFT JOIN field_data_field_collection collection
+      ON node.nid = collection.entity_id
+    INNER JOIN field_data_field_code code
+      ON collection.field_collection_nid = code.entity_id
+      AND code.field_code_value = :collection_code
+    WHERE node.language = :language
+    AND DATE_FORMAT(FROM_UNIXTIME(node.created), '%d-%m-%Y') = :date
+    AND node.status = :status
+    GROUP BY field_identifier.field_identifier_value
+    ORDER BY node.created DESC";
+
+  $sql_args = array(
+    ':language' => $requestedLang,
+    ':collection_code' => $wrapper->field_code->value(),
+    ':status' => $status,
+    ':date' => $date,
+  );
+
+  $results = db_query($sql, $sql_args)->fetchAll();
+
+  // Send response headers to the browser.
+  header('Content-Type: text/csv');
+  header('Content-Disposition: attachment;filename=' . $date . '.csv');
+
+  $fp = fopen('php://output', 'w');
+
+  fwrite($fp, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
+
+  fputcsv($fp, array('Identifier', 'Date', 'Topic', 'Call_number'));
+
+  foreach ($results as $result) {
+    fputcsv($fp, array_values((array) $result), ',');
+  }
+
+  fclose($fp);
+
+  exit;
+
 }
