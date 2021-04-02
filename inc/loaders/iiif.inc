@@ -60,6 +60,9 @@ function dlts_iiif_quality_load($quality) {
   // @link https://iiif.io/api/image/3.0/#44-quality
   $valid = array(
     'default.jpg',
+    'gray.jpg',
+    'color.jpg',
+    'bitonal.jpg',
   );
   if (in_array($quality, $valid)) {
     return $quality;
