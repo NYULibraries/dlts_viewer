@@ -72,9 +72,7 @@ function dlts_viewer_search_repository() {
             $digi_data = json_decode($request->data);
             $entity['digi_uuid'] = $digi_data->id;
             $entity['coll_uuid'] = $digi_data->coll_id;
-            $entity['coll_url'] = $digi_data->coll_url;
-            $entity['fmds_url'] = $digi_data->fmds_url;
-            $coll_url = parse_url($entity['coll_url']);
+            $coll_url = parse_url($digi_data->coll_url);
             $coll_url = $endpoint . $coll_url['path'];
             $request = drupal_http_request($coll_url);
             if ($request->code == '200') {
@@ -82,8 +80,7 @@ function dlts_viewer_search_repository() {
               $entity['coll_code'] = $coll_data->code;
               $entity['coll_name'] = $coll_data->name;
               $entity['partner_id'] = $coll_data->partner_id;
-              $entity['partner_url'] = $coll_data->partner_url;
-              $partner_url = parse_url($entity['partner_url']);
+              $partner_url = parse_url($coll_data->partner_url);
               $partner_url = $endpoint . $partner_url['path'];
               $request = drupal_http_request($partner_url);
               if ($request->code == '200') {
@@ -106,7 +103,7 @@ function dlts_viewer_search_repository() {
       return $entity;
     }
     else {
-      throw new Exception('Incorrect site configuration.');
+      throw new Exception('Incorrect configuration.');
     }
   }
   catch (Exception $e) {
