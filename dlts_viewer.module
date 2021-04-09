@@ -70,6 +70,10 @@ function dlts_viewer_custom_theme() {
  */
 function dlts_viewer_permission() {
   return array(
+    'access dlts repository' => [
+      'title' => t('Query repository'),
+      'description' => t('Query repository and search objects.'),
+    ],
     'administer fileserver' => array(
       'title' => t('administer fileserver'),
       'description' => t('Administer the settings for the fileServer.'),

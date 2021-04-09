@@ -23,9 +23,21 @@ function _dlts_viewer_menu_api() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['api/v1/repository'] = [
+    'title' => 'Query repository',
+    'description' => 'Query repository.',
+    'access arguments' => [
+      'access dlts repository'
+    ],
+    'page callback' => 'dlts_viewer_search_repository',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/repository.inc',
+    'type' => MENU_CALLBACK,
+  ];
+
   $items['api/v1/search'] = array(
     'title' => 'Apache Solr Search',
-    'description' => '<p>Proxy Apache Solr full-text search. See [Common Query Parameters|https://solr.apache.org/guide/6_6/common-query-parameters.html#common-query-parameters] for documentation.</p>',
+    'description' => 'Proxy Apache Solr full-text search. See [Common Query Parameters|https://solr.apache.org/guide/6_6/common-query-parameters.html#common-query-parameters] for documentation.',
     'access arguments' => array('access content'),
     'page callback' => 'dlts_viewer_search_json',
     'delivery callback' => 'drupal_json_output',

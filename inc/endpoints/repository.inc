@@ -1,0 +1,117 @@
+<?php
+
+/**
+ * @file
+ * API Search callbacks.
+ */
+
+/**
+ * Search using Solr.
+ * @link http://localhost:9000/api/v1/search
+ */
+function dlts_viewer_search_repository() {
+  try {
+
+    if (!user_access('access dlts repository')) {
+      throw new Exception('User not allowed.');
+    }
+
+    $user = variable_get('repository_user', NULL);
+
+    $pass = variable_get('repository_pass', NULL);
+
+    $endpoint = variable_get('repository_endpoint', NULL);
+
+    if ($user && $pass && $endpoint) {
+      $cache = md5($_SERVER['QUERY_STRING']);
+
+      $realpath = drupal_realpath('public://') . '/datasource';
+
+      $dir_path = $realpath . '/rsbe';
+
+      parse_str(
+        parse_url(
+          $_SERVER['REQUEST_URI'],
+          PHP_URL_QUERY
+        ),
+        $args
+      );
+
+      if (isset($args['digi_id'])) {
+        $digi_id = filter_var(
+          $args['digi_id'],
+          FILTER_SANITIZE_STRING,
+          FILTER_FLAG_STRIP_LOW
+        );
+      } else {
+        throw new Exception('No param digi_id in request.');
+      }
+
+      $scope = 'ses';
+
+      $endpoint = parse_url($endpoint);
+
+      $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'];
+
+      $requestUrl = $endpoint . '/api/v0/search?scope=' . $scope . '&digi_id=' . $digi_id;
+
+      $request = drupal_http_request($requestUrl);
+
+      $entity = [];
+
+      $entity['digi_id'] = $digi_id;
+
+      if ($request->code == '200') {
+        $data = json_decode($request->data);
+        if ($data->response->numFound > 0) {
+          // Found URL for Record.
+          $digi_url = parse_url($data->response->docs[0]->url);
+          $digi_url = $endpoint . $digi_url['path'];
+          $request = drupal_http_request($digi_url);
+          if ($request->code == '200') {
+            $digi_data = json_decode($request->data);
+            $entity['digi_uuid'] = $digi_data->id;
+            $entity['coll_uuid'] = $digi_data->coll_id;
+            $entity['coll_url'] = $digi_data->coll_url;
+            $entity['fmds_url'] = $digi_data->fmds_url;
+            $coll_url = parse_url($entity['coll_url']);
+            $coll_url = $endpoint . $coll_url['path'];
+            $request = drupal_http_request($coll_url);
+            if ($request->code == '200') {
+              $coll_data = json_decode($request->data);
+              $entity['coll_code'] = $coll_data->code;
+              $entity['coll_name'] = $coll_data->name;
+              $entity['partner_id'] = $coll_data->partner_id;
+              $entity['partner_url'] = $coll_data->partner_url;
+              $partner_url = parse_url($entity['partner_url']);
+              $partner_url = $endpoint . $partner_url['path'];
+              $request = drupal_http_request($partner_url);
+              if ($request->code == '200') {
+                $partner_data = json_decode($request->data);
+                $entity['partner_code'] = $partner_data->code;
+                $entity['partner_name'] = $partner_data->name;
+              } else {
+                throw new Exception('Unable to request partner data. Reqeust failed with status code ' . $request->code . '.');
+              }
+            } else {
+              throw new Exception('Unable to request collection data. Reqeust failed with status code ' . $request->code . '.');
+            }
+          }
+        } else {
+          throw new Exception("Record with digi_id $digi_id not found.");
+        }
+      } else {
+        throw new Exception('Request failed with status code ' . $request->code . '.');
+      }
+      return $entity;
+    }
+    else {
+      throw new Exception('Incorrect site configuration.');
+    }
+  }
+  catch (Exception $e) {
+    return [
+      'error' => $e->getMessage()
+    ];
+  }
+}
