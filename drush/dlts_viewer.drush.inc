@@ -110,19 +110,12 @@ function dlts_viewer_drush_command() {
     'description' => dt('Create book bject'),
   );
 
-  $items['list-resource-by-type'] = array(
-    'callback' => 'dlts_viewer_drush_list_resource_by_type',
-    'description' => dt('List resource pages'),
-    'options' => array(
-      'type' => dt('Resource type'),
-    ),
-  );
-
   $items['update-resource-pages'] = array(
     'callback' => 'dlts_viewer_drush_update_resource_pages',
     'description' => dt('Update resource pages'),
     'options' => array(
       'identifier' => dt('Resource identifier'),
+      'log' => dt('Display opt logs'),
     ),
   );
 
@@ -268,49 +261,34 @@ function dlts_viewer_drush_ticket_dlpas_274() {
 }
 
 /**
- * Update resource pages by identifier.
- */
-function dlts_viewer_drush_update_resource_pages() {
-  include_once __DIR__ . '/../inc/djatoka.inc';
-  $type = 'node';
-  $identifier = drush_get_option('identifier', NULL);
-  $collection_name = 'dlts_books_page';
-  $language = 'en';
-  $nid = nid_by_identifier($identifier, $language);
-  if ($nid) {
-    $cursor = mongodb_collection($collection_name);
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $count = $wrapper->field_sequence_count->value();
-    $pages = dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name);
-    foreach ($pages as $page) {
-      $uri = $page['uri'];
-      $cm = $page['cm'];
-      if (empty($cm['width']) || empty($cm['height'])) {
-        $metadata = dlts_viewer_djatoka_request($cm);
-        $page['cm']['width'] = $metadata['width'];
-        $page['cm']['height'] = $metadata['height'];
-        $page['cm']['dwtLevels'] = $metadata['dwtLevels'];
-        $page['cm']['levels'] = $metadata['levels'];
-        $page['cm']['compositingLayerCount'] = $metadata['compositingLayerCount'];
-        if (dlts_viewer_mongodb_update_sequence($page, $collection_name)) {
-          $realPageNumber = $page['realPageNumber'];
-          drush_log("Sequence $realPageNumber of $count part resource $identifier was updated.", 'ok');
-        }
-      }
-    }
-  }
-}
-
-/**
  * Update resource pages.
  */
-function dlts_viewer_drush_list_resource_by_type() {
+function dlts_viewer_drush_update_resource_pages() {
+  global $base_url;
+  $identifier = drush_get_option('identifier', FALSE);
+  $log = drush_get_option('log', TRUE);
+  $start = microtime(true);
+  if ($log === 'false') {
+    $log = FALSE;
+  }
+  else {
+    $log = TRUE;
+  }
   $type = 'node';
-  $collection_name = 'dlts_books_page';
-  $results = db_query("SELECT * FROM dlts_viewer_resource WHERE proceed = 0 LIMIT 1")->fetchAll();
+
+  if ($identifier) {
+    $results = db_query(
+      'SELECT * FROM dlts_viewer_resource resource LEFT JOIN node ON resource.nid = node.nid WHERE identifier = :identifier LIMIT 1',
+      [':identifier' => $identifier])->fetchAll();
+  }
+  else {
+    $results = db_query("SELECT * FROM dlts_viewer_resource resource LEFT JOIN node ON resource.nid = node.nid WHERE proceed = 0 LIMIT 1")->fetchAll();
+  }
+
   foreach ($results as $result) {
     if ($result->nid) {
+      $bundle_alias = dlts_viewer_get_bundle_alias($result->type);
+      $collection_name = dlts_viewer_mongodb_collections_by_type($result->type);
       $cursor = mongodb_collection($collection_name);
       $node = node_load($result->nid);
       $wrapper = entity_metadata_wrapper('node', $node);
@@ -321,30 +299,46 @@ function dlts_viewer_drush_list_resource_by_type() {
       $noid = str_replace('/2333.1/', '', $parsed_url['path']);
       $pages = dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name);
       $error = FALSE;
-      foreach ($pages as $page) {
-        $cm = $page['cm'];
-        if (empty($cm['width']) || empty($cm['height'])) {
-          $realPageNumber = $page['realPageNumber'];
-          $request_url = "http://dev-sites.dlib.nyu.edu/viewer/api/image/books/$identifier/$realPageNumber";
-          $response = drupal_http_request($request_url);
-          if ($response->code == '200' && isset($response->data)) {
-            $data = json_decode($response->data);
-            $page['cm']['width'] = $data->width;
-            $page['cm']['height'] = $data->height;
-            if (dlts_viewer_mongodb_update_sequence($page, $collection_name)) {
-              drush_log("Sequence $realPageNumber of $count part resource $identifier was updated.", 'ok');
+      try {
+        foreach ($pages as $page) {
+          $cm = $page['cm'];
+          if (empty($cm['width']) || empty($cm['height'])) {
+            $realPageNumber = $page['realPageNumber'];
+            $request_url = "$base_url/api/image/$bundle_alias/$identifier/$realPageNumber";
+            $response = drupal_http_request($request_url);
+            if ($response->code == '200' && isset($response->data)) {
+              $data = json_decode($response->data);
+              $page['cm']['width'] = $data->width;
+              $page['cm']['height'] = $data->height;
+              if (dlts_viewer_mongodb_update_sequence($page, $collection_name)) {
+                if ($log) {
+                  drush_log("Sequence $realPageNumber of $count part resource $identifier was updated.", 'ok');
+                }
+              }
+              else {
+                throw new Exception("Unable to update resource with id $identifier");
+              }
             }
           }
         }
+        if (!$error) {
+          db_update('dlts_viewer_resource')
+            ->fields(array(
+              'identifier' => $identifier,
+              'noid' => $noid,
+              'proceed' => 1,
+            )
+          )->condition('nid', $result->nid, '=')->execute();
+          $end = microtime(true);
+          $time = number_format(($end - $start), 2);
+          watchdog('dlts_viewer', "Sequences for resource with id $identifier were successfully updated. $time in seconds.", array(), WATCHDOG_NOTICE);
+        }
+        else {
+          throw new Exception("Unable to update resource with id $identifier");
+        }
       }
-      if (!$error) {
-        db_update('dlts_viewer_resource')
-          ->fields(array(
-            'identifier' => $identifier,
-            'noid' => $noid,
-            'proceed' => 1,
-          )
-        )->condition('nid', $result->nid, '=')->execute();
+      catch (Exception $e) {
+        watchdog_exception('dlts_viewer', $e);
       }
     }
   }
