@@ -9,6 +9,7 @@
 // api/iiif/photos/%dlts_photo_handle/%dlts_photo_sequence/%dlts_iiif_region/%dlts_iiif_size/%dlts_iiif_rotation/%dlts_iiif_quality
 function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
   $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');
+  // $image_server = 'http://192.168.0.102:8182';
   if (!empty($sequence['cm']['uri'])) {
     $static_source = variable_get('dlts_image_static_source', 'FilesystemSource');
     switch ($static_source) {

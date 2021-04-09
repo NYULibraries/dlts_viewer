@@ -178,12 +178,14 @@ function dlts_viewer_mongodb_load_sequence(int $sequence, $isPartOf, $collection
  * @return array
  *   List of items and count.
  */
-function dlts_viewer_mongodb_load_thumbnails($isPartOf, int $page = 0, int $per_page = 10, $collection_name = NULL, $content_type = NULL, $embeded_thumb = FALSE) {
+function dlts_viewer_mongodb_load_thumbnails($isPartOf, $page = 0, $per_page = 10, $collection_name = NULL, $content_type = NULL, $embeded_thumb = FALSE) {
   // Load helpers.
   module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
   $items = array();
   $query = array('isPartOf' => $isPartOf);
   $cursor = mongodb_collection($collection_name)->find($query);
+  $per_page = (int) $per_page;
+  $page = (int) $page;
   // No need to continue if request does not have items.
   $count = $cursor->count();
   if ($cursor->count() > 0) {

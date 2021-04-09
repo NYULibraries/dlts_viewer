@@ -71,33 +71,72 @@ function dlts_viewer_image_service_admin_settings_submit($form, &$form_state) {
     $form_state['values']['dlts_viewer_fileserver_host'] = rtrim($form_state['values']['dlts_viewer_fileserver_host'], '/');
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_admin_list_topics($entity, $status = 1, $requestedLang = 'en') {
-  /**
-   * Include datasource helpers
+  /*
+   * Include datasource helpers.
    */
   module_load_include('inc', 'dlts_viewer', 'inc/datasource');
 
-  drupal_set_title("$entity->title items by published date");
-
   $wrapper = entity_metadata_wrapper('node', $entity);
 
-  $dates = dlts_viewer_batch_days($wrapper->field_code->value());
+  $sql = "
+    SELECT
+      DISTINCT field_identifier.field_identifier_value identifier,
+      GROUP_CONCAT(
+        DISTINCT topic.field_topic_value
+        SEPARATOR ' |*| '
+      ) topic
+    FROM node
+    LEFT JOIN field_data_field_identifier field_identifier
+      ON node.nid = field_identifier.entity_id
+    LEFT JOIN field_data_field_topic topic
+      ON node.nid = topic.entity_id
+    LEFT JOIN field_data_field_collection collection
+      ON node.nid = collection.entity_id
+    INNER JOIN field_data_field_code code
+      ON collection.field_collection_nid = code.entity_id
+      AND code.field_code_value = :collection_code
+    WHERE node.language = :language
+    AND node.status = :status
+    GROUP BY field_identifier.field_identifier_value
+    ORDER BY topic ASC
+    ";
 
-  $header = array(
-    'Date',
-    'CSV',
+  $code = $wrapper->field_code->value();
+
+  $sql_args = array(
+    ':language' => $requestedLang,
+    ':collection_code' => $code,
+    ':status' => $status,
   );
 
-  $rows = array();
+  $results = db_query($sql, $sql_args)->fetchAll();
 
-  foreach ($dates as $date) {
-    $rows[] = array(
-      $date,
-      l('view', '/admin/list/topics/' . $wrapper->field_code->value() . '/' . $date),
-    );
+  $header = [
+    'Identifier',
+    'Topic',
+  ];
+
+  header('Content-Type: text/csv');
+
+  header('Content-Disposition: attachment;filename=topics-' . $code . '.csv');
+
+  $fp = fopen('php://output', 'w');
+
+  fwrite($fp, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
+
+  fputcsv($fp, $header);
+
+  foreach ($results as $result) {
+    fputcsv($fp, array_values((array) $result), ',');
   }
 
-  return theme('table', array('header' => $header, 'rows' => $rows));
+  fclose($fp);
+
+  exit;
 
 }
 
