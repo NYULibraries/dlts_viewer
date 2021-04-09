@@ -62,15 +62,15 @@ function dlts_viewer_get_translations_nid_by_identifier($identifier) {
 }
 
 /**
- * List of maps.
+ * List of photos.
  *
  * @todo Use range query.
  */
-function dlts_viewer_list_map() {
+function dlts_viewer_list_photos() {
   $query = new EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'dlts_map')
+    ->entityCondition('bundle', 'dlts_photo_set')
     ->propertyCondition('status', 1)
     ->addMetaData('account', user_load(0))
     ->execute();
@@ -81,15 +81,14 @@ function dlts_viewer_list_map() {
 }
 
 /**
- * List of photos.
- *
- * @todo Use range query.
+ * List of maps.
  */
-function dlts_viewer_list_photos() {
+function dlts_viewer_list_maps() {
   $query = new EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'dlts_photo_set')
+    ->entityCondition('bundle', 'dlts_map')
+    ->propertyCondition('language', 'en')
     ->propertyCondition('status', 1)
     ->addMetaData('account', user_load(0))
     ->execute();
