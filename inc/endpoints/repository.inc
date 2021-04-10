@@ -72,6 +72,7 @@ function dlts_viewer_search_repository() {
             $digi_data = json_decode($request->data);
             $entity['digi_uuid'] = $digi_data->id;
             $entity['coll_uuid'] = $digi_data->coll_id;
+            $entity['type'] = $digi_data->do_type;
             $coll_url = parse_url($digi_data->coll_url);
             $coll_url = $endpoint . $coll_url['path'];
             $request = drupal_http_request($coll_url);
