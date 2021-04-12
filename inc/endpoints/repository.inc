@@ -43,7 +43,7 @@ function dlts_viewer_search_repository() {
         $args
       );
       // No digi_id, no go.
-      if (isset($args['digi_id'])) {
+      if (isset($args['digi_id']) && !empty($args['digi_id'])) {
         $digi_id = filter_var(
           $args['digi_id'],
           FILTER_SANITIZE_STRING,
@@ -56,9 +56,9 @@ function dlts_viewer_search_repository() {
 
       // Entity language.
       $language = 'en';
-      if (isset($args['en'])) {
+      if (isset($args['lang']) && !empty($args['lang'])) {
         $language = filter_var(
-          $args['en'],
+          $args['lang'],
           FILTER_SANITIZE_STRING,
           FILTER_FLAG_STRIP_LOW
         );
@@ -170,4 +170,7 @@ function dlts_viewer_search_repository() {
       'error' => $e->getMessage(),
     ];
   }
+  return [
+    'error' => 'Fatal error, cause unknow.',
+  ];
 }
