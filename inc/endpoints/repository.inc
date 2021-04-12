@@ -123,6 +123,7 @@ function dlts_viewer_search_repository() {
             $digi_url = $endpoint . $digi_url['path'];
             $request = drupal_http_request($digi_url);
             if ($request->code == '200') {
+              $entity['noid'] = NULL;
               $digi_data = json_decode($request->data);
               $entity['type'] = $digi_data->do_type;
               $partOf['coll_uuid'] = $digi_data->coll_id;
