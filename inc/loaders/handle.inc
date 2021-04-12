@@ -5,7 +5,7 @@
  * Wildcard loaders.
  */
 
- /**
+/**
  * A wildcard loader for dlts_photo nodes, using the node handle.
  *
  * @parameter $handle
@@ -14,7 +14,7 @@
  * @return object
  *   A node object with the given value for field_handle url.
  */
- function dlts_photo_handle_load($handle, array $map, $resource_index) {
+function dlts_photo_handle_load($handle, array $map, $resource_index) {
   $language = ['en', LANGUAGE_NONE];
   $query_parameters = drupal_get_query_parameters();
   if (isset($query_parameters['lang'])) {
@@ -26,7 +26,7 @@
     ->entityCondition('bundle', 'dlts_photo_set')
     ->propertyCondition('language', $language)
     ->propertyCondition('status', 1)
-    ->fieldCondition('field_handle', 'url', '%' . db_like($handle) . '%'  , 'LIKE')
+    ->fieldCondition('field_handle', 'url', '%' . db_like($handle) . '%', 'LIKE')
     ->addTag('node_access')
     ->execute();
   if (empty($result['node'])) {
