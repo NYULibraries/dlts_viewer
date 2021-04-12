@@ -149,7 +149,7 @@ function dlts_viewer_search_repository() {
                 throw new Exception('Unable to request collection data. Reqeust failed with status code ' . $request->code . '.');
               }
             }
-            $entity['isPartOf'] = $partOf;
+            $entity['isPartOf'][] = $partOf;
           }
           else {
             throw new Exception("Record with digi_id $digi_id not found.");
