@@ -5,6 +5,9 @@
  * API Search callbacks.
  */
 
+/**
+ * Type alias.
+ */
 function dlts_viewer_rsbe_types_alias_map($type) {
   $alias = [
     'dlts_photo_set' => 'image_set',
@@ -114,7 +117,6 @@ function dlts_viewer_search_repository() {
         }
         $entity['noid'] = $handle[count($handle) - 1];
         $entity['type'] = dlts_viewer_rsbe_types_alias_map($wrapper->getBundle());
-        $entity['uuid'] = NULL;
         $entity['isPartOf'] = $isPartOf;
       }
       /*
@@ -143,20 +145,21 @@ function dlts_viewer_search_repository() {
               $entity['noid'] = NULL;
               $digi_data = json_decode($request->data);
               $entity['type'] = $digi_data->do_type;
-              $partOf['coll_uuid'] = $digi_data->coll_id;
+              $partOf['uuid'] = $digi_data->coll_id;
               $coll_url = parse_url($digi_data->coll_url);
               $coll_url = $endpoint . $coll_url['path'];
               $request = drupal_http_request($coll_url);
               if ($request->code == '200') {
                 $coll_data = json_decode($request->data);
-                $partOf['coll_code'] = $coll_data->code;
-                $partOf['partner_uuid'] = $coll_data->partner_id;
+                $partOf['code'] = $coll_data->code;
+                $partOf['provider'] = [];
+                $partOf['provider']['uuid'] = $coll_data->partner_id;
                 $partner_url = parse_url($coll_data->partner_url);
                 $partner_url = $endpoint . $partner_url['path'];
                 $request = drupal_http_request($partner_url);
                 if ($request->code == '200') {
                   $partner_data = json_decode($request->data);
-                  $partOf['partner_code'] = $partner_data->code;
+                  $partOf['provider']['code'] = $partner_data->code;
                 }
                 else {
                   throw new Exception('Unable to request partner data. Reqeust failed with status code ' . $request->code . '.');
