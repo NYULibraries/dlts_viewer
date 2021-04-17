@@ -1641,7 +1641,11 @@ function dlts_viewer_djakota_book_page(array $sequence) {
   return $sequence;
 }
 
-// @link http://localhost:9000/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
+/**
+ * Stream book page.
+ *
+ * @link http://localhost:9000/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
+ */
 function dlts_viewer_djakota_stream_book_page() {
 
   // Get query parameters.
@@ -1689,6 +1693,9 @@ function dlts_viewer_djakota_stream_book_page() {
 
 }
 
+/**
+ * Create book v1.
+ */
 function dlts_viewer_api_v1_dlts_book_objects($source) {
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book');
   $apiVersion = 'v1';
@@ -1730,6 +1737,9 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
 
 }
 
+/**
+ * Create book v1.0.1.
+ */
 function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
   if (user_access('dlts create object')) {
     $apiVersion = 'v1.0.1';
@@ -1820,6 +1830,9 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
   );
 }
 
+/**
+ * Create photo set v1.
+ */
 function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
 
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_photo_set');
@@ -1827,9 +1840,9 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
   $apiVersion = 'v1';
 
   // Define metadata fields.
-  $partners = array();
+  $partners = [];
 
-  $collections = array();
+  $collections = [];
 
   $title = NULL;
 
@@ -1839,9 +1852,9 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
 
   $handle = NULL;
 
-  $metadata = (object) array();
+  $metadata = (object) [];
 
-  $expected_keys = array(
+  $expected_keys = [
     'entity_title',
     'identifier',
     'entity_language',
@@ -1849,105 +1862,103 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
     'entity_type',
     'metadata',
     'pages',
-  );
-
-  $nodes = array(
-    'photo' => array(),
-    'collection' => '',
-    'partner' => '',
-  );
+  ];
 
   try {
 
-    if ($source['entity_type'] !== 'dlts_photo_set') {
-      throw new Exception('Wrong entity type.');
-    }
+    if ($source['entity_type'] == 'dlts_photo_set' || $source['entity_type'] == 'image_set') {
 
-    $keys = array_keys($source);
-    // https://stackoverflow.com/questions/9655687/php-check-if-array-contains-all-array-values-from-another-array
-    $containsSearch = !array_diff($expected_keys, $keys);
-    // Check if request has all the keys we required.
-    if ($containsSearch && count($expected_keys) == count($keys)) {
+      $keys = array_keys($source);
 
-      if (isset($source['entity_title'])) {
-        $entity_title = $source['entity_title'];
-      }
-      else {
-        throw new Exception('Field entity_title can not be empty.');
-      }
+      // https://stackoverflow.com/questions/9655687/php-check-if-array-contains-all-array-values-from-another-array
+      $containsSearch = !array_diff($expected_keys, $keys);
 
-      if (isset($source['identifier'])) {
-        $entity_identifier = $source['identifier'];
-      }
-      else {
-        throw new Exception('Field identifier can not be empty.');
-      }
+      // Check if request has all the keys we required.
+      if ($containsSearch && count($expected_keys) == count($keys)) {
+        if (isset($source['entity_title'])) {
+          $entity_title = $source['entity_title'];
+        }
+        else {
+          throw new Exception('Field entity_title can not be empty.');
+        }
 
-      if (isset($source['metadata'])) {
-        $metadata = $source['metadata'];
-      }
+        if (isset($source['identifier'])) {
+          $entity_identifier = $source['identifier'];
+        }
+        else {
+          throw new Exception('Field identifier can not be empty.');
+        }
 
-      // Partners the book belong.
-      if (isset($metadata->partner)) {
-        foreach ($metadata->partner->value as $value) {
-          $partners[] = array(
-            'title' => $value->title,
-            'language' => $value->language,
-            'identifier' => $value->identifier,
-            'code' => $value->code,
-            'name' => $value->name,
-          );
+        if (isset($source['metadata'])) {
+          $metadata = $source['metadata'];
+        }
+
+        // Partners the book belong.
+        if (isset($metadata->partner)) {
+          foreach ($metadata->partner->value as $value) {
+            $partners[] = [
+              'title' => $value->title,
+              'language' => $value->language,
+              'identifier' => $value->identifier,
+              'code' => $value->code,
+              'name' => $value->name,
+            ];
+          }
+        }
+        // Collections the book belong.
+        if (isset($metadata->collection)) {
+          foreach ($metadata->collection->value as $value) {
+            $collections[] = [
+              'title' => $value->title,
+              'language' => $value->language,
+              'identifier' => $value->identifier,
+              'code' => $value->code,
+              'name' => $value->name,
+              'partner' => $value->partner,
+            ];
+          }
+        }
+
+        // Change title to string not array.
+        if (isset($metadata->title)) {
+          $title = $metadata->title->value[0];
+        }
+        if (isset($metadata->page_count) && !empty($metadata->page_count->value)) {
+          $page_count = $metadata->page_count->value[0];
+        }
+        if (isset($metadata->sequence_count) && !empty($metadata->sequence_count->value)) {
+          $sequence_count = $metadata->sequence_count->value[0];
+        }
+        if (isset($metadata->handle) && !empty($metadata->handle->value)) {
+          $handle = $metadata->handle->value[0];
+        }
+        $node = [
+          'entity_title' => $entity_title,
+          'identifier' => $entity_identifier,
+          'partners' => $partners,
+          'collections' => $collections,
+          'title' => $title,
+          'page_count' => $page_count,
+          'handle' => $handle,
+          'sequence_count' => $sequence_count,
+        ];
+        $entity = save_dlts_photo_set($node, $source['entity_language']);
+        if ($entity) {
+          return [
+            'data' => $node,
+          ];
         }
       }
-      // Collections the book belong.
-      if (isset($metadata->collection)) {
-        foreach ($metadata->collection->value as $value) {
-          $collections[] = array(
-            'title' => $value->title,
-            'language' => $value->language,
-            'identifier' => $value->identifier,
-            'code' => $value->code,
-            'name' => $value->name,
-            'partner' => $value->partner,
-          );
-        }
-      }
-      // Change title to string not array.
-      if (isset($metadata->title)) {
-        $title = $metadata->title->value[0];
-      }
-      if (isset($metadata->page_count) && !empty($metadata->page_count->value)) {
-        $page_count = $metadata->page_count->value[0];
-      }
-      if (isset($metadata->sequence_count) && !empty($metadata->sequence_count->value)) {
-        $sequence_count = $metadata->sequence_count->value[0];
-      }
-      if (isset($metadata->handle) && !empty($metadata->handle->value)) {
-        $handle = $metadata->handle->value[0];
-      }
-      $node = array(
-        'entity_title' => $entity_title,
-        'identifier' => $entity_identifier,
-        'partners' => $partners,
-        'collections' => $collections,
-        'title' => $title,
-        'page_count' => $page_count,
-        'handle' => $handle,
-        'sequence_count' => $sequence_count,
-      );
-      $entity = save_dlts_photo_set($node, $source['entity_language']);
-      if ($entity) {
-        return array(
-          'data' => $node,
-        );
+      else {
+        throw new Exception('Keys: ' . implode($keys, ', ') . ' do not match the requierement: ' . implode($expected_keys, ', '));
       }
     }
     else {
-      throw new Exception('Keys: ' . implode($keys, ', ') . ' do not match the requierement: ' . implode($expected_keys, ', '));
+      throw new Exception('Wrong entity type.');
     }
   }
   catch (Exception $e) {
-    watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
+    watchdog('dlts_viewer', $e->getMessage(), [], WATCHDOG_CRITICAL);
     die($e->getMessage());
   }
 }
@@ -1960,6 +1971,7 @@ function dlts_viewer_api_v1_objects($version = NULL) {
   if (user_access('dlts create object') && $_SERVER['REQUEST_METHOD'] == 'POST') {
     $datasource = array();
     $entity_types = array(
+      'image_set',
       'dlts_book',
       'dlts_photo_set',
       'dlts_postcard',
@@ -1976,6 +1988,7 @@ function dlts_viewer_api_v1_objects($version = NULL) {
               return dlts_viewer_api_v1_dlts_book_objects($datasource);
 
             case 'dlts_photo_set':
+            case 'image_set':
               return dlts_viewer_api_v1_dlts_photo_set_objects($datasource);
 
             case 'dlts_postcard':
@@ -1993,7 +2006,11 @@ function dlts_viewer_api_v1_objects($version = NULL) {
   );
 }
 
-// @link https://stage-sites.dlib.nyu.edu/viewer/api/v1/image/resolver?rft_id=http://dlib.nyu.edu/washingtonsquare/2333.1/0000008x/wsp_ln_7_8_02d.tif&svc_level=3
+/**
+ * Djakota Resolver.
+ *
+ * @link https://stage-sites.dlib.nyu.edu/viewer/api/v1/image/resolver?rft_id=http://dlib.nyu.edu/washingtonsquare/2333.1/0000008x/wsp_ln_7_8_02d.tif&svc_level=3
+ */
 function dlts_viewer_djakota_resolver_stream() {
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();

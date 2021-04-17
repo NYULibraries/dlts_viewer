@@ -5,6 +5,15 @@
  * API Search callbacks.
  */
 
+function dlts_viewer_rsbe_types_alias_map($type) {
+  $alias = [
+    'dlts_photo_set' => 'image_set',
+    'dlts_collection' => 'collection',
+    'dlts_partner' => 'partner',
+  ];
+  return $alias[$type];
+}
+
 /**
  * Search using Solr.
  * @link http://localhost:9000/api/v1/repository?digi_id=princeton_aco002112
@@ -85,19 +94,27 @@ function dlts_viewer_search_repository() {
         $wrapper = entity_metadata_wrapper('node', $node);
         $handle_raw = $wrapper->field_handle->value();
         $handle = explode('/', $handle_raw['url']);
+        $partOf = [];
         foreach ($wrapper->field_collection->value() as $collection) {
           $collection_wrapper = entity_metadata_wrapper('node', $collection);
           $field_partner = $collection_wrapper->field_partner->value();
           $partner_wrapper = entity_metadata_wrapper('node', $field_partner[0]);
           $isPartOf[] = [
-            'coll_uuid' => $collection_wrapper->field_identifier->value(),
-            'coll_code' => $collection_wrapper->field_code->value(),
-            'partner_uuid' => $partner_wrapper->field_identifier->value(),
-            'partner_code' => $partner_wrapper->field_code->value(),
+            'uuid' => $collection_wrapper->field_identifier->value(),
+            'type' => dlts_viewer_rsbe_types_alias_map($collection_wrapper->getBundle()),
+            'code' => $collection_wrapper->field_code->value(),
+            'name' => $collection_wrapper->field_name->value(),
+            'provider' => [
+              'uuid' => $partner_wrapper->field_identifier->value(),
+              'type' => dlts_viewer_rsbe_types_alias_map($partner_wrapper->getBundle()),
+              'code' => $partner_wrapper->field_code->value(),
+              'name' => $partner_wrapper->field_name->value(),
+            ],
           ];
         }
         $entity['noid'] = $handle[count($handle) - 1];
-        $entity['type'] = str_replace('dlts_', '', $wrapper->getBundle());
+        $entity['type'] = dlts_viewer_rsbe_types_alias_map($wrapper->getBundle());
+        $entity['uuid'] = NULL;
         $entity['isPartOf'] = $isPartOf;
       }
       /*
