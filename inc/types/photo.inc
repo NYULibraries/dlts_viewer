@@ -5,6 +5,12 @@
  * photo.inc
  */
 
+/**
+ * Photo view.
+ *
+ * @param object $entity
+ *   Node.
+ */
 function dlts_viewer_full_photo_view(&$entity) {
 
   $module_path = drupal_get_path('module', 'dlts_viewer');
@@ -101,6 +107,12 @@ function dlts_viewer_full_photo_view(&$entity) {
 
 }
 
+/**
+ * Photo AJAX view.
+ *
+ * @param object $entity
+ *   Node.
+ */
 function dlts_viewer_pjax_photo_view($entity) {
   return theme(
     'viewer_page',
@@ -123,6 +135,12 @@ function dlts_viewer_pjax_photo_view($entity) {
   );
 }
 
+/**
+ * Photo set view.
+ *
+ * @param object $entity
+ *   Node.
+ */
 function dlts_viewer_photo_set_view($entity) {
 
   $module_path = drupal_get_path('module', 'dlts_viewer');
@@ -200,7 +218,13 @@ function dlts_viewer_photo_set_view($entity) {
 
 }
 
-function dlts_viewer_photo_dispatcher($entity, $arg, $arg1) {
+/**
+ * Photo dispatcher.
+ *
+ * @param object $entity
+ *   Node.
+ */
+function dlts_viewer_photo_dispatcher($entity, $arg) {
 
   // Check request type.
   $is_pjax = dlts_viewer_is_pjax();
@@ -498,14 +522,23 @@ function dlts_viewer_photo_dispatcher($entity, $arg, $arg1) {
   }
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_preprocess_html_photos(&$vars) {
   dlts_viewer_preprocess_html_photo($vars);
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_preprocess_html_photo(&$vars) {
   $vars['classes_array'][] = 'photo';
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_photo_embed_redirect($entity) {
   if (is_object($entity)) {
     $wrapper = entity_metadata_wrapper('node', $entity);
@@ -523,6 +556,9 @@ function dlts_viewer_photo_embed_redirect($entity) {
   return drupal_exit();
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_photo_thumb($entity, $page) {
   if (is_object($entity)) {
 
@@ -533,7 +569,7 @@ function dlts_viewer_photo_thumb($entity, $page) {
 
     $sequence = $page['sequence'];
 
-    $thumbnails = dlts_viewer_mongodb_load_thumbnails($identifier, reset($sequence) - 1, 1, 'dlts_photo', 'photos', true);
+    $thumbnails = dlts_viewer_mongodb_load_thumbnails($identifier, reset($sequence) - 1, 1, 'dlts_photo', 'photos', TRUE);
 
     $items = $thumbnails['items'];
 

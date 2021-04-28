@@ -13,7 +13,18 @@ function dlts_viewer_search_json() {
   $env_id = apachesolr_default_environment();
   $environment = apachesolr_environment_load($env_id);
   $discoveryUrl = 'http://discovery1.dlib.nyu.edu/solr/viewer';
-  // Get query parameters.
+  $cache = md5($_SERVER['QUERY_STRING']);
+  $realpath = drupal_realpath('public://') . '/datasource';
+  $dir_path = $realpath . '/solr';
+  // If no reset and file exists, read and return content.
+  if (!isset($_GET['reset']) && file_exists($dir_path . '/' . $cache . '.json')) {
+    drupal_add_http_header('Cached-File', "$cache.json");
+    return json_decode(file_get_contents($dir_path . '/' . $cache . '.json'));
+  }
+  // Make sure cache directory exists.
+  if (!file_exists($dir_path)) {
+    mkdir($dir_path, 0755, TRUE);
+  }
   $query_parameters = explode('&', $_SERVER['QUERY_STRING']);
   $queryArray = [];
   $queryArray[] = 'wt=json';
@@ -89,5 +100,9 @@ function dlts_viewer_search_json() {
       $doc->zm_subject = $zm_subjects;
     }
   }
+
+  file_put_contents($dir_path . '/' . $cache . '.json', json_encode($data->response), LOCK_EX);
+
   return $data->response;
+
 }

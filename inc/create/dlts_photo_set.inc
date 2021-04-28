@@ -22,8 +22,8 @@ function save_dlts_photo_set($node, $node_language = 'en') {
     die('Not allowed.');
   }
 
-  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_collection');
-  module_load_include('inc', 'dlts_viewer', 'inc/create.dlts_partner');
+  module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_collection');
+  module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_partner');
   global $user;
   // Force EN language.
   if ($node_language == LANGUAGE_NONE) {

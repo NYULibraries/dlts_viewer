@@ -44,5 +44,19 @@ function _dlts_viewer_menu_admin() {
     'file' => 'inc/admin.inc',
   );
 
+  /*
+   * Convinient way to edit object
+   */
+  $items['books/%dlts_resource/edit'] =
+  $items['photos/%dlts_resource/edit'] =
+  $items['maps/%dlts_resource/edit'] = array(
+    'title' => 'Edit object',
+    'access arguments' => array('edit any dlts_book content'),
+    'page callback' => '_dlts_viewer_edit_redirect',
+    'page arguments' => array(0, 1),
+    'load arguments' => array('%map', '%index'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }

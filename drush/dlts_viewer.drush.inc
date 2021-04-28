@@ -110,8 +110,98 @@ function dlts_viewer_drush_command() {
     'description' => dt('Create book bject'),
   );
 
+  $items['update-resource-pages'] = array(
+    'callback' => 'dlts_viewer_drush_update_resource_pages',
+    'description' => dt('Update resource pages'),
+    'options' => array(
+      'identifier' => dt('Resource identifier'),
+      'log' => dt('Display opt logs'),
+    ),
+  );
+
+  $items['generate-resource-record'] = array(
+    'callback' => 'dlts_viewer_drush_generate_resource_record',
+    'description' => dt('Update resource pages'),
+    'options' => array(
+      'type' => dt('Resource type'),
+    ),
+  );
+
+  /*
+   * https://jira.nyu.edu/jira/browse/DLPAS-274
+   * https://jira.nyu.edu/jira/secure/attachment/41481/se-list.txt
+   */
+  $items['ticket-dlpas-274'] = array(
+    'callback' => 'dlts_viewer_drush_ticket_dlpas_274',
+    'description' => dt('Make searchable the PDFs for The Fight Against War and Fascism.'),
+  );
+
+  /*
+   * https://jira.nyu.edu/jira/browse/DLTSBOOKS-292
+   * https://jira.nyu.edu/jira/secure/attachment/41769/se-list.txt
+   */
+  $items['ticket-dltsbooks-292'] = array(
+    'callback' => 'dlts_viewer_drush_ticket_dltsbooks_292',
+    'description' => dt('Update PDF with missing filesize data.'),
+  );
+
+  /*
+   * https://jira.nyu.edu/jira/browse/DLTSBOOKS-292
+   * https://jira.nyu.edu/jira/secure/attachment/41769/se-list.txt
+   */
+  $items['apes-strong-together'] = array(
+    'callback' => 'dlts_viewer_gme',
+    'aliases' => ['gme'],
+    'description' => dt('Diamonds hands'),
+  );
+
   return $items;
 
+}
+
+/**
+ * Publish migrated items.
+ */
+function dlts_viewer_drush_ticket_dltsbooks_292() {
+  $dir = drupal_get_path('module', 'dlts_viewer') . '/datasource';
+  $lines = file($dir . '/DLTSBOOKS-292-se-list.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  foreach ($lines as $identifier) {
+    $contents = file_get_contents($dir . '/dlts_viewer_content/books/' . htmlspecialchars($identifier) . '.en.json');
+    $data = json_decode($contents);
+    foreach ($data->metadata->pdfs->value as $key => $pdf) {
+      if ($pdf->type == 'hi') {
+        $data->metadata->pdfs->value[$key]->label = 'High-resolution';
+      }
+      if ($pdf->type == 'lo') {
+        $data->metadata->pdfs->value[$key]->label = 'Low-resolution';
+      }
+      $data->metadata->pdfs->value[$key]->searchable = TRUE;
+    }
+    $nid = nid_by_identifier($identifier, 'en');
+    if ($nid) {
+      $node = node_load($nid);
+      $wrapper = entity_metadata_wrapper('node', $node);
+      $update = [];
+      foreach ($data->metadata->pdfs->value as $value) {
+        $update[] = array(
+          'uri' => $value->uri,
+          'label' => $value->label,
+          'data' => serialize(
+            array(
+              'label' => $value->label,
+              'uri' => $value->uri,
+              'filesize' => $value->size,
+              'searchable' => (isset($value->searchable) && $value->searchable) ? $value->searchable : FALSE,
+            )
+          ),
+        );
+      }
+      $wrapper->field_pdf_file->set($update);
+      $wrapper->save();
+      node_save($node);
+    }
+    drush_log(drupal_get_path_alias('node/' . $nid, 'en'), 'ok');
+  }
 }
 
 /**
@@ -121,6 +211,164 @@ function dlts_viewer_drush_help($section) {
   switch ($section) {
     case 'drush:import-book':
       return dt('Some day someone will document this module');
+  }
+}
+
+/**
+ * FAWF Collection: make PDFs searchable.
+ */
+function dlts_viewer_drush_ticket_dlpas_274() {
+  $dir = drupal_get_path('module', 'dlts_viewer') . '/datasource';
+  $lines = file($dir . '/DLPAS-274-se-list.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  foreach ($lines as $identifier) {
+    $contents = file_get_contents($dir . '/dlts_viewer_content/books/' . htmlspecialchars($identifier) . '.en.json');
+    $data = json_decode($contents);
+    foreach ($data->metadata->pdfs->value as $key => $pdf) {
+      if ($pdf->type == 'hi') {
+        $data->metadata->pdfs->value[$key]->label = 'High resolution';
+      }
+      if ($pdf->type == 'lo') {
+        $data->metadata->pdfs->value[$key]->label = 'Low resolution';
+      }
+      $data->metadata->pdfs->value[$key]->searchable = TRUE;
+    }
+    $nid = nid_by_identifier($identifier, 'en');
+
+    if ($nid) {
+      $node = node_load($nid);
+      $wrapper = entity_metadata_wrapper('node', $node);
+      $update = [];
+      foreach ($data->metadata->pdfs->value as $value) {
+        $update[] = array(
+          'uri' => $value->uri,
+          'label' => $value->label,
+          'data' => serialize(
+            array(
+              'label' => $value->label,
+              'uri' => $value->uri,
+              'filesize' => $value->filesize,
+              'searchable' => (isset($value->searchable) && $value->searchable) ? $value->searchable : FALSE,
+            )
+          ),
+        );
+      }
+      $wrapper->field_pdf_file->set($update);
+      $wrapper->save();
+      node_save($node);
+    }
+    drush_log(drupal_get_path_alias('node/' . $nid, 'en'), 'ok');
+  }
+}
+
+/**
+ * Update resource pages.
+ */
+function dlts_viewer_drush_update_resource_pages() {
+  global $base_url;
+  $identifier = drush_get_option('identifier', FALSE);
+  $log = drush_get_option('log', TRUE);
+  $start = microtime(true);
+  if ($log === 'false') {
+    $log = FALSE;
+  }
+  else {
+    $log = TRUE;
+  }
+  $type = 'node';
+
+  if ($identifier) {
+    $results = db_query(
+      'SELECT * FROM dlts_viewer_resource resource LEFT JOIN node ON resource.nid = node.nid WHERE identifier = :identifier LIMIT 1',
+      [':identifier' => $identifier])->fetchAll();
+  }
+  else {
+    $results = db_query("SELECT * FROM dlts_viewer_resource resource LEFT JOIN node ON resource.nid = node.nid WHERE proceed = 0 LIMIT 1")->fetchAll();
+  }
+
+  foreach ($results as $result) {
+    if ($result->nid) {
+      $bundle_alias = dlts_viewer_get_bundle_alias($result->type);
+      $collection_name = dlts_viewer_mongodb_collections_by_type($result->type);
+      $cursor = mongodb_collection($collection_name);
+      $node = node_load($result->nid);
+      $wrapper = entity_metadata_wrapper('node', $node);
+      $identifier = $wrapper->field_identifier->value();
+      $count = $wrapper->field_sequence_count->value();
+      $field_handle = $wrapper->field_handle->value();
+      $parsed_url = parse_url($field_handle['url']);
+      $noid = str_replace('/2333.1/', '', $parsed_url['path']);
+      $pages = dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name);
+      $error = FALSE;
+      try {
+        foreach ($pages as $page) {
+          $cm = $page['cm'];
+          if (empty($cm['width']) || empty($cm['height'])) {
+            $realPageNumber = $page['realPageNumber'];
+            $request_url = "$base_url/api/image/$bundle_alias/$identifier/$realPageNumber";
+            $response = drupal_http_request($request_url);
+            if ($response->code == '200' && isset($response->data)) {
+              $data = json_decode($response->data);
+              $page['cm']['width'] = $data->width;
+              $page['cm']['height'] = $data->height;
+              if (dlts_viewer_mongodb_update_sequence($page, $collection_name)) {
+                if ($log) {
+                  drush_log("Sequence $realPageNumber of $count part resource $identifier was updated.", 'ok');
+                }
+              }
+              else {
+                throw new Exception("Unable to update resource with id $identifier");
+              }
+            }
+          }
+        }
+        if (!$error) {
+          db_update('dlts_viewer_resource')
+            ->fields(array(
+              'identifier' => $identifier,
+              'noid' => $noid,
+              'proceed' => 1,
+            )
+          )->condition('nid', $result->nid, '=')->execute();
+          $end = microtime(true);
+          $time = number_format(($end - $start), 2);
+          watchdog('dlts_viewer', "Sequences for resource with id $identifier were successfully updated. $time in seconds.", array(), WATCHDOG_NOTICE);
+        }
+        else {
+          throw new Exception("Unable to update resource with id $identifier");
+        }
+      }
+      catch (Exception $e) {
+        watchdog_exception('dlts_viewer', $e);
+      }
+    }
+  }
+}
+
+/**
+ * Generate resource record.
+ */
+function dlts_viewer_drush_generate_resource_record() {
+  $type = 'node';
+  $bundle = drush_get_option('type', NULL);
+  $content_type = dlts_type_load($bundle);
+  switch ($content_type) {
+    case 'dlts_photo_set':
+      $nids = dlts_viewer_list_photos();
+      break;
+
+    case 'dlts_book':
+      $nids = dlts_viewer_list_books();
+      break;
+
+    case 'dlts_map':
+      $nids = dlts_viewer_list_maps();
+      break;
+  }
+  foreach ($nids as $nid) {
+    $nid = db_insert('dlts_viewer_resource')->fields([
+      'nid' => $nid,
+      'proceed' => 0,
+    ])->execute();
   }
 }
 
@@ -863,4 +1111,11 @@ function dlts_viewer_update_handle($identifier, $handle) {
     $binding = trim($binding[1]);
     drush_log("Binded $binding to $location", 'ok');
   }
+}
+
+/**
+ * Apes Strong Together.
+ */
+function dlts_viewer_gme() {
+  drush_log('💎 ✋ 🚀', 'ok');
 }

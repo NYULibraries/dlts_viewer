@@ -11,3 +11,28 @@
   margin-top: .5em;
   margin-bottom: .5em;
 }
+
+.page-node-edit .field-fileserver-label, .page-node-edit .field-fileserver-uri, .page-node-edit .field-fileserver-filesize {
+  margin-top: .5em;
+  margin-bottom: .5em;
+}
+
+.not-logged-in .views-field-edit-node {
+  display: none;
+  visibility: hidden;
+}
+
+.not-logged-in .views-field-edit-node {
+  display: none;
+  visibility: hidden;
+}
+
+.not-logged-in .views-field-status {
+  display: none;
+  visibility: hidden;
+}
+
+.not-logged-in .views-field-status {
+  display: none;
+  visibility: hidden;
+}

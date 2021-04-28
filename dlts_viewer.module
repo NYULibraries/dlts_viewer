@@ -60,6 +60,9 @@ function dlts_viewer_custom_theme() {
   if (dlts_viewer_is_resource()) {
     return 'tao';
   }
+  if (current_path() == 'api/v1') {
+    return 'tao';
+  }
 }
 
 /**
@@ -67,6 +70,10 @@ function dlts_viewer_custom_theme() {
  */
 function dlts_viewer_permission() {
   return array(
+    'access dlts repository' => [
+      'title' => t('Query repository'),
+      'description' => t('Query repository and search objects.'),
+    ],
     'administer fileserver' => array(
       'title' => t('administer fileserver'),
       'description' => t('Administer the settings for the fileServer.'),
@@ -418,4 +425,21 @@ function dlts_viewer_node_delete($node) {
     }
   }
   db_delete('dlts_viewer_books_json')->condition('nid', $node->nid)->execute();
+}
+
+/**
+ * Create the table which was missing during early stage of module development.
+ */
+ function dlts_viewer_update_7102() {
+  $table = array(
+    'description' => 'Resource table',
+    'fields' => array(
+      'nid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
+      'noid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
+      'identifier' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
+      'document' => array('type' => 'text'),
+      'proceed' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+    )
+  );
+  db_create_table('dlts_viewer_resource', $table);
 }

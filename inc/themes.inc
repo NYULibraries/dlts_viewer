@@ -167,6 +167,10 @@ function dlts_viewer_theme() {
       'base hook' => 'page',
       'template' => 'templates/node.pjax',
     ),
+    'viewer_documentation_page' => array(
+      'template' => 'templates/documentation',
+      'variables' => [],
+    ),
   );
 }
 

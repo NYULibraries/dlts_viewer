@@ -26,7 +26,7 @@ function nid_by_identifier($identifier, $language = LANGUAGE_NONE) {
 }
 
 /**
- * List of translation.
+ * List of translation by identifier.
  *
  * @param string $identifier
  *   Identifier.
@@ -59,6 +59,43 @@ function dlts_viewer_get_translations_nid_by_identifier($identifier) {
     $keys = array_keys($result['node']);
   }
   return $keys;
+}
+
+/**
+ * List of photos.
+ *
+ * @todo Use range query.
+ */
+function dlts_viewer_list_photos() {
+  $query = new EntityFieldQuery();
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_photo_set')
+    ->propertyCondition('status', 1)
+    ->addMetaData('account', user_load(0))
+    ->execute();
+  if (empty($result['node'])) {
+    return FALSE;
+  }
+  return array_keys($result['node']);
+}
+
+/**
+ * List of maps.
+ */
+function dlts_viewer_list_maps() {
+  $query = new EntityFieldQuery();
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_map')
+    ->propertyCondition('language', 'en')
+    ->propertyCondition('status', 1)
+    ->addMetaData('account', user_load(0))
+    ->execute();
+  if (empty($result['node'])) {
+    return FALSE;
+  }
+  return array_keys($result['node']);
 }
 
 /**
@@ -493,7 +530,7 @@ function dlts_viewer_collection_nids_by_code($code, $partnerCode = NULL) {
  *
  * @todo document function
  */
-function dlts_viewer_books_isPartof_multivolume($nid) {
+function dlts_viewer_books_is_partof_multivolume($nid) {
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_multivol_book')
@@ -513,7 +550,7 @@ function dlts_viewer_books_isPartof_multivolume($nid) {
  *
  * @todo document function
  */
-function dlts_viewer_books_isPartof_series($nid) {
+function dlts_viewer_books_is_partof_series($nid) {
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_series_book')
@@ -569,8 +606,7 @@ function dlts_viewer_subject_vocabulary_vid() {
 }
 
 /**
- * Returns a list of created %d-%m-%Y. Usuful to select
- * batch of nodes that were publish in a specific day.
+ * List of created %d-%m-%Y, usuful to select batch of nodes that were publish in a specific day.
  */
 function dlts_viewer_batch_days($collectionCode = NULL, $status = 1, $requestedLang = 'en') {
   $dates = array();

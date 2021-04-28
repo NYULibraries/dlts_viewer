@@ -6,6 +6,35 @@
  */
 
 /**
+ * MongoDB collection name by content type.
+ *
+ * @param string $type
+ *   Content type.
+ * @param string $view
+ *   Legacy.
+ *
+ * @return string
+ *   Collection name.
+ */
+function dlts_viewer_mongodb_collections_by_type($type, $view = '') {
+  // View modes, we map the views with their machine names in MongoDB.
+  $collections = array(
+    'dlts_book' => 'dlts_books_page',
+    'dlts_collection' => 'dlts_collection',
+    'dlts_map' => 'dlts_map_page',
+    'dlts_partner' => 'dlts_partner',
+    'dlts_photo_set' => 'dlts_photo',
+    'dlts_postcard' => 'dlts_postcard',
+  );
+  if (isset($collections[$type])) {
+    return $collections[$type];
+  }
+  else {
+    // Error.
+  }
+}
+
+/**
  * Update sequence.
  *
  * @param array $arguments
@@ -117,9 +146,9 @@ function dlts_viewer_mongodb_load_by_item_identifier($isPartOf, $collection_name
  * @return array
  *   Sequence.
  */
-function dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection_name = 'dlts_books_page') {
+function dlts_viewer_mongodb_load_sequence(int $sequence, $isPartOf, $collection_name = 'dlts_books_page') {
   // Make sure we have a number.
-  $sequence = (int) $sequence;
+  $sequence = $sequence;
   // Prepare query.
   $query = array(
     'isPartOf' => $isPartOf,
@@ -183,4 +212,27 @@ function dlts_viewer_mongodb_load_thumbnails($isPartOf, $page = 0, $per_page = 1
     return array('count' => $count, 'items' => $items);
   }
   return FALSE;
+}
+
+/**
+ * Load resource by identifier.
+ *
+ * @param string $identifier
+ *   Identifier.
+ * @param string $collection_name
+ *   Name of collection to table to query.
+ *
+ * @return array
+ *   Resource.
+ */
+function dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name) {
+  $items = array();
+  $query = array('isPartOf' => $identifier);
+  $cursor = mongodb_collection($collection_name)->find($query);
+  $count = $cursor->count();
+  if ($count > 0) {
+    $cursor->sort(array('sequence' => 1));
+    return $cursor->skip(0);
+  }
+  return $items;
 }
