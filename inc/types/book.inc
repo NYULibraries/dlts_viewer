@@ -278,6 +278,8 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
     );
   }
 
+  $entity->title = html_entity_decode($entity->title, ENT_QUOTES);
+
   // Set entity title.
   drupal_set_title($entity->title);
 

@@ -29,7 +29,7 @@ function _dlts_viewer_menu_api() {
     'title' => 'Query repository',
     'description' => 'Query repository.',
     'access arguments' => [
-      'access content',
+      'access dlts repository',
     ],
     'page callback' => 'dlts_viewer_search_repository',
     'delivery callback' => 'drupal_json_output',
