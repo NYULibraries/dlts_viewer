@@ -37,6 +37,57 @@ function _dlts_viewer_menu_api() {
     'type' => MENU_CALLBACK,
   ];
 
+  $items['api/v1/repository/partners'] = [
+    'title' => 'Query repository partners',
+    'description' => 'Query repository.',
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_search_repository_partner',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/repository.inc',
+    'type' => MENU_CALLBACK,
+  ];
+
+  $items['api/v1/repository/partners/%'] = [
+    'title' => 'Query repository by partner code',
+    'description' => 'Query repository.',
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_search_repository_partner_code',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/repository.inc',
+    'type' => MENU_CALLBACK,
+    'page arguments' => [4],
+  ];
+
+  $items['api/v1/repository/partners/%/%'] = [
+    'title' => 'Query repository by partner code',
+    'description' => 'Query repository.',
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_search_repository_collection_ses',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/repository.inc',
+    'type' => MENU_CALLBACK,
+    'page arguments' => [4, 5],
+  ];
+
+  $items['api/v1/repository/partners/%/%/%'] = [
+    'title' => 'Query repository by partner/collection/digi_id',
+    'description' => 'Query repository.',
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_search_repository_collection_se_id',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/repository.inc',
+    'type' => MENU_CALLBACK,
+    'page arguments' => [4, 5, 6],
+  ];
+
   $items['api/v1/search'] = [
     'title' => 'Apache Solr Search',
     'description' => 'Proxy Apache Solr full-text search. See [Common Query Parameters|https://solr.apache.org/guide/6_6/common-query-parameters.html#common-query-parameters] for documentation.',
