@@ -55,6 +55,7 @@ function dlts_photo_load($sequence, array $map, $resource_index) {
   $wrapper = entity_metadata_wrapper('node', $map[$resource_index - 1]);
 
   $isPartOf = $wrapper->field_identifier->value();
+
   /*
    * Load MongoDB helper
    */
@@ -65,6 +66,7 @@ function dlts_photo_load($sequence, array $map, $resource_index) {
   $result = dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection_name);
 
   if ($result && isset($result['cm']) && !empty($result['cm']['uri'])) {
+
     /*
      * Found sequence in MongoDB but we need to request metadata.
      */
