@@ -13,7 +13,7 @@
  * description.
  */
 function dlts_viewer_drush_command() {
-  $items = array();
+  $items = [];
 
   $items['import-photo'] = array(
     'callback' => 'dlts_viewer_import_photo',
@@ -58,6 +58,9 @@ function dlts_viewer_drush_command() {
   $items['update-pdf-filesize'] = array(
     'callback' => 'dlts_viewer_drush_update_pdf_filesize',
     'description' => dt('Update PDF filesize'),
+    'options' => array(
+      'identifier' => dt('Book identifier'),
+    ),
   );
 
   $items['update-book-topic'] = array(
@@ -532,44 +535,92 @@ function dlts_viewer_drush_update_pdf_node($nodes, $edit) {
 
 /**
  * Helper function used to update PDF filesize.
- *
- * @todo Remove
  */
 function dlts_viewer_drush_update_pdf_filesize() {
   // Flag to not update node since we don't have the filesize information.
   $skip = FALSE;
-  $results = dlts_viewer_list_nodes_pdf();
-  if (!$results) {
-    exit(1);
-  }
-  foreach ($results as $result) {
-    $nodes = array();
-    $entity = node_load($result->nid);
-    $wrapper = entity_metadata_wrapper('node', $entity);
-    $items = $wrapper->field_pdf_file->value();
-    $edit = array();
-    $ar_nid = book_nid($wrapper->field_identifier->value(), 'ar');
-    $nodes[] = $entity;
-    if ($ar_nid) {
-      $nodes[] = node_load($ar_nid);
-    }
-    foreach ($items as $item) {
-      $data = unserialize($item['data']);
-      $data['filesize'] = field_fileserver_get_pdf_filesize($data);
-      if ((int) $data['filesize'] < 1) {
-        $skip = TRUE;
+  $digi_id = drush_get_option('identifier', FALSE);
+  if ($digi_id) {
+    // User for repository challange.
+    $user = variable_get('repository_user', NULL);
+    // Password for repository challange.
+    $pass = variable_get('repository_pass', NULL);
+    // Repository URL.
+    $endpoint = variable_get('repository_endpoint', NULL);
+    // We need this values to continue.
+    if ($user && $pass && $endpoint) {
+      $fmds = [];
+      $nodes = [];
+      $scope = 'ses';
+      $endpoint = parse_url($endpoint);
+      $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'];
+      $requestUrl = $endpoint . '/api/v0/search?scope=' . $scope . '&digi_id=' . $digi_id;
+      $request = drupal_http_request($requestUrl);
+      if ($request->code == '200') {
+        $data = json_decode($request->data);
+        if ($data->response->numFound > 0) {
+          $digi_url = parse_url($data->response->docs[0]->url);
+          $digi_url = $endpoint . $digi_url['path'];
+          $request = drupal_http_request($digi_url);
+          if ($request->code == '200') {
+            $digi_data = json_decode($request->data);
+            $fmds_url = parse_url($digi_data->fmds_url);
+            $fmds_url = $endpoint . $fmds_url['path'];
+            $fmds_request = drupal_http_request($fmds_url);
+            if ($fmds_request->code == '200') {
+              $fmds_data = json_decode($fmds_request->data);
+              foreach ($fmds_data as $fmd) {
+                $fmds[] = [
+                  'id' => $fmd->id,
+                  'name' => $fmd->name,
+                  'searchable' => (isset($fmd->data) && isset($fmd->data->searchable) && $fmd->data->searchable) ? TRUE : FALSE,
+                  'filesize' => $fmd->size,
+                ];
+              }
+            }
+          }
+          if (!empty($fmds)) {
+            $nid = nid_by_identifier($digi_id, 'en');
+            if ($nid) {
+              // Holds value of field update.
+              $edit = array();
+              $entity = node_load($nid);
+              $wrapper = entity_metadata_wrapper('node', $entity);
+              $items = $wrapper->field_pdf_file->value();
+              $ar_nid = book_nid($wrapper->field_identifier->value(), 'ar');
+              $nodes[] = $entity;
+              if ($ar_nid) {
+                $nodes[] = node_load($ar_nid);
+              }
+              foreach ($items as $item) {
+                $data = unserialize($item['data']);
+                $parsed_url = parse_url($data['uri']);
+                $filename = basename($parsed_url['path']);
+                $found_key = array_search($filename, array_column($fmds, 'name'));
+                print_r($data);
+                if (isset($fmds[$found_key]) && $fmds[$found_key]['name'] == $filename) {
+                  $data['filesize'] = $fmds[$found_key]['filesize'];
+                  $data['searchable'] = $fmds[$found_key]['searchable'];
+                }
+                print_r($data);
+                $item['data'] = serialize($data);
+                $edit[] = $item;
+              }
+              dlts_viewer_drush_update_pdf_node($nodes, $edit);
+            }
+          }
+        }
+        else {
+          drush_log('Unable to find object with identifier ' . $digi_id, 'error');
+        }
       }
-      $item['uri'] = str_replace('fileserver', 'pdfserver', $item['uri']);
-      $data['uri'] = $item['uri'];
-      $item['data'] = serialize($data);
-      $edit[] = $item;
+      else {
+        drush_log('Reqeust to RSBE API faild. Request URL ' . $requestUrl, 'error');
+      }
     }
-    if (!$skip) {
-      dlts_viewer_drush_update_pdf_node($nodes, $edit);
-    }
-    else {
-      db_merge('dlts_viewer_pdf_node_map')->key(array('nid' => $result->nid))->fields(array('status' => 2))->execute();
-    }
+  }
+  else {
+    drush_log('Can not run command without object identifier.', 'error');
   }
 }
 
