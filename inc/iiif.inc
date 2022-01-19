@@ -146,7 +146,7 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
     header('Content-type: image/jpeg');
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET');
-    header("Content-Transfer-Encoding: binary");
+    header('Content-Transfer-Encoding: binary');
     header("Etag: $etag");
     echo $content;
     exit(0);
@@ -173,10 +173,8 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
  * @param object $entity
  *   Node.
  */
-function dlts_viewer_iiif_resource_manifest($type, $entity) {
+function dlts_viewer_iiif_resource_manifest($type, $entity, $cache = TRUE) {
   $query_parameters = drupal_get_query_parameters();
-  // Use cache?
-  $cache = TRUE;
   if (isset($query_parameters['reset'])) {
     $cache = FALSE;
   }
@@ -281,17 +279,21 @@ function dlts_book_fields_values($wrapper, array $translatable_fields = []) {
 
   // Entity language.
   $language = $wrapper->language->value();
+
   $content_type = node_type_get_type($wrapper->getBundle());
+
   $fields = [];
+  
+  // Return the value of all the fields.
+  $metadata = [];
+
   $field_info_instances = field_info_instances('node', $content_type->type);
   foreach ($field_info_instances as $field_name => $field_info_instance) {
     $fields[$field_name] = locale($field_info_instance['label'], NULL, $language);
   }
-  // Return the value of all the fields.
-  $metadata = [];
 
   foreach ($translatable_fields as $field_name) {
-    if (array_search($field_name, $type_fields)) {
+    if (array_search($field_name, $type_fields) !== false) {
       $field_value = $wrapper->$field_name->value();
       if (!empty($field_value)) {
         $metadata[$field_name] = [
@@ -960,28 +962,35 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     );
   }
 
-  $fields = array();
+  $fields = [];
 
-  $series = array();
+  $series = [];
 
-  $volumes = array();
+  $volumes = [];
 
-  $collections = array();
+  $collections = [];
+
+  $items = [];
+
+  $summary = [];
+
+  $values = [];
+
+  $rendering = [];
+
+  $pdfs = [];
 
   $availableLanguages = language_list();
 
   // https://iiif.io/api/presentation/3.0/#rendering
   $field_pdf_file_raw = $wrapper->field_pdf_file->value();
 
-  $rendering = [];
-
   if ($field_pdf_file_raw) {
-    $pdfs = [];
     foreach ($field_pdf_file_raw as $value) {
-      $data = array(
+      $data = [
         'uri' => $value['uri'],
         'label' => $value['label'],
-      );
+      ];
       $data['size'] = field_fileserver_get_pdf_filesize($data);
       $data['uri'] = file_create_url($data['uri']);
       $filename = pathinfo($data['uri'], PATHINFO_FILENAME);
@@ -989,7 +998,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
       if (isset($matches) && isset($matches[1])) {
         switch ($matches[1]) {
           case 'hi':
-            $pdfs[] = array(
+            $pdfs[] = [
               'id' => $data['uri'],
               'type' => 'Text',
               'format' => 'application/pdf',
@@ -998,11 +1007,11 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
                   locale('High-resolution PDF rendering', NULL, 'en') . ' (' . field_fileserver_human_filesize($data['size']) . ')',
                 ],
               ],
-            );
+            ];
             break;
 
           case 'lo':
-            $pdfs[] = array(
+            $pdfs[] = [
               'id' => $data['uri'],
               'type' => 'Text',
               'format' => 'application/pdf',
@@ -1011,7 +1020,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
                   locale('Low-resolution PDF rendering', NULL, 'en') . ' (' . field_fileserver_human_filesize($data['size']) . ')',
                 ],
               ],
-            );
+            ];
             break;
         }
       }
@@ -1023,10 +1032,10 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   // and the language map from $availableLanguages.
   $viewingDirection = 'left-to-right';
 
-  $lang_map = array(
+  $lang_map = [
     0 => 'left-to-right',
     1 => 'right-to-left',
-  );
+  ];
 
   $field_language_code_raw = $wrapper->field_language_code->value();
   if ($field_language_code_raw) {
@@ -1036,15 +1045,15 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     }
   }
 
-  $behavior = array('individuals');
+  $behavior = ['individuals'];
 
   $sequence_count = $wrapper->field_sequence_count->value();
 
   $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
 
-  $translations = array(
+  $translations = [
     $entity->language => $wrapper,
-  );
+  ];
 
   $search_nid = array_search($entity->nid, $nids);
 
@@ -1055,14 +1064,6 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   foreach ($nids as $nid) {
     $translations[] = entity_metadata_wrapper('node', $nid);
   }
-
-  $items = [];
-
-  $summary = [];
-
-  $values = [];
-
-  $fields = [];
 
   $metadata_fields = [
     'field_author',
@@ -1124,7 +1125,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   }
 
   if ($sequence_count > 1) {
-    $behavior = array('paged');
+    $behavior = ['paged'];
   }
 
   $collection_name = dlts_viewer_mongodb_collections_by_type($bundle);
@@ -1137,11 +1138,11 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_resource_page_canvas(
       $wrapper->getBundle(),
       $entity,
-      array(
+      [
         'sequence' => $page['sequence'],
         'width' => (int) $page['cm']['width'],
         'height' => (int) $page['cm']['height'],
-      )
+      ]
     );
   }
 
