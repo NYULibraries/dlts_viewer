@@ -431,9 +431,11 @@ function theme_thumbnails_photo_pager($vars) {
     $links = array();
     for($i=0; $i < $pager_count; $i++) {
       $attributes = array('target'=> '_self');
-      if($i== $current_page) {
-          $links[''.$i] =  array('title' => ''.$i+1);
-      } else {
+      if ($i == $current_page) {
+        $context_index = $i + 1;
+        $links[''.$i] =  array('title' => ''. $context_index);
+      } 
+      else {
           $links['' . $i] = theme('pager_link', array(
               'text' => (isset($tags[0]) ? $tags[0] : t('' . ($i + 1))),
               'element' => $element,

@@ -90,11 +90,12 @@ function dlts_viewer_dispatch_thumbnails(string $identifier) {
  * @param object $entity
  *   Entity to render.
  */
-function dlts_viewer_full_book_view(&$entity) {
+function dlts_viewer_full_book_view($entity) {
   $module_path = drupal_get_path('module', 'dlts_viewer');
   $js_common_config = array('type' => 'file', 'scope' => 'footer');
   $css_common_config = array('group' => CSS_DEFAULT, 'every_page' => TRUE);
   drupal_add_css($module_path . '/css/dlts_viewer.css', $css_common_config);
+  
   drupal_add_js(
     'https://yui-s.yahooapis.com/3.18.1/build/yui/yui-min.js', 'external',
     array(
@@ -102,6 +103,7 @@ function dlts_viewer_full_book_view(&$entity) {
       'weight' => -100,
     )
   );
+
   drupal_add_js(
     'https://yui-s.yahooapis.com/combo?gallery-2014.07.31-18-26/build/gallery-soon/gallery-soon-min.js',
     'external',
@@ -110,11 +112,13 @@ function dlts_viewer_full_book_view(&$entity) {
       'weight' => -101,
     )
   );
+
   drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
   drupal_add_js($module_path . '/js/modules/slider-base.js', $js_common_config);
   drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
   drupal_add_js($module_path . '/js/ui.components.yui.js', $js_common_config);
   drupal_add_js(variable_get('dlts_viewer_openlayers_source', 'sites/all/libraries/openlayers/build/OpenLayers.js'), array('group' => JS_LIBRARY));
+
   return node_view($entity, 'metadata', $entity->language);
 }
 
@@ -158,7 +162,7 @@ function dlts_viewer_process_node_dlts_book(&$vars) {
  *   Entity to render.
  */
 function dlts_viewer_pjax_book_view(&$entity) {
-  $vars = array(
+  $vars = [
     'button_next' => $entity->button_next,
     'button_previous' => $entity->button_previous,
     'button_togglepage' => $entity->button_togglepage,
@@ -177,7 +181,7 @@ function dlts_viewer_pjax_book_view(&$entity) {
     'uri' => $entity->book_page_data['uri'],
     'width' => $entity->book_page_data['width'],
     'pageView' => $entity->pageView,
-  );
+  ];
   return theme('viewer_page', $vars);
 }
 
@@ -503,13 +507,11 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
   // Types of returns.
   switch ($display_type) {
     case 'book_page':
+    case 'book_metadata':
       return dlts_viewer_full_book_view($entity);
 
     case 'book_page_pjax':
       return dlts_viewer_pjax_book_view($entity);
-
-    case 'book_metadata':
-      return dlts_viewer_full_book_view($entity);
 
     case 'book_metadata_pjax':
       return dlts_viewer_book_metadata_view($entity);
