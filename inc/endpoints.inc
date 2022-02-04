@@ -781,13 +781,61 @@ function _dlts_viewer_book_loader($node, $reset = FALSE) {
 }
 
 /**
+ * Generate metadata about a photo.
+ *
+ * @param object $node
+ *   A dlts_photo node object.
+ * @param bool $reset
+ *   True if request does not want cache version of the resource.
+ *
+ * @return json|array
+ *   A keyed array to be converted into JSON.
+ */
+function _dlts_viewer_photo_loader($node, $reset = FALSE) {
+
+  $wrapper = entity_metadata_wrapper('node', $node);
+
+  $bundle = dlts_viewer_get_bundle_alias($wrapper->getBundle());
+
+  $identifier = $wrapper->field_identifier->value();
+
+  $query_parameters = drupal_get_query_parameters();
+
+  $requestedLang = 'en';
+
+  // Need to make sure lang exists.
+  if (isset($query_parameters['lang'])) {
+    $requestedLang = $query_parameters['lang'];
+  }
+
+  if (isset($query_parameters['reset'])) {
+    $reset = TRUE;
+  }
+
+  $realpath = drupal_realpath('public://');
+
+  $cachepath = "$realpath/datasource/$bundle/$identifier/info.$requestedLang.json";
+  
+  if (file_exists($cachepath) && !$reset) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET');
+    header('Content-Type: application/json;charset=utf-8');
+    echo file_get_contents($cachepath);
+    exit(0);
+  }
+
+  return dlts_viewer_api_photo_json($node);
+
+}
+
+/**
  * Thumbnails.
  *
  * @todo not working.
  */
 function _dlts_viewer_book_thumbnails_loader($identifier, $page = 0, $per_page = 10) {
 
-  $items = array();
+  $items = [];
 
   $image_server = variable_get('dlts_viewer_image_server', 'http://127.0.0.1:8182');
 
@@ -1165,6 +1213,195 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
 }
 
 /**
+ * Photo.
+ *
+ * @param object $entity
+ *   Index to start.
+ * @param string $requestedLang
+ *   Language code.
+ */
+function dlts_viewer_api_photo_json($entity, $requestedLang = 'en') {
+
+  global $base_url;
+
+  drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
+
+  $image_server = variable_get('dlts_viewer_image_server', 'http://127.0.0.1:8182');
+
+  $fields = $collections = [];
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  // Need to make sure lang exists.
+  if (isset($query_parameters['lang'])) {
+    $requestedLang = $query_parameters['lang'];
+  }
+  
+  $availableLanguages = language_list();
+
+  foreach ($availableLanguages as $code => $lang) {
+    if (
+      // MUST check if language is enable.
+      $availableLanguages[$code]->enabled &&
+      // Check if this books exists in the given language.
+      // 2 different strategies to check.
+      (
+        // 1) check if loaded book language match the language
+        $code == $entity->language ||
+        // If not,
+        // 2) This book is not the same language as $code,
+        // query the book using the identifier and $code
+        // if we have a nid, we have a book.
+        map_nid($identifier, $code)
+      )
+    ) {
+      $availableLanguages[$code]->direction = ($availableLanguages[$code]->direction == 0) ? 'ltr' : 'rtl';
+      $availableLanguages[$code]->default = ($code == $requestedLang) ? 1 : 0;
+      // We don't have any use for this properties.
+      unset($availableLanguages[$code]->prefix);
+      unset($availableLanguages[$code]->plurals);
+      unset($availableLanguages[$code]->formula);
+      unset($availableLanguages[$code]->domain);
+      unset($availableLanguages[$code]->weight);
+      unset($availableLanguages[$code]->javascript);
+      unset($availableLanguages[$code]->enabled);
+    }
+    else {
+      // Language is not enabled.
+      unset($availableLanguages[$code]);
+    }
+  }  
+
+  // Default to left-to-rigth.
+  $worldDirection = 'ltr';
+
+  // Entity API wrapper.
+  $wrapper = entity_metadata_wrapper('node', $entity);
+
+  // identifier.
+  $identifier = $wrapper->field_identifier->value();
+
+  // Default title of the book.
+  $displayTitle = $title = trim($wrapper->field_title->value());
+
+  $type = dlts_utilities_content_types_type($entity->type);
+
+  $bundle = dlts_viewer_get_bundle_alias($wrapper->getBundle());
+
+  $imageCount = 0;
+
+  foreach ($type['fields'] as $field) {
+    $name = str_replace('field_', '', $field['field_name']);
+    $field_name = $field['field_name'];
+    // Get the raw value of the field.
+    $raw_value = $wrapper->$field_name->value();
+    $fields[$name] = array(
+      'label' => locale($field['label'], NULL, $requestedLang),
+      'value' => NULL,
+    );
+    switch ($name) {
+
+      case 'collection':
+        $fields[$name]['value'] = [];
+        $collections = dlts_viewer_collections($raw_value);
+        foreach ($collections as $collection) {
+          unset($collection['title']);
+          unset($collection['type']);
+          unset($collection['language']);
+          unset($collection['partner']['title']);
+          unset($collection['partner']['type']);
+          unset($collection['partner']['language']);
+          $collection['name'] = locale($collection['name'], NULL, $requestedLang);
+          $collection['partner']['name'] = locale($collection['partner']['name'], NULL, $requestedLang);
+          $fields[$name]['value'][] = $collection;
+        }
+        break;
+
+      case 'handle':
+        $handle = $fields[$name]['value'] = $raw_value['url'];        
+        break;
+
+      case 'identifier':
+        unset($fields[$name]);
+        break;
+
+      case 'partner':
+        $partner_value = [];
+        foreach ($raw_value as $partner) {
+          $partner_wrapper = entity_metadata_wrapper('node', $partner);
+          $partner_value[] = [
+            'identifier' => $partner_wrapper->field_identifier->value(),
+            'code' => $partner_wrapper->field_code->value(),
+            'name' => locale($partner_wrapper->field_name->value(), NULL, $requestedLang),
+          ];
+        }
+        $fields[$name]['value'] = $partner_value;
+        unset($partner_value);
+        break;
+
+      case 'sequence_count':
+        $imageCount = $fields[$name]['value'] = (int) $raw_value;
+        break;
+
+      case 'page_count':
+        $fields[$name]['value'] = (int) $raw_value;
+        break;
+
+      case 'title':
+        unset($fields[$name]);
+        break;
+    }
+  }
+
+  $handle = explode('/', $handle);
+
+  for ($sequence = 1; $imageCount >= $sequence; ++$sequence) {
+    $items[] = "$base_url/api/image/$bundle/$identifier/$sequence/info.json";
+  }
+
+  $response = [
+    'title' => $title,
+    'displayTitle' => $displayTitle,
+    'type' => 'photo',
+    'identifier' => $identifier,
+    'nid' => $entity->nid,
+    'noid' => $handle[count($handle) - 1],
+    'worldDirection' => $worldDirection,
+    'requestedLanguage' => $availableLanguages[$requestedLang],
+    'availableLanguages' => $availableLanguages,
+    'status' => (int) $entity->status,
+    'iiif' => [
+      'identifier' => "$bundle/$identifier",
+      'image' => [
+        'service' => "$base_url/api/image",
+        'version' => 2,
+        'items' => $items,
+      ],
+      'presentation' => [
+        'service' => "$base_url/api/presentation",
+        'manifest' => "$base_url/api/presentation/$bundle/$identifier/manifest.json",
+        'version' => 3,
+      ],
+    ],
+    'metadata' => $fields,
+  ];
+
+  $realpath = drupal_realpath('public://') . '/datasource';
+
+  $dir_path = "$realpath/$bundle/$identifier";
+  
+  if (!file_exists($dir_path)) {
+    mkdir($dir_path, 0755, TRUE);
+  }
+
+  file_put_contents("$dir_path/info.$requestedLang.json", json_encode($response), LOCK_EX);
+
+  return $response;
+
+}
+
+/**
  * Book.
  *
  * @param object $entity
@@ -1199,7 +1436,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   // Default to left-to-rigth.
   // @todo will set later on using the book field "field_language_code"
   // and the language map from $availableLanguages.
-  $worldDirection = 'rtl';
+  $worldDirection = 'ltr';
 
   // Entity API wrapper.
   $book = entity_metadata_wrapper('node', $entity);
@@ -2113,4 +2350,40 @@ function dlts_viewer_djakota_resolver_stream() {
     exit(1);
   }
 
+}
+
+/**
+ * Generate metadata about a DTLS resource.
+ *
+ * @param object $node
+ *   A dlts_book node object.
+ * @param bool $reset
+ *   True if request does not want cache version of the resource.
+ *
+ * @return json|array
+ *   A keyed array to be converted into JSON.
+ */
+function _dlts_viewer_noid_loader($node, $reset = FALSE) {
+
+  $object = entity_metadata_wrapper('node', $node);
+
+  $type = $object->getBundle();
+
+  switch ($type) {
+    case 'dlts_book':
+      // http://HOST/api/v1/noid/hqbzkt5z
+      return _dlts_viewer_book_loader($node);
+    case 'dlts_photo_set':
+      // http://HOST/api/v1/noid/fttdz79p
+      return _dlts_viewer_photo_loader($node);
+    case 'dlts_map':
+      // http://HOST/api/v1/noid/6hdr7z37
+      // return _dlts_viewer_map_loader($node);
+      return [];
+    case 'dlts_postcard':
+      // http://HOST/api/v1/noid/0zpc8fgz
+      // return _dlts_viewer_postcard_loader($node);
+      return [];
+  }
+  return $type;
 }
