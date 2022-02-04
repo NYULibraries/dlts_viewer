@@ -50,6 +50,7 @@ include_once 'inc/themes.inc';
  */
 function dlts_viewer_init() {
   drupal_add_http_header('Access-Control-Allow-Origin', '*');
+  drupal_add_http_header('Permissions-Policy', 'interest-cohort=()');
 }
 
 /**

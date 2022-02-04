@@ -147,8 +147,6 @@ function dlts_viewer_mongodb_load_by_item_identifier($isPartOf, $collection_name
  *   Sequence.
  */
 function dlts_viewer_mongodb_load_sequence(int $sequence, $isPartOf, $collection_name = 'dlts_books_page') {
-  // Make sure we have a number.
-  $sequence = $sequence;
   // Prepare query.
   $query = array(
     'isPartOf' => $isPartOf,
