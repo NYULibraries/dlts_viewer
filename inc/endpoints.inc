@@ -1873,13 +1873,13 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
   $realpath = drupal_realpath('public://') . '/datasource';
 
-  foreach ($fields['collection']['value'] as $collection) {
-    $dir_path = $realpath . '/books/' . $identifier;
-    if (!file_exists($dir_path)) {
-      mkdir($dir_path, 0755, TRUE);
-    }
-    file_put_contents($dir_path . '/book.' . $requestedLang . '.json', json_encode($response), LOCK_EX);
+  $cachepath = "$realpath/$bundle/$identifier/info.$requestedLang.json";
+
+  if (!file_exists($realpath/$bundle/$identifier)) {
+    mkdir($realpath/$bundle/$identifier, 0755, TRUE);
   }
+
+  file_put_contents($cachepath, json_encode($response), LOCK_EX);
 
   return $response;
 
