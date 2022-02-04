@@ -198,6 +198,16 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
+  $items['api/v1/noid/%dlts_noid'] = [
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => '_dlts_viewer_noid_loader',
+    'delivery callback' => 'drupal_json_output',
+    'page arguments' => [3],
+    'file' => 'inc/endpoints.inc',
+  ];
+
   // @todo remove.
   $items['api/v1/books'] = [
     'access arguments' => [
