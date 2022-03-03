@@ -91,11 +91,13 @@ function dlts_viewer_dispatch_thumbnails(string $identifier) {
  *   Entity to render.
  */
 function dlts_viewer_full_book_view($entity) {
+
   $module_path = drupal_get_path('module', 'dlts_viewer');
   $js_common_config = array('type' => 'file', 'scope' => 'footer');
   $css_common_config = array('group' => CSS_DEFAULT, 'every_page' => TRUE);
+
   drupal_add_css($module_path . '/css/dlts_viewer.css', $css_common_config);
-  
+
   drupal_add_js(
     'https://yui-s.yahooapis.com/3.18.1/build/yui/yui-min.js', 'external',
     array(
@@ -114,12 +116,32 @@ function dlts_viewer_full_book_view($entity) {
   );
 
   drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
-  drupal_add_js($module_path . '/js/modules/slider-base.js', $js_common_config);
-  drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
-  drupal_add_js($module_path . '/js/ui.components.yui.js', $js_common_config);
-  drupal_add_js(variable_get('dlts_viewer_openlayers_source', 'sites/all/libraries/openlayers/build/OpenLayers.js'), array('group' => JS_LIBRARY));
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  $server_service = 'openurl';
+
+  if (isset($query_parameters['service'])) {
+    $server_service = $query_parameters['service'];
+  }
+
+  switch ($server_service) {
+    case 'openurl':
+      drupal_add_js($module_path . '/js/modules/slider-base.js', $js_common_config);
+      drupal_add_js($module_path . '/js/ui.keyboard.yui.js', $js_common_config);
+      drupal_add_js($module_path . '/js/ui.components.yui.js', $js_common_config);
+      drupal_add_js(variable_get('dlts_viewer_openlayers_source', 'sites/all/libraries/openlayers/build/OpenLayers.js'), ['group' => JS_LIBRARY]);
+      break;
+
+    case 'iiif':
+      drupal_add_js($module_path . '/js/ui.openseadragon.components.yui.js', $js_common_config);
+      drupal_add_js('sites/all/libraries/openseadragon/openseadragon.js', ['group' => JS_LIBRARY]);
+      break;
+  }
 
   return node_view($entity, 'metadata', $entity->language);
+
 }
 
 /**
@@ -265,6 +287,13 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
   $is_mobile = dlts_viewer_is_mobile();
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
+
+  $server_service = 'openurl';
+
+  if (isset($query_parameters['service'])) {
+    $server_service = $query_parameters['service'];
+  }
+
   // Check if this books is part of a multi-volume.
   $multivolume_book = dlts_viewer_is_multivolume_book($entity);
   // If book is part of multi-volume; use append volume value to entity title.
@@ -482,13 +511,6 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
     $entity->pane_metadata_hidden = $is_mobile;
     $entity->sequence = $page;
     $entity->sequence_count = $sequence_count;
-    $slider_options = array(
-      'slider_id' => 'slider',
-      'uri' => $book_url,
-      'lang_dir' => $entity->read_order,
-      'sequence_number' => $page,
-      'sequence_count' => $sequence_count,
-    );
     $entity->thumbnailsPage = ceil($page / $thumbnails_rows_per_page) - 1;
     $entity->thumbnailsRows = $thumbnails_rows_per_page;
     $entity->thumbnailsURL = $book_url . '/thumbnails';
@@ -500,8 +522,29 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
     $book_page_options = array(
       'file' => $arg,
     );
-    $entity->book_page = theme('dlts_viewer_openlayers_image', $book_page_options);
-    $entity->slider = theme('dlts_viewer_slider', $slider_options);
+
+    switch ($server_service) {
+      case 'openurl':
+        $slider_options = [
+          'slider_id' => 'slider',
+          'uri' => $book_url,
+          'lang_dir' => $entity->read_order,
+          'sequence_number' => $page,
+          'sequence_count' => $sequence_count,
+        ];
+        $entity->book_page = theme('dlts_viewer_openlayers_image', $book_page_options);
+        $entity->slider = theme('dlts_viewer_slider', $slider_options);
+        break;
+
+      case 'iiif':
+        $book_page_options['identifier'] = $identifier;
+        $book_page_options['resourceType'] = 'books';
+        $book_page_options['sequence'] = $page;
+        $entity->book_page = theme('dlts_viewer_openseadragon_image', $book_page_options);
+        $entity->slider = '';
+        break;
+    }
+
   }
 
   // Types of returns.

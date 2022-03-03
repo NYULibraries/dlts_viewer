@@ -44,6 +44,9 @@ function dlts_viewer_theme() {
     'dlts_viewer_openlayers_image' => array(
       'variables' => array(),
     ),
+    'dlts_viewer_openseadragon_image' => array(
+      'variables' => [],
+    ),
     'dlts_viewer_navbar_item' => array(
       'variables' => array(),
     ),
@@ -434,7 +437,7 @@ function theme_thumbnails_photo_pager($vars) {
       if ($i == $current_page) {
         $context_index = $i + 1;
         $links[''.$i] =  array('title' => ''. $context_index);
-      } 
+      }
       else {
           $links['' . $i] = theme('pager_link', array(
               'text' => (isset($tags[0]) ? $tags[0] : t('' . ($i + 1))),
@@ -545,4 +548,86 @@ function theme_field__field_pdf_file (&$variables) {
     $out .= '</div>';
     return $out;
   }
+}
+
+/**
+ * Returns HTML for a high-resolution JPEG 2000 image.
+ *
+ * This function returns the necessary HTML elements, and sets certain
+ * JavaScript settings for the file being displayed. The given elements are
+ * then replaced by OpenLayers with a zoomable version of the image.
+ *
+ * @ingroup themable
+ */
+function theme_dlts_viewer_openseadragon_image($variables) {
+
+  $fid = 'openseadragon1';
+
+  $file = $variables['file'];
+
+  $resourseType = $variables['resourceType'];
+
+  $identifier = $variables['identifier'];
+
+  $sequence = $variables['sequence'];
+
+  $file_uri = file_create_url($file['uri']);
+
+  if (isset($file['timestamp'])) {
+    $file_uri = $file_uri . '?v=' . $file['timestamp'];
+  }
+
+  // Check if zoom its part of the request.
+  if (isset($file['zoom'])) {
+    $zoom = $file['zoom'];
+  }
+  else {
+    // We default zoom to 1 (tablets and "desktops").
+    $zoom = 1;
+    // Mobile_Detect.
+    $detect = dlts_viewer_mobile_detect();
+    // We give phone users the smallest possible image by default
+    // see https://jira.nyu.edu/jira/browse/DLTSVIEWER-74
+    // Mobiles zoom default 0, exclude tablets.
+    if ($detect->isMobile() && !$detect->isTablet()) {
+      $zoom = 0;
+    }
+  }
+
+  if (!isset($file['thumbnailsUrl'])) {
+    $file['thumbnailsUrl'] = 'undefined';
+  }
+
+  if (!isset($file['thumbnailsRows'])) {
+    $file['thumbnailsRows'] = 0;
+  }
+
+  if (!isset($file['thumbnailsPage'])) {
+    $file['thumbnailsPage'] = 0;
+  }
+
+  $options = [
+    '@id' => $fid,
+    '@uri' => $file_uri,
+    '@width' => $file['width'],
+    '@height' => $file['height'],
+    '@manifest' => "https://sites.dlib.nyu.edu/viewer/api/image/$resourseType/$identifier/$sequence/info.json",
+    '@sequence' => array_shift($file['sequence']),
+    '@thumbnailsUrl' => $file['thumbnailsUrl'],
+    '@thumbnailsRows' => $file['thumbnailsRows'],
+    '@thumbnailsPage' => $file['thumbnailsPage'],
+    '@pageView' => 'single',
+  ];
+
+  return t('<div
+    id="@id"
+    class="dlts_image_map dlts_viewer_map"
+    data-sequence="@sequence"
+    data-pageView="@pageView"
+    data-uri="@uri"
+    data-manifest="@manifest"
+    data-thumbnails-url="@thumbnailsUrl"
+    data-thumbnails-rows="@thumbnailsRows"
+    data-thumbnails-page="@thumbnailsPage"
+  ></div>', $options);
 }
