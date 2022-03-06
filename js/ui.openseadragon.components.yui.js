@@ -1,61 +1,152 @@
 /* jshint laxcomma: true, laxbreak: true, unused: false */
-YUI().use(
-  'node'
-, 'event'
-, 'event-custom'
-, 'transition'
-, 'pjax'
-, 'gallery-soon'
-, 'widget-anim'
-, 'crossframe'
-, function(Y) {
-'use strict';
+YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget-anim', 'crossframe', 'slider', function(Y) {
+  Y.Viewer = null;
+  Y.OpenSeadragon = OpenSeadragon;
+  Y.isFullyLoaded = false;
+  var html = Y.one('html');
+  var pagemeta = Y.one('.pane.pagemeta');
+  var display = Y.one('#display');
+  var displayData = display.getData();
+  var sequence = parseInt(displayData['sequence'] , 10);
+  var sequenceCount = parseInt(displayData['sequence-count'] , 10);
+  var pager = Y.one('#pager');
+  var lang_dir = pager.get('dir');
+  const slider_datasource = Y.one('#slider_value');
 
-/** set a X-PJAX HTTP header for all IO requests */
-Y.io.header('X-PJAX', 'true');
-var PJAX_INVALID = -1;
-var PJAX_UNKNOWN_ERROR = -2;
-var html = Y.one('html');
-var pagemeta = Y.one('.pane.pagemeta');
-var display = Y.one('#display');
-var displayData = display.getData();
-var bookUrl = displayData['url'];
-var sequenceCount = parseInt(displayData['sequence-count'] , 10);
+  /** slider object */
+  const slider = new Y.Slider({
+    axis: 'x',
+    min: 1,
+    dir: lang_dir,
+    clickableRail: false,
+    max: sequenceCount,
+    value: sequence,
+    length:(Y.one('#pager').get('offsetWidth') - 120) + 'px'
+  });
 
-function on_toggle_language(e) {
+  slider.render('#slider');
+
+  slider.after('valueChange', slide_value_change);
+
+  slider.after('slideEnd', slide_end, slider);
+
+  /** callback for the slide end event */
+  function slide_end(e) {
+    e.preventDefault();
+    if (!Y.Lang.isValue(slider.triggerBy)) {
+      try {
+        const currentTarget = Y.one('.paging');
+        const config = {
+          identifier: currentTarget.getAttribute('data-identifier'),
+          title: 'pjax_callback: title',
+          sequence: e.target.getValue(),
+          sequenceCount: currentTarget.getAttribute('data-sequence-count'),
+          operation: currentTarget.getAttribute('data-operation'),
+          type: currentTarget.getAttribute('data-type')
+        };
+        Y.one('.current_page').set('text', e.target.getValue());
+        Y.fire('sequence:available', config);
+        Y.soon(function() {
+          slider.thumb.blur();
+        });
+      } catch(e) {
+        console.log(e);
+      }
+    }
+    /** event was triggered by reference */
+    else {
+      slider.triggerBy = undefined;
+    }
+  }
+
+  /** callback for changes in the value of the slider */
+  function slide_value_change(e) {
+    console.log('slide_value_change', e.newVal);
+    /** slider event */
+    if (!Y.Lang.isValue(slider.triggerBy)) {
+      slider_datasource.set('value', e.newVal);
+    }
+    /** event was triggered by reference */
+    else {
+      slider.triggerBy = undefined;
+    }
+  }
+
+  function resizeSlider() {
+    slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
+  }
+
+  /** TODO: I don't like this, find a more elegant solution */
+  function pager_form(e) {
+    e.preventDefault();
+    var value = this.get('value');
+    var css_class;
+    if (value.match(/\D/)) {
+      css_class = 'error';
+    }
+    else {
+      value = parseInt(value, 10);
+      if (value !== current && (value > 0 && value <= sequenceCount)) {
+        css_class = 'ok';
+        Y.one('.current_page').set('text', value);
+        console.log(value)
+      }
+      else {
+        if (value !== current) {
+          css_class = 'error';
+        }
+        else {
+          css_class = 'warning';
+        }
+      }
+    }
+    this.addClass(css_class).transition({
+      duration: 1,
+      easing: 'ease-in',
+      opacity: 0.9
+    }, function() {
+      this.removeClass(css_class);
+    });
+  }
+
+  Y.on('windowresize', resizeSlider);
+
+  Y.one('.pane.pager').delegate('submit', pager_form, 'form', slider_datasource);  
+
+  // https://codepen.io/iangilman/pen/jOmLYvd
+  // https://openseadragon.github.io/docs/OpenSeadragon.html#.Options
+
+  function on_toggle_language(e) {
     var current_target = e.currentTarget;
     var data_target = current_target.get('value');
     e.preventDefault();
-    Y.io(data_target, {
-      on: {
-        complete: function(_id, e) {
-          var node = Y.one('#pagemeta');
-          var dir;
-          var titlebar = Y.one('#titlebar');
-          var pagetitle = Y.one('#page-title');
-          node.set('innerHTML', e.response);
-          document.title = node.one('.field-name-title h2').get('innerText');
-          dir = node.one('.node-dlts-book').getAttribute('data-dir');
-          Y.one('.pane.main').set('dir', dir);
-          if (titlebar) {
-            titlebar.set('dir', dir);
-          }
-          if (pagetitle) {
-            pagetitle.set('innerHTML', document.title);
-          }
-        }
-      }
-    });
+    // Y.io(data_target, {
+    //   on: {
+    //     complete: function(_id, e) {
+    //       var node = Y.one('#pagemeta');
+    //       var dir;
+    //       var titlebar = Y.one('#titlebar');
+    //       var pagetitle = Y.one('#page-title');
+    //       node.set('innerHTML', e.response);
+    //       document.title = node.one('.field-name-title h2').get('innerText');
+    //       dir = node.one('.node-dlts-book').getAttribute('data-dir');
+    //       Y.one('.pane.main').set('dir', dir);
+    //       if (titlebar) {
+    //         titlebar.set('dir', dir);
+    //       }
+    //       if (pagetitle) {
+    //         pagetitle.set('innerHTML', document.title);
+    //       }
+    //     }
+    //   }
+    // });
   }
 
   function on_button_click(e) {
     e.preventDefault();
-    var self = this;
-    var current_target = e.currentTarget;
-    var event_prefix;
-    var event_id;
-    var node_target;
-    var data_target;
+    const self = this;
+    const current_target = e.currentTarget;
+    let event_prefix, event_id, node_target, data_target;
     /** don't waste time if the button is inactive */
     if (current_target.hasClass('inactive')) return;
     /** if current target has target, get target from data-target */
@@ -93,105 +184,42 @@ function on_toggle_language(e) {
     Y.fire(event_prefix + ':toggle', e);
   }
 
-  function pjax_navigate(e) {
-    Y.one('body').addClass('openlayers-loading');
-    var url = new URL(e.url);
-    var to_page = parseInt(url.pathname.split('/').slice(-1).pop(), 10);
-    if (url.searchParams.get('page_view') === 'double') {
-      var pdir = to_page % 2;
-      if (pdir === 1) {
-        to_page = `${to_page}, ${to_page + 1}`
-      } else {
-        to_page = `${to_page - 1}, ${to_page}`
-      }
-    }
-    this.one('.current_page').set('text', to_page);
-    this.addClass('loading').show();
-  }
-
   /**
    * pjax callback can be call by clicking a pjax
    * enable link or by reference with data-url
    */
   function pjax_callback(e) {
-    var url;
-    var currentTarget = e.currentTarget;
+
+    const currentTarget = e.currentTarget;
+
     e.preventDefault();
+
     /** test if the target is not active */
-    if (currentTarget.hasClass('inactive')) return false;
-    /** if event has referenceTarget, then event was trigger by reference */
-    if (Y.Lang.isObject(e.referenceTarget, true)) {
-      url = e.referenceTarget.getAttribute('data-url');
-    }
-    /** trigger by a pjax enable link */
-    else {
-      url = this.get('href');
-    }
-    /** request URL */
-    pjax.navigate(url);
-    Y.fire('button:button-thumbnails:off');
-  }
-
-  function PjaxException(value) {
-    this.value = value;
-    this.message = "does not conform to the expected format for a PJAX request";
-    this.toString = function() {
-      return this.value + ' ' + this.message;
-    };
-  }
-
-  function pjax_load(e) {
-    var config = {};
-    var node = e.content.node;
-    var toggle = Y.one('.navbar-item .toggle');
-    var next = Y.one('.navbar-item .next');
-    var previous = Y.one('.navbar-item .previous');
+    if (currentTarget.hasClass('inactive')) return false;    
     try {
-      /** check if request include a map object */
-      var map = node.one('.dlts_viewer_map');
-      if (map) {
-        /** if "toggle" navbar item is available, replace it with this request link */
-        if (toggle) {
-          toggle.replace(node.one('.toggle').cloneNode(true));
-        }
-        /** if "next" navbar item is available, replace it with this request link */
-        if (next) {
-          next.replace(node.one('.next').cloneNode(true));
-        }
-        /** if "previous" navbar item is available, replace it with this request link */
-        if (previous) {
-          previous.replace(node.one('.previous').cloneNode(true));
-        }
-        /** Configuration for the new book page */
-        config = {
-          id: map.get('id'),
-          title: map.getAttribute('data-title'),
-          node: map,
-          sequence: map.getAttribute('data-sequence'),
-          sequenceCount: map.getAttribute('data-sequenceCount'),
-          uri: map.getAttribute('data-uri'),
-          metadata: {
-            width: map.getAttribute('data-width'),
-            height: map.getAttribute('data-height'),
-            levels: map.getAttribute('data-levels'),
-            dwtLevels: map.getAttribute('data-dwtlevels'),
-            compositingLayerCount: map.getAttribute('data-compositingLayerCount')
-          }
-        };
-        Y.on('available', change_page, '#' + config.id, OpenLayers, config);
-        Y.fire('pjax:load:available', config);
-      }
-      else {
-        throw new PjaxException(e.url);
-      }
-    }
-    catch(e) {
-      if (e instanceof PjaxException) {
-        return PJAX_INVALID;
-      }
-      else {
-        return PJAX_UNKNOWN_ERROR;
-      }
+      // if (url.searchParams.get('page_view') === 'double') {
+      //   var pdir = to_page % 2;
+      //   if (pdir === 1) {
+      //     to_page = `${to_page}, ${to_page + 1}`
+      //   } else {
+      //     to_page = `${to_page - 1}, ${to_page}`
+      //   }
+      // }
+      // this.one('.current_page').set('text', to_page);
+      // this.addClass('loading').show();
+      document.getElementsByTagName('body')[0].classList.add('openlayers-loading');
+      const config = {
+        id: currentTarget.get('id'),
+        identifier: currentTarget.getAttribute('data-identifier'),
+        title: 'pjax_callback: title',
+        sequence: currentTarget.getAttribute('data-sequence'),
+        sequenceCount: currentTarget.getAttribute('data-sequence-count'),
+        operation: currentTarget.getAttribute('data-operation'),
+        type: currentTarget.getAttribute('data-type')
+      };
+      Y.fire('sequence:available', config);
+    } catch(e) {
+      console.log(e);
     }
   }
 
@@ -245,26 +273,50 @@ function on_toggle_language(e) {
   }
 
   function change_page(config) {
-    var map;
-    var service;
-    var zoom;
-    var open_layers_dlts = OpenLayers.DLTS;
-    if (Y.Lang.isObject(open_layers_dlts.pages[0], true)) {
-      map = open_layers_dlts.pages[0];
-      service = map.baseLayer.url; // get this value from a data attribute
-      zoom = map.getZoom(); // get this value from a data attribute
+    try {
+      const { sequence, sequenceCount, type, identifier } = config;
+      const sequence_req = parseInt(sequence, 10);       
+      const sequence_next = sequence_req + 1;
+      const sequence_previous = sequence_req - 1;
+      const int_sequence_count = parseInt(sequenceCount, 10);
+      const image_service = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
+
+      config.manifest = `${image_service}/${type}/${identifier}/${sequence_req.toString()}/info.json`;
+
+      document.querySelectorAll('.paging.next').forEach((item) => {
+        item.dataset.sequence = sequence_next;
+        if (sequence_next > int_sequence_count) {
+          item.classList.add('inactive');
+        } else {
+          if (item.classList.contains('inactive')) {
+            item.classList.remove('inactive');
+          }
+        }        
+      });
+
+      document.querySelectorAll('.paging.previous').forEach((item) => {
+        item.dataset.sequence = sequence_previous;
+        if (sequence_req <= 1) {
+          item.classList.add('inactive');
+        } else {
+          if (item.classList.contains('inactive')) {
+            item.classList.remove('inactive');
+          }
+        }
+      });
+
+      Y.isFullyLoaded = false;
+
+      window.history.pushState({}, config.title, sequence_req.toString());
+
+      Y.Viewer.open(config.manifest);
+
+      // Let parent know that Viewer is going to paint.
+      Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:change', data: config }));
+
+    } catch(e) {
+      console.log(e);
     }
-    open_layers_dlts.pages = [];
-    open_layers_dlts.Page(config.id, config.uri, {
-      zoom: zoom,
-      boxes: config.boxes,
-      service: service,
-      imgMetadata: config.metadata
-    });
-    Y.on('contentready', function() {
-      Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'openlayers:change', data: config }));
-      Y.fire('openlayers:change', config);
-    }, '#' + config.id);
   }
 
   function onButtonMetadataOn() {
@@ -282,12 +334,13 @@ function on_toggle_language(e) {
   }
 
   function openLayersTilesLoading() {
-    // if (Y.one('body').hasClass('openlayers-loading')) {
-    //   Y.later(200, Y.one('.pane.load'), openLayersTilesLoading);
-    // }
-    // else {
+    if (Y.one('body').hasClass('openlayers-loading')) {
+      Y.later(200, Y.one('.pane.load'), openLayersTilesLoading);
+    }
+    else {
       Y.one('.pane.load').hide();
-    // }
+      Y.one('body').removeClass('openlayers-loading');
+    }
   }
 
   function onPjaxLoadAvailable(conf) {
@@ -299,6 +352,9 @@ function on_toggle_language(e) {
     if (page_title) {
       page_title.set('text', conf.title);
     }
+    slider.triggerBy = 'pjax:load:available';
+    slider.set('value', parseInt(sequence, 10));
+    Y.one('#slider_value').set('value', sequence);
     var thumbnails = Y.one('.view-book-thumbnails');
     if (thumbnails) {
       currentPage = thumbnails.one('.current-page');
@@ -322,13 +378,13 @@ function on_toggle_language(e) {
   function onButtonThumbnailsOn(e) {
     e.halt();
     var map = Y.one('.dlts_viewer_map').getData();
-    Y.io(map['thumbnails-url'], {
-      data: 'page=' + map['thumbnails-page'] + '&rows=' + map['thumbnails-rows'] + '&sequence=' + map['sequence'],
-      on: {
-        start: onButtonThumbnailsOnIOStart,
-        complete: onThumbnailsOnSuccess }
-      }
-    );
+    // Y.io(map['thumbnails-url'], {
+    //   data: 'page=' + map['thumbnails-page'] + '&rows=' + map['thumbnails-rows'] + '&sequence=' + map['sequence'],
+    //   on: {
+    //     start: onButtonThumbnailsOnIOStart,
+    //     complete: onThumbnailsOnSuccess }
+    //   }
+    // );
   }
 
   function onButtonThumbnailsOff(e) {
@@ -350,11 +406,10 @@ function on_toggle_language(e) {
 
   function onThumbnailsContainerPagerClick(e) {
     e.preventDefault();
-    pjax.navigate(e.currentTarget.get('href'));
+    // pjax.navigate(e.currentTarget.get('href'));
   }
 
   function onThumbnailsPagePagerClick(e) {
-    var url;
     e.preventDefault();
     /** test if the target is not active */
     if (e.currentTarget.hasClass('inactive')) {
@@ -373,13 +428,13 @@ function on_toggle_language(e) {
       url = this.get('href');
     }
     /** request new page */
-    Y.io(url, { on : {
-      start: onThumbnailsPageStart,
-      end: onThumbnailsPageEnd,
-      complete: onThumbnailsPageComplete,
-      success: onThumbnailsPageSuccess
-    }
-    });
+    // Y.io(url, { on : {
+    //   start: onThumbnailsPageStart,
+    //   end: onThumbnailsPageEnd,
+    //   complete: onThumbnailsPageComplete,
+    //   success: onThumbnailsPageSuccess
+    // }
+    // });
   }
 
   // remove content
@@ -411,17 +466,26 @@ function on_toggle_language(e) {
 
   /** events listeners */
 
-  Y.on('pjax:load:available', onPjaxLoadAvailable);
+  function onSelectMVChange(e) {
+    e.halt();
+    const currentTarget = e.currentTarget;
+    const value = currentTarget.one(':checked').get('value');
+    const lang = Y.one('.node-dlts-book').getAttribute('data-lang');
+    const url = value.substring(value.indexOf('::') + 2, value.length) + '/1?lang=' + lang;
+    const data = { url : url };
+    if (window.self === window.top) {
+      window.location.assign(url)
+    }
+    else {
+      Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'change:option:multivolume', data }));
+    }
+  }
 
-  /**
-   * Pjax object to request new book pages; the content from
-   * successful requests will be appended to "display" pane
-   */
-  var pjax = new Y.Pjax({ container: '.pane.display' });
+  // we need to remove all jQuery events for this node (DOM)
+  jQuery('.field-name-mv-2016 *').unbind();
 
-  pjax.on('load', pjax_load);
-
-  pjax.on('navigate', pjax_navigate, Y.one('.pane.load'));
+  // https://javascript.info/event-delegation
+  Y.delegate('change', onSelectMVChange, 'body', '.field-name-mv-2016 form');
 
   html.delegate('click', on_button_click, 'a.button');
 
@@ -430,6 +494,8 @@ function on_toggle_language(e) {
   Y.on('pjax:change|openlayers:next|openlayers:previous', pjax_callback);
 
   Y.on('button:button-metadata:on', onButtonMetadataOn , pagemeta);
+
+  Y.on('sequence:available', change_page)
 
   Y.on('button:button-metadata:off', onButtonMetadataOff, pagemeta);
 
@@ -444,61 +510,101 @@ function on_toggle_language(e) {
 
   Y.on('button:button-thumbnails:off', onButtonThumbnailsOff);
 
+  // https://javascript.info/event-delegation
   Y.delegate('click', onThumbnailsContainerPagerClick, 'body', '.thumbnails .views-row a');
 
   Y.one('body').delegate('click', onThumbnailsPagePagerClick, '#thumbnails .pager a');
 
+  // https://javascript.info/event-delegation
   Y.delegate('change', on_toggle_language, 'body', '.language');
 
-  // https://github.com/josephj/yui3-crossframe
-  function onSelectMVChange(e) {
-    e.halt();
-    var currentTarget = e.currentTarget;
-    var value = currentTarget.one(':checked').get('value');
-    var lang = Y.one('.node-dlts-book').getAttribute('data-lang');
-    var url = value.substring(value.indexOf('::') + 2, value.length) + '/1?lang=' + lang;
-    var data = { url : url };
-    if (window.self === window.top) {
-      window.location.assign(url)
-    }
-    else {
-      Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'change:option:multivolume', data }));
+  Y.on('pjax:load:available', onPjaxLoadAvailable);
+
+  function updateLoadingIndicator() {
+    // Note that this function gets called every time isFullyLoaded changes, which it will do as you 
+    // zoom and pan around. All we care about is the initial load, though, so we are just hiding the 
+    // loading indicator and not showing it again. 
+    if (Y.isFullyLoaded) {
+      console.log('Y.isFullyLoaded');
+      document.querySelector('body').classList.remove('openlayers-loading');
+      Y.one('.pane.load').hide();
+      Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:isFullyLoaded', data: {} }));
     }
   }
 
-  // we need to remove all jQuery events for this node (DOM)
-  jQuery('.field-name-mv-2016 *').unbind();
+  function addItemHandler(event) {
+    const tiledImage = event.item;
+    tiledImage.addHandler('fully-loaded-change', () => {
+      const newFullyLoaded = areAllFullyLoaded();
+      if (newFullyLoaded !== Y.isFullyLoaded) {
+        Y.isFullyLoaded = newFullyLoaded;
+        updateLoadingIndicator();
+      }
+    });
+  }    
+  
+  function areAllFullyLoaded() {
+    const count = Y.Viewer.world.getItemCount();
+    for (let i = 0; i < count; i++) {
+      const tiledImage = Y.Viewer.world.getItemAt(i);
+      if (!tiledImage.getFullyLoaded()) {
+        return false;
+      }
+    }
+    return true;
+  }
 
-  Y.delegate('change', onSelectMVChange, 'body', '.field-name-mv-2016 form');
-
-  // Post message to parent frame when "pane display" is available
-  // and give access to the node data attributes
-  function onDisplayContentReady () {
-    const display = Y.one('#display');
-    const osd = Y.one('#openseadragon1');
-    const displayData = display.getData();
-    const osdData = osd.getData();
-
-    console.log(osdData);
-
-    // https://codepen.io/iangilman/pen/jOmLYvd
-    OpenSeadragon({
-      id: "openseadragon1",
+  window.addEventListener('load', () => {   
+    const id = 'openseadragon1';
+    const display = document.querySelector('#display');
+    const osd = document.querySelector(`#${id}`);
+    Y.Viewer = Y.OpenSeadragon({
+      id: id,
       preserveViewport: true,
+      showNavigationControl: false,
+      showZoomControl: false,
+      showHomeControl: false,
+      showFullPageControl: false,
       visibilityRatio: 1,
       minZoomLevel: 0,
       defaultZoomLevel: 0,
       sequenceMode: true,
       tileSources: [
-        osdData.manifest,
+        osd.dataset.manifest,
       ]
     });
 
-    Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: displayData}));
+    Y.Viewer.world.addHandler('add-item', addItemHandler);
 
+    Y.Viewer.addHandler('zoom', (event) => {
+      console.log('Current zoom', event.zoom);
+      console.log('MaxZoom', Y.Viewer.viewport.getMaxZoom());
+    });
 
-  }
+    Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: { display: display.dataset, osd: osd.dataset} }));
 
-  Y.once('contentready', onDisplayContentReady, '#display');
+    document.getElementById('control-zoom-in').onclick = () => {
+      const actualZoom = Y.Viewer.viewport.getZoom();
+      const maxZoom = Y.Viewer.viewport.getMaxZoom();
+      if (actualZoom < maxZoom) {
+        Y.Viewer.viewport.zoomTo(actualZoom * 2);
+      }
+    }
+
+    document.getElementById('control-zoom-out').onclick = () => {
+      const actualZoom = Y.Viewer.viewport.getZoom();
+      const minZoom = Y.Viewer.viewport.getMinZoom();
+      const zoom = actualZoom / 2;
+      if (zoom >= minZoom) {
+        Y.Viewer.viewport.zoomTo(zoom);
+      } else {
+        if (actualZoom > minZoom) {
+          Y.Viewer.viewport.zoomTo(minZoom);
+        }
+      }
+    }
+
+  });
 
 });
+
