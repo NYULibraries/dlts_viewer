@@ -59,11 +59,11 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
 
   // View modes, we map the views with their machine names in MongoDB.
-  $collections = array(
+  $collections = [
     'single' => 'dlts_books_page',
     'double' => 'dlts_stitched_books_page',
     'photo' => 'dlts_photo',
-  );
+  ];
 
   // Viewer defaults to single page view.
   $collection_name = 'dlts_books_page';

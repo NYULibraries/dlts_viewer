@@ -11,44 +11,41 @@
  */
 function dlts_viewer_theme() {
   return array(
-    'dlts_viewer_pager_button' => array(
-      'variables' => array(),
-    ),
+    'dlts_viewer_pager_button' => [
+      'variables' => [],
+    ],
     'dlts_viewer_field__field_pdf_file' => array(
-      'variables' => array(),
+      'variables' => [],
       'render element' => 'content',
       'base hook' => 'node',
     ),
     'field__field_pdf_file' => array(
-      'variables' => array(),
+      'variables' => [],
     ),
     'thumbnails_pager' => array(
       'variables' => array(
-        'tags' => array(),
+        'tags' => [],
         'limit' => 10,
         'element' => 0,
-        'parameters' => array(),
+        'parameters' => [],
         'quantity' => 9,
       ),
     ),
     'thumbnails_photo_pager' => array(
       'variables' => array(
-        'tags' => array(),
+        'tags' => [],
         'limit' => 10,
         'element' => 0,
         'current_page' => 0,
-        'parameters' => array(),
+        'parameters' => [],
         'quantity' => 9,
       ),
-    ),
-    'dlts_viewer_openlayers_image' => array(
-      'variables' => array(),
     ),
     'dlts_viewer_openseadragon_image' => array(
       'variables' => [],
     ),
     'dlts_viewer_navbar_item' => array(
-      'variables' => array(),
+      'variables' => [],
     ),
     'dlts_viewer_loading' => array(
       'template' => 'templates/components/component--loading',
@@ -68,47 +65,43 @@ function dlts_viewer_theme() {
     ),
     'dlts_viewer_navbar' => array(
       'template' => 'templates/components/component--navbar',
-      'variables' => array(),
+      'variables' => [],
     ),
     'dlts_viewer_thumbnails' => array(
       'template' => 'templates/components/component--thumbnails',
-      'variables' => array(),
+      'variables' => [],
     ),
     'dlts_viewer_set' => array(
       'template' => 'templates/set',
-      'variables' => array(),
-    ),
-    'dlts_viewer_controlpanel' => array(
-      'template' => 'templates/components/component--control_panel',
-      'variables' => NULL,
+      'variables' => [],
     ),
     'viewer' => array(
       'template' => 'templates/components/component--viewer',
-      'variables' => array(),
+      'variables' => [],
     ),
     'photo' => array(
       'template' => 'templates/components/component--photo',
-      'variables' => array(),
+      'variables' => [],
     ),
     'viewer_page' => array(
       'template' => 'templates/components/component--bookpage',
-      'variables' => array(),
+      'variables' => [],
     ),
     'viewer_map' => array(
       'template' => 'templates/components/component--map',
-      'variables' => array(),
+      'variables' => [],
     ),
     'viewer_display' => array(
       'template' => 'templates/components/component--display',
-      'variables' => array(),
+      'variables' => [],
     ),
     'dlts_viewer_oembed' => array(
       'template' => 'templates/components/component--oembed',
-      'variables' => array(),
+      'variables' => [],
     ),
     'dlts_viewer_top' => array(
       'template' => 'templates/components/component--top',
-      'variables' => array(),
+      'variables' => [],
     ),
     'html__viewer' => array(
       'render element' => 'content',
@@ -206,30 +199,35 @@ function dlts_viewer_theme_field($variables) {
 }
 
 function theme_dlts_viewer_pager_button($variables) {
-  $classes = array('paging');
+  $classes = ['paging'];  
   if (isset($variables['classes'])) {
     $classes = array_merge($classes, $variables['classes']);
   }
   if (dlts_viewer_is_pjax()) {
     $classes[] = 'pjax';
   }
-  $render_array = array(
-    'markup' => array(
+
+  $attributes = array_merge(
+    [
+      'title' => $variables['text'],
+      'href' => $variables['url'],
+      'class' =>  $classes,
+    ], 
+    $variables['attributes']
+  );
+  $render_array = [
+    'markup' => [
       '#theme' => 'html_tag',
       '#tag' => 'a',
       '#value' => '<span>' . $variables['text'] . '</span>',
-      '#attributes' => array(
-        'title' => $variables['text'],
-        'href' => $variables['url'],
-        'class' =>  $classes,
-      ),
-    ),
-  );
+      '#attributes' => $attributes,
+    ],
+  ];
   return drupal_render($render_array);
 }
 
 function theme_dlts_viewer_navbar_item($variables) {
-  $parts = array('html' => TRUE);
+  $parts = ['html' => TRUE];
   if (isset($variables['fragment'])) {
         $parts = array_merge($parts, array('fragment' => $variables['fragment']));
   }
@@ -246,116 +244,6 @@ function theme_dlts_viewer_navbar_item($variables) {
     $url = $variables['url'];
   }
   return '<li class="navbar-item">' . l(t('<span>@title</span>', array('@title' => $variables['title'])), $url,$parts);
-}
-
-/**
- * Returns HTML for a high-resolution JPEG 2000 image.
- *
- * This function returns the necessary HTML elements, and sets certain
- * JavaScript settings for the file being displayed. The given elements are
- * then replaced by OpenLayers with a zoomable version of the image.
- *
- * @ingroup themable
- */
-function theme_dlts_viewer_openlayers_image($variables) {
-
-  $file = $variables['file'];
-
-  $fid = 'id-' . $file['fid'];
-
-  $file_uri = file_create_url($file['uri']);
-
-  if (isset($file['timestamp'])) {
-    $file_uri = $file_uri . '?v=' . $file['timestamp'];
-  }
-
-  // Check if zoom its part of the request.
-  if (isset($file['zoom'])) {
-    $zoom = $file['zoom'];
-  }
-  else {
-    // We default zoom to 1 (tablets and "desktops").
-    $zoom = 1;
-    // Mobile_Detect.
-    $detect = dlts_viewer_mobile_detect();
-    // We give phone users the smallest possible image by default
-    // see https://jira.nyu.edu/jira/browse/DLTSVIEWER-74
-    // Mobiles zoom default 0, exclude tablets.
-    if ($detect->isMobile() && !$detect->isTablet()) {
-      $zoom = 0;
-    }
-  }
-
-  $openlayers_options = array(
-    'service' => $GLOBALS['base_url'] . '/api/v1/image',
-    'imgMetadata' => array(
-      'width' => $file['width'],
-      'height' => $file['height'],
-      'levels' => $file['levels'],
-      'dwtLevels' => $file['dwtLevels'],
-      'compositingLayerCount' => $file['compositingLayerCount'],
-    ),
-    'zoom' => $zoom,
-  );
-
-  $json_data = json_encode($openlayers_options);
-
-  $js_inline = '(function(O){O.DLTS.Page("' . $fid . '","' .  $file_uri . '",' . $json_data . ')})(OpenLayers);';
-
-  $js_options = array(
-    'group' => JS_DEFAULT,
-    'type' => 'inline',
-    'every_page' => FALSE,
-    'weight' => 5,
-    'scope' => 'footer',
-    'cache' => TRUE,
-    'defer' => TRUE,
-  );
-
-  drupal_add_js($js_inline, $js_options);
-
-  if (!isset($file['thumbnailsUrl'])) {
-    $file['thumbnailsUrl'] = 'undefined';
-  }
-
-  if (!isset($file['thumbnailsRows'])) {
-    $file['thumbnailsRows'] = 0;
-  }
-
-  if (!isset($file['thumbnailsPage'])) {
-    $file['thumbnailsPage'] = 0;
-  }
-
-  $options = array(
-    '@id' => $fid,
-    '@uri' => $file_uri,
-    '@width' => $file['width'],
-    '@height' => $file['height'],
-    '@levels' => $file['levels'],
-    '@dwtLevels' => $file['dwtLevels'],
-    '@layer' => $file['compositingLayerCount'],
-    '@sequence' => array_shift($file['sequence']),
-    '@thumbnailsUrl' => $file['thumbnailsUrl'],
-    '@thumbnailsRows' => $file['thumbnailsRows'],
-    '@thumbnailsPage' => $file['thumbnailsPage'],
-    '@pageView' => 'single',
-  );
-
-  return t('<div
-    id="@id"
-    class="dlts_image_map dlts_viewer_map"
-    data-sequence="@sequence"
-    data-pageView="@pageView"
-    data-uri="@uri"
-    data-width="@width"
-    data-height="@height"
-    data-levels="@levels"
-    data-dwtLevels="@dwtLevels"
-    data-compositing-layer="@layer"
-    data-thumbnails-url="@thumbnailsUrl"
-    data-thumbnails-rows="@thumbnailsRows"
-    data-thumbnails-page="@thumbnailsPage"
-  ></div>', $options);
 }
 
 /**
@@ -560,74 +448,15 @@ function theme_field__field_pdf_file (&$variables) {
  * @ingroup themable
  */
 function theme_dlts_viewer_openseadragon_image($variables) {
-
-  $fid = 'openseadragon1';
-
-  $file = $variables['file'];
-
-  $resourseType = $variables['resourceType'];
-
-  $identifier = $variables['identifier'];
-
-  $sequence = $variables['sequence'];
-
-  $file_uri = file_create_url($file['uri']);
-
-  if (isset($file['timestamp'])) {
-    $file_uri = $file_uri . '?v=' . $file['timestamp'];
-  }
-
-  // Check if zoom its part of the request.
-  if (isset($file['zoom'])) {
-    $zoom = $file['zoom'];
-  }
-  else {
-    // We default zoom to 1 (tablets and "desktops").
-    $zoom = 1;
-    // Mobile_Detect.
-    $detect = dlts_viewer_mobile_detect();
-    // We give phone users the smallest possible image by default
-    // see https://jira.nyu.edu/jira/browse/DLTSVIEWER-74
-    // Mobiles zoom default 0, exclude tablets.
-    if ($detect->isMobile() && !$detect->isTablet()) {
-      $zoom = 0;
-    }
-  }
-
-  if (!isset($file['thumbnailsUrl'])) {
-    $file['thumbnailsUrl'] = 'undefined';
-  }
-
-  if (!isset($file['thumbnailsRows'])) {
-    $file['thumbnailsRows'] = 0;
-  }
-
-  if (!isset($file['thumbnailsPage'])) {
-    $file['thumbnailsPage'] = 0;
-  }
-
   $options = [
-    '@id' => $fid,
-    '@uri' => $file_uri,
-    '@width' => $file['width'],
-    '@height' => $file['height'],
-    '@manifest' => "https://sites.dlib.nyu.edu/viewer/api/image/$resourseType/$identifier/$sequence/info.json",
-    '@sequence' => array_shift($file['sequence']),
-    '@thumbnailsUrl' => $file['thumbnailsUrl'],
-    '@thumbnailsRows' => $file['thumbnailsRows'],
-    '@thumbnailsPage' => $file['thumbnailsPage'],
-    '@pageView' => 'single',
+    '@id' => $variables['id'],
+    '@identifier' => $variables['identifier'],
+    '@manifest' => $variables['manifest'],
+    '@type' => $variables['type'],
+    '@sequence' => $variables['sequence'],
+    '@count' => $variables['count'],
+    '@view' => $variables['view'],
+    '@class' => 'dlts_image_map dlts_viewer_map',
   ];
-
-  return t('<div
-    id="@id"
-    class="dlts_image_map dlts_viewer_map"
-    data-sequence="@sequence"
-    data-pageView="@pageView"
-    data-uri="@uri"
-    data-manifest="@manifest"
-    data-thumbnails-url="@thumbnailsUrl"
-    data-thumbnails-rows="@thumbnailsRows"
-    data-thumbnails-page="@thumbnailsPage"
-  ></div>', $options);
+  return t('<div id="@id" class="@class" data-type="@type" data-identifier="@identifier" data-sequence="@sequence" data-sequence-count="@count" data-view="@view" data-manifest="@manifest"></div>', $options);
 }

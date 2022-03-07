@@ -27,16 +27,20 @@ YUI().use(
   var sequenceCount = parseInt(displayData['sequence-count'] , 10);
   var sequence = parseInt(displayData['sequence'] , 10);
   var slider_datasource = Y.one('#slider_value');
-  /** slider object */
-  var slider = new Y.Slider({
-    axis: 'x',
-    min: 1,
-    dir: land_dir,
-    clickableRail: false,
-    max: sequenceCount,
-    value: sequence,
-    length:(Y.one('#pager').get('offsetWidth') - 120) + 'px'
-  });
+
+  console.log(pager);
+
+  // /** slider object */
+  // var slider = new Y.Slider({
+  //   axis: 'x',
+  //   min: 1,
+  //   dir: land_dir,
+  //   clickableRail: false,
+  //   max: sequenceCount,
+  //   value: sequence,
+  //   length:(Y.one('#pager').get('offsetWidth') - 120) + 'px'
+  // });
+
   /** nodes */
 
     function on_toggle_language(e) {
@@ -110,73 +114,11 @@ YUI().use(
       Y.fire(event_prefix + ':toggle', e);
     }
 
-    /** TODO: I don't like this, find a more elegant solution */
-    function pager_form(e) {
-      e.preventDefault();
-      var value = this.get('value');
-      var olMap = Y.one('.olMap');
-      var olMapData = olMap.getData();
-      var current = parseInt(olMapData.sequence, 10);
-      var css_class;
-      if (value.match(/\D/)) {
-        css_class = 'error';
-      }
-      else {
-        value = parseInt(value, 10);
-        if (value !== current && (value > 0 && value <= sequenceCount)) {
-          css_class = 'ok';
-          Y.one('.current_page').set('text', value);
-          pjax.navigate(bookUrl + '/' +  value);
-        }
-        else {
-          if (value !== current) {
-            css_class = 'error';
-          }
-          else {
-            css_class = 'warning';
-          }
-        }
-      }
-      this.addClass(css_class).transition({
-        duration: 1,
-        easing: 'ease-in',
-        opacity: 0.9
-      }, function() {
-        this.removeClass(css_class);
-      });
-    }
 
-    /** callback for changes in the value of the slider */
-    function slide_value_change(e) {
-      /** slider event */
-      if (!Y.Lang.isValue(slider.triggerBy)) {
-        slider_datasource.set('value', e.newVal);
-      }
-      /** event was triggered by reference */
-      else {
-        slider.triggerBy = undefined;
-      }
-    }
 
-    /** callback for the slide end event */
-    function slide_end(e) {
-      e.preventDefault();
-      var map = Y.one('.dlts_viewer_map');
-      var data = map.getData();
-      var request = bookUrl + '/' + e.target.getValue() + '?page_view=' + data.pageview;
-      if (!Y.Lang.isValue(slider.triggerBy)) {
-        Y.one('.current_page').set('text', e.target.getValue());
-        pjax.navigate(request);
-        /** slider set focus to the slider rail, blur as soon as possible so that user can use the keyboard to read the book */
-        Y.soon(function() {
-          slider.thumb.blur();
-        });
-      }
-      /** event was triggered by reference */
-      else {
-        slider.triggerBy = undefined;
-      }
-    }
+
+
+
 
     function pjax_navigate(e) {
       Y.one('body').addClass('openlayers-loading');
@@ -470,7 +412,7 @@ YUI().use(
       });
     }
 
-    // remove content
+    // Remove content.
     function onThumbnailsPageComplete() {
       Y.one('.thumbnails-container').empty();
     }
@@ -500,16 +442,11 @@ YUI().use(
     /** render the slider and plug-ins */
 
     /** events listeners */
+    Y.on('pjax:load:available', onPjaxLoadAvailable);
 
     slider.render('#slider');
 
-    slider.after('valueChange', slide_value_change);
 
-    slider.after('slideEnd', slide_end, slider);
-
-    Y.on('pjax:load:available', onPjaxLoadAvailable);
-
-    Y.one('.pane.pager').delegate('submit', pager_form, 'form', slider_datasource);
 
     /**
      * Pjax object to request new book pages; the content from
@@ -577,11 +514,9 @@ YUI().use(
       Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: displayData}));
     }
 
-    function resizeSlider() {
-      slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
-    }
 
-    Y.on('windowresize', resizeSlider);
+
+
 
     Y.once('contentready', onDisplayContentReady, '#display');
 

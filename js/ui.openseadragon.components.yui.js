@@ -1,10 +1,10 @@
 /* jshint laxcomma: true, laxbreak: true, unused: false */
 YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget-anim', 'crossframe', 'slider', function(Y) {
+  // https://www.npmjs.com/package/delegated-events
   Y.Viewer = null;
   Y.OpenSeadragon = OpenSeadragon;
   Y.isFullyLoaded = false;
   var html = Y.one('html');
-  var pagemeta = Y.one('.pane.pagemeta');
   var display = Y.one('#display');
   var displayData = display.getData();
   var sequence = parseInt(displayData['sequence'] , 10);
@@ -32,20 +32,19 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
 
   /** callback for the slide end event */
   function slide_end(e) {
+    console.log('slide_end')
+    return;
     e.preventDefault();
     if (!Y.Lang.isValue(slider.triggerBy)) {
       try {
         const currentTarget = Y.one('.paging');
         const config = {
-          identifier: currentTarget.getAttribute('data-identifier'),
-          title: 'pjax_callback: title',
-          sequence: e.target.getValue(),
-          sequenceCount: currentTarget.getAttribute('data-sequence-count'),
           operation: currentTarget.getAttribute('data-operation'),
-          type: currentTarget.getAttribute('data-type')
         };
         Y.one('.current_page').set('text', e.target.getValue());
-        Y.fire('sequence:available', config);
+        document.dispatchEvent(
+          new CustomEvent('sequence:available', config)
+        );
         Y.soon(function() {
           slider.thumb.blur();
         });
@@ -70,10 +69,6 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
     else {
       slider.triggerBy = undefined;
     }
-  }
-
-  function resizeSlider() {
-    slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
   }
 
   /** TODO: I don't like this, find a more elegant solution */
@@ -109,8 +104,6 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
     });
   }
 
-  Y.on('windowresize', resizeSlider);
-
   Y.one('.pane.pager').delegate('submit', pager_form, 'form', slider_datasource);  
 
   // https://codepen.io/iangilman/pen/jOmLYvd
@@ -143,6 +136,7 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
   }
 
   function on_button_click(e) {
+    console.log('on_button_click', e);
     e.preventDefault();
     const self = this;
     const current_target = e.currentTarget;
@@ -166,22 +160,31 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
     if (self.hasClass('on')) {
       self.removeClass('on');
       if (Y.Lang.isObject(node_target)) {
-        node_target.each(function(node) {
+        node_target.each((node) => {
           node.removeClass('on');
         });
       }
-      Y.fire(event_prefix + ':off', e);
+      console.log(`${event_prefix}:off`)
+      document.dispatchEvent(
+        new CustomEvent(`${event_prefix}:off`, e)
+      );
     }
     else {
       self.addClass('on');
       if (Y.Lang.isObject(node_target)) {
-        node_target.each(function(node) {
+        node_target.each((node) => {
           node.addClass('on');
         });
       }
-      Y.fire(event_prefix + ':on', e);
+      console.log(`${event_prefix}:on`)
+      document.dispatchEvent(
+        new CustomEvent(`${event_prefix}:on`, e)
+      );
     }
-    Y.fire(event_prefix + ':toggle', e);
+    console.log(`${event_prefix}:toggle`)
+    document.dispatchEvent(
+      new CustomEvent(`${event_prefix}:toggle`, e)
+    );
   }
 
   /**
@@ -189,46 +192,30 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
    * enable link or by reference with data-url
    */
   function pjax_callback(e) {
-
     const currentTarget = e.currentTarget;
-
     e.preventDefault();
-
     /** test if the target is not active */
-    if (currentTarget.hasClass('inactive')) return false;    
-    try {
-      // if (url.searchParams.get('page_view') === 'double') {
-      //   var pdir = to_page % 2;
-      //   if (pdir === 1) {
-      //     to_page = `${to_page}, ${to_page + 1}`
-      //   } else {
-      //     to_page = `${to_page - 1}, ${to_page}`
-      //   }
-      // }
-      // this.one('.current_page').set('text', to_page);
-      // this.addClass('loading').show();
+    if (currentTarget.classList.contains('inactive')) return false;
+    try {     
       document.getElementsByTagName('body')[0].classList.add('openlayers-loading');
-      const config = {
-        id: currentTarget.get('id'),
-        identifier: currentTarget.getAttribute('data-identifier'),
-        title: 'pjax_callback: title',
-        sequence: currentTarget.getAttribute('data-sequence'),
-        sequenceCount: currentTarget.getAttribute('data-sequence-count'),
-        operation: currentTarget.getAttribute('data-operation'),
-        type: currentTarget.getAttribute('data-type')
-      };
-      Y.fire('sequence:available', config);
+      document.dispatchEvent(
+        new CustomEvent('sequence:available', {
+          detail: {
+            operation: e.currentTarget.dataset.operation,
+          }
+        })
+      );
     } catch(e) {
       console.log(e);
     }
   }
 
   function fullscreenOn() {
-    var docElm = document.documentElement;
-    var top = Y.one('.top');
-    var button = Y.one('#button-metadata');
+    const docElm = document.documentElement;
+    const top = document.querySelector('.top');
+    const button = document.querySelector('#button-metadata');
     if (button) {
-    button.removeClass('on');
+      button.classList.remove('on');
     }
     if (docElm.requestFullscreen) {
       docElm.requestFullscreen();
@@ -243,14 +230,14 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
       docElm.webkitRequestFullScreen();
     }
     if (top) {
-      top.addClass('hidden');
+      button.classList.add('hidden');
     }
-    Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-fullscreen:on'}));
+    Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'button:button-fullscreen:on'}));
   }
 
   function fullscreenOff() {
-    var fullscreenButton = Y.one('a.fullscreen');
-    var top = Y.one('.top');
+    const fullscreenButton = document.querySelector('a.fullscreen');
+    const top = document.querySelector('.top');
     if (document.exitFullscreen) {
       document.exitFullscreen();
     }
@@ -263,40 +250,84 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
     else if (document.webkitCancelFullScreen) {
       document.webkitCancelFullScreen();
     }
+    console.log('click fullscreenOff: @todo blur()')
+    // figure out how to do this without YUI3
     if (fullscreenButton) {
-      fullscreenButton.blur();
+      // fullscreenButton.blur();
+      console.log(fullscreenButton);
     }
     if (top) {
-      top.removeClass('hidden');
+      top.classList.remove('hidden');
     }
     Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'button:button-fullscreen:off'}));
   }
 
-  function change_page(config) {
+  function change_page(e) {
+    console.log('change_page', e);
     try {
-      const { sequence, sequenceCount, type, identifier } = config;
-      const sequence_req = parseInt(sequence, 10);       
-      const sequence_next = sequence_req + 1;
-      const sequence_previous = sequence_req - 1;
-      const int_sequence_count = parseInt(sequenceCount, 10);
+      const { 
+        operation
+      } = e.detail;
+
+      let sequence = 1;
+
+      const osd = document.querySelector('#openseadragon1');
+
+      const sequence_current = parseInt(osd.dataset.sequence, 10);
+
+      const sequenceCount = parseInt(osd.dataset.sequenceCount, 10);
+
+      if (operation == 'decrease') {
+        sequence = sequence_current - 1;
+        if (sequence < 1) {
+          sequence = 1;
+        }
+      }
+
+      if (operation == 'increase') {
+        sequence = sequence_current + 1;
+        if (sequence > sequenceCount) {
+          sequence = sequenceCount;
+        }
+      }
+      
       const image_service = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
 
-      config.manifest = `${image_service}/${type}/${identifier}/${sequence_req.toString()}/info.json`;
+      const manifestList = `${image_service}/${osd.dataset.type}/${osd.dataset.identifier}/${sequence.toString()}/info.json`;
+
+      console.log(operation, manifestList);
+    
+      // if (url.searchParams.get('page_view') === 'double') {
+      //   var pdir = to_page % 2;
+      //   if (pdir === 1) {
+      //     to_page = `${to_page}, ${to_page + 1}`
+      //   } else {
+      //     to_page = `${to_page - 1}, ${to_page}`
+      //   }
+      // }
+      // this.one('.current_page').set('text', to_page);
+      // this.addClass('loading').show();
+      // return;
+
+      const tileSources = manifestList.split(',').map((manifest, x) => {
+        return {
+          tileSource: manifest,
+          x: x
+        }
+      });
 
       document.querySelectorAll('.paging.next').forEach((item) => {
-        item.dataset.sequence = sequence_next;
-        if (sequence_next > int_sequence_count) {
+        if (sequence >= sequenceCount) {
           item.classList.add('inactive');
         } else {
           if (item.classList.contains('inactive')) {
             item.classList.remove('inactive');
           }
-        }        
+        }
       });
 
       document.querySelectorAll('.paging.previous').forEach((item) => {
-        item.dataset.sequence = sequence_previous;
-        if (sequence_req <= 1) {
+        if (sequence <= 1) {
           item.classList.add('inactive');
         } else {
           if (item.classList.contains('inactive')) {
@@ -307,12 +338,14 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
 
       Y.isFullyLoaded = false;
 
-      window.history.pushState({}, config.title, sequence_req.toString());
+      // window.history.pushState({}, config.title, sequence_req.toString());
+      
+      osd.dataset.sequence = sequence;
 
-      Y.Viewer.open(config.manifest);
+      Y.Viewer.open(tileSources);
 
       // Let parent know that Viewer is going to paint.
-      Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:change', data: config }));
+      // Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:change', data: config }));
 
     } catch(e) {
       console.log(e);
@@ -320,26 +353,35 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
   }
 
   function onButtonMetadataOn() {
-    this.removeClass('hidden');
-    this.ancestor('.pane-body').removeClass('pagemeta-hidden');
+    const element = document.querySelector('#pagemeta');
+    element.classList.remove('hidden');
+    element.closest('.pane-body').classList.remove('pagemeta-hidden');
     Y.CrossFrame.postMessage('parent', JSON.stringify({
       fire: 'button:button-metadata:on'
     }));
   }
 
-  function onButtonMetadataOff(e) {
-    this.addClass('hidden');
-    this.ancestor('.pane-body').addClass('pagemeta-hidden');
+  function onButtonMetadataOff() {
+    const element = document.querySelector('#pagemeta');
+    element.classList.add('hidden');
+    element.closest('.pane-body').classList.add('pagemeta-hidden');
     Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-metadata:off'}));
   }
 
-  function openLayersTilesLoading() {
-    if (Y.one('body').hasClass('openlayers-loading')) {
-      Y.later(200, Y.one('.pane.load'), openLayersTilesLoading);
-    }
-    else {
-      Y.one('.pane.load').hide();
-      Y.one('body').removeClass('openlayers-loading');
+  function hide(selector) {
+    // aria-hidden="false" style="display: none;" hidden="hidden"
+    Y.one(selector).hide();
+  }
+
+  function tilesLoading() {
+    const body = document.querySelector('body');
+    if (body.classList.contains('openlayers-loading')) {
+      setTimeout(() => {
+        tilesLoading();
+      }, 100);
+    } else {
+      hide('.pane.load');
+      body.classList.remove('openlayers-loading');
     }
   }
 
@@ -376,8 +418,8 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
   }
 
   function onButtonThumbnailsOn(e) {
-    e.halt();
-    var map = Y.one('.dlts_viewer_map').getData();
+    // e.halt();
+    // var map = Y.one('.dlts_viewer_map').getData();
     // Y.io(map['thumbnails-url'], {
     //   data: 'page=' + map['thumbnails-page'] + '&rows=' + map['thumbnails-rows'] + '&sequence=' + map['sequence'],
     //   on: {
@@ -481,30 +523,13 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
     }
   }
 
-  // we need to remove all jQuery events for this node (DOM)
-  jQuery('.field-name-mv-2016 *').unbind();
-
   // https://javascript.info/event-delegation
   Y.delegate('change', onSelectMVChange, 'body', '.field-name-mv-2016 form');
 
   html.delegate('click', on_button_click, 'a.button');
 
-  html.delegate('click', pjax_callback, 'a.paging');
-
-  Y.on('pjax:change|openlayers:next|openlayers:previous', pjax_callback);
-
-  Y.on('button:button-metadata:on', onButtonMetadataOn , pagemeta);
-
-  Y.on('sequence:available', change_page)
-
-  Y.on('button:button-metadata:off', onButtonMetadataOff, pagemeta);
-
-  Y.on('button:button-fullscreen:on', fullscreenOn);
-
-  Y.on('button:button-fullscreen:off', fullscreenOff);
-
-  Y.once('contentready', openLayersTilesLoading, '.dlts_viewer_map');
-
+  // Y.on('pjax:change|openlayers:next|openlayers:previous', pjax_callback);  
+  
   /** Thumbnails related events */
   Y.on('button:button-thumbnails:on', onButtonThumbnailsOn);
 
@@ -518,14 +543,8 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
   // https://javascript.info/event-delegation
   Y.delegate('change', on_toggle_language, 'body', '.language');
 
-  Y.on('pjax:load:available', onPjaxLoadAvailable);
-
   function updateLoadingIndicator() {
-    // Note that this function gets called every time isFullyLoaded changes, which it will do as you 
-    // zoom and pan around. All we care about is the initial load, though, so we are just hiding the 
-    // loading indicator and not showing it again. 
-    if (Y.isFullyLoaded) {
-      console.log('Y.isFullyLoaded');
+    if (Y.isFullyLoaded) { 
       document.querySelector('body').classList.remove('openlayers-loading');
       Y.one('.pane.load').hide();
       Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:isFullyLoaded', data: {} }));
@@ -553,13 +572,42 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
     }
     return true;
   }
+  
+  document.querySelectorAll('a.paging').forEach(item => {
+    item.addEventListener('click', pjax_callback, false);
+  })  
 
-  window.addEventListener('load', () => {   
-    const id = 'openseadragon1';
-    const display = document.querySelector('#display');
-    const osd = document.querySelector(`#${id}`);
+  document.addEventListener('sequence:available', change_page, false);
+
+  document.addEventListener('button:button-metadata:on', onButtonMetadataOn, false);
+  
+  document.addEventListener('button:button-metadata:off', onButtonMetadataOff, false);
+
+  document.addEventListener('button:button-fullscreen:on', fullscreenOn, false);
+
+  document.addEventListener('button:button-fullscreen:off', fullscreenOff, false);
+
+  document.addEventListener('pjax:load:available', onPjaxLoadAvailable, false);
+
+  document.addEventListener('viewer:contentready', tilesLoading, false);
+  
+  document.dispatchEvent(
+    new CustomEvent('viewer:contentready')
+  );
+
+  window.addEventListener('load', () => {
+
+    const osd = document.querySelector('#openseadragon1');
+
+    const tileSources = osd.dataset.manifest.split(',').map((manifest, x) => {
+      return {
+        tileSource: manifest,
+        x: x
+      }
+    });
+
     Y.Viewer = Y.OpenSeadragon({
-      id: id,
+      id: osd.id,
       preserveViewport: true,
       showNavigationControl: false,
       showZoomControl: false,
@@ -568,20 +616,14 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
       visibilityRatio: 1,
       minZoomLevel: 0,
       defaultZoomLevel: 0,
-      sequenceMode: true,
-      tileSources: [
-        osd.dataset.manifest,
-      ]
+      sequenceMode: false,
+      tileSources: tileSources,
     });
 
     Y.Viewer.world.addHandler('add-item', addItemHandler);
 
-    Y.Viewer.addHandler('zoom', (event) => {
-      console.log('Current zoom', event.zoom);
-      console.log('MaxZoom', Y.Viewer.viewport.getMaxZoom());
-    });
-
-    Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: { display: display.dataset, osd: osd.dataset} }));
+    // Use to change state of buttons.
+    // Y.Viewer.addHandler('zoom', (event) => {});
 
     document.getElementById('control-zoom-in').onclick = () => {
       const actualZoom = Y.Viewer.viewport.getZoom();
@@ -591,6 +633,7 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
       }
     }
 
+    // Zoom out event.
     document.getElementById('control-zoom-out').onclick = () => {
       const actualZoom = Y.Viewer.viewport.getZoom();
       const minZoom = Y.Viewer.viewport.getMinZoom();
@@ -604,7 +647,52 @@ YUI().use('node', 'event', 'event-custom', 'transition', 'gallery-soon', 'widget
       }
     }
 
+    document.getElementById('toggle-page').onclick = (e) => {
+
+      e.preventDefault();
+
+      const elem = document.getElementById('openseadragon1');
+
+      console.log(elem)
+
+      return;
+
+      console.log('toggle-view', elem.dataset);
+
+      // const manifest = [
+      //   {
+      //     tileSource: 'https://stage-sites.dlib.nyu.edu/viewer/api/image/books/tamwag_palante000011/11/info.json',
+      //     x: 0
+      //   },        
+      //   {
+      //     tileSource: 'https://stage-sites.dlib.nyu.edu/viewer/api/image/books/tamwag_palante000011/12/info.json',
+      //     x: 1
+      //   }
+      // ];
+
+      document.dispatchEvent(
+        new CustomEvent('sequence:available', {
+          detail: {
+            title: "pjax_callback: title",
+            id: "openseadragon1",
+            identifier: elem.dataset.identifier,
+            manifest: manifest,
+            operation: "toggle",
+            sequence: elem.dataset.sequence,
+            sequenceCount: elem.dataset.sequenceCount,
+            type: elem.dataset.type,
+            view: elem.dataset.view,
+          }
+        })
+      );
+
+    }
+
+    window.addEventListener('resize', () => {
+      slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
+    });
+
+    Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: { osd: osd.dataset} }));
+
   });
-
 });
-

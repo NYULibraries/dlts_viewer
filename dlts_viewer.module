@@ -417,6 +417,21 @@ function dlts_viewer_flush_caches() {
 
 }
 
+function dlts_viewer_js_alter(&$javascript) {
+  $allow = [
+    'sites/all/modules/dlts_viewer/js/ui.openseadragon.components.yui.js',
+    'sites/all/modules/dlts_viewer/js/modules/slider-base.js',
+    'sites/all/modules/dlts_viewer/js/crossframe.js',
+    'sites/all/libraries/openseadragon/openseadragon.js',
+    'https://yui-s.yahooapis.com/3.18.1/build/yui/yui-min.js',
+  ];
+  foreach ($javascript as $key => $setting) {
+    if ((array_search($key, $allow)) === false) {
+      unset($javascript[$key]);
+    }
+  }
+}
+
 // here we need to make sure we delete the record from Apache Solr
 function dlts_viewer_node_delete($node) {
   $records = db_query("SELECT document from {dlts_viewer_books_json} WHERE nid = :nid", array(":nid" => $node->nid));

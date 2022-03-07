@@ -9,12 +9,7 @@
       <?php if (isset($content)) print render($content); ?>
     </div>
   </div>
-  <div
-    id="display"
-    class="pane display"
-    <?php if (isset($url)) : ?>
-      data-url="<?php print $url ?>"
-    <?php endif; ?>
+  <div id="display" class="pane display"
     <?php if (isset($identifier)) : ?>
       data-identifier="<?php print $identifier ?>"
     <?php endif; ?>
