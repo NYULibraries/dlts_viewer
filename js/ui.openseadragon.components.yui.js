@@ -3,6 +3,7 @@ function ViewerApp(Y) {
   Y.Viewer = null;
   Y.OpenSeadragon = OpenSeadragon;
   Y.isFullyLoaded = false;
+  Y.nodes = {};
 
   // https://codepen.io/iangilman/pen/jOmLYvd
   // https://openseadragon.github.io/docs/OpenSeadragon.html#.Options
@@ -33,57 +34,59 @@ function ViewerApp(Y) {
     // });
   }
 
-  // function on_button_click(e) {
-  //   console.log('on_button_click', e);
-  //   e.preventDefault();
-  //   const self = this;
-  //   const current_target = e.currentTarget;
-  //   let event_prefix, event_id, node_target, data_target;
-  //   /** don't waste time if the button is inactive */
-  //   if (current_target.hasClass('inactive')) return;
-  //   /** if current target has target, get target from data-target */
-  //   if (current_target.hasClass('target')) {
-  //     data_target = self.getAttribute('data-target');
-  //     event_prefix = 'button:' + data_target;
-  //     /** look-up for the main target */
-  //     node_target = Y.all('#' + data_target);
-  //   }
-  //   /** current target is the main target */
-  //   else {
-  //     event_id = self.get('id');
-  //     event_prefix = 'button:' + event_id;
-  //     /** find possible reference targets to this target */
-  //     node_target = Y.all('a[data-target=' + event_id + ']');
-  //   }
-  //   if (self.hasClass('on')) {
-  //     self.removeClass('on');
-  //     if (Y.Lang.isObject(node_target)) {
-  //       node_target.each((node) => {
-  //         node.removeClass('on');
-  //       });
-  //     }
-  //     console.log(`${event_prefix}:off`)
-  //     document.dispatchEvent(
-  //       new CustomEvent(`${event_prefix}:off`, e)
-  //     );
-  //   }
-  //   else {
-  //     self.addClass('on');
-  //     if (Y.Lang.isObject(node_target)) {
-  //       node_target.each((node) => {
-  //         node.addClass('on');
-  //       });
-  //     }
-  //     console.log(`${event_prefix}:on`)
-  //     document.dispatchEvent(
-  //       new CustomEvent(`${event_prefix}:on`, e)
-  //     );
-  //   }
-  //   console.log(`${event_prefix}:toggle`)
-  //   document.dispatchEvent(
-  //     new CustomEvent(`${event_prefix}:toggle`, e)
-  //   );
-  // }
+  function on_button_click(e) {
+    console.log('on_button_click', e, e.currentTarget);
+    e.preventDefault();
+    const current_target = e.currentTarget;
+    let event_prefix, event_id, node_target, data_target;
+    /** don't waste time if the button is inactive */
+    if (current_target.classList.contains('inactive')) return;
+    /** if current target has target, get target from data-target */
+    if (current_target.classList.contains('target')) {
+      // data_target = self.getAttribute('data-target');
+      // event_prefix = 'button:' + data_target;
+      /** look-up for the main target */
+      // node_target = Y.all('#' + data_target);
+      console.log('@TODO: Has target')
+    }
+    /** current target is the main target */
+    else {
+      event_id = current_target.id;
+      event_prefix = 'button:' + event_id;
+      /** find possible reference targets to this target */
+      // node_target = Y.all('a[data-target=' + event_id + ']');
+      console.log('@TODO: Find all targets')
+    }
+    if (current_target.classList.contains('on')) {
+      current_target.classList.remove('on');
+      console.log('@TODO: Remove all class')
+      // if (Y.Lang.isObject(node_target)) {
+      //   node_target.each((node) => {
+      //     node.removeClass('on');
+      //   });
+      // }
+      console.log(`${event_prefix}:off`)
+      document.dispatchEvent(
+        new CustomEvent(`${event_prefix}:off`, e)
+      );
+    }
+    else {
+      current_target.classList.remove('on');
+      // if (Y.Lang.isObject(node_target)) {
+      //   node_target.each((node) => {
+      //     node.addClass('on');
+      //   });
+      // }
+      console.log(`${event_prefix}:on`)
+      document.dispatchEvent(
+        new CustomEvent(`${event_prefix}:on`, e)
+      );
+    }
+    console.log(`${event_prefix}:toggle`)
+    document.dispatchEvent(
+      new CustomEvent(`${event_prefix}:toggle`, e)
+    );
+  }
 
   /**
    * pjax callback can be call by clicking a pjax
@@ -169,7 +172,7 @@ function ViewerApp(Y) {
       
       Y.isFullyLoaded = true;
 
-      const osd = document.querySelector('#openseadragon1');
+      const osd = Y.nodes.osd;
 
       const { type, identifier, service } = osd.dataset;
 
@@ -268,8 +271,11 @@ function ViewerApp(Y) {
   }
 
   function onButtonMetadataOn() {
+    const button = document.querySelector('#button-metadata');
     const element = document.querySelector('#pagemeta');
     element.classList.remove('hidden');
+    button.classList.remove('off');
+    button.classList.add('on');
     element.closest('.pane-body').classList.remove('pagemeta-hidden');
     // Y.CrossFrame.postMessage('parent', JSON.stringify({
     //   fire: 'button:button-metadata:on'
@@ -277,7 +283,10 @@ function ViewerApp(Y) {
   }
 
   function onButtonMetadataOff() {
+    const button = document.querySelector('#button-metadata');
     const element = document.querySelector('#pagemeta');
+    button.classList.remove('on');
+    button.classList.add('off');    
     element.classList.add('hidden');
     element.closest('.pane-body').classList.add('pagemeta-hidden');
     // Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-metadata:off'}));
@@ -300,7 +309,7 @@ function ViewerApp(Y) {
   }
 
   function tilesLoading() {
-    const body = document.querySelector('body');
+    const body = Y.nodes.body;
     if (body.classList.contains('openlayers-loading')) {
       setTimeout(() => {
         tilesLoading();
@@ -359,8 +368,6 @@ function ViewerApp(Y) {
   // https://javascript.info/event-delegation
   // Y.delegate('change', onSelectMVChange, 'body', '.field-name-mv-2016 form');
 
-  // html.delegate('click', on_button_click, 'a.button');
-
   // Y.on('pjax:change|openlayers:next|openlayers:previous', pjax_callback);  
   
   // https://javascript.info/event-delegation
@@ -368,7 +375,7 @@ function ViewerApp(Y) {
 
   function updateLoadingIndicator() {
     if (Y.isFullyLoaded) { 
-      document.querySelector('body').classList.remove('openlayers-loading');
+      Y.nodes.body.classList.remove('openlayers-loading');
       // Y.one('.pane.load').hide();
       // Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:isFullyLoaded', data: {} }));
     }
@@ -397,40 +404,49 @@ function ViewerApp(Y) {
   }
   
   document.querySelectorAll('a.paging').forEach(item => {
-    item.addEventListener('click', pjax_callback, false);
-  })  
-
-  document.addEventListener('sequence:available', change_page, false);
-
-  document.addEventListener('button:button-metadata:on', onButtonMetadataOn, false);
+    item.addEventListener('click', pjax_callback, false)
+  })
   
-  document.addEventListener('button:button-metadata:off', onButtonMetadataOff, false);
+  document.querySelectorAll('a.button').forEach(item => {
+    item.addEventListener('click', on_button_click, false)
+  })
 
-  document.addEventListener('button:button-fullscreen:on', fullscreenOn, false);
+  document.addEventListener('sequence:available', change_page, false)
 
-  document.addEventListener('button:button-fullscreen:off', fullscreenOff, false);
+  document.addEventListener('button:button-metadata:on', onButtonMetadataOn, false)
+  
+  document.addEventListener('button:button-metadata:off', onButtonMetadataOff, false)
 
-  document.addEventListener('pjax:load:available', onPjaxLoadAvailable, false);
+  document.addEventListener('button:button-fullscreen:on', fullscreenOn, false)
 
-  document.addEventListener('viewer:contentready', tilesLoading, false);
+  document.addEventListener('button:button-fullscreen:off', fullscreenOff, false)
+
+  document.addEventListener('pjax:load:available', onPjaxLoadAvailable, false)
+
+  document.addEventListener('viewer:contentready', tilesLoading, false)
   
   window.addEventListener('load', () => {
+    Y.nodes.body = document.querySelector('body')
+    Y.nodes.buttonMetadata = document.querySelector('#button-metadata')
+    Y.nodes.pagemeta = document.querySelector('#pagemeta')
+    Y.nodes.osd = document.querySelector('#openseadragon1')
+    Y.nodes.togglePage = document.getElementById('toggle-page')
+    Y.nodes.controlZoomOut = document.getElementById('control-zoom-out')
+    Y.nodes.controlZoomIn = document.getElementById('control-zoom-in')
 
     document.dispatchEvent(
       new CustomEvent('viewer:contentready')
-    );    
+    )
 
-    const osd = document.querySelector('#openseadragon1');
-
-    const tileSources = osd.dataset.manifest.split(',').map((manifest, x) => {
+    const tileSources = Y.nodes.osd.dataset.manifest.split(',').map((manifest, x) => {
       return {
         tileSource: manifest,
         x: x
       }
-    });
+    })
 
     Y.Viewer = Y.OpenSeadragon({
-      id: osd.id,
+      id: Y.nodes.osd.id,
       preserveViewport: true,
       showNavigationControl: false,
       showZoomControl: false,
@@ -441,23 +457,23 @@ function ViewerApp(Y) {
       defaultZoomLevel: 0,
       sequenceMode: false,
       tileSources: tileSources,
-    });
+    })
 
-    Y.Viewer.world.addHandler('add-item', addItemHandler);
+    Y.Viewer.world.addHandler('add-item', addItemHandler)
 
     // Use to change state of buttons.
     // Y.Viewer.addHandler('zoom', (event) => {});
 
-    document.getElementById('control-zoom-in').onclick = () => {
-      const actualZoom = Y.Viewer.viewport.getZoom();
-      const maxZoom = Y.Viewer.viewport.getMaxZoom();
+    Y.nodes.controlZoomIn.onclick = () => {
+      const actualZoom = Y.Viewer.viewport.getZoom()
+      const maxZoom = Y.Viewer.viewport.getMaxZoom()
       if (actualZoom < maxZoom) {
-        Y.Viewer.viewport.zoomTo(actualZoom * 2);
+        Y.Viewer.viewport.zoomTo(actualZoom * 2)
       }
     }
 
     // Zoom out event.
-    document.getElementById('control-zoom-out').onclick = () => {
+    Y.nodes.controlZoomOut.onclick = () => {
       const actualZoom = Y.Viewer.viewport.getZoom();
       const minZoom = Y.Viewer.viewport.getMinZoom();
       const zoom = actualZoom / 2;
@@ -470,7 +486,7 @@ function ViewerApp(Y) {
       }
     }
 
-    document.getElementById('toggle-page').onclick = (e) => {
+    Y.nodes.togglePage.onclick = (e) => {
       e.preventDefault();
       document.dispatchEvent(
         new CustomEvent('sequence:available', {
