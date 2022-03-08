@@ -222,8 +222,6 @@ function ViewerApp(Y) {
         }
       }
 
-      console.log(items);
-
       osd.dataset.sequence = items[0];
 
       // this.one('.current_page').set('text', to_page);
@@ -285,9 +283,20 @@ function ViewerApp(Y) {
     // Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-metadata:off'}));
   }
 
+  function show(selector) {
+    document.querySelectorAll(selector).forEach(elm => {
+      elm.style.display = 'initial';
+      elm.setAttribute('aria-hidden', false);
+      elm.hidden = false;
+    });
+  }
+
   function hide(selector) {
-    // aria-hidden="false" style="display: none;" hidden="hidden"
-    // Y.one(selector).hide();
+    document.querySelectorAll(selector).forEach(elm => {
+      elm.style.display = 'none';
+      elm.setAttribute('aria-hidden', true);
+      elm.hidden = true;
+    });
   }
 
   function tilesLoading() {
@@ -297,7 +306,7 @@ function ViewerApp(Y) {
         tilesLoading();
       }, 100);
     } else {
-      // hide('.pane.load');
+      hide('.pane.load');
       body.classList.remove('openlayers-loading');
     }
   }
