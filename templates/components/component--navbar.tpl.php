@@ -4,6 +4,7 @@
       href="<?php echo $metadata['href'] ?>"
       title="<?php echo $metadata['label']; ?>" 
       class="<?php echo $metadata['class']; ?>" 
+      data-operation="<?php echo $metadata['operation'] ?>"
       id="<?php echo $metadata['id']; ?>">
       <span><?php echo $metadata['label']; ?></span>
     </a>
@@ -13,6 +14,7 @@
       id="<?php echo $togglepage['id'] ?>"
       title="<?php echo $togglepage['label'] ?>" 
       href="<?php echo $togglepage['href'] ?>"
+      data-operation="<?php echo $togglepage['operation'] ?>"
       class="<?php echo $togglepage['class'] ?>">
       <span><?php echo $togglepage['label'] ?></span>
     </a>

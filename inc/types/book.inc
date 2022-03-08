@@ -103,20 +103,9 @@ function dlts_viewer_full_book_view($entity) {
 
   drupal_add_css($module_path . '/css/dlts_viewer.css', $css_common_config);
 
-  drupal_add_js(
-    'https://yui-s.yahooapis.com/3.18.1/build/yui/yui-min.js', 
-    'external',
-    [
-      'group' => JS_LIBRARY,
-      'weight' => -100,
-    ]
-  );
-  
   drupal_add_js('sites/all/libraries/openseadragon/openseadragon.js', ['group' => JS_LIBRARY]);
 
-  drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
-
-  drupal_add_js($module_path . '/js/modules/slider-base.js', $js_common_config);
+  // drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
 
   drupal_add_js($module_path . '/js/ui.openseadragon.components.yui.js', $js_common_config);
 
@@ -430,7 +419,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
         'identifier' => $identifier,
         'sequence' => $entity->sequence,
         'count' => $sequence_count,
-        'operation' => 'togglepage',      
+        'operation' => 'toggleview',      
         'class' => implode(' ', [
           'toggle',
           'active',
@@ -439,6 +428,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
       ],
       'metadata' => [
         'label' => t('Show/hide metadata'),
+        'operation' => 'togglemetadata',  
         'class' => implode(' ', [
           'button', 
           'metadata', 
@@ -454,56 +444,41 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
     
     $entity->book_page_data = $arg;
   
-    $iiif_manifest = "$base_url/api/image/books/$identifier/$entity->sequence/info.json";
-  
     $entity->loading = theme('dlts_viewer_loading', [
       'sequence_number' => $entity->sequence,
     ]);
-    
+
     $entity->pane_metadata_hidden = $is_mobile;
     
     $entity->sequence_count = $sequence_count;
-    
-    $entity->thumbnailsPage = ceil($entity->sequence / $thumbnails_rows_per_page) - 1;
-    
-    $entity->thumbnailsRows = $thumbnails_rows_per_page;
-    
-    $entity->thumbnailsURL = $book_url . '/thumbnails';
 
-    $entity->manifest = $iiif_manifest;
-   
-    $entity->pageView = ($is_single_page) ? 'single' : 'double';
-    
-    $arg['pageView'] = $entity->pageView;
-    
-    $arg['thumbnailsUrl'] = $entity->thumbnailsURL;
-    
-    $arg['thumbnailsRows'] = $entity->thumbnailsRows;
-    
-    $arg['thumbnailsPage'] = $entity->thumbnailsPage;
-    
+    $entity->manifest = "$base_url/api/image/books/$identifier/$entity->sequence/info.json";
+        
     $entity->slider = theme(
       'dlts_viewer_slider', 
       [
-        'slider_id' => 'slider',
-        'uri' => $book_url,
+        'id' => 'slider',
+        'max' => $sequence_count,
+        'min' => 1,
         'lang_dir' => $entity->read_order,
-        'sequence_number' => $entity->sequence,
-        'sequence_count' => $sequence_count,
+        'sequence' => $entity->sequence,
+        'count' => $sequence_count,
       ]
     );
 
-     $entity->book_page = theme(
-       'dlts_viewer_openseadragon_image', 
-       [
+    $servie_url = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
+
+    $entity->book_page = theme(
+      'dlts_viewer_openseadragon_image', 
+      [
         'id' => 'openseadragon1',
-        'file' => $arg,
         'view' => 'single',
         'type' => 'books',
         'identifier' => $identifier,
         'sequence' => $entity->sequence,
         'count' => $sequence_count,
-        'manifest' => $iiif_manifest,
+        'manifest' => $entity->manifest,
+        'service' => $servie_url ,
       ]
     ); 
   }

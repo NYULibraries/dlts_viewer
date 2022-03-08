@@ -456,7 +456,8 @@ function theme_dlts_viewer_openseadragon_image($variables) {
     '@sequence' => $variables['sequence'],
     '@count' => $variables['count'],
     '@view' => $variables['view'],
+    '@service' => $variables['service'],
     '@class' => 'dlts_image_map dlts_viewer_map',
   ];
-  return t('<div id="@id" class="@class" data-type="@type" data-identifier="@identifier" data-sequence="@sequence" data-sequence-count="@count" data-view="@view" data-manifest="@manifest"></div>', $options);
+  return t('<div id="@id" class="@class" data-type="@type" data-identifier="@identifier" data-sequence="@sequence" data-sequence-count="@count" data-view="@view" data-manifest="@manifest" data-service="@service"></div>', $options);
 }
