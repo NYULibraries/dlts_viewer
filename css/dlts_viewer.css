@@ -33,3 +33,24 @@ html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abb
   background: #a7aba9;
   cursor: pointer;
 }
+
+.thumbnails.container {
+  background: #fff;
+  width: auto;
+  display: flex;
+  flex-flow: row wrap;
+  position: relative;
+}
+
+.thumbnails.item {
+  background: #fff;
+  margin: 4px;
+  flex: 0 1 calc(20% - 8px); /* <-- adjusting for margin */
+}
+
+#thumbnails {
+  bottom: initial;
+  top: 90px;
+  background: #fff;
+  position: inherit;
+}

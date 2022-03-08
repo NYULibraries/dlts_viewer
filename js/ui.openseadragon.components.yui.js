@@ -199,6 +199,10 @@ function ViewerApp(Y) {
         }
       }
 
+      if (operation == 'change') {
+        items[0] = sequence;  
+      }
+
       osd.dataset.sequence = items[0];
 
       // this.one('.current_page').set('text', to_page);
@@ -374,7 +378,7 @@ function ViewerApp(Y) {
         updateLoadingIndicator();
       }
     });
-  }    
+  }
   
   function areAllFullyLoaded() {
     const count = Y.Viewer.world.getItemCount();
@@ -386,16 +390,90 @@ function ViewerApp(Y) {
     }
     return true;
   }
+
+
+  function onOpenThumbnailsView() {
+    
+    Y.nodes.html.style.overflow = 'initial'
+
+    hide('#openseadragon1')
+    hide('#pager')
+    hide('#pagemeta')
+
+    Y.nodes.thumbnails.classList.remove('hidden')
+
+    Y.nodes.thumbnails.innerHTML = '<div class="thumbnails container"></div>';
+
+    const container = Y.nodes.thumbnails.querySelector('.thumbnails.container')
+    const count = parseInt(Y.nodes.osd.dataset.sequenceCount, 10)
+    const identifier = Y.nodes.osd.dataset.identifier
+    const type = Y.nodes.osd.dataset.type
+    const service = 'https://sites.dlib.nyu.edu/viewer/api/image'
+    const viewerEndpoint = 'https://sites.dlib.nyu.edu/viewer'
+    let item = 0;
+    while (item <= count) {
+
+      item++;
+
+      const elm_div = document.createElement('div')
+            elm_div.className = 'thumbnails item'
+
+      const elm_a = document.createElement('a')
+            elm_a.onclick = onThumbnailsClick
+            elm_a.className = 'thumbnails sequence'
+            elm_a.setAttribute('href', `${viewerEndpoint}/${type}/${identifier}/${item}`)
+            elm_a.setAttribute('data-sequence', item)
+
+      const elm_img = document.createElement('img');
+            elm_img.setAttribute('src', `${service}/${type}/${identifier}/${item}/full/150,/0/default.jpg`)
+            elm_img.setAttribute('alt', '')
+            elm_img.setAttribute('loading', 'lazy')
+
+      elm_div.appendChild(elm_a)
+      elm_a.appendChild(elm_img)
+      container.appendChild(elm_div)
+    }
+  }
+
+  function onThumbnailsClick(event) {
+    event.preventDefault()
+    const current_target = event.currentTarget
+    Y.nodes.osd.dataset.sequence = current_target.dataset.sequence
+    
+    Y.nodes.html.style.overflow = 'hidden'
+
+    show('#openseadragon1')
+    
+    show('#pager')
+    
+    show('#pagemeta')
+    
+    hide('#thumbnails')
+
+    document.dispatchEvent(
+      new CustomEvent('sequence:available', {
+        detail: {
+          operation: 'change',
+        }
+      })
+    );    
+  }
  
   window.addEventListener('load', () => {
 
+    Y.nodes.html = document.querySelector('html')
+
     Y.nodes.body = document.querySelector('body')
+    
+    Y.nodes.thumbnails = document.querySelector('#thumbnails')
 
     Y.nodes.buttonMetadata = document.querySelector('#button-metadata')
 
     Y.nodes.pagemeta = document.querySelector('#pagemeta')
 
     Y.nodes.osd = document.querySelector('#openseadragon1')
+
+    Y.nodes.display = document.getElementById('#display')
 
     Y.nodes.togglePage = document.getElementById('toggle-page')
 
@@ -491,6 +569,8 @@ function ViewerApp(Y) {
   
     document.addEventListener('viewer:contentready', tilesLoading, false)
 
+    document.addEventListener('button:button-thumbnails:on', onOpenThumbnailsView, false)
+    
     Y.delegate('body', 'change', 'select', event => {
       const current_target = event.target      
       axios.get(current_target.value).then(response => {
@@ -505,14 +585,7 @@ function ViewerApp(Y) {
           main.dir = pagemeta.dataset.dir
           pane.dir = pagemeta.dataset.dir
           pane.innerHTML = pagemeta.innerHTML;
-          console.log(
-            doc.querySelector('#titlebar')
-          )
-          console.log(
-            doc.querySelector('#page-title')
-          )
           // document.title = node.one('.field-name-title h2').get('innerText');
-          // 
           // if (titlebar) {
           //   titlebar.set('dir', dir);
           // }
@@ -526,13 +599,9 @@ function ViewerApp(Y) {
       })
     })
 
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('DOMContentLoaded')
-    })    
-
     // Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: { osd: osd.dataset} }));
 
   });
 }
 
-ViewerApp({});
+ViewerApp({})
