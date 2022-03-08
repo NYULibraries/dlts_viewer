@@ -102,7 +102,8 @@ function dlts_viewer_full_book_view($entity) {
   ];
 
   drupal_add_css($module_path . '/css/dlts_viewer.css', $css_common_config);
-
+  
+  drupal_add_js('sites/all/libraries/axios/axios.min.js', ['group' => JS_LIBRARY]);
   drupal_add_js('sites/all/libraries/openseadragon/openseadragon.js', ['group' => JS_LIBRARY]);
 
   // drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);

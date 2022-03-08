@@ -1,38 +1,12 @@
 function ViewerApp(Y) {
-  // https://www.npmjs.com/package/delegated-events
-  Y.Viewer = null;
-  Y.OpenSeadragon = OpenSeadragon;
-  Y.isFullyLoaded = false;
-  Y.nodes = {};
 
-  // https://codepen.io/iangilman/pen/jOmLYvd
-  // https://openseadragon.github.io/docs/OpenSeadragon.html#.Options
+  Y.OpenSeadragon = OpenSeadragon
 
-  function on_toggle_language(e) {
-    // var current_target = e.currentTarget;
-    // var data_target = current_target.get('value');
-    // e.preventDefault();
-    // Y.io(data_target, {
-    //   on: {
-    //     complete: function(_id, e) {
-    //       var node = Y.one('#pagemeta');
-    //       var dir;
-    //       var titlebar = Y.one('#titlebar');
-    //       var pagetitle = Y.one('#page-title');
-    //       node.set('innerHTML', e.response);
-    //       document.title = node.one('.field-name-title h2').get('innerText');
-    //       dir = node.one('.node-dlts-book').getAttribute('data-dir');
-    //       Y.one('.pane.main').set('dir', dir);
-    //       if (titlebar) {
-    //         titlebar.set('dir', dir);
-    //       }
-    //       if (pagetitle) {
-    //         pagetitle.set('innerHTML', document.title);
-    //       }
-    //     }
-    //   }
-    // });
-  }
+  Y.Viewer = null
+
+  Y.isFullyLoaded = false
+
+  Y.nodes = {}
 
   function on_button_click(e) {
     console.log('on_button_click', e, e.currentTarget);
@@ -371,7 +345,17 @@ function ViewerApp(Y) {
   // Y.on('pjax:change|openlayers:next|openlayers:previous', pjax_callback);  
   
   // https://javascript.info/event-delegation
-  // Y.delegate('change', on_toggle_language, 'body', '.language');
+
+  Y.delegate = (selector, eventType, childSelector, eventHandler) => {
+    const elements = document.querySelectorAll(selector)
+    for (element of elements) {
+      element.addEventListener(eventType, eventOnElement => {
+        if (eventOnElement.target.matches(childSelector)) {
+          eventHandler(eventOnElement)
+        }
+      })
+    }
+  }
 
   function updateLoadingIndicator() {
     if (Y.isFullyLoaded) { 
@@ -402,37 +386,24 @@ function ViewerApp(Y) {
     }
     return true;
   }
-  
-  document.querySelectorAll('a.paging').forEach(item => {
-    item.addEventListener('click', pjax_callback, false)
-  })
-  
-  document.querySelectorAll('a.button').forEach(item => {
-    item.addEventListener('click', on_button_click, false)
-  })
-
-  document.addEventListener('sequence:available', change_page, false)
-
-  document.addEventListener('button:button-metadata:on', onButtonMetadataOn, false)
-  
-  document.addEventListener('button:button-metadata:off', onButtonMetadataOff, false)
-
-  document.addEventListener('button:button-fullscreen:on', fullscreenOn, false)
-
-  document.addEventListener('button:button-fullscreen:off', fullscreenOff, false)
-
-  document.addEventListener('pjax:load:available', onPjaxLoadAvailable, false)
-
-  document.addEventListener('viewer:contentready', tilesLoading, false)
-  
+ 
   window.addEventListener('load', () => {
+
     Y.nodes.body = document.querySelector('body')
+
     Y.nodes.buttonMetadata = document.querySelector('#button-metadata')
+
     Y.nodes.pagemeta = document.querySelector('#pagemeta')
+
     Y.nodes.osd = document.querySelector('#openseadragon1')
+
     Y.nodes.togglePage = document.getElementById('toggle-page')
+
     Y.nodes.controlZoomOut = document.getElementById('control-zoom-out')
+
     Y.nodes.controlZoomIn = document.getElementById('control-zoom-in')
+
+    Y.nodes.toggleLanguage = document.querySelector('body .language')
 
     document.dispatchEvent(
       new CustomEvent('viewer:contentready')
@@ -461,15 +432,12 @@ function ViewerApp(Y) {
 
     Y.Viewer.world.addHandler('add-item', addItemHandler)
 
-    // Use to change state of buttons.
-    // Y.Viewer.addHandler('zoom', (event) => {});
-
     Y.nodes.controlZoomIn.onclick = () => {
       const actualZoom = Y.Viewer.viewport.getZoom()
       const maxZoom = Y.Viewer.viewport.getMaxZoom()
       if (actualZoom < maxZoom) {
         Y.Viewer.viewport.zoomTo(actualZoom * 2)
-      }
+      }    
     }
 
     // Zoom out event.
@@ -499,7 +467,68 @@ function ViewerApp(Y) {
 
     window.addEventListener('resize', () => {
       // slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
-    });
+    })
+
+    document.querySelectorAll('a.paging').forEach(item => {
+      item.addEventListener('click', pjax_callback, false)
+    })
+    
+    document.querySelectorAll('a.button').forEach(item => {
+      item.addEventListener('click', on_button_click, false)
+    })
+
+    document.addEventListener('sequence:available', change_page, false)
+
+    document.addEventListener('button:button-metadata:on', onButtonMetadataOn, false)
+    
+    document.addEventListener('button:button-metadata:off', onButtonMetadataOff, false)
+  
+    document.addEventListener('button:button-fullscreen:on', fullscreenOn, false)
+  
+    document.addEventListener('button:button-fullscreen:off', fullscreenOff, false)
+  
+    document.addEventListener('pjax:load:available', onPjaxLoadAvailable, false)
+  
+    document.addEventListener('viewer:contentready', tilesLoading, false)
+
+    Y.delegate('body', 'change', 'select', event => {
+      const current_target = event.target      
+      axios.get(current_target.value).then(response => {
+        if (response.status === 200) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(response.data, 'text/html')
+          const pane = document.querySelector('.view-mode-metadata')
+          const pagemeta = doc.querySelector('.view-mode-metadata')          
+          const main = document.querySelector('.pane.main')
+          const html = document.querySelector('html')
+          html.dir = pagemeta.dataset.dir
+          main.dir = pagemeta.dataset.dir
+          pane.dir = pagemeta.dataset.dir
+          pane.innerHTML = pagemeta.innerHTML;
+          console.log(
+            doc.querySelector('#titlebar')
+          )
+          console.log(
+            doc.querySelector('#page-title')
+          )
+          // document.title = node.one('.field-name-title h2').get('innerText');
+          // 
+          // if (titlebar) {
+          //   titlebar.set('dir', dir);
+          // }
+          // if (pagetitle) {
+          //   pagetitle.set('innerHTML', document.title);
+          // }
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      })
+    })
+
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOMContentLoaded')
+    })    
 
     // Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: { osd: osd.dataset} }));
 
