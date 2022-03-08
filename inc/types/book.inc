@@ -429,6 +429,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
       'metadata' => [
         'label' => t('Show/hide metadata'),
         'operation' => 'togglemetadata',  
+        'href' => '#metadata',
         'class' => implode(' ', [
           'button', 
           'metadata', 
