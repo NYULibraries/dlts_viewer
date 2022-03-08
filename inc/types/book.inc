@@ -380,18 +380,18 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
     $entity->book_page_sequence_number = $entity->sequence;
     
     // Set navbar pager buttons according to read direction.
-    $nav_pager_button_left_arrow = $button_previous;
+    // $nav_pager_button_left_arrow = $button_previous;
     
-    $nav_pager_button_right_arrow = $button_next;
+    // $nav_pager_button_right_arrow = $button_next;
 
-    if ($entity->read_order == 'rtl') {
-      $nav_pager_button_left_arrow = $button_next;
-      $nav_pager_button_right_arrow = $button_previous;
-    }
+    // if ($entity->read_order == 'rtl') {
+    //   $nav_pager_button_left_arrow = $button_next;
+    //   $nav_pager_button_right_arrow = $button_previous;
+    // }
 
-    $nav_pager_button_left_arrow = '<li class="navbar-item navbar-pager-left">' . $nav_pager_button_left_arrow . '</li>';
+    // $nav_pager_button_left_arrow = '<li class="navbar-item navbar-pager-left">' . $nav_pager_button_left_arrow . '</li>';
     
-    $nav_pager_button_right_arrow = '<li class="navbar-item navbar-pager-right">' . $nav_pager_button_right_arrow . '</li>';
+    // $nav_pager_button_right_arrow = '<li class="navbar-item navbar-pager-right">' . $nav_pager_button_right_arrow . '</li>';
     
     $navbar_options = [
       'next' => $button_next,
@@ -437,8 +437,8 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
         ]),
         'id' => 'button-metadata',
       ],
-      'nav_buttons_pager_left_arrow' => $nav_pager_button_left_arrow,
-      'nav_buttons_pager_right_arrow' => $nav_pager_button_right_arrow,
+      // 'nav_buttons_pager_left_arrow' => $nav_pager_button_left_arrow,
+      // 'nav_buttons_pager_right_arrow' => $nav_pager_button_right_arrow,
     ];
     
     $entity->navbar = theme('dlts_viewer_navbar', $navbar_options);
