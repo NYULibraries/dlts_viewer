@@ -404,15 +404,15 @@ function ViewerApp(Y) {
 
   function onOpenThumbnailsView() {
 
-    const osd = Y.nodes.osd
+    const { id, uri } = Y.nodes.osd.dataset
 
-    const { uri } = osd.dataset
+    const { state } = Y.nodes.thumbnails.dataset
 
     const width = '230'
 
     const height = '150'
 
-    Y.hide(`#${osd.id}`)
+    Y.hide(`#${id}`)
 
     Y.hide('#pager')
 
@@ -420,21 +420,24 @@ function ViewerApp(Y) {
 
     Y.show('#thumbnails')
 
-    axios.get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
-      if (response.status === 200) {
-        const parser = new DOMParser()
-        const doc = parser.parseFromString(response.data, 'text/html')
-        Y.nodes.thumbnails.appendChild(
-          doc.querySelector('.thumbnails.container')
-        )
-        document.querySelectorAll('.thumbnails.container a').forEach(item => {
-          item.addEventListener('click', onThumbnailsClick, false)
-        })
-      }
-    })
-    .catch(error => {
-      console.log(error)
-    })
+    if (parseInt(state, 10) === 0) {
+      axios.get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
+        if (response.status === 200) {
+          const parser = new DOMParser()
+          const doc = parser.parseFromString(response.data, 'text/html')
+           Y.nodes.thumbnails.appendChild(
+            doc.querySelector('.thumbnails.container')
+          )
+          document.querySelectorAll('.thumbnails.container a').forEach(item => {
+            item.addEventListener('click', onThumbnailsClick)
+          })
+          Y.nodes.thumbnails.dataset.state = 1
+        }
+      })
+      .catch(error => {
+        console.log(error)
+      })
+    }
   }
 
   function onThumbnailsClick(event) {
@@ -548,30 +551,30 @@ function ViewerApp(Y) {
     })
 
     document.querySelectorAll('a.paging').forEach(item => {
-      item.addEventListener('click', pjax_callback, false)
+      item.addEventListener('click', pjax_callback)
     })
     
     document.querySelectorAll('a.button').forEach(item => {
-      item.addEventListener('click', on_button_click, false)
+      item.addEventListener('click', on_button_click)
     })
 
-    document.addEventListener('sequence:available', change_page, false)
+    document.addEventListener('sequence:available', change_page)
 
-    document.addEventListener('button:button-metadata:on', onButtonMetadataOn, false)
+    document.addEventListener('button:button-metadata:on', onButtonMetadataOn)
 
-    document.addEventListener('button:button-metadata:off', onButtonMetadataOff, false)
+    document.addEventListener('button:button-metadata:off', onButtonMetadataOff)
 
-    document.addEventListener('button:button-fullscreen:on', fullscreenOn, false)
+    document.addEventListener('button:button-fullscreen:on', fullscreenOn)
 
-    document.addEventListener('button:button-fullscreen:off', fullscreenOff, false)
+    document.addEventListener('button:button-fullscreen:off', fullscreenOff)
 
-    document.addEventListener('pjax:load:available', onPjaxLoadAvailable, false)
+    document.addEventListener('pjax:load:available', onPjaxLoadAvailable)
 
-    document.addEventListener('viewer:contentready', tilesLoading, false)
+    document.addEventListener('viewer:contentready', tilesLoading)
 
-    document.addEventListener('button:button-thumbnails:on', onOpenThumbnailsView, false)
+    document.addEventListener('button:button-thumbnails:on', onOpenThumbnailsView)
 
-    document.addEventListener('button:button-thumbnails:off', onHideThumbnailsView, false)
+    document.addEventListener('button:button-thumbnails:off', onHideThumbnailsView)
 
     Y.delegate('#thumbnails', 'click', 'a', event => {
       event.preventDefault()

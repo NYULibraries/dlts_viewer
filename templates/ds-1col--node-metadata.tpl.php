@@ -24,11 +24,12 @@
     <?php print $book_page ?>
     <?php if (isset($button_previous)) print $button_previous; ?>
     <?php if (isset($button_next)) print $button_next;  ?>
-    <div 
+    <div
       id="thumbnails" 
       role="presentation"
       class="views-g pane thumbnails" 
-      style="display: none; visibility: hidden;" 
+      style="display: none; visibility: hidden;"
+      data-state="0"
       aria-hidden="true" 
       hidden="true">
     </div>
