@@ -427,6 +427,9 @@ function ViewerApp(Y) {
         Y.nodes.thumbnails.appendChild(
           doc.querySelector('.thumbnails.container')
         )
+        document.querySelectorAll('.thumbnails.container a').forEach(item => {
+          item.addEventListener('click', onThumbnailsClick, false)
+        })
       }
     })
     .catch(error => {
@@ -441,13 +444,11 @@ function ViewerApp(Y) {
     
     Y.nodes.html.style.overflow = 'hidden'
 
-    show('#openseadragon1')
-    
-    show('#pager')
-    
-    show('#pagemeta')
-    
-    hide('#thumbnails')
+    Y.hide('#thumbnails')
+
+    Y.show('#openseadragon1')
+
+    Y.show('#pager')
 
     document.dispatchEvent(
       new CustomEvent('sequence:available', {
