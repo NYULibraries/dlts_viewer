@@ -379,7 +379,7 @@ function theme_thumbnails_photo_pager($vars) {
 }
 
 // See ticker https://jira.nyu.edu/jira/browse/DLTSVIEWER-95
-function theme_field__field_pdf_file (&$variables) {
+function theme_field__field_pdf_file(&$variables) {
   $out = '';
   $dir = dlts_viewer_viewer_language((array)$variables['element']['#object']);
   if ($variables['element']['#view_mode'] == 'metadata') {
@@ -448,16 +448,17 @@ function theme_field__field_pdf_file (&$variables) {
  * @ingroup themable
  */
 function theme_dlts_viewer_openseadragon_image($variables) {
-  $options = [
-    '@id' => $variables['id'],
-    '@identifier' => $variables['identifier'],
-    '@manifest' => $variables['manifest'],
-    '@type' => $variables['type'],
-    '@sequence' => $variables['sequence'],
-    '@count' => $variables['count'],
-    '@view' => $variables['view'],
-    '@service' => $variables['service'],
-    '@class' => 'dlts_image_map dlts_viewer_map',
-  ];
-  return t('<div id="@id" class="@class" data-type="@type" data-identifier="@identifier" data-sequence="@sequence" data-sequence-count="@count" data-view="@view" data-manifest="@manifest" data-service="@service"></div>', $options);
+  $classList = implode(' ', $variables['classList']);
+  return "<div
+   id='$variables[id]'
+   class='$classList'
+   data-type='$variables[type]'
+   data-identifier='$variables[identifier]'
+   data-sequence='$variables[sequence]'
+   data-sequence-count='$variables[count]'
+   data-view='$variables[view]'
+   data-manifest='$variables[manifest]'
+   data-service='$variables[service]'
+   data-uri='$variables[uri]'
+   ></div>";
 }

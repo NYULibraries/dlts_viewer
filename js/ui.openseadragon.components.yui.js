@@ -2,6 +2,33 @@ function ViewerApp(Y) {
 
   Y.OpenSeadragon = OpenSeadragon
 
+  Y.show = (selector) => {
+    document.querySelectorAll(selector).forEach(elm => {
+      elm.style.display = null
+      elm.style.visibility = null
+      elm.hidden = null
+    })
+  }
+
+  Y.hide = (selector) => {
+    document.querySelectorAll(selector).forEach(elm => {
+      elm.style.display = 'none'
+      elm.style.visibility = 'hidden'
+      elm.setAttribute('hidden', true)
+    })
+  }
+
+  Y.delegate = (selector, eventType, childSelector, eventHandler) => {
+    const elements = document.querySelectorAll(selector)
+    for (element of elements) {
+      element.addEventListener(eventType, eventOnElement => {
+        if (eventOnElement.target.matches(childSelector)) {
+          eventHandler(eventOnElement)
+        }
+      })
+    }
+  }
+
   Y.Viewer = null
 
   Y.isFullyLoaded = false
@@ -33,6 +60,8 @@ function ViewerApp(Y) {
     }
     if (current_target.classList.contains('on')) {
       current_target.classList.remove('on');
+      current_target.classList.add('off');
+      
       console.log('@TODO: Remove all class')
       // if (Y.Lang.isObject(node_target)) {
       //   node_target.each((node) => {
@@ -45,7 +74,8 @@ function ViewerApp(Y) {
       );
     }
     else {
-      current_target.classList.remove('on');
+      current_target.classList.add('on');
+      current_target.classList.remove('off');
       // if (Y.Lang.isObject(node_target)) {
       //   node_target.each((node) => {
       //     node.addClass('on');
@@ -62,26 +92,22 @@ function ViewerApp(Y) {
     );
   }
 
-  /**
-   * pjax callback can be call by clicking a pjax
-   * enable link or by reference with data-url
-   */
   function pjax_callback(e) {
-    const currentTarget = e.currentTarget;
-    e.preventDefault();
+    const currentTarget = e.currentTarget
+    e.preventDefault()
     /** test if the target is not active */
-    if (currentTarget.classList.contains('inactive')) return false;
-    try {     
-      document.getElementsByTagName('body')[0].classList.add('openlayers-loading');
+    if (currentTarget.classList.contains('inactive')) return false
+    try {
+      document.getElementsByTagName('body')[0].classList.add('openlayers-loading')
       document.dispatchEvent(
         new CustomEvent('sequence:available', {
           detail: {
             operation: e.currentTarget.dataset.operation,
           }
         })
-      );
+      )
     } catch(e) {
-      console.log(e);
+      console.log(e)
     }
   }
 
@@ -270,22 +296,6 @@ function ViewerApp(Y) {
     // Y.CrossFrame.postMessage("parent", JSON.stringify({fire: 'button:button-metadata:off'}));
   }
 
-  function show(selector) {
-    document.querySelectorAll(selector).forEach(elm => {
-      elm.style.display = 'initial';
-      elm.setAttribute('aria-hidden', false);
-      elm.hidden = false;
-    });
-  }
-
-  function hide(selector) {
-    document.querySelectorAll(selector).forEach(elm => {
-      elm.style.display = 'none';
-      elm.setAttribute('aria-hidden', true);
-      elm.hidden = true;
-    });
-  }
-
   function tilesLoading() {
     const body = Y.nodes.body;
     if (body.classList.contains('openlayers-loading')) {
@@ -293,7 +303,7 @@ function ViewerApp(Y) {
         tilesLoading();
       }, 100);
     } else {
-      hide('.pane.load');
+      Y.hide('.pane.load');
       body.classList.remove('openlayers-loading');
     }
   }
@@ -324,8 +334,6 @@ function ViewerApp(Y) {
   //   }
   }
 
-  /** events listeners */
-
   // function onSelectMVChange(e) {
   //   e.halt();
   //   const currentTarget = e.currentTarget;
@@ -345,22 +353,7 @@ function ViewerApp(Y) {
 
   // https://javascript.info/event-delegation
   // Y.delegate('change', onSelectMVChange, 'body', '.field-name-mv-2016 form');
-
-  // Y.on('pjax:change|openlayers:next|openlayers:previous', pjax_callback);  
-  
-  // https://javascript.info/event-delegation
-
-  Y.delegate = (selector, eventType, childSelector, eventHandler) => {
-    const elements = document.querySelectorAll(selector)
-    for (element of elements) {
-      element.addEventListener(eventType, eventOnElement => {
-        if (eventOnElement.target.matches(childSelector)) {
-          eventHandler(eventOnElement)
-        }
-      })
-    }
-  }
-
+ 
   function updateLoadingIndicator() {
     if (Y.isFullyLoaded) { 
       Y.nodes.body.classList.remove('openlayers-loading');
@@ -391,34 +384,50 @@ function ViewerApp(Y) {
     return true;
   }
 
+  function onHideThumbnailsView() {
+
+    const osd = Y.nodes.osd
+
+    Y.show(`#${osd.id}`)
+    
+    Y.show('#pager')
+    
+    Y.nodes.html.style.overflow = 'initial'
+
+    Y.hide('#thumbnails')
+
+  }
 
   function onOpenThumbnailsView() {
+
+    const osd = Y.nodes.osd
+
+    const { uri } = osd.dataset
+
+    const width = '230'
+
+    const height = '150'
+
+    Y.hide(`#${osd.id}`)
+
+    Y.hide('#pager')
+
     Y.nodes.html.style.overflow = 'initial'
-    hide('#openseadragon1')
-    hide('#pager')
-    // hide('#pagemeta')
 
-    const osd = Y.nodes.osd;
+    Y.show('#thumbnails')
 
-    const { type, identifier, service } = osd.dataset;
-
-    const target = `http://192.168.0.22/projects/viewer/${type}/${identifier}/thumbnails?pjax=true`
-    
-    axios.get(target).then(response => {
+    axios.get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
       if (response.status === 200) {
-        const parser = new DOMParser();
+        const parser = new DOMParser()
         const doc = parser.parseFromString(response.data, 'text/html')
-        const node = doc.querySelector('.thumbnails.container')
-        console.log(node);
         Y.nodes.thumbnails.appendChild(
-          node
+          doc.querySelector('.thumbnails.container')
         )
       }
     })
     .catch(error => {
-      console.log(error);
+      console.log(error)
     })
-    Y.nodes.thumbnails.classList.remove('hidden')
   }
 
   function onThumbnailsClick(event) {
@@ -544,21 +553,23 @@ function ViewerApp(Y) {
     document.addEventListener('sequence:available', change_page, false)
 
     document.addEventListener('button:button-metadata:on', onButtonMetadataOn, false)
-    
+
     document.addEventListener('button:button-metadata:off', onButtonMetadataOff, false)
-  
+
     document.addEventListener('button:button-fullscreen:on', fullscreenOn, false)
-  
+
     document.addEventListener('button:button-fullscreen:off', fullscreenOff, false)
-  
+
     document.addEventListener('pjax:load:available', onPjaxLoadAvailable, false)
-  
+
     document.addEventListener('viewer:contentready', tilesLoading, false)
 
     document.addEventListener('button:button-thumbnails:on', onOpenThumbnailsView, false)
-    
+
+    document.addEventListener('button:button-thumbnails:off', onHideThumbnailsView, false)
+
     Y.delegate('body', 'change', 'select', event => {
-      const current_target = event.target      
+      const current_target = event.target
       axios.get(current_target.value).then(response => {
         if (response.status === 200) {
           const parser = new DOMParser();
@@ -587,7 +598,8 @@ function ViewerApp(Y) {
 
     // Y.CrossFrame.postMessage('parent', JSON.stringify({ fire: 'display:load', data: { osd: osd.dataset} }));
 
-  });
+  })
+
 }
 
 ViewerApp({})

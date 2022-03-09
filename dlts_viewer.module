@@ -8,6 +8,11 @@
 /**
  * Load MongoDB helper.
  */
+include_once 'inc/common.inc';
+
+/**
+ * Load MongoDB helper.
+ */
 include_once 'inc/mongodb.inc';
 
 /**

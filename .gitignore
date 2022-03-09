@@ -8,6 +8,7 @@ datasource/dlts_viewer_content
 *.iml
 
 js/node_modules
+node_modules
 *.sql
 *.json
 !filesize-from-csv.json

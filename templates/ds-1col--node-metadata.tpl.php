@@ -20,16 +20,18 @@
     aria-hidden="true" 
     id="display" 
     class="pane display"
-    data-url="<?php print $url ?>"
-    data-identifier="<?php print $identifier ?>"
-    data-sequence-count="<?php print $sequence_count ?>"
-    data-sequence="<?php print $book_page_sequence_number ?>"
-    data-title="<?php print $title ?>"
-    data-pageView="<?php print $pageView ?>"
   >
     <?php print $book_page ?>
     <?php if (isset($button_previous)) print $button_previous; ?>
     <?php if (isset($button_next)) print $button_next;  ?>
+    <div 
+      id="thumbnails" 
+      role="presentation"
+      class="views-g pane thumbnails" 
+      style="display: none; visibility: hidden;" 
+      aria-hidden="true" 
+      hidden="true">
+    </div>
   </div>
   <div class="pane load loading" role="presentation" aria-hidden="true">
     <?php if (isset($loading)) print $loading ; ?>
@@ -41,7 +43,3 @@
   <?php if (isset($slider)) : print $slider ; endif ; ?>
 </div>
 <?php endif; ?>
-
-<div role="presentation" id="thumbnails" class="views-g pane thumbnails hidden">
-  <?php if (isset($thumbnails)) : print $thumbnails; endif; ?>
-</div>

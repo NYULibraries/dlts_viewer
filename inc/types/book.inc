@@ -65,16 +65,20 @@ function dlts_viewer_dispatch_thumbnails(object $entity) {
   $out = '<div class="node">';
   $out .= '<div class="thumbnails container">'; 
   while (true) {
-    $out .= '<div class="thumbnails item">'; 
-    $out .= "<a href='$base_url/$type/$identifier/$sequence' data-sequence='$sequence' class='thumbnails sequence' onclick='onThumbnailsClick'>"; 
-    $out .= "<img height='$height' width='$width' loading='lazy' alt='' src='$service/$type/$identifier/$sequence/full/$width,/0/default.jpg'>"; 
-    $out .= '</a>'; 
+    $out .= '<div class="thumbnails item">'; // @todo: Set current-page
+    $out .= "  <a href='$base_url/$type/$identifier/$sequence' data-sequence='$sequence' class='thumbnails sequence' onclick='onThumbnailsClick'>"; 
+    $out .= "    <img class='thumbItem' height='$height' width='$width' loading='lazy' alt='' src='$service/$type/$identifier/$sequence/full/$width,/0/default.jpg'>";
+    // $out .= "    <img class='thumbItemloader' src='$placeholder' height='$height' width='$width'>";
+    // $out .= "    <img class='thumbItembg' src='$placeholder' height='$height' width='$width'>";
+    // $out .= "    <span class='page-number'>$sequence</span>";
+    $out .= '  </a>'; 
+    $out .= '</div>'; 
     if ($sequence === $sequence_count) {
       break;
     }
     $sequence++;
   }
-  $out .= '</div>'; 
+  $out .= '</div>';
   $out .= '</div>';
 
   return $out;
@@ -90,24 +94,23 @@ function dlts_viewer_full_book_view($entity) {
 
   $module_path = drupal_get_path('module', 'dlts_viewer');
 
-  $js_common_config = [
-    'type' => 'file', 
-    'scope' => 'footer',
-  ];
-
-  $css_common_config = [
+  drupal_add_css($module_path . '/css/dlts_viewer.css', [
     'group' => CSS_DEFAULT, 
     'every_page' => TRUE,
-  ];
-
-  drupal_add_css($module_path . '/css/dlts_viewer.css', $css_common_config);
+  ]);
   
-  drupal_add_js('sites/all/libraries/axios/axios.min.js', ['group' => JS_LIBRARY]);
-  drupal_add_js('sites/all/libraries/openseadragon/openseadragon.js', ['group' => JS_LIBRARY]);
+  drupal_add_js('sites/all/libraries/axios/axios.min.js', [
+    'group' => JS_LIBRARY
+  ]);
 
-  // drupal_add_js($module_path . '/js/crossframe.js', $js_common_config);
+  drupal_add_js('sites/all/libraries/openseadragon/openseadragon.js', [
+    'group' => JS_LIBRARY
+  ]);
 
-  drupal_add_js($module_path . '/js/ui.openseadragon.components.yui.js', $js_common_config);
+  drupal_add_js($module_path . '/js/ui.openseadragon.components.yui.js', [
+    'type' => 'file', 
+    'scope' => 'footer',
+  ]);
 
   return node_view($entity, 'metadata', $entity->language);
 
@@ -147,57 +150,6 @@ function dlts_viewer_process_node_dlts_book(&$vars) {
 }
 
 /**
- * Render language selection for metadata view.
- *
- * @param object $entity
- *   Entity.
- */
-function _language_field(&$entity) {
-  $languages = language_list('enabled');
-  $languages = $languages[1];
-  $entity->lang_dir = (!isset($languages[$entity->language]->direction) || isset($languages[$entity->language]->direction) && $languages[$entity->language]->direction == 0) ? 'ltr' : 'rtl';
-  $entity->lang_language = isset($languages[$entity->language]->language) ? $languages[$entity->language]->language : 'en';
-  $entity->lang_name = isset($languages[$entity->language]->name) ? $languages[$entity->language]->name : t('English');
-  $translations = dlts_viewer_list_translation($entity->identifier);
-  if (count($translations) > 1) {
-    $entity->lang_options = array(
-      '#type' => 'markup',
-      '#prefix' => '<select class="language" aria-label="' . t('Choose Language for Metadata') . '">',
-      '#suffix' => '</select>',
-      '#markup' => '',
-    );
-    foreach ($translations as $key => $index) {
-      $url = url(
-        'books/' . $entity->identifier . '/display',
-        array(
-          'absolute' => TRUE,
-          'query' => array(
-            'lang' => $key,
-          ),
-        )
-      );
-      $markup = array(
-        '#tag' => 'option',
-        '#theme' => 'html_tag',
-        '#attributes' => array(
-          'data-title' => t('@lang', array('@lang' => $languages[$key]->native)),
-          'data-language' => $key,
-          'title' => t('@lang', array('@lang' => $languages[$key]->native)),
-          'class' => array('language', $key),
-          'data-url' => $url,
-          'value' => $url,
-        ),
-        '#value' => t('@lang', array('@lang' => $languages[$key]->native)),
-      );
-      if ($entity->lang_language == $key) {
-        $markup['#attributes']['selected'] = 'selected';
-      }
-      $entity->lang_options['#markup'] .= theme('html_tag', $markup);
-    }
-  }
-}
-
-/**
  * Book dispatcher.
  *
  * @param object $entity
@@ -212,7 +164,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
   // Check if this collection has searchable PDFs.
   $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
 
-  // Test if resource.
+  // Test if resource, will return the maped type of resource (e.g., books).
   $is_resource = dlts_viewer_is_resource();
 
   if ($is_resource) {
@@ -346,7 +298,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
 
     $button_previous = [
       'label' => t('Go to previous page'),
-      'type' => 'books',
+      'type' => $is_resource,
       'href' => '#previous',
       'identifier' => $identifier,
       'sequence' => $entity->sequence,
@@ -362,7 +314,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
 
     $button_next = [
       'label' => t('Go to next page'),
-      'type' => 'books',
+      'type' => $is_resource,
       'href' => '#next',
       'identifier' => $identifier,
       'sequence' => $entity->sequence,
@@ -398,7 +350,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
       'previous' => $button_previous,
       'thumbnails' => [
         'label' => t('Select page'),
-        'type' => 'books',
+        'type' => $is_resource,
         'href' => '#thumbnails',
         'id' => 'button-thumbnails',
         'identifier' => $identifier,
@@ -414,7 +366,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
       'togglepage' => [
         'id' => 'toggle-page',
         'label' => t('Toggle between single or double page'),
-        'type' => 'books',
+        'type' => $is_resource,
         'href' => '#toggle-view',
         'identifier' => $identifier,
         'sequence' => $entity->sequence,
@@ -453,7 +405,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
     
     $entity->sequence_count = $sequence_count;
 
-    $entity->manifest = "$base_url/api/image/books/$identifier/$entity->sequence/info.json";
+    $entity->manifest = "$base_url/api/image/$is_resource/$identifier/$entity->sequence/info.json";
         
     $entity->slider = theme(
       'dlts_viewer_slider', 
@@ -467,6 +419,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
       ]
     );
 
+    // Change to $base_url.
     $servie_url = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
 
     $entity->book_page = theme(
@@ -474,12 +427,17 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
       [
         'id' => 'openseadragon1',
         'view' => 'single',
-        'type' => 'books',
+        'type' => $is_resource,
         'identifier' => $identifier,
         'sequence' => $entity->sequence,
         'count' => $sequence_count,
         'manifest' => $entity->manifest,
         'service' => $servie_url ,
+        'uri' => "$base_url/$is_resource/$identifier",
+        'classList' => [
+          'dlts_image_map',
+          'dlts_viewer_map',
+        ],
       ]
     ); 
   }

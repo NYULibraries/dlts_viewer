@@ -143,7 +143,9 @@ function dlts_viewer_is_resource() {
     // to it's route. Get the route values as array.
     $types = array_values($object_types);
     // Check if DLTS Vierwer render the object requested.
-    $is_resource = in_array($route_argument, $types);
+    if (in_array($route_argument, $types)) {
+      $is_resource = $route_argument;
+    }
   }
   return $is_resource;
 }

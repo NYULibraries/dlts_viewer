@@ -21,6 +21,16 @@
       <?php if (isset($button_next)) : ?>
         <?php print $button_next ?>
       <?php endif; ?>
+      <?php if (isset($thumbnails)) : ?>
+        <div 
+          id="thumbnails" 
+          class="views-g pane thumbnails" 
+          style="display: none; visibility: hidden;" 
+          aria-hidden="true" 
+          hidden="true">
+          <?php print $thumbnails ?>
+        </div>
+      <?php endif; ?>
     </div>
     <?php if (isset($loading)) : ?>
       <div class="pane load loading" role="presentation">
@@ -31,10 +41,5 @@
 <?php if (isset($slider) && !isset($off)) : ?>
   <div id="pager" dir="<?php print $language_dir ?>" class="pane pager">
     <?php print $slider ?>
-  </div>
-<?php endif; ?>
-<?php if (isset($thumbnails)) : ?>
-  <div id="thumbnails" class="views-g pane thumbnails hidden">
-    <?php print $thumbnails ?>
   </div>
 <?php endif; ?>

@@ -1,21 +1,8 @@
-<div class="dlts_viewer node pjax" data-identifier="<?php print $identifier ?>">
+<div class="dlts_viewer node pjax">
   <?php if (isset($button_previous)) : ?>
     <?php print $button_previous ?>
   <?php endif; ?>
-  <div 
-    id="viewer-<?php print $fid ?>"
-    class="dlts_viewer_map"
-    data-manifest="<?php print $manifest ?>"
-    data-pageView="<?php print $pageView ?>"
-    data-sequenceCount="<?php print $sequence_count ?>"
-    data-sequence="<?php print $sequence ?>"
-    data-title="<?php print $title ?>"
-    data-width="<?php print $width ?>"
-    data-height="<?php print $height ?>"
-    data-thumbnails-url="<?php print $thumbnailsURL ?>"
-    data-thumbnails-rows="<?php print $thumbnailsRows ?>"
-    data-thumbnails-page="<?php print $thumbnailsPage ?>">
-  </div>
+  <div class="dlts_viewer_map"></div>
   <?php if (isset($button_next)) : ?>
     <?php print $button_next ?>
   <?php endif; ?>
