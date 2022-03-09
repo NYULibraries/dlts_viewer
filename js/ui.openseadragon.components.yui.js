@@ -19,6 +19,10 @@ function ViewerApp(Y) {
   }
 
   Y.delegate = (selector, eventType, childSelector, eventHandler) => {
+    console.log(selector)
+    console.log(eventType)
+    console.log(childSelector)
+    console.log(eventHandler)
     const elements = document.querySelectorAll(selector)
     for (element of elements) {
       element.addEventListener(eventType, eventOnElement => {
@@ -567,6 +571,12 @@ function ViewerApp(Y) {
     document.addEventListener('button:button-thumbnails:on', onOpenThumbnailsView, false)
 
     document.addEventListener('button:button-thumbnails:off', onHideThumbnailsView, false)
+
+    Y.delegate('#thumbnails', 'click', 'a', event => {
+      event.preventDefault()
+      const current_target = event.target
+      console.log(current_target)
+    })
 
     Y.delegate('body', 'change', 'select', event => {
       const current_target = event.target

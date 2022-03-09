@@ -66,7 +66,7 @@ function dlts_viewer_dispatch_thumbnails(object $entity) {
   $out .= '<div class="thumbnails container">'; 
   while (true) {
     $out .= '<div class="thumbnails item">'; // @todo: Set current-page
-    $out .= "  <a href='$base_url/$type/$identifier/$sequence' data-sequence='$sequence' class='thumbnails sequence' onclick='onThumbnailsClick'>"; 
+    $out .= "  <a href='$base_url/$type/$identifier/$sequence' data-sequence='$sequence' class='thumbnails sequence'>"; 
     $out .= "    <img class='thumbItem' height='$height' width='$width' loading='lazy' alt='' src='$service/$type/$identifier/$sequence/full/$width,/0/default.jpg'>";
     // $out .= "    <img class='thumbItemloader' src='$placeholder' height='$height' width='$width'>";
     // $out .= "    <img class='thumbItembg' src='$placeholder' height='$height' width='$width'>";
