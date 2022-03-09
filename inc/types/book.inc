@@ -214,12 +214,6 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
   // Set $identifier so that .tpl.php can use it.
   $entity->identifier = $identifier;
 
-  // Book URL.
-  $book_url = url('node/' . $entity->nid, ['absolute' => TRUE]);
-
-  // Set $url so that .tpl.php can use it.
-  $entity->url = $book_url;
-
   // Set language.
   _language_field($entity);
 
@@ -241,13 +235,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
     // Default single page view.
     $is_single_page = TRUE;
     
-    $thumbnails_rows_per_page = 10;
-    
     $sequence = $arg['sequence'];
-
-    if (isset($query_parameters['rows'])) {
-      $thumbnails_rows_per_page = filter_xss($query_parameters['rows']);
-    }
 
     if (is_array($sequence)) {
       // Get the first page of the requested sequence.
@@ -397,10 +385,6 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
     
     $entity->book_page_data = $arg;
   
-    $entity->loading = theme('dlts_viewer_loading', [
-      'sequence_number' => $entity->sequence,
-    ]);
-
     $entity->pane_metadata_hidden = $is_mobile;
     
     $entity->sequence_count = $sequence_count;
