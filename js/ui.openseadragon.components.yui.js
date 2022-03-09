@@ -393,46 +393,32 @@ function ViewerApp(Y) {
 
 
   function onOpenThumbnailsView() {
-    
     Y.nodes.html.style.overflow = 'initial'
-
     hide('#openseadragon1')
     hide('#pager')
-    hide('#pagemeta')
+    // hide('#pagemeta')
 
+    const osd = Y.nodes.osd;
+
+    const { type, identifier, service } = osd.dataset;
+
+    const target = `http://192.168.0.22/projects/viewer/${type}/${identifier}/thumbnails?pjax=true`
+    
+    axios.get(target).then(response => {
+      if (response.status === 200) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(response.data, 'text/html')
+        const node = doc.querySelector('.thumbnails.container')
+        console.log(node);
+        Y.nodes.thumbnails.appendChild(
+          node
+        )
+      }
+    })
+    .catch(error => {
+      console.log(error);
+    })
     Y.nodes.thumbnails.classList.remove('hidden')
-
-    Y.nodes.thumbnails.innerHTML = '<div class="thumbnails container"></div>';
-
-    const container = Y.nodes.thumbnails.querySelector('.thumbnails.container')
-    const count = parseInt(Y.nodes.osd.dataset.sequenceCount, 10)
-    const identifier = Y.nodes.osd.dataset.identifier
-    const type = Y.nodes.osd.dataset.type
-    const service = 'https://sites.dlib.nyu.edu/viewer/api/image'
-    const viewerEndpoint = 'https://sites.dlib.nyu.edu/viewer'
-    let item = 0;
-    while (item <= count) {
-
-      item++;
-
-      const elm_div = document.createElement('div')
-            elm_div.className = 'thumbnails item'
-
-      const elm_a = document.createElement('a')
-            elm_a.onclick = onThumbnailsClick
-            elm_a.className = 'thumbnails sequence'
-            elm_a.setAttribute('href', `${viewerEndpoint}/${type}/${identifier}/${item}`)
-            elm_a.setAttribute('data-sequence', item)
-
-      const elm_img = document.createElement('img');
-            elm_img.setAttribute('src', `${service}/${type}/${identifier}/${item}/full/150,/0/default.jpg`)
-            elm_img.setAttribute('alt', '')
-            elm_img.setAttribute('loading', 'lazy')
-
-      elm_div.appendChild(elm_a)
-      elm_a.appendChild(elm_img)
-      container.appendChild(elm_div)
-    }
   }
 
   function onThumbnailsClick(event) {

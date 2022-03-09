@@ -32,53 +32,52 @@ function dlts_viewer_preprocess_node_dlts_book(&$vars) {
  * @param string $identifier
  *   Resorce identifier.
  */
-function dlts_viewer_dispatch_thumbnails(string $identifier) {
-  // Load helpers.
-  module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
-  // Hold query arguments.
-  $query_parameters = drupal_get_query_parameters();
-  if (isset($query_parameters['sequence'])) {
-    $sequence = $query_parameters['sequence'];
+function dlts_viewer_dispatch_thumbnails(object $entity) {
+
+  global $base_url;
+
+  $module = drupal_get_path('module', 'dlts_viewer');
+
+  // Entity API wrapper.
+  $wrapper = entity_metadata_wrapper('node', $entity);
+
+  $title = $wrapper->field_title->value();
+ 
+  // Check for mobile devices.
+  $is_mobile = dlts_viewer_is_mobile();
+
+  $identifier = $wrapper->field_identifier->value();
+  
+  $sequence_count = (int) $wrapper->field_sequence_count->value();
+
+  $placeholder = "$base_url/$module/images/loadhold.png";
+
+  $type = 'books';
+  
+  $sequence = 1;
+
+  $service = "$base_url/api/image";
+
+  $height = '230';
+
+  $width = '150';
+
+  $out = '<div class="node">';
+  $out .= '<div class="thumbnails container">'; 
+  while (true) {
+    $out .= '<div class="thumbnails item">'; 
+    $out .= "<a href='$base_url/$type/$identifier/$sequence' data-sequence='$sequence' class='thumbnails sequence' onclick='onThumbnailsClick'>"; 
+    $out .= "<img height='$height' width='$width' loading='lazy' alt='' src='$service/$type/$identifier/$sequence/full/$width,/0/default.jpg'>"; 
+    $out .= '</a>'; 
+    if ($sequence === $sequence_count) {
+      break;
+    }
+    $sequence++;
   }
-  // Start page.
-  $page = 0;
-  // Default amount of items to request.
-  $per_page = 10;
-  // Page number can be part of the query parameter.
-  if (isset($query_parameters['page'])) {
-    $page = filter_xss($query_parameters['page']);
-  }
-  // App can overwrite the amount of items to display.
-  if (isset($query_parameters['rows'])) {
-    $per_page = filter_xss($query_parameters['rows']);
-  }
-  // Request thumbnails from MondoDB.
-  $thumbnails = dlts_viewer_mongodb_load_thumbnails($identifier, $page, $per_page, "dlts_books_page", "books");
-  // No need to continue if request does not have items.
-  if ($thumbnails) {
-    // Count of thumbnails.
-    $count = $thumbnails['count'];
-    // Items.
-    $items = $thumbnails['items'];
-    // Initialise the pager.
-    $current_page = pager_default_initialize($count, $per_page);
-    // Pager.
-    $pager = theme('thumbnails_pager', array('quantity' => $count));
-    $placeholder = $GLOBALS['base_url'] . '/' . drupal_get_path('module', 'dlts_viewer') . '/images/loadhold.png';
-    $output = theme(
-      'dlts_viewer_thumbnails',
-      array(
-        'items' => $items,
-        'pager' => $pager,
-        'sequence' => $sequence,
-        'placeholder' => $placeholder,
-      )
-    );
-    return $output;
-  }
-  else {
-    drupal_exit();
-  }
+  $out .= '</div>'; 
+  $out .= '</div>';
+
+  return $out;
 }
 
 /**
