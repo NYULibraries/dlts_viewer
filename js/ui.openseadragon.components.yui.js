@@ -412,7 +412,7 @@ function ViewerApp(Y) {
 
     const height = '150'
 
-    Y.hide(`#${id}`)
+    Y.hide('#openseadragon1')
 
     Y.hide('#pager')
 
