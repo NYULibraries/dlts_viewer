@@ -58,6 +58,7 @@ html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abb
 #thumbnails {
   padding-left: 300px;
   padding-right: 2em;
+  padding-top: 2em;
 }
 
 .pagemeta-hidden {
