@@ -19,10 +19,6 @@ function ViewerApp(Y) {
   }
 
   Y.delegate = (selector, eventType, childSelector, eventHandler) => {
-    console.log(selector)
-    console.log(eventType)
-    console.log(childSelector)
-    console.log(eventHandler)
     const elements = document.querySelectorAll(selector)
     for (element of elements) {
       element.addEventListener(eventType, eventOnElement => {
@@ -241,7 +237,7 @@ function ViewerApp(Y) {
 
       Y.nodes.slider_value.value = sequence
 
-      // this.addClass('loading').show();
+      Y.nodes.slider_value.value = sequence
 
       const tileSources = items.map((sequence, x) => {
         return {
@@ -273,6 +269,10 @@ function ViewerApp(Y) {
       window.history.pushState({}, 'some title', items[0].toString());
 
       Y.Viewer.open(tileSources);
+
+      Y.show('#openseadragon1')
+
+      Y.show('#pager')
 
       // Let parent know that Viewer is going to paint.
       // Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:change', data: config }));
@@ -360,7 +360,7 @@ function ViewerApp(Y) {
   // Y.delegate('change', onSelectMVChange, 'body', '.field-name-mv-2016 form');
  
   function updateLoadingIndicator() {
-    if (Y.isFullyLoaded) { 
+    if (Y.isFullyLoaded) {
       Y.nodes.body.classList.remove('openlayers-loading')
       Y.hide('.pane.load')
       // Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:isFullyLoaded', data: {} }));
@@ -393,11 +393,11 @@ function ViewerApp(Y) {
 
     const osd = Y.nodes.osd
 
-    Y.show(`#${osd.id}`)
-    
-    Y.show('#pager')
-    
     Y.nodes.html.style.overflow = 'initial'
+
+    Y.show(`#${osd.id}`)
+
+    Y.show('#pager')
 
     Y.hide('#thumbnails')
 
@@ -443,16 +443,19 @@ function ViewerApp(Y) {
 
   function onThumbnailsClick(event) {
     event.preventDefault()
+    
     const current_target = event.currentTarget
+    
     Y.nodes.osd.dataset.sequence = current_target.dataset.sequence
     
+    if (Y.nodes.buttonThumbnails.classList.contains('on')) {
+      Y.nodes.buttonThumbnails.classList.remove('on')
+      Y.nodes.buttonThumbnails.classList.add('off')
+    }
+
     Y.nodes.html.style.overflow = 'hidden'
 
     Y.hide('#thumbnails')
-
-    Y.show('#openseadragon1')
-
-    Y.show('#pager')
 
     document.dispatchEvent(
       new CustomEvent('sequence:available', {
@@ -472,7 +475,7 @@ function ViewerApp(Y) {
           operation: 'change',
         }
       })
-    );        
+    )
   }
  
   window.addEventListener('load', () => {
@@ -504,6 +507,8 @@ function ViewerApp(Y) {
     Y.nodes.slider_value = document.querySelector('#slider_value')
 
     Y.nodes.loadingMsg = document.querySelector('.current_page')
+
+    Y.nodes.buttonThumbnails = document.getElementById('button-thumbnails')    
 
     document.dispatchEvent(
       new CustomEvent('viewer:contentready')
