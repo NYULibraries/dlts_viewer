@@ -424,7 +424,8 @@ function dlts_viewer_js_alter(&$javascript) {
   $allow = [
     'sites/all/libraries/openseadragon/openseadragon.js',
     'sites/all/libraries/axios/axios.min.js',
-    'sites/all/modules/dlts_viewer/js/ui.openseadragon.components.yui.js',    
+    // 'sites/all/modules/dlts_viewer/js/ui.openseadragon.components.yui.js',
+    'sites/all/modules/dlts_viewer/dist/bundle.js',
   ];
   foreach ($javascript as $key => $setting) {
     if ((array_search($key, $allow)) === false) {

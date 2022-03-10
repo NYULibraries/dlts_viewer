@@ -94,7 +94,7 @@ function dlts_viewer_full_book_view($entity) {
 
   $module_path = drupal_get_path('module', 'dlts_viewer');
 
-  drupal_add_css($module_path . '/css/dlts_viewer.css', [
+  drupal_add_css($module_path . '/dist/bundle.css', [
     'group' => CSS_DEFAULT, 
     'every_page' => TRUE,
   ]);
@@ -107,7 +107,12 @@ function dlts_viewer_full_book_view($entity) {
     'group' => JS_LIBRARY
   ]);
 
-  drupal_add_js($module_path . '/js/ui.openseadragon.components.yui.js', [
+  // drupal_add_js($module_path . '/js/ui.openseadragon.components.yui.js', [
+  //   'type' => 'file', 
+  //   'scope' => 'footer',
+  // ]);
+
+  drupal_add_js($module_path . '/dist/bundle.js', [
     'type' => 'file', 
     'scope' => 'footer',
   ]);

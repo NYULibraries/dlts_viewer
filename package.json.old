@@ -1,0 +1,30 @@
+{
+  "name": "dlts_viewer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "babel ./js/ui.openseadragon.components.yui.js -d dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NYULibraries/dlts_viewer.git"
+  },
+  "sideEffects": false,
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NYULibraries/dlts_viewer/issues"
+  },
+  "homepage": "https://github.com/NYULibraries/dlts_viewer#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.17.6",
+    "@babel/core": "^7.17.5",
+    "@babel/preset-env": "^7.16.11",
+    "babel-minify": "^0.5.1",
+    "babel-preset-minify": "^0.5.1"
+  },
+  "dependencies": {
+    "@material/image-list": "^13.0.0",
+  }
+}

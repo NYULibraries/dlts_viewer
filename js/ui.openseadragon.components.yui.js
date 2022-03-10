@@ -1,6 +1,13 @@
+// https://www.npmjs.com/package/material-ui-image
+// import Image from 'material-ui-image'
+
 function ViewerApp(Y) {
 
   Y.OpenSeadragon = OpenSeadragon
+
+  Y.Viewer = null
+
+  Y.isFullyLoaded = false  
 
   Y.show = (selector) => {
     document.querySelectorAll(selector).forEach(elm => {
@@ -29,45 +36,21 @@ function ViewerApp(Y) {
     }
   }
 
-  Y.Viewer = null
-
-  Y.isFullyLoaded = false
-
-  Y.nodes = {}
-
   function on_button_click(e) {
     console.log('on_button_click', e, e.currentTarget);
     e.preventDefault();
     const current_target = e.currentTarget;
-    let event_prefix, event_id, node_target, data_target;
+    let event_prefix, event_id;
     /** don't waste time if the button is inactive */
     if (current_target.classList.contains('inactive')) return;
-    /** if current target has target, get target from data-target */
-    if (current_target.classList.contains('target')) {
-      // data_target = self.getAttribute('data-target');
-      // event_prefix = 'button:' + data_target;
-      /** look-up for the main target */
-      // node_target = Y.all('#' + data_target);
-      console.log('@TODO: Has target')
-    }
     /** current target is the main target */
     else {
       event_id = current_target.id;
       event_prefix = 'button:' + event_id;
-      /** find possible reference targets to this target */
-      // node_target = Y.all('a[data-target=' + event_id + ']');
-      console.log('@TODO: Find all targets')
     }
     if (current_target.classList.contains('on')) {
       current_target.classList.remove('on');
       current_target.classList.add('off');
-      
-      console.log('@TODO: Remove all class')
-      // if (Y.Lang.isObject(node_target)) {
-      //   node_target.each((node) => {
-      //     node.removeClass('on');
-      //   });
-      // }
       console.log(`${event_prefix}:off`)
       document.dispatchEvent(
         new CustomEvent(`${event_prefix}:off`, e)
@@ -76,11 +59,6 @@ function ViewerApp(Y) {
     else {
       current_target.classList.add('on');
       current_target.classList.remove('off');
-      // if (Y.Lang.isObject(node_target)) {
-      //   node_target.each((node) => {
-      //     node.addClass('on');
-      //   });
-      // }
       console.log(`${event_prefix}:on`)
       document.dispatchEvent(
         new CustomEvent(`${event_prefix}:on`, e)
@@ -92,15 +70,16 @@ function ViewerApp(Y) {
     );
   }
 
-  function pjax_callback(e) {
+  function on_paging_click(e) {
+    console.log('on_paging_click', e)
     const currentTarget = e.currentTarget
     e.preventDefault()
     /** test if the target is not active */
     if (currentTarget.classList.contains('inactive')) return false
     try {
-      document.getElementsByTagName('body')[0].classList.add('openlayers-loading')
+      Y.nodes.body.classList.add('openlayers-loading')
       document.dispatchEvent(
-        new CustomEvent('sequence:available', {
+        new CustomEvent('load:sequence', {
           detail: {
             operation: e.currentTarget.dataset.operation,
           }
@@ -163,70 +142,70 @@ function ViewerApp(Y) {
     // Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'button:button-fullscreen:off'}));
   }
 
-  function change_page(e) {
-    console.log('change_page');
+  function loadSequence(e) {
+    console.log('loadSequence')
     try {
       const {
         operation
-      } = e.detail;
+      } = e.detail
 
-      Y.isFullyLoaded = true;
+      Y.isFullyLoaded = true
 
-      const osd = Y.nodes.osd;
+      const osd = Y.nodes.osd
 
-      const { type, identifier, view, service } = osd.dataset;
+      const { type, identifier, view, service } = osd.dataset
 
-      let sequence = parseInt(osd.dataset.sequence, 10);
+      let sequence = parseInt(osd.dataset.sequence, 10)
 
-      const sequenceCount = parseInt(osd.dataset.sequenceCount, 10);
+      const sequenceCount = parseInt(osd.dataset.sequenceCount, 10)
 
-      const items = [];
+      const items = []
 
       if (operation == 'decrease') {
-        sequence = sequence - 1;
+        sequence = sequence - 1
         if (sequence < 1) {
-          sequence = 1;
+          sequence = 1
         }
-        items[0] = sequence;
+        items[0] = sequence
         console.log('decrease', sequence)
       }
 
       if (operation == 'increase') {
-        sequence = sequence + 1;
+        sequence = sequence + 1
         if (sequence > sequenceCount) {
-          sequence = sequenceCount;
+          sequence = sequenceCount
         }
         if (osd.dataset.view == 'single') {
           items[0] = sequence;
         } else {
           if (sequence % 2 === 1) {
-            items[0] = sequence;
-            items[1] = sequence + 1;
+            items[0] = sequence
+            items[1] = sequence + 1
           } else {
-            items[0] = sequence - 1;
-            items[1] = sequence;
+            items[0] = sequence - 1
+            items[1] = sequence
           }
         }
       }
 
       if (operation == 'toggleview') {
         if (osd.dataset.view == 'single') {
-          osd.dataset.view = 'doublepage';
+          osd.dataset.view = 'doublepage'
           if (sequence % 2 === 1) {
-            items[0] = sequence;
-            items[1] = sequence + 1;
+            items[0] = sequence
+            items[1] = sequence + 1
           } else {
-            items[0] = sequence - 1;
-            items[1] = sequence;
+            items[0] = sequence - 1
+            items[1] = sequence
           }
         } else {
-          osd.dataset.view = 'single';
-          items[0] = sequence;
+          osd.dataset.view = 'single'
+          items[0] = sequence
         }
       }
 
       if (operation == 'change') {
-        items[0] = sequence;  
+        items[0] = sequence
       }
 
       osd.dataset.sequence = sequence
@@ -246,40 +225,41 @@ function ViewerApp(Y) {
         }
       });
 
-      document.querySelectorAll('.paging.next').forEach((item) => {
+      Y.nodes.next.forEach((item) => {
         if (sequence >= sequenceCount) {
-          item.classList.add('inactive');
+          item.classList.add('inactive')
         } else {
           if (item.classList.contains('inactive')) {
-            item.classList.remove('inactive');
+            item.classList.remove('inactive')
           }
         }
       });
 
-      document.querySelectorAll('.paging.previous').forEach((item) => {
+      Y.nodes.previous.forEach((item) => {
         if (sequence <= 1) {
           item.classList.add('inactive');
         } else {
           if (item.classList.contains('inactive')) {
-            item.classList.remove('inactive');
+            item.classList.remove('inactive')
           }
         }
       });
 
-      window.history.pushState({}, 'some title', items[0].toString());
+      window.history.pushState({}, 'some title', items[0].toString())
 
       Y.show('#openseadragon1')
 
       Y.show('#pager')
 
-      Y.Viewer.open(tileSources);
-
+      Y.Viewer.open(tileSources)
+      
+      Y.nodes.body.classList.remove('openlayers-loading')
 
       // Let parent know that Viewer is going to paint.
       // Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:change', data: config }));
 
     } catch(e) {
-      console.log(e);
+      console.log(e)
     }
   }
 
@@ -459,7 +439,7 @@ function ViewerApp(Y) {
     Y.hide('#thumbnails')
 
     document.dispatchEvent(
-      new CustomEvent('sequence:available', {
+      new CustomEvent('load:sequence', {
         detail: {
           operation: 'change',
         }
@@ -471,7 +451,7 @@ function ViewerApp(Y) {
     console.log('slide_value_change', event, event.currentTarget.value)
     Y.nodes.osd.dataset.sequence = event.currentTarget.value
     document.dispatchEvent(
-      new CustomEvent('sequence:available', {
+      new CustomEvent('load:sequence', {
         detail: {
           operation: 'change',
         }
@@ -481,35 +461,25 @@ function ViewerApp(Y) {
  
   window.addEventListener('load', () => {
 
-    Y.nodes.html = document.querySelector('html')
-
-    Y.nodes.body = document.querySelector('body')
-    
-    Y.nodes.thumbnails = document.querySelector('#thumbnails')
-
-    Y.nodes.buttonMetadata = document.querySelector('#button-metadata')
-
-    Y.nodes.pagemeta = document.querySelector('#pagemeta')
-
-    Y.nodes.osd = document.querySelector('#openseadragon1')
-
-    Y.nodes.display = document.getElementById('#display')
-
-    Y.nodes.togglePage = document.getElementById('toggle-page')
-
-    Y.nodes.controlZoomOut = document.getElementById('control-zoom-out')
-
-    Y.nodes.controlZoomIn = document.getElementById('control-zoom-in')
-
-    Y.nodes.toggleLanguage = document.querySelector('body .language')
-
-    Y.nodes.slider = document.querySelector('#range_weight')
-
-    Y.nodes.slider_value = document.querySelector('#slider_value')
-
-    Y.nodes.loadingMsg = document.querySelector('.current_page')
-
-    Y.nodes.buttonThumbnails = document.getElementById('button-thumbnails')    
+    Y.nodes = {
+      html: document.querySelector('html'),
+      body: document.querySelector('body'),
+      thumbnails: document.querySelector('#thumbnails'),
+      buttonMetadata: document.querySelector('#button-metadata'),
+      pagemeta: document.querySelector('#pagemeta'),
+      osd: document.querySelector('#openseadragon1'),
+      display: document.getElementById('#display'),
+      togglePage: document.getElementById('toggle-page'),
+      controlZoomOut: document.getElementById('control-zoom-out'),
+      controlZoomIn: document.getElementById('control-zoom-in'),
+      toggleLanguage: document.querySelector('body .language'),
+      slider: document.querySelector('#range_weight'),
+      slider_value: document.querySelector('#slider_value'),
+      loadingMsg: document.querySelector('.current_page'),
+      buttonThumbnails: document.getElementById('button-thumbnails'),
+      next: document.querySelectorAll('.paging.next'),
+      previous: document.querySelectorAll('.paging.previous')
+    }
 
     document.dispatchEvent(
       new CustomEvent('viewer:contentready')
@@ -563,7 +533,7 @@ function ViewerApp(Y) {
     Y.nodes.togglePage.onclick = (e) => {
       e.preventDefault();
       document.dispatchEvent(
-        new CustomEvent('sequence:available', {
+        new CustomEvent('load:sequence', {
           detail: {
             operation: e.currentTarget.dataset.operation,
           }
@@ -571,12 +541,8 @@ function ViewerApp(Y) {
       );
     }
 
-    window.addEventListener('resize', () => {
-      // slider.set('length' ,(Y.one('#pager').get('offsetWidth') - 120 ));
-    })
-
     document.querySelectorAll('a.paging').forEach(item => {
-      item.addEventListener('click', pjax_callback)
+      item.addEventListener('click', on_paging_click)
     })
     
     document.querySelectorAll('a.button').forEach(item => {
@@ -585,7 +551,7 @@ function ViewerApp(Y) {
 
     Y.nodes.slider.addEventListener('change', slide_value_change)
 
-    document.addEventListener('sequence:available', change_page)
+    document.addEventListener('load:sequence', loadSequence)
 
     document.addEventListener('button:button-metadata:on', onButtonMetadataOn)
 
