@@ -268,11 +268,12 @@ function ViewerApp(Y) {
 
       window.history.pushState({}, 'some title', items[0].toString());
 
-      Y.Viewer.open(tileSources);
-
       Y.show('#openseadragon1')
 
       Y.show('#pager')
+
+      Y.Viewer.open(tileSources);
+
 
       // Let parent know that Viewer is going to paint.
       // Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:change', data: config }));
