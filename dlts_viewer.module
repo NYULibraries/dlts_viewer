@@ -145,7 +145,6 @@ function dlts_viewer_preprocess_html(&$vars) {
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     /** we are not in admin page, default Viewer HTML template */
     $vars['theme_hook_suggestions'][] = 'html__viewer';
-    $vars['classes_array'][] = 'yui3-skin-sam';
     /** Check if this is a PJAX request */
     if (dlts_viewer_is_pjax()) {
       /** default Viewer PJAX HTML template */
@@ -243,7 +242,7 @@ function dlts_viewer_process_page(&$vars) {
     }
     // check if this is a embed request. Don't show title if is embeded
     if (!$is_embed) {
-      $top_options = array(
+      $top_options = [
         'is_admin' => $vars['is_admin'],
         'tabs' => render($vars['tabs']),
         'messages' => $vars['messages'],
@@ -252,7 +251,7 @@ function dlts_viewer_process_page(&$vars) {
         'title_prefix' => render($vars['title_prefix']),
         'title_suffix' => render($vars['title_suffix']),
         'help' => render($vars['page']['help']),
-      );
+      ];
       $vars['top'] = theme('dlts_viewer_top', $top_options);
     }
   }
@@ -268,21 +267,20 @@ function dlts_viewer_process_page(&$vars) {
  * @see FileFilesServerStreamWrapper
  */
 function dlts_viewer_stream_wrappers() {
-  $wrappers = array(
-    'fileserver' => array(
+  return [
+    'fileserver' => [
       'name' => t('Fileserver StreamWrapper'),
       'class' => 'FileFilesServerStreamWrapper',
       'description' => t('Access file from the FileServer.'),
       'type' => STREAM_WRAPPERS_WRITE_VISIBLE,
-    ),
-    'pdfserver' => array(
+    ],
+    'pdfserver' => [
       'name' => t('PDFServer StreamWrapper'),
       'class' => 'PDFServerStreamWrapper',
       'description' => t('Access PDF file from the PDFServer.'),
       'type' => STREAM_WRAPPERS_WRITE_VISIBLE,
-    ),
-  ) ;
-  return $wrappers;
+    ],
+  ];
 }
 
 function dlts_viewer_metadata_display($node) {

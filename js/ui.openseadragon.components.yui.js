@@ -356,8 +356,6 @@ function ViewerApp(Y) {
   //   }
   // }
 
-  // Y.one('.pane.pager').delegate('submit', pager_form, 'form', slider_datasource);  
-
   // https://javascript.info/event-delegation
   // Y.delegate('change', onSelectMVChange, 'body', '.field-name-mv-2016 form');
  
