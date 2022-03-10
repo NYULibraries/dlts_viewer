@@ -10,7 +10,7 @@
           <div class="lang-options"><?php print locale('Available languages', NULL, $lang_language) ?>: <?php print render($lang_options) ; ?></div>
         </div>
       <?php endif; ?>
-      <?php print $ds_content; ?>
+      <?php print $ds_content ?>
       </<?php print $ds_content_wrapper ?>>
       <?php if (!empty($drupal_render_children)) : print $drupal_render_children; endif; ?>
     </div>
@@ -22,8 +22,8 @@
     class="pane display"
   >
     <?php print $book_page ?>
-    <?php if (isset($button_previous)) print $button_previous; ?>
-    <?php if (isset($button_next)) print $button_next;  ?>
+    <?php if (isset($button_previous)) print $button_previous ?>
+    <?php if (isset($button_next)) print $button_next ?>
     <div
       id="thumbnails" 
       role="presentation"

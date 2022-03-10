@@ -42,18 +42,18 @@ function dlts_viewer_dispatch_thumbnails(object $entity) {
   $wrapper = entity_metadata_wrapper('node', $entity);
 
   $title = $wrapper->field_title->value();
- 
+
   // Check for mobile devices.
   $is_mobile = dlts_viewer_is_mobile();
 
   $identifier = $wrapper->field_identifier->value();
-  
+
   $sequence_count = (int) $wrapper->field_sequence_count->value();
 
   $placeholder = "$base_url/$module/images/loadhold.png";
 
   $type = 'books';
-  
+
   $sequence = 1;
 
   $service = "$base_url/api/image";

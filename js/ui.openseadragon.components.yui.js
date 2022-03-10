@@ -173,12 +173,12 @@ function ViewerApp(Y) {
       const {
         operation
       } = e.detail;
-      
+
       Y.isFullyLoaded = true;
 
       const osd = Y.nodes.osd;
 
-      const { type, identifier, service } = osd.dataset;
+      const { type, identifier, view, service } = osd.dataset;
 
       let sequence = parseInt(osd.dataset.sequence, 10);
 
@@ -233,9 +233,13 @@ function ViewerApp(Y) {
         items[0] = sequence;  
       }
 
-      osd.dataset.sequence = items[0];
+      osd.dataset.sequence = sequence
 
-      // this.one('.current_page').set('text', to_page);
+      Y.nodes.loadingMsg.textContent = items.join(' - ')
+
+      Y.nodes.slider.value = sequence
+
+      Y.nodes.slider_value.value = sequence
 
       // this.addClass('loading').show();
 
@@ -301,14 +305,13 @@ function ViewerApp(Y) {
   }
 
   function tilesLoading() {
-    const body = Y.nodes.body;
     if (body.classList.contains('openlayers-loading')) {
       setTimeout(() => {
         tilesLoading();
       }, 100);
     } else {
       Y.hide('.pane.load');
-      body.classList.remove('openlayers-loading');
+      Y.nodes.body.classList.remove('openlayers-loading');
     }
   }
 
@@ -360,8 +363,8 @@ function ViewerApp(Y) {
  
   function updateLoadingIndicator() {
     if (Y.isFullyLoaded) { 
-      Y.nodes.body.classList.remove('openlayers-loading');
-      // Y.one('.pane.load').hide();
+      Y.nodes.body.classList.remove('openlayers-loading')
+      Y.hide('.pane.load')
       // Y.CrossFrame.postMessage('parent', JSON.stringify({fire: 'viewer:isFullyLoaded', data: {} }));
     }
   }
@@ -461,6 +464,18 @@ function ViewerApp(Y) {
       })
     );    
   }
+
+  function slide_value_change(event) {
+    console.log('slide_value_change', event, event.currentTarget.value)
+    Y.nodes.osd.dataset.sequence = event.currentTarget.value
+    document.dispatchEvent(
+      new CustomEvent('sequence:available', {
+        detail: {
+          operation: 'change',
+        }
+      })
+    );        
+  }
  
   window.addEventListener('load', () => {
 
@@ -485,6 +500,12 @@ function ViewerApp(Y) {
     Y.nodes.controlZoomIn = document.getElementById('control-zoom-in')
 
     Y.nodes.toggleLanguage = document.querySelector('body .language')
+
+    Y.nodes.slider = document.querySelector('#range_weight')
+
+    Y.nodes.slider_value = document.querySelector('#slider_value')
+
+    Y.nodes.loadingMsg = document.querySelector('.current_page')
 
     document.dispatchEvent(
       new CustomEvent('viewer:contentready')
@@ -558,6 +579,8 @@ function ViewerApp(Y) {
       item.addEventListener('click', on_button_click)
     })
 
+    Y.nodes.slider.addEventListener('change', slide_value_change)
+
     document.addEventListener('sequence:available', change_page)
 
     document.addEventListener('button:button-metadata:on', onButtonMetadataOn)
@@ -575,12 +598,6 @@ function ViewerApp(Y) {
     document.addEventListener('button:button-thumbnails:on', onOpenThumbnailsView)
 
     document.addEventListener('button:button-thumbnails:off', onHideThumbnailsView)
-
-    Y.delegate('#thumbnails', 'click', 'a', event => {
-      event.preventDefault()
-      const current_target = event.target
-      console.log(current_target)
-    })
 
     Y.delegate('body', 'change', 'select', event => {
       const current_target = event.target
