@@ -1,3 +1,5 @@
+import OpenSeadragon from '../node_modules/openseadragon/build/openseadragon/openseadragon.js'
+
 // https://www.npmjs.com/package/material-ui-image
 // import Image from 'material-ui-image'
 
