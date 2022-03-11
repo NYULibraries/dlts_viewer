@@ -1,51 +1,39 @@
-module.exports = [{
-  entry: ['./css/dlts_viewer.scss', './js/ui.openseadragon.components.yui.js'],
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const devMode = process.env.NODE_ENV !== "production";
+
+module.exports = {
+  mode: process.env.NODE_ENV,
+  devtool: "source-map",
+  entry: ["./css/dlts_viewer.scss", "./js/ui.openseadragon.components.yui.js"],
   output: {
     filename: 'bundle.js',
   },
   module: {
     rules: [
       {
-        test: /\.(woff(2)?|ttf|png|jpe?g|gif|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+        test: /\.(sa|sc|c)ss$/i,
         use: [
+          devMode ? "style-loader" : MiniCssExtractPlugin.loader,
+          "css-loader",
+          "postcss-loader",
           {
-            loader: 'file-loader',
+            loader: "sass-loader",
             options: {
-              name: '[name].[ext]',
-              outputPath: 'fonts/'
-            }
-          }
-        ]
-      },
-      {
-        test: /\.((c|sa|sc)ss)$/i,
-        use: [
-          {
-            loader: 'file-loader',
-            options: {
-              name: 'bundle.css',
+              sourceMap: true,
             },
           },
-          { loader: 'extract-loader' },
-          { loader: 'css-loader' },
-          {
-            loader: 'sass-loader',
-            options: {
-              includePaths: ['./node_modules'],
-              implementation: require('sass'),
-              webpackImporter: false,
-            }
-          }
-        ]
+        ],
       },
       {
-        test: /\.js$/,
-        loader: 'babel-loader',
-        query: {
-          presets: ['es2015'],
-          plugins: ['transform-object-assign']
-        },
-      }
+        test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/i,
+        type: "asset",
+      },
     ]
   },
-}];
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: "[name].css",
+      chunkFilename: "[id].css",
+    }),
+  ],
+};

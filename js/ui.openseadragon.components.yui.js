@@ -1,11 +1,14 @@
-import OpenSeadragon from '../node_modules/openseadragon/build/openseadragon/openseadragon.js'
+import OpenSeaDragon from 'openseadragon';
+import {MDCList} from '@material/list';
 
 // https://www.npmjs.com/package/material-ui-image
 // import Image from 'material-ui-image'
 
 function ViewerApp(Y) {
 
-  Y.OpenSeadragon = OpenSeadragon
+  new MDCList(document.querySelector('.mdc-list'));
+  
+  Y.OpenSeadragon = OpenSeaDragon
 
   Y.Viewer = null
 
@@ -29,7 +32,7 @@ function ViewerApp(Y) {
 
   Y.delegate = (selector, eventType, childSelector, eventHandler) => {
     const elements = document.querySelectorAll(selector)
-    for (element of elements) {
+    for (let element of elements) {
       element.addEventListener(eventType, eventOnElement => {
         if (eventOnElement.target.matches(childSelector)) {
           eventHandler(eventOnElement)
