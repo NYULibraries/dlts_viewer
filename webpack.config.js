@@ -1,15 +1,45 @@
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const devMode = process.env.NODE_ENV !== "production";
+const path = require('path')
+const MiniCssExtractPlugin = require("mini-css-extract-plugin")
+const devMode = process.env.NODE_ENV !== "production"
 
 module.exports = {
-  mode: process.env.NODE_ENV,
-  devtool: "source-map",
-  entry: ["./css/dlts_viewer.scss", "./js/ui.openseadragon.components.yui.js"],
+  mode: "development",
+  devtool: "inline-source-map",
+  devServer: {
+    static: {
+      directory: path.join(__dirname, 'dist'),
+    },
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },   
+    compress: true,
+    port: 9000,
+  },
+  watchOptions: {
+    ignored: /node_modules/,
+  },
+  entry: [
+    "babel-polyfill",
+    "./sass/viewer.scss",
+    "./js/viewer.js",
+    'index.html'
+  ],
   output: {
-    filename: 'bundle.js',
+    filename: "bundle.js",
+    clean: true,
   },
   module: {
     rules: [
+      {
+        test: /\.m?js$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        }
+      },
       {
         test: /\.(sa|sc|c)ss$/i,
         use: [

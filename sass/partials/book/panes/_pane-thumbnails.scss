@@ -5,25 +5,6 @@
   z-index: 999999;
   height: auto;
   width: inherit;
-  #book-navbar {
-    height: 40px;
-    background-color: #333;
-    border-top: 1px solid #212121;
-    a, a:link {
-      text-decoration: none;
-    }
-    div.pager {
-      float: right;
-      margin-right: 1em;
-      margin-top: -1px;
-      background-color: #333;
-      height: 40px;
-      .pager-list {
-        display: none;
-        visibility: hidden;
-      }
-    }
-  }
   .view-book-thumbnails {
     margin: 5px 1%;
     display: -ms-flexbox;
@@ -96,28 +77,6 @@
 
 // Use sibling selector here
 #pager[dir="rtl"] ~ .thumbnails {
-  .thumbnails-container {
-    .pager-first,
-    .pager-previous {
-      float: right;
-    }
-    .pager-last,
-    .pager-next {
-      float: right;
-    }
-    .pager-next a:before {
-      content: "\e013" !important;
-    }
-    .pager-previous a:before {
-      content: "\e012" !important;
-    }
-    .pager-last a:before {
-      content: "\e010";
-    }
-    .pager-first a:before {
-      content: "\e011";
-    }
-  }
   .view-book-thumbnails {
     direction: rtl;
   }

@@ -1,3 +1,4 @@
+@use "sass:math";
 body {
   &.pagemeta-hidden {
     .pane {
@@ -64,7 +65,7 @@ body {
         position: fixed;
         display: inline;
         margin: 0;
-        opacity: $normal-opacity / 2;
+        opacity: math.div($normal-opacity,2);
         top: 40%;
         z-index: 9999;
         &.pager-left {

@@ -38,8 +38,8 @@ $break-large: 1200px;
     a,
     a.active,
     span,
-    .olControlDLTSZoomInItemInactive,
-    .olControlDLTSZoomOutItemInactive {
+    .zoomIn,
+    .zoomOut {
       display: block;
       margin: 0 auto;
       width: 44px;
@@ -152,12 +152,12 @@ $break-large: 1200px;
         content: "\e003";
       }
     }
-    .olControlDLTSZoomInItemInactive {
+    .zoomIn {
       &:before {
         content: "\e00b";
       }
     }
-    .olControlDLTSZoomOutItemInactive {
+    .zoomOut {
       &:before {
         content: "\e00c";
       }
