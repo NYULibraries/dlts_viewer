@@ -5,7 +5,7 @@
   <link rel="shortcut icon" href="./favicon.ico" type="image/vnd.microsoft.icon" />
   <title>Palante, September 25, 1970</title>
   <style type="text/css" media="all">
-    @import url("./viewer.css");
+    @import url("./main.css");
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <base target="content-frame">
@@ -44,16 +44,23 @@
         </a>
       </li>
     </ul>
-    <div class="navbar navbar-middle">
-      <div id="control-zoom">
-        <div class="navbar-item" data-title="Zoom in" title="Zoom in">
-          <div id="control-zoom-in" class="olButton olControlDLTSZoomInItemInactive"></div>
-        </div>
-        <div class="navbar-item" data-title="Zoom out" title="Zoom out">
-          <div id="control-zoom-out" class="olButton olControlDLTSZoomOutItemInactive"></div>
-        </div>
-      </div>
-    </div>
+    <ul class="navbar navbar-middle">
+      <li class="navbar-item">
+        <a id="control-zoom-in" title="Zoom in" class="zoom-in">
+          <span>Zoom in</span>
+        </a>
+      </li>
+      <li class="navbar-item">
+        <a id="control-zoom-out" title="Zoom out" class="zoom-out">
+          <span>Zoom out</span>
+        </a>
+      </li>
+      <li class="navbar-item">
+        <a id="control-rotate" title="Rotate image" class="rotate">
+          <span>Rotate</span>
+        </a>
+      </li>
+    </ul>
     <ul class="navbar navbar-arrows">
       <li class="navbar-item navbar-pager-left">
         <a 
@@ -190,7 +197,6 @@
 </span>
 </div>
   </div>
-  <script type="text/javascript" src="./polyfill.bundle.js"></script>
-  <script type="text/javascript" src="./app.bundle.js"></script>
+  <script type="text/javascript" src="./bundle.js"></script>
 </body>
 </html>

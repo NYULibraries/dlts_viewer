@@ -7,7 +7,7 @@
   "scripts": {
     "build": "webpack --config webpack.prod.js",
     "serve": "./node_modules/http-server/bin/http-server dist",
-    "babel": "babel ./js/ui.openseadragon.components.yui.js -d dist",
+
     "dev": "webpack serve"
   },
   "license": "ISC",
@@ -30,7 +30,6 @@
     "babel-polyfill": "^6.26.0",
     "babel-preset-minify": "^0.5.1",
     "css-loader": "^6.7.1",
-    "http-server": "^14.1.0",
     "mini-css-extract-plugin": "^2.6.0",
     "postcss-loader": "^6.2.1",
     "sass": "^1.49.9",
@@ -39,12 +38,12 @@
     "webpack": "^5.70.0",
     "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.7.4",
-    "webpack-merge": "^5.8.0"
+    "webpack-merge": "^5.8.0",
+    "html-webpack-plugin": "^5.5.0"    
   },
   "dependencies": {
     "@babel/runtime": "^7.17.7",
     "axios": "^0.26.1",
-    "html-webpack-plugin": "^5.5.0",
     "openseadragon": "^3.0.0"
   }
 }

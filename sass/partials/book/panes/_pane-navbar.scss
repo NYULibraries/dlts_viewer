@@ -37,9 +37,7 @@ $break-large: 1200px;
     font-size: 2.3em;
     a,
     a.active,
-    span,
-    .zoomIn,
-    .zoomOut {
+    span {
       display: block;
       margin: 0 auto;
       width: 44px;
@@ -87,9 +85,7 @@ $break-large: 1200px;
         -webkit-font-smoothing: antialiased;
       }
     }
-    .inactive,
-    .zoom_in_max,
-    .zoom_out_max {
+    .inactive {
       opacity: $dimmed-opacity;
       @include box-shadow(none !important);
       cursor: default !important;
@@ -147,17 +143,22 @@ $break-large: 1200px;
         content: "\e004";
       }
     }
+    .rotate {
+      &:before {
+        content: "\e001";
+      }
+    }
     .search {
       &:before {
         content: "\e003";
       }
     }
-    .zoomIn {
+    .zoom-in {
       &:before {
         content: "\e00b";
       }
     }
-    .zoomOut {
+    .zoom-out {
       &:before {
         content: "\e00c";
       }

@@ -371,6 +371,7 @@ function ViewerApp(Y) {
       body: document.querySelector('body'),
       thumbnails: document.querySelector('#thumbnails'),
       buttonMetadata: document.querySelector('#button-metadata'),
+      rotate: document.querySelector('#control-rotate'),
       pagemeta: document.querySelector('#pagemeta'),
       osd: document.querySelector('#openseadragon1'),
       display: document.getElementById('#display'),
@@ -509,6 +510,13 @@ function ViewerApp(Y) {
           Y.Viewer.viewport.zoomTo(minZoom)
         }
       }
+    }
+
+    // Zoom out click event.
+    Y.nodes.rotate.onclick = (e) => {
+      e.preventDefault()
+      console.log(Y.Viewer.viewport)
+      Y.Viewer.viewport.setRotation(Y.Viewer.viewport.degrees + 90);
     }
 
     Y.nodes.togglePage.onclick = (e) => {

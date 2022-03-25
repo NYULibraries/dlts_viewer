@@ -1,7 +1,7 @@
 // Variables to change
 $light-background: #e5e5e5;
 $navbar-background: #333333;
-$dark-background: #666666;
+$dark-background: #000;
 $link-color: $lib-red;
 $navbar-on-color: #ffffff;
 $special-titlebar-color: $lib-red;
@@ -11,7 +11,7 @@ $navbar-overlay: $navbar-background;
 $slider-overlay: $light-background;
 $navbar-border-color: darken($light-background, 15%);
 
-$page-background: lighten($light-background, 15%);
+$page-background: $dark-background;
 $pane-background: desaturate(lighten($light-background, 8%), 5%);
 
 // $navbar-icon-color: $dark-background;

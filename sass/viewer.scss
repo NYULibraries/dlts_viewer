@@ -12,7 +12,6 @@
 @import "partials/base/_range";
 @import "partials/book/pages/_base";
 @import "partials/book/panes/_pane-base";
-@import "partials/book/panes/_pane-top";
 @import "partials/book/panes/_pane-navbar";
 @import "partials/book/panes/_pane-metadata";
 @import "partials/book/panes/_pane-display";
@@ -22,33 +21,4 @@
 @import "partials/book/panes/_pane-pager";
 @import "partials/book/panes/_pane-thumbnails";
 @import "partials/photo/_base.scss";
-
 @import "partials/base/_openseadragon";
-
-
-#log_console {
-  table {
-    width: 100%;
-    td, th {
-      .xid {
-        width: 10px;
-      }
-      text-align: left;
-      border: 1px solid #dbdbdb;
-      border-top-width: 1px;
-      border-right-width: 1px;
-      border-bottom-width: 1px;
-      border-left-width: 1px;
-      border-width: 0 0 1px;
-    //   padding: 0 .75em .5em .75em;
-      padding-top: .75em;
-      padding-bottom: .75em;
-      vertical-align: top;
-    }
-  }
-}
-
-.hidden { 
-  display: none;
-  visibility: hidden;
-}

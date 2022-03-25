@@ -29,16 +29,23 @@
     </a>
   </li>
 </ul>
-<div class="navbar navbar-middle">
-  <div id="control-zoom">
-    <div class="navbar-item" data-title="<?php echo t('Zoom in'); ?>" title="<?php echo t('Zoom in'); ?>">
-      <div id="control-zoom-in" class="olButton olControlDLTSZoomInItemInactive"></div>
-    </div>
-    <div class="navbar-item" data-title="<?php echo t('Zoom out') ?>" title="<?php echo t('Zoom out') ?>">
-      <div id="control-zoom-out" class="olButton olControlDLTSZoomOutItemInactive"></div>
-    </div>
-  </div>
-</div>
+<ul class="navbar navbar-middle">
+      <li class="navbar-item">
+        <a id="control-zoom-in" title="Zoom in" class="zoom-in">
+          <span>Zoom in</span>
+        </a>
+    </li>
+    <li class="navbar-item">
+      <a id="control-zoom-out" title="Zoom out" class="zoom-out">
+        <span>Zoom out</span>
+      </a>
+    </li>
+    <li class="navbar-item">
+      <a id="control-rotate" title="Rotate image" class="rotate">
+        <span>Rotate</span>
+      </a>
+    </li>
+  </ul>
 <ul class="navbar navbar-arrows">
   <li class="navbar-item navbar-pager-left">
     <a 

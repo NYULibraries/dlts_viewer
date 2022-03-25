@@ -4,7 +4,7 @@ const devMode = process.env.NODE_ENV !== "production"
 
 module.exports = {
   mode: "development",
-  devtool: "inline-source-map",
+  devtool: "source-map",
   devServer: {
     static: {
       directory: path.join(__dirname, 'dist'),
@@ -21,12 +21,10 @@ module.exports = {
   entry: [
     "babel-polyfill",
     "./sass/viewer.scss",
-    "./js/viewer.js",
-    'index.html'
+    "./js/viewer.js"
   ],
   output: {
     filename: "bundle.js",
-    clean: true,
   },
   module: {
     rules: [
@@ -43,7 +41,7 @@ module.exports = {
       {
         test: /\.(sa|sc|c)ss$/i,
         use: [
-          devMode ? "style-loader" : MiniCssExtractPlugin.loader,
+          MiniCssExtractPlugin.loader,
           "css-loader",
           "postcss-loader",
           {
@@ -62,7 +60,7 @@ module.exports = {
   },
   plugins: [
     new MiniCssExtractPlugin({
-      filename: "[name].css",
+      filename: "main.css",
       chunkFilename: "[id].css",
     }),
   ],
