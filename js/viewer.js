@@ -312,7 +312,7 @@ function ViewerApp(Y) {
     })
 
     if (parseInt(state, 10) === 0) {
-      get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
+      axios.get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
         if (response.status === 200) {
           const parser = new DOMParser()
           const doc = parser.parseFromString(response.data, 'text/html')
