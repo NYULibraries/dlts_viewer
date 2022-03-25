@@ -94,25 +94,17 @@ function dlts_viewer_full_book_view($entity) {
 
   $module_path = drupal_get_path('module', 'dlts_viewer');
 
-  drupal_add_css($module_path . '/dist/bundle.css', [
+  drupal_add_css($module_path . '/dist/viewer.css', [
     'group' => CSS_DEFAULT, 
     'every_page' => TRUE,
   ]);
   
-  drupal_add_js('sites/all/libraries/axios/axios.min.js', [
-    'group' => JS_LIBRARY
+  drupal_add_js($module_path . '/dist/polyfill.bundle.js', [
+    'type' => 'file', 
+    'scope' => 'footer',
   ]);
 
-  drupal_add_js('sites/all/libraries/openseadragon/openseadragon.js', [
-    'group' => JS_LIBRARY
-  ]);
-
-  // drupal_add_js($module_path . '/js/ui.openseadragon.components.yui.js', [
-  //   'type' => 'file', 
-  //   'scope' => 'footer',
-  // ]);
-
-  drupal_add_js($module_path . '/dist/bundle.js', [
+  drupal_add_js($module_path . '/dist/app.bundle.js', [
     'type' => 'file', 
     'scope' => 'footer',
   ]);
