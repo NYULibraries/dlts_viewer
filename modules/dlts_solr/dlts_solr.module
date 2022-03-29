@@ -79,6 +79,13 @@ function dlts_solr_apachesolr_index_document_build(ApacheSolrDocument $document,
         dlts_solr_index_map($document, $entity, $entity_type, $env_id);
 				break;
 
+      case 'dlts_photo_set':
+        // Load utils.
+        module_load_include('inc', 'dlts_solr', 'inc/photos');
+        // Pass the document as reference.
+        dlts_solr_index_photos($document, $entity, $entity_type, $env_id);
+        break;
+
   }
 }
 

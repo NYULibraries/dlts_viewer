@@ -421,24 +421,28 @@ function dlts_viewer_flush_caches() {
 }
 
 function dlts_viewer_js_alter(&$javascript) {
-  $allow = [
-    'sites/all/modules/dlts_viewer/dist/polyfill.bundle.js',
-    'sites/all/modules/dlts_viewer/dist/app.bundle.js',    
-  ];
-  foreach ($javascript as $key => $setting) {
-    if ((array_search($key, $allow)) === false) {
-      unset($javascript[$key]);
+  if (dlts_viewer_is_resource()) {
+    $allow = [
+      'sites/all/modules/dlts_viewer/dist/polyfill.bundle.js',
+      'sites/all/modules/dlts_viewer/dist/app.bundle.js',    
+    ];
+    foreach ($javascript as $key => $setting) {
+      if ((array_search($key, $allow)) === false) {
+        unset($javascript[$key]);
+      }
     }
   }
 }
 
 function dlts_viewer_css_alter(&$css) {
-  $allow = [
-    'sites/all/modules/dlts_viewer/dist/viewer.css',
-  ];
-  foreach ($css as $key => $setting) {
-    if ((array_search($key, $allow)) === false) {
-      unset($css[$key]);
+  if (dlts_viewer_is_resource()) {
+    $allow = [
+      'sites/all/modules/dlts_viewer/dist/viewer.css',
+    ];
+    foreach ($css as $key => $setting) {
+      if ((array_search($key, $allow)) === false) {
+        unset($css[$key]);
+      }
     }
   }
 }

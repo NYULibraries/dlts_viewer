@@ -105,6 +105,7 @@ function dlts_solr_index_book_series($document, $entity, $searchableFields) {
  * Index Book.
  */
 function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
+  global $base_url;
   module_load_include('inc', 'dlts_viewer', 'inc/datasource');
   $language = $entity->language;
   // Skip if entity language is not English.
@@ -172,8 +173,13 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
 
   if (!empty($handle)) {
     $document->addField('ss_handle', $handle['url']);
+    $noid = explode('/', $handle['url']);
+    $document->addField('ss_noid', $noid[count($noid) - 1]);
   }
   unset($handle);
+
+  // https://dev-sites.dlib.nyu.edu/viewer/api/presentation/books/tamwag_palante000011/manifest.json
+  $document->addField('ss_manifest', "$base_url/api/presentation/books/$identifier/manifest.json");  
 
   /*
    * Title (field_title)
