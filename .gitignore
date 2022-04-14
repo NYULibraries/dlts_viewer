@@ -3,7 +3,7 @@
 datasource/dlts_viewer_content
 .sass-cache
 .vscode/
-
+node_modules
 # Ignore Intellij/PHPStorm/WebStorm files
 *.iml
 

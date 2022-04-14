@@ -15,10 +15,10 @@
  *   A node object with the given value for field_identifier.
  */
 function dlts_book_load($identifier) {
-  $language = array('en', LANGUAGE_NONE);
+  $language = [ 'en', LANGUAGE_NONE ];
   $query_parameters = drupal_get_query_parameters();
   if (isset($query_parameters['lang'])) {
-    $language = array(filter_xss($query_parameters['lang']));
+    $language = [ filter_xss($query_parameters['lang']) ];
   }
   $query = new EntityFieldQuery();
   $identifier = filter_xss($identifier);
@@ -28,7 +28,7 @@ function dlts_book_load($identifier) {
     ->propertyCondition('language', $language)
     ->fieldCondition('field_identifier', 'value', $identifier, '=')
     ->execute();
-  if (!empty($result['node'])) {
+  if (!empty($result['node'])) {  
     $keys = array_keys($result['node']);
     $nid = array_pop($keys);
     return node_load($nid);
@@ -65,7 +65,6 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
   if (!file_exists($dir_path)) {
     mkdir($dir_path, 0755, TRUE);
   }
-
   if (file_exists("$dir_path/sequence.$sequence.json")) {
     $data = json_decode(
       file_get_contents("$dir_path/sequence.$sequence.json")

@@ -24,6 +24,14 @@ function dlts_viewer_drush_command() {
     ),
   );
 
+  $items['solr-index-photos'] = array(
+    'callback' => 'dlts_viewer_solr_index_photos',
+    'description' => dt('Index photos entities .'),
+    'options' => array(
+      'limit' => dt('Limit.'),
+    ),
+  );
+
   $items['import-map'] = array(
     'callback' => 'dlts_viewer_import_map',
     'description' => dt('Import map from a JSON document.'),
@@ -1169,4 +1177,67 @@ function dlts_viewer_update_handle($identifier, $handle) {
  */
 function dlts_viewer_gme() {
   drush_log('💎 ✋ 🚀', 'ok');
+}
+
+/**
+ * Batch Operation Callback
+ *
+ * @param string $env_id
+ *   The machine name of the environment.
+ * @param $total_limit
+ *   The total number of items to index across all batches
+ * @param array $context
+ *
+ * @return false
+ *   return false when an exception was caught
+ *
+ * @throws Exception
+ *   When solr gives an error, throw an exception that solr is not available
+ */
+function dlts_viewer_solr_index_photos() {
+  module_load_include('inc', 'apachesolr', 'apachesolr.index');
+  $id = apachesolr_default_environment();
+  try {
+    // Get the $solr object
+    $solr = apachesolr_get_solr($id);
+    // If there is no server available, don't continue.
+    if (!$solr->ping()) {
+      throw new Exception(t('No Solr instance available during indexing.'));
+    }
+
+
+    $docs = [78242, 79159];
+
+    foreach ($docs as $doc) {
+
+      $entity = node_load($doc);
+
+      $documents = apachesolr_convert_entity_to_documents($entity, 'node', $env_id);
+      
+      $indexed = $solr->addDocuments($documents);
+  
+      print_r($indexed);
+    }
+
+    $entity = node_load('78095');
+
+    $documents = apachesolr_convert_entity_to_documents($entity, 'node', $env_id);    
+
+    $indexed = $solr->addDocuments($documents);
+
+    print_r($indexed);
+
+    $entity = node_load('27398');
+
+    $documents = apachesolr_convert_entity_to_documents($entity, 'node', $env_id);    
+
+    $indexed = $solr->addDocuments($documents);
+
+    print_r($indexed);    
+
+  }
+  catch (Exception $e) {
+    apachesolr_log_exception($env_id, $e);
+    return FALSE;
+  }
 }

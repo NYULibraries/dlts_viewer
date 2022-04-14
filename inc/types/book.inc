@@ -109,6 +109,7 @@ function dlts_viewer_full_book_view($entity) {
     'scope' => 'footer',
   ]);
 
+
   return node_view($entity, 'metadata', $entity->language);
 
 }
@@ -151,10 +152,11 @@ function dlts_viewer_process_node_dlts_book(&$vars) {
  *
  * @param object $entity
  *   Entity.
- * @param object $arg
+ * @param object $seq
  *   Mongo.
  */
-function dlts_viewer_book_dispatcher($entity, $arg) {
+function dlts_viewer_book_dispatcher($entity, $seq) {
+  $arg = $seq;
 
   global $base_url;
 
@@ -191,13 +193,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
     // Get volume value.
     $volume_number_str = $wrapper->field_volume_number_str->value();
     // Change entity title.
-    $entity->title = t(
-      '@title @volume',
-      [
-        '@title' => $entity->title,
-        '@volume' => $volume_number_str,
-      ]
-    );
+    $entity->title = t('@title @volume', [ '@title' => $entity->title, '@volume' => $volume_number_str ]);
   }
 
   $entity->title = html_entity_decode($entity->title, ENT_QUOTES);
@@ -432,6 +428,7 @@ function dlts_viewer_book_dispatcher($entity, $arg) {
     case 'book_metadata_pjax':
       return dlts_viewer_book_metadata_view($entity);
   }
+
 }
 
 /**

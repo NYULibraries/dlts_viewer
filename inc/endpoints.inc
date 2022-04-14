@@ -780,6 +780,54 @@ function _dlts_viewer_book_loader($node, $reset = FALSE) {
 }
 
 /**
+ * Generate metadata about a map.
+ *
+ * @param object $node
+ *   A dlts_photo node object.
+ * @param bool $reset
+ *   True if request does not want cache version of the resource.
+ *
+ * @return json|array
+ *   A keyed array to be converted into JSON.
+ */
+function _dlts_viewer_map_loader($node, $reset = FALSE) {
+
+  $wrapper = entity_metadata_wrapper('node', $node);
+
+  $bundle = dlts_viewer_get_bundle_alias($wrapper->getBundle());
+
+  $identifier = $wrapper->field_identifier->value();
+
+  $query_parameters = drupal_get_query_parameters();
+
+  $requestedLang = 'en';
+
+  // Need to make sure lang exists.
+  if (isset($query_parameters['lang'])) {
+    $requestedLang = $query_parameters['lang'];
+  }
+
+  if (isset($query_parameters['reset'])) {
+    $reset = TRUE;
+  }
+
+  $realpath = drupal_realpath('public://');
+
+  $cachepath = "$realpath/datasource/$bundle/$identifier/info.$requestedLang.json";
+  
+  if (file_exists($cachepath) && !$reset) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET');
+    header('Content-Type: application/json;charset=utf-8');
+    echo file_get_contents($cachepath);
+    exit(0);
+  }
+
+  return dlts_viewer_api_map_json($node);
+
+}
+
+/**
  * Generate metadata about a photo.
  *
  * @param object $node
@@ -2397,7 +2445,7 @@ function _dlts_viewer_noid_loader($node, $reset = FALSE) {
       return _dlts_viewer_photo_loader($node);
     case 'dlts_map':
       // http://HOST/api/v1/noid/6hdr7z37
-      // return _dlts_viewer_map_loader($node);
+      return _dlts_viewer_map_loader($node);
       return [];
     case 'dlts_postcard':
       // http://HOST/api/v1/noid/0zpc8fgz
