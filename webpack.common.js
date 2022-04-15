@@ -5,7 +5,8 @@ module.exports = {
   entry: {
     polyfill: 'babel-polyfill',
     viewer: './sass/viewer.scss',
-    app: './js/viewer.js',
+    books: './js/viewer.js',
+    photos: './js/viewer.photos.js',
   },
   plugins: [
     new MiniCssExtractPlugin({

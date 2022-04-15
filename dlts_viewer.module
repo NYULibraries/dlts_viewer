@@ -424,7 +424,9 @@ function dlts_viewer_js_alter(&$javascript) {
   if (dlts_viewer_is_resource()) {
     $allow = [
       'sites/all/modules/dlts_viewer/dist/polyfill.bundle.js',
-      'sites/all/modules/dlts_viewer/dist/app.bundle.js',    
+      'sites/all/modules/dlts_viewer/dist/app.bundle.js',
+      'sites/all/modules/dlts_viewer/dist/books.bundle.js',
+      'sites/all/modules/dlts_viewer/dist/photos.bundle.js',      
     ];
     foreach ($javascript as $key => $setting) {
       if ((array_search($key, $allow)) === false) {

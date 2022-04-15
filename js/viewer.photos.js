@@ -3,12 +3,11 @@ import axios from 'axios'
 import { seqmap } from './componets/seqmap.mjs'
 import { hide } from './componets/hide.mjs'
 import { show } from './componets/show.mjs'
-import { delegate } from './componets/delegate.mjs'
-import { decrease } from './componets/decrease-sequence.js'
-import { increase } from './componets/increase-sequence.js'
-import { change } from './componets/change-sequence.mjs'
 import { tiles }  from './componets/tile-sources.js'
-import { toggleview } from './componets/toggleview-sequence.js'
+
+// import { decrease } from './componets/decrease-sequence.js'
+// import { change } from './componets/change-sequence.mjs'
+// import { toggleview } from './componets/toggleview-sequence.js'
 
 function ViewerApp(Y) {
   
@@ -72,6 +71,27 @@ function ViewerApp(Y) {
     }
   }
 
+  async function increase(props) {
+    const sequence_current = Number(props.dataset.sequence)
+    const sequence_count = Number(props.dataset.sequenceCount)
+    const sequence = sequence_current + 1
+    if (sequence > sequence_count) {
+      return sequence_count
+    } else {
+      props.dataset.sequence = sequence.toString()
+    }
+  }
+
+  async function decrease(props) {
+    const sequence_current = Number(props.dataset.sequence)
+    const sequence = sequence_current - 1
+    if (sequence < 1) {
+      return sequence
+    } else {
+      props.dataset.sequence = sequence.toString()
+    }
+  }  
+
   function fullscreen_on() {
     const docElm = document.documentElement
     const top = document.querySelector('.top')
@@ -133,14 +153,6 @@ function ViewerApp(Y) {
         case 'decrease':
           await decrease(osd)
           break
-
-        case 'change':
-          await change(e.detail.to, osd)
-          break
-
-        case 'toggleview':          
-          Y.seqmap = await toggleview(osd, Y.seqmap)
-          break
       }
 
       const tileSources = await tiles(Y.seqmap, dataset)
@@ -166,10 +178,6 @@ function ViewerApp(Y) {
           }
         }
       })
-
-      Y.nodes.togglePage.classList.add('active')
-      
-      Y.nodes.togglePage.classList.remove('inactive')
 
       show('#openseadragon1')
 
@@ -246,148 +254,23 @@ function ViewerApp(Y) {
     return true
   }
 
-  function on_hide_thumbnails_view() {
-
-    const osd = Y.nodes.osd
-
-    const { sequenceCount, sequence } = osd.dataset
-
-    Y.nodes.html.classList.remove('thumbnails-view')
-
-    hide('#thumbnails')
-
-    Y.nodes.togglePage.classList.remove('inactive')
-    Y.nodes.togglePage.classList.add('active')    
-
-    Y.nodes.next.forEach(item => {
-      item.classList.remove('active')
-      item.classList.add('inactive')
-    })
-
-    Y.nodes.previous.forEach(item => {
-      if (sequence > 1) {
-        item.classList.remove('inactive')
-        item.classList.add('active')
-      }
-    })
-
-    Y.nodes.next.forEach(item => {
-      if (sequence < sequenceCount) {
-        item.classList.remove('inactive')
-        item.classList.add('active')
-      }
-    })
-
-  }
-
-  function on_open_thumbnails_view() {
-
-    const { uri } = Y.nodes.osd.dataset
-
-    const { state } = Y.nodes.thumbnails.dataset
-
-    const width = '230'
-
-    const height = '150'
-
-    Y.nodes.html.classList.add('thumbnails-view')
-
-    Y.nodes.controlZoomOut.classList.remove('active')
-    Y.nodes.controlZoomOut.classList.add('inactive')
-
-    Y.nodes.controlZoomIn.classList.remove('active')
-    Y.nodes.controlZoomIn.classList.add('inactive')
-
-    Y.nodes.togglePage.classList.remove('active')
-    Y.nodes.togglePage.classList.add('inactive')
-    
-    Y.nodes.next.forEach(item => {
-      item.classList.remove('active')
-      item.classList.add('inactive')
-    })
-
-    Y.nodes.previous.forEach(item => {
-      item.classList.remove('active')
-      item.classList.add('inactive')
-    })
-
-    if (parseInt(state, 10) === 0) {
-      axios.get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
-        if (response.status === 200) {
-          const parser = new DOMParser()
-          const doc = parser.parseFromString(response.data, 'text/html')
-           Y.nodes.thumbnails.appendChild(
-            doc.querySelector('.thumbnails.container')
-          )
-          document.querySelectorAll('.thumbnails.container a').forEach(item => {
-            item.addEventListener('click', onThumbnailsClick)
-          })
-          Y.nodes.thumbnails.dataset.state = 1
-        }
-        
-        show('#thumbnails')
-
-      })
-      .catch(error => {
-        console.log(error)
-      })
-    }
-  }
-
-  function onThumbnailsClick(event) {
-    event.preventDefault()
-    Y.nodes.html.classList.remove('thumbnails-view')
-    if (Y.nodes.buttonThumbnails.classList.contains('on')) {
-      Y.nodes.buttonThumbnails.classList.remove('on')
-      Y.nodes.buttonThumbnails.classList.add('off')
-    }
-
-    hide('#thumbnails')
-
-    document.dispatchEvent(
-      new CustomEvent('load:sequence', {
-        detail: {
-          operation: 'change',
-          to: event.currentTarget.dataset.sequence
-        }
-      })
-    );    
-  }
-
-  function slide_value_change(event) {
-    document.dispatchEvent(
-      new CustomEvent('load:sequence', {
-        detail: {
-          operation: 'change',
-          to: event.currentTarget.value,
-        }
-      })
-    )
-  }
- 
   window.addEventListener('load', async () => {
     Y.nodes = {
       html: document.querySelector('html'),
       body: document.querySelector('body'),
-      thumbnails: document.querySelector('#thumbnails'),
-      buttonMetadata: document.querySelector('#button-metadata'),
       rotate: document.querySelector('#control-rotate'),
+      flip: document.querySelector('#control-flip'),
       pagemeta: document.querySelector('#pagemeta'),
       osd: document.querySelector('#openseadragon1'),
       display: document.getElementById('#display'),
-      togglePage: document.getElementById('toggle-page'),
       controlZoomOut: document.getElementById('control-zoom-out'),
       controlZoomIn: document.getElementById('control-zoom-in'),
-      toggleLanguage: document.querySelector('body .language'),
-      slider: document.querySelector('#range_weight'),
-      slider_value: document.querySelector('#slider_value'),
       loadingMsg: document.querySelector('.current_page'),
-      buttonThumbnails: document.getElementById('button-thumbnails'),
       next: document.querySelectorAll('.paging.next'),
       previous: document.querySelectorAll('.paging.previous')
     }
 
-    const { sequenceCount } = Y.nodes.osd.dataset
+    const { sequenceCount, sequence } = Y.nodes.osd.dataset
 
     const params = new URLSearchParams(window.location.search)
 
@@ -396,24 +279,14 @@ function ViewerApp(Y) {
     let req_sequence = params.get('sequence')
 
     if (!req_sequence) {
-      req_sequence = 1
+      req_sequence = sequence
     }
 
     Y.seqmap = await seqmap({ count: sequenceCount, view })
-
-    if (view) {
-      Y.nodes.osd.dataset.view = view // 'singlepage', 'doublepage'
-      if (view == 'doublepage') {
-        if (Y.nodes.togglePage.classList.contains('page-double')) {
-          Y.nodes.togglePage.classList.remove('page-double')
-          Y.nodes.togglePage.classList.add('page-single')
-        }
-      }
-    }
+   
+    document.querySelector('.current_page').textContent =  Y.nodes.osd.dataset.sequence = req_sequence
     
-    document.querySelector('.current_page').textContent = Y.nodes.osd.dataset.sequence = Y.nodes.slider.value = Y.nodes.slider_value.value = req_sequence
-    
-    document.querySelector('.sequence_count').textContent = Y.nodes.slider.max = Y.seqmap.count
+    document.querySelector('.sequence_count').textContent = Y.seqmap.count
 
     document.dispatchEvent(
       new CustomEvent('viewer:contentready')
@@ -515,28 +388,12 @@ function ViewerApp(Y) {
     // Zoom out click event.
     Y.nodes.rotate.onclick = (e) => {
       e.preventDefault()
-      console.log(Y.Viewer.viewport)
-      Y.Viewer.viewport.setRotation(Y.Viewer.viewport.degrees + 90);
+      Y.Viewer.viewport.setRotation(Y.Viewer.viewport.degrees + 90)
     }
 
-    Y.nodes.togglePage.onclick = (e) => {
+    Y.nodes.flip.onclick = (e) => {
       e.preventDefault()
-      if (e.currentTarget.classList.contains('inactive')) return false
-      if (Y.nodes.togglePage.classList.contains('page-double')) {
-        Y.nodes.togglePage.classList.remove('page-double')
-        Y.nodes.togglePage.classList.add('page-single')
-      }
-      else {
-        Y.nodes.togglePage.classList.remove('page-single')
-        Y.nodes.togglePage.classList.add('page-double')
-      }
-      document.dispatchEvent(
-        new CustomEvent('load:sequence', {
-          detail: {
-            operation: e.currentTarget.dataset.operation,
-          }
-        })
-      );
+      Y.Viewer.viewport.toggleFlip()
     }
 
     document.querySelectorAll('a.paging').forEach(item => {
@@ -546,8 +403,6 @@ function ViewerApp(Y) {
     document.querySelectorAll('a.button').forEach(item => {
       item.addEventListener('click', on_button_click)
     })
-
-    Y.nodes.slider.addEventListener('change', slide_value_change)
 
     document.addEventListener('load:sequence', load_sequence)
 
@@ -560,44 +415,6 @@ function ViewerApp(Y) {
     document.addEventListener('button:button-fullscreen:off', fullscreen_off)
 
     document.addEventListener('viewer:contentready', tiles_loading)
-
-    document.addEventListener('button:button-thumbnails:on', on_open_thumbnails_view)
-
-    document.addEventListener('button:button-thumbnails:off', on_hide_thumbnails_view)
-
-    // Language
-    delegate('body', 'change', '.lang-options select', event => {
-      const current_target = event.target
-      axios.get(current_target.value).then(response => {
-        if (response.status === 200) {
-          const parser = new DOMParser()
-          const doc = parser.parseFromString(response.data, 'text/html')
-          const pane = document.querySelector('.view-mode-metadata')
-          const pagemeta = doc.querySelector('.view-mode-metadata')          
-          const main = document.querySelector('.pane.main')
-          const html = document.querySelector('html')
-          html.dir = pagemeta.dataset.dir
-          main.dir = pagemeta.dataset.dir
-          pane.dir = pagemeta.dataset.dir
-          pane.innerHTML = pagemeta.innerHTML
-        }
-      })
-      .catch(error => {
-        console.log(error)
-      })
-    })
-
-    // Volume
-    delegate('body', 'change', '.view-mv select', event => {
-      const current_target = event.target
-      const value = current_target.value
-      const node = document.querySelector('.node-dlts-book')
-      const lang = node.dataset.lang
-      const url = value.substring(value.indexOf('::') + 2, value.length) + '/1?lang=' + lang
-      if (window.self === window.top) {
-        window.location.assign(url)
-      }
-    })
 
   })
 

@@ -1,4 +1,5 @@
 <ul class="navbar navbar-left">
+  <?php if (isset($metadata)) : ?>
   <li class="navbar-item">
     <a 
       href="<?php echo $metadata['href'] ?>"
@@ -9,6 +10,8 @@
       <span><?php echo $metadata['label']; ?></span>
     </a>
   </li>
+  <?php endif; ?>
+  <?php if (isset($togglepage)) : ?>
   <li class="navbar-item">
     <a 
       id="<?php echo $togglepage['id'] ?>"
@@ -19,6 +22,8 @@
       <span><?php echo $togglepage['label'] ?></span>
     </a>
   </li>
+  <?php endif; ?>
+  <?php if (isset($thumbnails)) : ?>
   <li class="navbar-item">
     <a 
       href="<?php echo $thumbnails['href'] ?>" 
@@ -28,6 +33,7 @@
       <span><?php echo $thumbnails['label'] ?></span>
     </a>
   </li>
+  <?php endif; ?>
 </ul>
 <ul class="navbar navbar-middle">
       <li class="navbar-item">
@@ -45,8 +51,14 @@
         <span>Rotate</span>
       </a>
     </li>
+    <li class="navbar-item">
+      <a id="control-flip" title="Flip image" class="rotate">
+        <span>Flip</span>
+      </a>
+    </li>
   </ul>
 <ul class="navbar navbar-arrows">
+  <?php if (isset($previous)) : ?>
   <li class="navbar-item navbar-pager-left">
     <a 
       title="<?php echo $previous['label'] ?>" 
@@ -60,6 +72,8 @@
       <span><?php echo $previous['label'] ?></span>
     </a>
   </li>
+  <?php endif; ?>
+  <?php if (isset($next)) : ?>
   <li class="navbar-item navbar-pager-right">
     <a 
       title="<?php echo $next['label'] ?>" 
@@ -73,6 +87,7 @@
       <span><?php echo $next['label'] ?></span>
     </a>
   </li>
+  <?php endif; ?>
 </ul>
 <ul class="navbar-fullscreen">
   <li class="navbar-item">

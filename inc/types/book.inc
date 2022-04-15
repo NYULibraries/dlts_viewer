@@ -104,7 +104,7 @@ function dlts_viewer_full_book_view($entity) {
     'scope' => 'footer',
   ]);
 
-  drupal_add_js($module_path . '/dist/app.bundle.js', [
+  drupal_add_js($module_path . '/dist/books.bundle.js', [
     'type' => 'file', 
     'scope' => 'footer',
   ]);

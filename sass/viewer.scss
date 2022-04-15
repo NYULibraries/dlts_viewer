@@ -22,3 +22,10 @@
 @import "partials/book/panes/_pane-thumbnails";
 @import "partials/photo/_base.scss";
 @import "partials/base/_openseadragon";
+
+.page-books {
+  .contextual-links-wrapper {
+      display: none;
+      visibility: hidden;
+  }
+}
