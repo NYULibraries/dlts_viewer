@@ -40,7 +40,7 @@
       <span id="squaresWaveG_7" class="squaresWaveG"></span>
       <span id="squaresWaveG_8" class="squaresWaveG"></span>
     </div>
-    <p><?php print t('Loading Page') ?> <span class="current_page"><?php print $sequence; ?></span></p>
+    <p><?php print t('Loading Page') ?> <span class="current_page"><?php print $sequence; ?></span> of <span class="sequence_count"><?php print $count; ?></span></p>
   </div>
 </div>
 

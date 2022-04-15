@@ -413,7 +413,11 @@ function ViewerApp(Y) {
     
     document.querySelector('.current_page').textContent = Y.nodes.osd.dataset.sequence = Y.nodes.slider.value = Y.nodes.slider_value.value = req_sequence
     
-    document.querySelector('.sequence_count').textContent = Y.nodes.slider.max = Y.seqmap.count
+    Y.nodes.slider.max = Y.seqmap.count
+
+    document.querySelectorAll('.sequence_count').forEach(item => {
+      item.textContent = Y.seqmap.count
+    })
 
     document.dispatchEvent(
       new CustomEvent('viewer:contentready')

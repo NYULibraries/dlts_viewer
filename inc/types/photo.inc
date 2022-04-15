@@ -9,34 +9,6 @@
  // http://192.168.0.18:9000/photos/AD_MC_036_ref349
 
 /**
- * Photo AJAX view.
- *
- * @param object $entity
- *   Node.
- */
-function dlts_viewer_pjax_photo_view($entity) {
-  return theme(
-    'viewer_page',
-    array(
-      'button_next' => $entity->button_next,
-      'button_previous' => $entity->button_previous,
-      'compositingLayerCount' => $entity->book_page_data['compositingLayerCount'],
-      'dwtLevels' => $entity->book_page_data['dwtLevels'],
-      'fid' => $entity->book_page_data['fid'],
-      'height' => $entity->book_page_data['height'],
-      'identifier' => $entity->identifier,
-      'levels' => $entity->book_page_data['levels'],
-      'sequence' => $entity->sequence,
-      'sequence_count' => $entity->sequence_count,
-      'title' => $entity->title,
-      'uri' => $entity->book_page_data['uri'],
-      'width' => $entity->book_page_data['width'],
-      'pageView' => $entity->pageView,
-    )
-  );
-}
-
-/**
  * Photo set dispatcher.
  *
  * @param object $entity
