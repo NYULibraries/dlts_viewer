@@ -14,11 +14,8 @@
 </span> 
 <span role="navigation">
   <form id="form-update-sequence">
-    <input 
-      id="slider_value" 
-      value="<?php print $sequence ?>" 
-      aria-label="Page to jump to">
-    </form> 
-    <span>/</span> 
-    <span class="sequence_count"><?php print $count ?></span>
+    <input id="slider_value" value="<?php print $sequence ?>" aria-label="Page to jump to">
+  </form>
+  <span>/</span> 
+  <span class="sequence_count"><?php print $count ?></span>
 </span>
