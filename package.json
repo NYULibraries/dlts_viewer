@@ -7,7 +7,6 @@
   "scripts": {
     "build": "webpack --config webpack.prod.js",
     "serve": "./node_modules/http-server/bin/http-server dist",
-
     "dev": "webpack serve"
   },
   "license": "ISC",
