@@ -269,7 +269,7 @@ function ViewerApp(Y) {
       previous: document.querySelectorAll('.paging.previous')
     }
 
-    const { sequenceCount, sequence } = Y.nodes.osd.dataset
+    const { sequenceCount, sequence, type } = Y.nodes.osd.dataset
 
     const params = new URLSearchParams(window.location.search)
 
@@ -293,7 +293,7 @@ function ViewerApp(Y) {
 
     const tileSources = await tiles(Y.seqmap, Y.nodes.osd.dataset)
 
-    Y.Viewer = Y.OpenSeadragon({
+    const options = {
       id: Y.nodes.osd.id,
       preserveViewport: true,
       showNavigationControl: false,
@@ -305,7 +305,13 @@ function ViewerApp(Y) {
       defaultZoomLevel: 0,
       sequenceMode: false,
       tileSources: tileSources,
-    })
+    }
+
+    if (type == 'maps') {
+      options.showNavigator = true
+    }
+
+    Y.Viewer = Y.OpenSeadragon(options)
 
     // OpenSeadragon event.
     Y.Viewer.world.addHandler('add-item', add_item_handler)
