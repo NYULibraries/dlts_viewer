@@ -316,6 +316,14 @@ function ViewerApp(Y) {
     // OpenSeadragon event.
     Y.Viewer.world.addHandler('add-item', add_item_handler)
 
+    Y.Viewer.addHandler('page', (e) => {
+      console.log('page event')
+    })
+
+    Y.Viewer.world.addHandler('item-index-change', (e) => {
+      console.log('item-index-change event')
+    })
+
     // OpenSeadragon event.
     Y.Viewer.addHandler('zoom', () => {
 

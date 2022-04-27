@@ -156,12 +156,22 @@ function dlts_viewer_process_node_dlts_book(&$vars) {
  *   Mongo.
  */
 function dlts_viewer_book_dispatcher($entity, $seq) {
-  $arg = $seq;
 
   global $base_url;
 
+  $arg = $seq;
+
   // Check if this collection has searchable PDFs.
   $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
+
+  // Check request type.
+  $is_pjax = dlts_viewer_is_pjax();
+
+  // Check for mobile devices.
+  $is_mobile = dlts_viewer_is_mobile();
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
 
   // Test if resource, will return the maped type of resource (e.g., books).
   $is_resource = dlts_viewer_is_resource();
@@ -171,29 +181,26 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
   }
 
   // Wrapp book entity with Entity API wrapper.
-  $book_wrapper = entity_metadata_wrapper('node', $entity);
+  $wrapper = entity_metadata_wrapper('node', $entity);
 
-  $entity->title = $book_wrapper->field_title->value();
-
-  // Check request type.
-  $is_pjax = dlts_viewer_is_pjax();
-  
-  // Check for mobile devices.
-  $is_mobile = dlts_viewer_is_mobile();
-  
-  // Get query parameters.
-  $query_parameters = drupal_get_query_parameters();
+  $entity->title = $wrapper->field_title->value();
 
   // Check if this books is part of a multi-volume.
   $multivolume_book = dlts_viewer_is_multivolume_book($entity);
-  
+
   // If book is part of multi-volume; use append volume value to entity title.
   if ($multivolume_book) {
-    $wrapper = entity_metadata_wrapper('node', $multivolume_book);
+    $multivolume_book_wrapper = entity_metadata_wrapper('node', $multivolume_book);
     // Get volume value.
-    $volume_number_str = $wrapper->field_volume_number_str->value();
+    $volume_number_str = $multivolume_book_wrapper->field_volume_number_str->value();
     // Change entity title.
-    $entity->title = t('@title @volume', [ '@title' => $entity->title, '@volume' => $volume_number_str ]);
+    $entity->title = t(
+      '@title @volume', 
+      [
+        '@title' => $entity->title,
+        '@volume' => $volume_number_str
+      ]
+    );
   }
 
   $entity->title = html_entity_decode($entity->title, ENT_QUOTES);
@@ -201,11 +208,8 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
   // Set entity title.
   drupal_set_title($entity->title);
 
-  // Book identifier.
-  $identifier = $book_wrapper->field_identifier->value();
-
   // Set $identifier so that .tpl.php can use it.
-  $entity->identifier = $identifier;
+  $entity->identifier = $wrapper->field_identifier->value();
 
   // Set language.
   _language_field($entity);
@@ -246,12 +250,12 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
       $is_single_page = TRUE;
     }
 
-    $sequence_count = $book_wrapper->field_sequence_count->value();
+    $sequence_count = $wrapper->field_sequence_count->value();
     
     $int_read_order = 0;
     
-    if (isset($book_wrapper->field_read_order)) {
-      $int_read_order = $book_wrapper->field_read_order->value();
+    if (isset($wrapper->field_read_order)) {
+      $int_read_order = $wrapper->field_read_order->value();
     }
 
     $entity->read_order = ($int_read_order == 1) ? 'rtl' : 'ltr';
@@ -281,13 +285,14 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
       'label' => t('Go to previous page'),
       'type' => $is_resource,
       'href' => '#previous',
-      'identifier' => $identifier,
+      'identifier' => $entity->identifier,
       'sequence' => $entity->sequence,
       'count' => $sequence_count,
       'operation' => 'decrease',
       'class' => implode(' ', [
         'paging',
         'previous', 
+        $entity->read_order,
         ($entity->read_order === 'ltr') ? 'pager-left' : 'pager-right',
         ($previous_page_active ? 'active' : 'inactive'),
       ])
@@ -297,13 +302,14 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
       'label' => t('Go to next page'),
       'type' => $is_resource,
       'href' => '#next',
-      'identifier' => $identifier,
+      'identifier' => $entity->identifier,
       'sequence' => $entity->sequence,
       'count' => $sequence_count,
       'operation' => 'increase',
       'class' => implode(' ', [
         'paging',
-        'next', 
+        'next',
+        $entity->read_order,
         ($entity->read_order === 'ltr') ? 'pager-right' : 'pager-left',
         ($next_page_active ? 'active' : 'inactive'),
       ])      
@@ -311,21 +317,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
    
     // Book page sequence number.
     $entity->book_page_sequence_number = $entity->sequence;
-    
-    // Set navbar pager buttons according to read direction.
-    // $nav_pager_button_left_arrow = $button_previous;
-    
-    // $nav_pager_button_right_arrow = $button_next;
-
-    // if ($entity->read_order == 'rtl') {
-    //   $nav_pager_button_left_arrow = $button_next;
-    //   $nav_pager_button_right_arrow = $button_previous;
-    // }
-
-    // $nav_pager_button_left_arrow = '<li class="navbar-item navbar-pager-left">' . $nav_pager_button_left_arrow . '</li>';
-    
-    // $nav_pager_button_right_arrow = '<li class="navbar-item navbar-pager-right">' . $nav_pager_button_right_arrow . '</li>';
-    
+  
     $navbar_options = [
       'next' => $button_next,
       'previous' => $button_previous,
@@ -334,7 +326,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         'type' => $is_resource,
         'href' => '#thumbnails',
         'id' => 'button-thumbnails',
-        'identifier' => $identifier,
+        'identifier' => $entity->identifier,
         'sequence' => $entity->sequence,
         'count' => $sequence_count,
         'operation' => 'increase',
@@ -349,7 +341,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         'label' => t('Toggle between single or double page'),
         'type' => $is_resource,
         'href' => '#toggle-view',
-        'identifier' => $identifier,
+        'identifier' => $entity->identifier,
         'sequence' => $entity->sequence,
         'count' => $sequence_count,
         'operation' => 'toggleview',      
@@ -370,19 +362,20 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         ]),
         'id' => 'button-metadata',
       ],
-      // 'nav_buttons_pager_left_arrow' => $nav_pager_button_left_arrow,
-      // 'nav_buttons_pager_right_arrow' => $nav_pager_button_right_arrow,
     ];
+
+    // 'nav_buttons_pager_left_arrow' => $nav_pager_button_left_arrow,
+    // 'nav_buttons_pager_right_arrow' => $nav_pager_button_right_arrow,    
     
     $entity->navbar = theme('dlts_viewer_navbar', $navbar_options);
     
-    $entity->book_page_data = $arg;
+    // $entity->book_page_data = $arg;
   
     $entity->pane_metadata_hidden = $is_mobile;
     
     $entity->sequence_count = $sequence_count;
 
-    $entity->manifest = "$base_url/api/image/$is_resource/$identifier/$entity->sequence/info.json";
+    $entity->manifest = "$base_url/api/image/$is_resource/$entity->identifier/$entity->sequence/info.json";
         
     $entity->slider = theme(
       'dlts_viewer_slider', 
@@ -405,12 +398,12 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         'id' => 'openseadragon1',
         'view' => 'single',
         'type' => $is_resource,
-        'identifier' => $identifier,
+        'identifier' => $entity->identifier,
         'sequence' => $entity->sequence,
         'count' => $sequence_count,
         'manifest' => $entity->manifest,
         'service' => $servie_url ,
-        'uri' => "$base_url/$is_resource/$identifier",
+        'uri' => "$base_url/$is_resource/$entity->identifier",
         'classList' => [
           'dlts_image_map',
           'dlts_viewer_map',

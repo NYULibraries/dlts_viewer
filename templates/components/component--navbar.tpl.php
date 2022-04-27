@@ -36,21 +36,21 @@
   <?php endif; ?>
 </ul>
 <ul class="navbar navbar-middle">
-      <li class="navbar-item">
-        <a id="control-zoom-in" title="Zoom in" class="zoom-in">
-          <span>Zoom in</span>
-        </a>
-    </li>
-    <li class="navbar-item">
-      <a id="control-zoom-out" title="Zoom out" class="zoom-out">
-        <span>Zoom out</span>
-      </a>
-    </li>
-    <li class="navbar-item">
-      <a id="control-rotate" title="Rotate image" class="rotate">
-        <span>Rotate</span>
-      </a>
-    </li>
+  <li class="navbar-item">
+    <a id="control-zoom-in" title="Zoom in" class="zoom-in">
+      <span>Zoom in</span>
+    </a>
+  </li>
+  <li class="navbar-item">
+    <a id="control-zoom-out" title="Zoom out" class="zoom-out">
+      <span>Zoom out</span>
+    </a>
+  </li>
+  <li class="navbar-item">
+    <a id="control-rotate" title="Rotate image" class="rotate">
+      <span>Rotate</span>
+    </a>
+  </li>
   </ul>
 <ul class="navbar navbar-arrows">
   <?php if (isset($previous)) : ?>
@@ -90,7 +90,9 @@
       href="#fullscreen" 
       title="<?php echo t('Toggle fullscreen') ?>" 
       class="button fullscreen off" 
-      id="button-fullscreen">
+      id="button-fullscreen"
+      tabindex="-1"
+      >
       <span><?php echo t('Toggle fullscreen') ?></span>
     </a>
   </li>
