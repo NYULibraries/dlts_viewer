@@ -323,10 +323,10 @@ function dlts_viewer_search_repository() {
         ->fieldCondition('field_identifier', 'value', $entity['digi_id'], '=')
         ->execute();
 
-      if (!empty($result['node']) && 1 == 2) {
+      if (!empty($result['node'])) {
         $keys = array_keys($result['node']);
         $nid = array_pop($keys);
-        $node = node_load($nid);
+        $node = node_load($nid); 
         $wrapper = entity_metadata_wrapper('node', $node);
         $handle_raw = $wrapper->field_handle->value();
         $handle = explode('/', $handle_raw['url']);
@@ -378,6 +378,9 @@ function dlts_viewer_search_repository() {
             if ($request->code == '200') {
               $entity['noid'] = NULL;
               $digi_data = json_decode($request->data);
+              if (isset($digi_data->fids) && isset($digi_data->fids->noid)) {
+                $entity['noid'] = $digi_data->fids->noid;
+              }
               $fmds_url = parse_url($digi_data->fmds_url);
               $fmds_url = $endpoint . $fmds_url['path'];
               $fmds_request = drupal_http_request($fmds_url);

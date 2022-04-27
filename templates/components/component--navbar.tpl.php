@@ -51,11 +51,6 @@
         <span>Rotate</span>
       </a>
     </li>
-    <li class="navbar-item">
-      <a id="control-flip" title="Flip image" class="rotate">
-        <span>Flip</span>
-      </a>
-    </li>
   </ul>
 <ul class="navbar navbar-arrows">
   <?php if (isset($previous)) : ?>

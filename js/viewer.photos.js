@@ -259,7 +259,6 @@ function ViewerApp(Y) {
       html: document.querySelector('html'),
       body: document.querySelector('body'),
       rotate: document.querySelector('#control-rotate'),
-      flip: document.querySelector('#control-flip'),
       pagemeta: document.querySelector('#pagemeta'),
       osd: document.querySelector('#openseadragon1'),
       display: document.getElementById('#display'),
@@ -389,11 +388,6 @@ function ViewerApp(Y) {
     Y.nodes.rotate.onclick = (e) => {
       e.preventDefault()
       Y.Viewer.viewport.setRotation(Y.Viewer.viewport.degrees + 90)
-    }
-
-    Y.nodes.flip.onclick = (e) => {
-      e.preventDefault()
-      Y.Viewer.viewport.toggleFlip()
     }
 
     document.querySelectorAll('a.paging').forEach(item => {
