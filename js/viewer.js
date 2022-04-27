@@ -227,6 +227,7 @@ function ViewerApp(Y) {
   }
 
   function add_item_handler(event) {
+    Y.Viewer.viewport.setRotation(0)
     const tiledImage = event.item
     tiledImage.addHandler('fully-loaded-change', () => {
       const newFullyLoaded = are_all_fully_loaded()
@@ -450,7 +451,7 @@ function ViewerApp(Y) {
 
     Y.Viewer.world.addHandler('item-index-change', (e) => {
       console.log('item-index-change event')
-    })    
+    })
 
     // OpenSeadragon event.
     Y.Viewer.addHandler('zoom', () => {

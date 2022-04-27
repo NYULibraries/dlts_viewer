@@ -233,6 +233,7 @@ function ViewerApp(Y) {
   }
 
   function add_item_handler(event) {
+    Y.Viewer.viewport.setRotation(0)
     const tiledImage = event.item
     tiledImage.addHandler('fully-loaded-change', () => {
       const newFullyLoaded = are_all_fully_loaded()
