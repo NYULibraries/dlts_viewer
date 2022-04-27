@@ -217,7 +217,7 @@ function ViewerApp(Y) {
       Y.nodes.body.classList.remove('openlayers-loading')
     }
   }
- 
+
   function update_loading_indicator() {
     if (Y.isFullyLoaded) {
       Y.nodes.body.classList.remove('openlayers-loading')
@@ -236,7 +236,7 @@ function ViewerApp(Y) {
       }
     })
   }
-  
+
   function are_all_fully_loaded() {
     const count = Y.Viewer.world.getItemCount()
     for (let i = 0; i < count; i++) {
@@ -366,7 +366,7 @@ function ViewerApp(Y) {
       })
     )
   }
- 
+
   window.addEventListener('load', async () => {
     Y.nodes = {
       html: document.querySelector('html'),
@@ -414,7 +414,7 @@ function ViewerApp(Y) {
     }
     
     document.querySelector('.current_page').textContent = Y.nodes.osd.dataset.sequence = Y.nodes.slider.value = Y.nodes.slider_value.value = req_sequence
-    
+
     Y.nodes.slider.max = Y.seqmap.count
 
     document.querySelectorAll('.sequence_count').forEach(item => {
@@ -491,6 +491,18 @@ function ViewerApp(Y) {
       }
 
     })
+
+    document.querySelector('#form-update-sequence').onsubmit = (event) => {
+      event.preventDefault()
+      document.dispatchEvent(
+        new CustomEvent('load:sequence', {
+          detail: {
+            operation: 'change',
+            to: Y.nodes.slider_value.value,
+          }
+        })
+      )      
+    }
 
     // Zoom in click event.
     Y.nodes.controlZoomIn.onclick = () => {

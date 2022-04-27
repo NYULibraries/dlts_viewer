@@ -13,7 +13,7 @@
     >
 </span> 
 <span role="navigation">
-  <form>
+  <form id="form-update-sequence">
     <input 
       id="slider_value" 
       value="<?php print $sequence ?>" 
