@@ -43,6 +43,14 @@ function dlts_viewer_dispatch_thumbnails(object $entity) {
 
   $title = $wrapper->field_title->value();
 
+  $int_read_order = 0;
+    
+  if (isset($wrapper->field_read_order)) {
+    $int_read_order = $wrapper->field_read_order->value();
+  }
+
+  $entity->read_order = ($int_read_order == 1) ? 'rtl' : 'ltr';  
+
   // Check for mobile devices.
   $is_mobile = dlts_viewer_is_mobile();
 
@@ -63,7 +71,7 @@ function dlts_viewer_dispatch_thumbnails(object $entity) {
   $width = '150';
 
   $out = '<div class="node">';
-  $out .= '<div class="thumbnails container">'; 
+  $out .= '<div class="thumbnails container" dir="' . $entity->read_order . '">'; 
   while (true) {
     $out .= '<div class="thumbnails item">'; // @todo: Set current-page
     $out .= "  <a href='$base_url/$type/$identifier/$sequence' data-sequence='$sequence' class='thumbnails sequence'>"; 
@@ -363,9 +371,6 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         'id' => 'button-metadata',
       ],
     ];
-
-    // 'nav_buttons_pager_left_arrow' => $nav_pager_button_left_arrow,
-    // 'nav_buttons_pager_right_arrow' => $nav_pager_button_right_arrow,    
     
     $entity->navbar = theme('dlts_viewer_navbar', $navbar_options);
     
