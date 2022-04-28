@@ -1,2 +1,1 @@
-<script src="googletagmanager.js"></script>
-<?php print $page; ?>
+<?php print $page ?>

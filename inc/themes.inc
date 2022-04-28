@@ -10,164 +10,164 @@
  * @link http://api.drupal.org/api/drupal/modules--system--system.api.php/function/hook_custom_theme/7
  */
 function dlts_viewer_theme() {
-  return array(
+  return [
     'dlts_viewer_pager_button' => [
       'variables' => [],
     ],
-    'dlts_viewer_field__field_pdf_file' => array(
+    'dlts_viewer_field__field_pdf_file' => [
       'variables' => [],
       'render element' => 'content',
       'base hook' => 'node',
-    ),
-    'field__field_pdf_file' => array(
+    ],
+    'field__field_pdf_file' => [
       'variables' => [],
-    ),
-    'thumbnails_pager' => array(
-      'variables' => array(
+    ],
+    'thumbnails_pager' => [
+      'variables' => [
         'tags' => [],
         'limit' => 10,
         'element' => 0,
         'parameters' => [],
         'quantity' => 9,
-      ),
-    ),
-    'thumbnails_photo_pager' => array(
-      'variables' => array(
+      ],
+    ],
+    'thumbnails_photo_pager' => [
+      'variables' => [
         'tags' => [],
         'limit' => 10,
         'element' => 0,
         'current_page' => 0,
         'parameters' => [],
         'quantity' => 9,
-      ),
-    ),
-    'dlts_viewer_openseadragon_image' => array(
+      ],
+    ],
+    'dlts_viewer_openseadragon_image' => [
       'variables' => [],
-    ),
-    'dlts_viewer_navbar_item' => array(
+    ],
+    'dlts_viewer_navbar_item' => [
       'variables' => [],
-    ),
-    'dlts_viewer_loading' => array(
+    ],
+    'dlts_viewer_loading' => [
       'template' => 'templates/components/component--loading',
-      'variables' => array(
+      'variables' => [
         'sequence_number' => 0,
-      ),
-    ),
-    'dlts_viewer_slider' => array(
+      ],
+    ],
+    'dlts_viewer_slider' => [
       'template' => 'templates/components/component--slider',
-      'variables' => array(
+      'variables' => [
         'slider_id' => 'slider',
         'uri' => base_path(),
         'lang_dir' => 'rtl',
         'sequence_number' => 0,
         'sequence_count' => 0,
-      ),
-    ),
-    'dlts_viewer_navbar' => array(
+      ],
+    ],
+    'dlts_viewer_navbar' => [
       'template' => 'templates/components/component--navbar',
       'variables' => [],
-    ),
-    'dlts_viewer_thumbnails' => array(
+    ],
+    'dlts_viewer_thumbnails' => [
       'template' => 'templates/components/component--thumbnails',
       'variables' => [],
-    ),
-    'dlts_viewer_set' => array(
+    ],
+    'dlts_viewer_set' => [
       'template' => 'templates/set',
       'variables' => [],
-    ),
-    'viewer' => array(
+    ],
+    'viewer' => [
       'template' => 'templates/components/component--viewer',
       'variables' => [],
-    ),
-    'photo' => array(
+    ],
+    'photo' => [
       'template' => 'templates/components/component--photo',
       'variables' => [],
-    ),
-    'viewer_page' => array(
+    ],
+    'viewer_page' => [
       'template' => 'templates/components/component--bookpage',
       'variables' => [],
-    ),
-    'viewer_map' => array(
+    ],
+    'viewer_map' => [
       'template' => 'templates/components/component--map',
       'variables' => [],
-    ),
-    'viewer_display' => array(
+    ],
+    'viewer_display' => [
       'template' => 'templates/components/component--display',
       'variables' => [],
-    ),
-    'dlts_viewer_oembed' => array(
+    ],
+    'dlts_viewer_oembed' => [
       'template' => 'templates/components/component--oembed',
       'variables' => [],
-    ),
-    'dlts_viewer_top' => array(
+    ],
+    'dlts_viewer_top' => [
       'template' => 'templates/components/component--top',
       'variables' => [],
-    ),
-    'html__viewer' => array(
+    ],
+    'html__viewer' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/html',
-    ),
-    'html__viewer_pjax' => array(
+    ],
+    'html__viewer_pjax' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/html.pjax',
-    ),
-    'page__viewer' => array(
+    ],
+    'page__viewer' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/page',
-    ),
-    'page__viewer_pjax' => array(
+    ],
+    'page__viewer_pjax' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/page.pjax',
-    ),
-    'ds_1col__node_metadata' => array(
+    ],
+    'ds_1col__node_metadata' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/ds-1col--node-metadata',
-    ),
-    'node__display' => array(
+    ],
+    'node__display' => [
       'render element' => 'content',
       'base hook' => 'node',
       'template' => 'templates/display',
-    ),
-    'block__content' => array(
+    ],
+    'block__content' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/block',
-    ),
-    'region__content' => array(
+    ],
+    'region__content' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/region',
-    ),
-    'node__dlts_book' => array(
+    ],
+    'node__dlts_book' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/node',
-    ),
-    'node__dlts_book_pjax' => array(
+    ],
+    'node__dlts_book_pjax' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/node.pjax',
-    ),
-    'node__dlts_map' => array(
+    ],
+    'node__dlts_map' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/node',
-    ),
-    'node__dlts_map_pjax' => array(
+    ],
+    'node__dlts_map_pjax' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/node.pjax',
-    ),
-    'viewer_documentation_page' => array(
+    ],
+    'viewer_documentation_page' => [
       'template' => 'templates/documentation',
       'variables' => [],
-    ),
-  );
+    ],
+  ];
 }
 
 function dlts_viewer_theme_registry_alter(&$theme_registry) {
@@ -199,14 +199,13 @@ function dlts_viewer_theme_field($variables) {
 }
 
 function theme_dlts_viewer_pager_button($variables) {
-  $classes = ['paging'];  
+  $classes = ['paging'];
   if (isset($variables['classes'])) {
     $classes = array_merge($classes, $variables['classes']);
   }
   if (dlts_viewer_is_pjax()) {
     $classes[] = 'pjax';
   }
-
   $attributes = array_merge(
     [
       'title' => $variables['text'],
@@ -259,56 +258,64 @@ function theme_thumbnails_pager($vars) {
   $parameters = $vars['parameters'];
   $quantity = $vars['quantity'];
   $pager_list = theme('pager_list', $vars);
-  $links = array();
+  $links = [];
   $links['pager-first'] = theme(
     'pager_first',
-    array(
+    [
       'text' => (isset($tags[0]) ? $tags[0] : t('First')),
       'element' => $element,
       'parameters' => $parameters,
-    )
+    ]
   );
   $links['pager-previous'] = theme(
     'pager_previous',
-    array(
+    [
       'text' => (isset($tags[1]) ? $tags[1] : t('Prev')),
       'element' => $element,
       'interval' => 1,
       'parameters' => $parameters,
-    )
+    ]
   );
-  $links['pager-next'] = theme('pager_next', array(
-    'text' => (isset($tags[3]) ? $tags[3] : t('Next')),
-    'element' => $element,
-    'interval' => 1,
-    'parameters' => $parameters,
-  ));
-  $links['pager-last'] = theme('pager_last', array(
-    'text' => (isset($tags[4]) ? $tags[4] : t('Last')),
-    'element' => $element,
-    'parameters' => $parameters,
-  ));
-  $links['close'] = array(
+  $links['pager-next'] = theme(
+    'pager_next', 
+    [
+      'text' => (isset($tags[3]) ? $tags[3] : t('Next')),
+      'element' => $element,
+      'interval' => 1,
+      'parameters' => $parameters,
+    ]
+  );
+
+  $links['pager-last'] = theme(
+    'pager_last', 
+    [
+      'text' => (isset($tags[4]) ? $tags[4] : t('Last')),
+      'element' => $element,
+      'parameters' => $parameters,
+    ]
+  );
+  
+  $links['close'] = [
     'title' => t('Close [x]'),
     'href' => '#',
-    'attributes'
-    => array(
-      'class' =>
-        array(
-          'close',
-        ),
-    ),
-  );
+    'attributes' => [
+      'class' => [ 'close' ]
+    ],
+  ];
+
   $links = array_filter($links);
-  $pager_links = theme('links', array(
+
+  $pager_links = theme('links', [
     'links' => $links,
-    'attributes' => array(
+    'attributes' => [
       'class' => 'links pager pager-links',
-    ),
-  ));
+    ],
+  ]);
+
   if ($pager_list) {
     return '<div class="pager clearfix">' . $pager_list . ' ' . $pager_links . '</div>';
   }
+
 }
 
 function theme_thumbnails_photo_pager($vars) {

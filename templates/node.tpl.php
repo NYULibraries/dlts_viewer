@@ -1,12 +1,12 @@
 <div id="navbar" class="pane navbar">
   <?php if (isset($navbar)) : ?>
     <?php print $navbar ?>
-  <?php endif; ?>
+  <?php endif ?>
 </div>
 <div id="main" class="pane main" dir="<?php if (isset($lang_dir)) print $lang_dir; else print 'ltr' ?>">
   <div id="pagemeta" class="pane pagemeta">
     <div class="container">
-      <?php if (isset($content)) print render($content); ?>
+      <?php if (isset($content)) print render($content) ?>
     </div>
   </div>
   <div id="display" class="pane display">
@@ -32,4 +32,4 @@
   <div dir="<?php if (isset($read_order)) print $read_order; else print 'ltr' ?>" id="pager" class="pane pager">
     <?php if (isset($slider)) : print $slider; endif; ?>
   </div>
-<?php endif; ?>
+<?php endif ?>

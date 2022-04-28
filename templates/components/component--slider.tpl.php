@@ -1,16 +1,5 @@
-<span 
-  id="<?php print $id ?>" 
-  aria-hidden="true">
-    <input 
-      id="range_weight"
-      type="range" 
-      min="<?php print $min ?>" 
-      max="<?php print $max ?>" 
-      value="<?php print $sequence ?>" 
-      class="slider" 
-      style="width: 90%; vertical-align: middle;"
-      oninput="slider_value.value = range_weight.value"
-    >
+<span id="<?php print $id ?>" aria-hidden="true">
+  <input id="range_weight" type="range" min="<?php print $min ?>" max="<?php print $max ?>" value="<?php print $sequence ?>" class="slider" oninput="slider_value.value = range_weight.value">
 </span> 
 <span role="navigation">
   <form id="form-update-sequence">

@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="<?php print $resource_language_code ?>" dir="<?php print $language_dir ?>" class="<?php print $resource_language_code ?> <?php print $classes; ?>">
+<html lang="<?php print $resource_language_code ?>" dir="<?php print $language_dir ?>" class="<?php print $resource_language_code ?> <?php print $classes ?>">
 <head>
   <?php print $head ?>
   <title><?php print $head_title ?></title>
   <?php print $styles ?>
   <?php print $scripts ?>
-  <script src="googletagmanager.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <base target="content-frame">
 </head>

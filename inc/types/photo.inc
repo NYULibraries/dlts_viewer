@@ -89,10 +89,12 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   
   $collection_title = $collections[0]->label;
 
-  drupal_set_title("$collection_title: $title");
+  $page_title = "$collection_title - $title";
+
+  drupal_set_title($page_title);
  
   return theme('dlts_viewer_set', [ 
-    'title' => $title,
+    'title' => $page_title,
     'identifier' => $identifier,
     'resources' => $resources,
     'collections' => $collections,
@@ -244,7 +246,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
     'title' => $entity->title,
   ];
 
-  return theme('viewer', $viewer);  
+  return theme('viewer', $viewer);
 
 }
 

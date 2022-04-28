@@ -4,10 +4,6 @@ import { hide } from './componets/hide.mjs'
 import { show } from './componets/show.mjs'
 import { tiles }  from './componets/tile-sources.js'
 
-// import { decrease } from './componets/decrease-sequence.js'
-// import { change } from './componets/change-sequence.mjs'
-// import { toggleview } from './componets/toggleview-sequence.js'
-
 function ViewerApp(Y) {
   
   Y.OpenSeadragon = OpenSeaDragon
