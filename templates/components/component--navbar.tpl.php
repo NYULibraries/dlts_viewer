@@ -1,3 +1,4 @@
+<?php if (isset($metadata) || isset($togglepage) || isset($thumbnails)) : ?>
 <ul class="navbar navbar-left">
   <?php if (isset($metadata)) : ?>
   <li class="navbar-item">
@@ -35,6 +36,7 @@
   </li>
   <?php endif; ?>
 </ul>
+<?php endif; ?>
 <ul class="navbar navbar-middle">
   <li class="navbar-item">
     <a id="control-zoom-in" title="Zoom in" class="zoom-in">

@@ -157,23 +157,22 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
 
   if ($entity->sequence == 1) {
     $previous_page_active = FALSE;
-  }
-
-  $navbar_options = [
-    'thumbnails' => [
-      'label' => t('Select page'),
-      'type' => $is_resource,
-      'href' => "$base_url/photos/$identifier",
-      'id' => 'button-thumbnails',
-      'target' => '_self',
-      'class' => implode(' ', [
-        'thumbnails', 
-        'off',
-      ])
-    ],
-  ];    
+  } 
 
   if ($sequence_count > 1) {
+    $navbar_options = [
+      'thumbnails' => [
+        'label' => t('Select page'),
+        'type' => $is_resource,
+        'href' => "$base_url/photos/$identifier",
+        'id' => 'button-thumbnails',
+        'target' => '_self',
+        'class' => implode(' ', [
+          'thumbnails', 
+          'off',
+        ])
+      ],
+    ];
     $navbar_options['previous'] = [
       'id' => 'previous-page',
       'label' => t('Go to previous page'),
