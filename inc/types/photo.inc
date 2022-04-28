@@ -28,9 +28,6 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   // Test if resource, will return the maped type of resource (e.g., books, photos).
   $is_resource = dlts_viewer_is_resource();
 
-  // Check request type.
-  $is_pjax = dlts_viewer_is_pjax();  
-
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
@@ -122,9 +119,6 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
 
   // Test if resource, will return the maped type of resource (e.g., books, photos).
   $is_resource = dlts_viewer_is_resource();
-
-  // Check request type.
-  $is_pjax = dlts_viewer_is_pjax();
 
   // Wrapp book entity with Entity API wrapper.
   $set_wrapper = entity_metadata_wrapper('node', $entity);

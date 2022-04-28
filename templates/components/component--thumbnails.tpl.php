@@ -9,7 +9,7 @@
       <?php foreach ($items as $thumbnail) : ?>
         <div class="<?php if ($thumbnail['sequence'] == $sequence) { echo 'current-page '; } ?>views-row" data-uri="<?php print $thumbnail['cm']['uri'] ?>" data-sequence="<?php print $thumbnail['sequence'] ?>" data-width="<?php print $thumbnail['cm']['width'] ?>" data-height="<?php print $thumbnail['cm']['height'] ?>">
           <div class="thumbHolder">
-            <a href="<?php print $thumbnail['url'] ?>">
+            <a target="_self" href="<?php print $thumbnail['url'] ?>">
               <img class="thumbItem"  src="<?php print $thumbnail['imageServeURI'] ?>"  />
               <img class="thumbItemloader" src="<?php print $placeholder ?>" height="230" width="166">
               <img class="thumbItembg"  src="<?php print $placeholder ?>" height="230" width="166">
