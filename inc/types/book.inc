@@ -417,6 +417,8 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
     ); 
   }
 
+  $entity->count = $sequence_count;
+
   // Types of returns.
   switch ($display_type) {
     case 'book_page':

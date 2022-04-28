@@ -1,5 +1,4 @@
 import OpenSeaDragon from 'openseadragon'
-import axios from 'axios'
 import { seqmap } from './componets/seqmap.mjs'
 import { hide } from './componets/hide.mjs'
 import { show } from './componets/show.mjs'

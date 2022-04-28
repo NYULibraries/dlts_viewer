@@ -1,5 +1,5 @@
 import OpenSeaDragon from 'openseadragon'
-import axios from 'axios'
+import { get } from 'axios'
 import { seqmap } from './componets/seqmap.mjs'
 import { hide } from './componets/hide.mjs'
 import { show } from './componets/show.mjs'
@@ -12,8 +12,6 @@ import { toggleview } from './componets/toggleview-sequence.js'
 
 function ViewerApp(Y) {
   
-  console.log('ViewerApp')
-
   Y.OpenSeadragon = OpenSeaDragon
 
   Y.Viewer = null
@@ -315,7 +313,7 @@ function ViewerApp(Y) {
     })
 
     if (parseInt(state, 10) === 0) {
-      axios.get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
+      get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
         if (response.status === 200) {
           const parser = new DOMParser()
           const doc = parser.parseFromString(response.data, 'text/html')
@@ -390,16 +388,18 @@ function ViewerApp(Y) {
       previous: document.querySelectorAll('.paging.previous')
     }
 
-    const { sequenceCount } = Y.nodes.osd.dataset
+    const { sequence, sequenceCount } = Y.nodes.osd.dataset
 
     const params = new URLSearchParams(window.location.search)
+
+    console.log(sequence)
 
     const view = params.get('view')
 
     let req_sequence = params.get('sequence')
 
     if (!req_sequence) {
-      req_sequence = 1
+      req_sequence = sequence
     }
 
     Y.seqmap = await seqmap({ count: sequenceCount, view })
@@ -595,7 +595,7 @@ function ViewerApp(Y) {
     // Language
     delegate('body', 'change', '.lang-options select', event => {
       const current_target = event.target
-      axios.get(current_target.value).then(response => {
+      get(current_target.value).then(response => {
         if (response.status === 200) {
           const parser = new DOMParser()
           const doc = parser.parseFromString(response.data, 'text/html')
