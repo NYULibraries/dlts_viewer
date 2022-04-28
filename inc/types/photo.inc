@@ -158,7 +158,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
   if ($entity->sequence == 1) {
     $previous_page_active = FALSE;
   } 
-
+  $navbar_options = [];
   if ($sequence_count > 1) {
     $navbar_options = [
       'thumbnails' => [
