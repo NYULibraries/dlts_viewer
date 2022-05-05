@@ -102,11 +102,16 @@ function dlts_viewer_full_book_view($entity) {
 
   $module_path = drupal_get_path('module', 'dlts_viewer');
 
-  drupal_add_css($module_path . '/dist/viewer.css', [
-    'group' => CSS_DEFAULT, 
-    'every_page' => TRUE,
+  $inline = file_get_contents(DRUPAL_ROOT . '/' . $module_path . '/dist/viewer.css');
+
+  drupal_add_css($inline, [ 'type' => 'inline', 'group' => CSS_THEME, 'every_page' => FALSE, ]);
+
+  // JS_LIBRARY
+  drupal_add_js('sites/all/libraries/openseadragon/openseadragon.min.js', [
+    'type' => 'file',
+    'scope' => 'footer',
   ]);
-  
+
   drupal_add_js($module_path . '/dist/polyfill.bundle.js', [
     'type' => 'file', 
     'scope' => 'footer',
@@ -116,7 +121,6 @@ function dlts_viewer_full_book_view($entity) {
     'type' => 'file', 
     'scope' => 'footer',
   ]);
-
 
   return node_view($entity, 'metadata', $entity->language);
 

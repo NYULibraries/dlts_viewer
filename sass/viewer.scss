@@ -2,7 +2,6 @@
 @import "libraries/compass-mixins/lib/compass/typography";
 @import "libraries/compass-mixins/lib/compass/css3";
 @import "libraries/compass-animate/_animations";
-@import "libraries/scss-blend-modes/_blend-mode";
 @import "partials/book/defaults/_variables";
 @import "partials/book/defaults/_mixins";
 @import "partials/themeable/_variables";
@@ -30,9 +29,20 @@
   }
 }
 
+.en {
+  #pager {
+    padding-left: 1em;
+    padding-right: initial;
+  }  
+}
+
 .ar {
   .navbar-pager-left {
     float: right !important
+  }
+  #pager {
+    padding-left: initial;
+    padding-right: 1em;
   }
 }
 

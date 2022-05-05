@@ -48,7 +48,6 @@
   margin: 3px 3px 0 0;
   padding: 20px;
   overflow: auto;
-
   .thumbHolder {
     padding: 10px;
     a {
@@ -63,7 +62,7 @@
     display: none;
   }
   .photoset-thumbs {
-  justify-content: center;
+    justify-content: center;
     .thumbHolder {
       flex: 0 1 45%;
       img {

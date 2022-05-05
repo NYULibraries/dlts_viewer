@@ -4,7 +4,7 @@
 <div role="main" id="main" class="pane main" dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>">
   <div id="pagemeta" class="pane pagemeta <?php echo ($pane_metadata_hidden) ? 'hidden' : '' ?>">
     <div class="container">
-      <<?php print $ds_content_wrapper; print $layout_attributes; ?> class="<?php print $classes;?> " dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" data-dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" data-lang="<?php print isset($lang_language) ? $lang_language : "und" ?>">
+      <<?php print $ds_content_wrapper; print $layout_attributes; ?> class="<?php print $classes ?> " dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" data-dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" data-lang="<?php print isset($lang_language) ? $lang_language : "und" ?>">
       <?php if (isset($lang_options)) : ?>
         <div class="metapane-dropdowns">
           <div class="lang-options"><?php print locale('Available languages', NULL, $lang_language) ?>: <?php print render($lang_options) ; ?></div>
@@ -40,12 +40,14 @@
       <span id="squaresWaveG_7" class="squaresWaveG"></span>
       <span id="squaresWaveG_8" class="squaresWaveG"></span>
     </div>
-    <p><?php print t('Loading Page') ?> <span class="current_page"><?php print $sequence; ?></span> of <span class="sequence_count"><?php print $count; ?></span></p>
+    <p><?php print t('Loading Page') ?> <span class="current_page"><?php print $sequence ?></span> of <span class="sequence_count"><?php print (isset($count) ? $count : 0 ) ?></span></p>
   </div>
 </div>
 
 <?php if (isset($read_order)) : ?>
-<div id="pager" class="pane pager" dir="<?php print $read_order; ?>">
-  <?php if (isset($slider)) : print $slider ; endif ; ?>
+<div id="pager" class="pane pager" dir="<?php print $read_order ?>">
+  <?php if (isset($slider)) : ?>
+    <?php print $slider ?>
+  <?php endif ?>
 </div>
-<?php endif; ?>
+<?php endif ?>

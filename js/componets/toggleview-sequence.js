@@ -2,6 +2,8 @@ import { seqmap } from './seqmap.mjs'
 
 async function toggleview(props, _seqmap) {
 
+  console.log('toggleview', props, _seqmap)
+
   if (props.dataset.view == 'single') {
     props.dataset.view = 'doublepage'
   } else {
@@ -9,8 +11,6 @@ async function toggleview(props, _seqmap) {
   }
 
   const sequence_current = _seqmap.sequences[Number(props.dataset.sequence) - 1].find(e => true)
-
-  console.log('toggleview', sequence_current)
 
   const count = props.dataset.sequenceCount
 

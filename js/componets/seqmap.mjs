@@ -27,6 +27,7 @@ async function doublepage(props) {
 }
 
 async function seqmap(props) {
+  console.log('called : function : seqmap : props', props)
   const { count, view } = props
   switch (view) {
     case 'doublepage':

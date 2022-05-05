@@ -1,6 +1,8 @@
 @include bv-font-face($icon-font-name, $icon-font-woff, $icon-font-ttf, $inline-fonts, $font-weight, $font-style, $icon-font-eot);
 
-html {
+html.page-books,
+html.page-photos,
+html.page-maps {
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -23,9 +25,12 @@ html {
   }
 }
 
-/** Global elements */
-
-.element-invisible, .hidden {
+//
+// Always hide an element when it has the `hidden` HTML attribute.
+//
+.element-invisible, 
+.hidden,
+[hidden] {
   display: none;
   visibility: hidden;
 }

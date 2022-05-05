@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="es" dir="ltr" class="html not-front not-logged-in no-sidebars page-books page-books-tamwag-palante000011 page-books-tamwag-palante000011- page-books-tamwag-palante000011-1 not_mobile i18n-en tao">
+<html lang="it" dir="ltr" class="it html not-front not-logged-in no-sidebars page-books page-books-ifa-frdl-book000067 page-books-ifa-frdl-book000067- page-books-ifa-frdl-book000067-1 not_mobile i18n-en tao">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <link rel="shortcut icon" href="./favicon.ico" type="image/vnd.microsoft.icon" />
-  <title>Palante, September 25, 1970</title>
-  <style type="text/css" media="all">
-    @import url("./main.css");
-  </style>
+  <meta name="Generator" content="Drupal 7 (http://drupal.org)" />
+  <link rel="shortcut icon" href="http://192.168.0.18:9000/misc/favicon.ico" type="image/vnd.microsoft.icon" />
+  <title>Trattato della pittura</title>
+  <style type="text/css" media="all">@import url("./viewer.css");</style>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <base target="content-frame">
 </head>
@@ -15,98 +14,85 @@
     <div id="navbar" class="pane navbar" role="navigation">
       <ul class="navbar navbar-left">
         <li class="navbar-item">
-          <a 
-            href="#metadata"
-            title="Show/hide metadata" 
-            class="button metadata on" 
-            data-operation="togglemetadata"
-            id="button-metadata">
+          <a href="#metadata" title="Show/hide metadata"  class="button metadata on" data-operation="togglemetadata" id="button-metadata">
             <span>Show/hide metadata</span>
           </a>
         </li>
         <li class="navbar-item">
+          <a id="toggle-page" title="Toggle between single or double page"  href="#toggle-view" data-operation="toggleview" class="toggle active page-double">
+            <span>Toggle between single or double page</span>
+          </a>
+        </li>
+        <li class="navbar-item">
+          <a href="#thumbnails" title="Select page" class="button thumbnails off" id="button-thumbnails">
+            <span>Select page</span>
+          </a>
+        </li>
+      </ul>
+      <ul class="navbar navbar-middle">
+        <li class="navbar-item">
+          <a id="control-zoom-in" title="Zoom in" class="zoom-in">
+            <span>Zoom in</span>
+          </a>
+        </li>
+        <li class="navbar-item">
+          <a id="control-zoom-out" title="Zoom out" class="zoom-out">
+            <span>Zoom out</span>
+          </a>
+        </li>
+        <li class="navbar-item">
+          <a id="control-rotate" title="Rotate image" class="rotate">
+            <span>Rotate</span>
+          </a>
+        </li>
+      </ul>
+      <ul class="navbar navbar-arrows">
+        <li class="navbar-item navbar-pager-left">
           <a 
-          id="toggle-page"
-          title="Toggle between single or double page" 
-          href="#toggle-view"
-          data-operation="toggleview"
-          class="toggle active page-double">
-          <span>Toggle between single or double page</span>
+            title="Go to previous page" 
+            href="#previous"
+            class="paging previous ltr pager-left inactive"
+            data-type="books" 
+            data-identifier="ifa_frdl_book000067" 
+            data-sequence="1" 
+            data-sequence-count="260" 
+            data-operation="decrease">
+            <span>Go to previous page</span>
+          </a>
+        </li>
+        <li class="navbar-item navbar-pager-right">
+          <a 
+            title="Go to next page" 
+            href="#next" 
+            class="paging next ltr pager-right active" 
+            data-type="books" 
+            data-identifier="ifa_frdl_book000067" 
+            data-sequence="1" 
+            data-sequence-count="260" 
+            data-operation="increase">
+          <span>Go to next page</span>
         </a>
       </li>
+      </ul>
+      <ul class="navbar-fullscreen">
       <li class="navbar-item">
         <a 
-          href="#thumbnails" 
-          title="Select page" 
-          class="button thumbnails off" 
-          id="button-thumbnails">
-          <span>Select page</span>
+          href="#fullscreen" 
+          title="Toggle fullscreen" 
+          class="button fullscreen off" 
+          id="button-fullscreen"
+          tabindex="-1"
+        >
+          <span>Toggle fullscreen</span>
         </a>
       </li>
-    </ul>
-    <ul class="navbar navbar-middle">
-      <li class="navbar-item">
-        <a id="control-zoom-in" title="Zoom in" class="zoom-in">
-          <span>Zoom in</span>
-        </a>
-      </li>
-      <li class="navbar-item">
-        <a id="control-zoom-out" title="Zoom out" class="zoom-out">
-          <span>Zoom out</span>
-        </a>
-      </li>
-      <li class="navbar-item">
-        <a id="control-rotate" title="Rotate image" class="rotate">
-          <span>Rotate</span>
-        </a>
-      </li>
-    </ul>
-    <ul class="navbar navbar-arrows">
-      <li class="navbar-item navbar-pager-left">
-        <a 
-          title="Go to previous page" 
-          href="#previous"
-          class="paging previous pager-left inactive"
-          data-type="books" 
-          data-identifier="tamwag_palante000011" 
-          data-sequence="1" 
-          data-sequence-count="20" 
-          data-operation="decrease">
-        <span>Go to previous page</span>
-      </a>
-    </li>
-    <li class="navbar-item navbar-pager-right">
-      <a 
-        title="Go to next page" 
-        href="#next" 
-        class="paging next pager-right active" 
-        data-type="books" 
-        data-identifier="tamwag_palante000011" 
-        data-sequence="1" 
-        data-sequence-count="20" 
-        data-operation="increase">
-        <span>Go to next page</span>
-      </a>
-    </li>
-  </ul>
-  <ul class="navbar-fullscreen">
-    <li class="navbar-item">
-      <a 
-        href="#fullscreen" 
-        title="Toggle fullscreen" 
-        class="button fullscreen off" 
-        id="button-fullscreen">
-        <span>Toggle fullscreen</span>
-      </a>
-    </li>
-  </ul>
-</div>
-<div role="main" id="main" class="pane main" dir="ltr">
-  <div id="pagemeta" class="pane pagemeta ">
-    <div class="container">
-      <div  id="node-32268" class="node node-dlts-book clearfix clearfix view-mode-metadata " dir="ltr" data-dir="ltr" data-lang="en">
-        <div dir="ltr" class="field field-name-title field-type-ds field-label-hidden"><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even"><h2>Palante, September 25, 1970</h2></div></div></div><div dir="ltr" class="field field-name-field-pdf clearfix"><div dir="ltr" class="field-label">Download:</div><div class="pdf-items" dir="ltr"><div class="pdf-item" dir="ltr">
-      <a data-filesize="43261851" href="http://devmc.dlib.nyu.edu/files/books/tamwag_palante000011/tamwag_palante000011_hi.pdf" class="field field-fileserver field-fileserver-link even"><span class="icon" aria-hidden="true" role="presentation">
+      </ul>
+    </div>
+    <div role="main" id="main" class="pane main" dir="ltr">
+      <aside id="pagemeta" class="pane pagemeta">
+        <div id="node-735" class="container node node-dlts-book clearfix clearfix view-mode-metadata" dir="ltr" data-dir="ltr" data-lang="en">
+        <div dir="ltr" class="field field-name-title field-type-ds field-label-hidden"><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even"><h2>Trattato della pittura</h2></div></div></div><div dir="ltr" class="field field-name-field-subtitle field-type-text field-label-hidden"><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">fondato nell&#039;auttorità di molti eccellenti in questa professione</div></div></div><div dir="ltr" class="field field-name-field-pdf clearfix"><div dir="ltr" class="field-label">Download:</div><div class="pdf-items" dir="ltr"><div class="pdf-item" dir="ltr">
+        <a data-filesize="67057341" href="http://mc.dlib.nyu.edu/files/books/ifa_frdl_book000067/ifa_frdl_book000067_hi.pdf" class="field field-fileserver field-fileserver-link even"><span class="icon" aria-hidden="true" role="presentation">
             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" fill="#9f2226" width="14" height="17" viewBox="0 0 30 40" style="enable-background:new 0 0 30 40;" xml:space="preserve">
             <path d="M14.2,20c-0.4-1.2-0.4-3.7-0.2-3.7C14.7,16.3,14.6,19.2,14.2,20z M14.1,23.7c-0.6,1.6-1.4,3.4-2.2,4.9
                 c1.4-0.5,3-1.3,4.9-1.7C15.8,26.1,14.8,25.1,14.1,23.7L14.1,23.7z M6.7,33.4c0,0.1,1-0.4,2.7-3.1C8.9,30.8,7.2,32.2,6.7,33.4z
@@ -115,8 +101,8 @@
                 c0,0,0,0,0,0c-2.1,1.1-5.7,3.5-4.3,5.3C5.8,34.8,6.6,35,7,35c1.4,0,2.8-1.4,4.8-4.8c2-0.7,4.2-1.5,6.2-1.8c1.7,0.9,3.7,1.5,5,1.5
                 c2.3,0,2.4-2.5,1.5-3.4C23.4,25.4,20.3,25.7,18.8,25.9z M29.5,8.2l-7.7-7.7C21.4,0.2,21,0,20.5,0H20v10h10V9.5
                 C30,9,29.8,8.6,29.5,8.2z M23.7,28.1c0.3-0.2-0.2-0.9-3.3-0.7C23.2,28.7,23.7,28.1,23.7,28.1z"></path>
-            </svg></span>High-resolution PDF <span class="filesize">43.26 MB</span>  <span class="is-searchable" dir="ltr">(searchable)</span></a></div></div><div class="pdf-items" dir="ltr"><div class="pdf-item" dir="ltr">
-      <a data-filesize="10712644" href="http://devmc.dlib.nyu.edu/files/books/tamwag_palante000011/tamwag_palante000011_lo.pdf" class="field field-fileserver field-fileserver-link odd"><span class="icon" aria-hidden="true" role="presentation">
+            </svg></span>High resolution PDF <span class="filesize">67.06 MB</span></a></div></div><div class="pdf-items" dir="ltr"><div class="pdf-item" dir="ltr">
+      <a data-filesize="13930169" href="http://mc.dlib.nyu.edu/files/books/ifa_frdl_book000067/ifa_frdl_book000067_lo.pdf" class="field field-fileserver field-fileserver-link odd"><span class="icon" aria-hidden="true" role="presentation">
             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" fill="#9f2226" width="14" height="17" viewBox="0 0 30 40" style="enable-background:new 0 0 30 40;" xml:space="preserve">
             <path d="M14.2,20c-0.4-1.2-0.4-3.7-0.2-3.7C14.7,16.3,14.6,19.2,14.2,20z M14.1,23.7c-0.6,1.6-1.4,3.4-2.2,4.9
                 c1.4-0.5,3-1.3,4.9-1.7C15.8,26.1,14.8,25.1,14.1,23.7L14.1,23.7z M6.7,33.4c0,0.1,1-0.4,2.7-3.1C8.9,30.8,7.2,32.2,6.7,33.4z
@@ -125,78 +111,56 @@
                 c0,0,0,0,0,0c-2.1,1.1-5.7,3.5-4.3,5.3C5.8,34.8,6.6,35,7,35c1.4,0,2.8-1.4,4.8-4.8c2-0.7,4.2-1.5,6.2-1.8c1.7,0.9,3.7,1.5,5,1.5
                 c2.3,0,2.4-2.5,1.5-3.4C23.4,25.4,20.3,25.7,18.8,25.9z M29.5,8.2l-7.7-7.7C21.4,0.2,21,0,20.5,0H20v10h10V9.5
                 C30,9,29.8,8.6,29.5,8.2z M23.7,28.1c0.3-0.2-0.2-0.9-3.3-0.7C23.2,28.7,23.7,28.1,23.7,28.1z"></path>
-            </svg></span>Low-resolution PDF <span class="filesize">10.71 MB</span>  <span class="is-searchable" dir="ltr">(searchable)</span></a></div></div></div><div dir="ltr" class="field field-name-field-publication-location field-type-text field-label-inline clearfix"><div dir="ltr" class="field-label">Place of Publication:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">Bronx, N.Y.</div></div></div><div dir="ltr" class="field field-name-field-publisher field-type-text field-label-inline clearfix"><div dir="ltr" class="field-label">Publisher:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">Organización Obrera Revolucionaria Puertorriqueña.</div></div></div><div dir="ltr" class="field field-name-field-publication-date-text field-type-text field-label-inline clearfix"><div dir="ltr" class="field-label">Date of Publication:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">September 25, 1970</div></div></div><div dir="ltr" class="field field-name-field-volume field-type-text field-label-inline clearfix"><div dir="ltr" class="field-label">Volume:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">2</div></div></div><div dir="ltr" class="field field-name-field-number field-type-text field-label-inline clearfix"><div dir="ltr" class="field-label">Number:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">12</div></div></div><div dir="ltr" class="field field-name-field-subject field-type-taxonomy-term-reference field-label-inline clearfix"><div dir="ltr" class="field-label">Subject:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">Puerto Ricans -- United States -- Periodicals</div></div></div><div dir="ltr" class="field field-name-field-call-number field-type-text field-label-above"><div dir="ltr" class="field-label">Call Number:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">E184.P85 P35</div></div></div><div dir="ltr" class="field field-name-field-collection field-type-node-reference field-label-above"><div dir="ltr" class="field-label">Collection:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">Palante</div></div></div><div dir="ltr" class="field field-name-field-language field-type-text field-label-above"><div dir="ltr" class="field-label">Language:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">Spanish</div><div dir="ltr" class="field-item odd">English</div></div></div><div dir="ltr" class="field field-name-field-partner field-type-node-reference field-label-above"><div dir="ltr" class="field-label">Provider:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">The Tamiment Library and Robert F. Wagner Labor Archives</div></div></div><div dir="ltr" class="field field-name-field-handle field-type-link-field field-label-inline clearfix"><div dir="ltr" class="field-label">Permanent Link:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">http://hdl.handle.net/2333.1/djh9w6rb</div></div></div><div dir="ltr" class="field field-name-field-rights field-type-text-long field-label-hidden"><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">The material on this site may be covered under copyright law. We    are making such material available on a noncommercial basis for    research and educational purposes. If you wish to use copyrighted    material from this site for purposes beyond those in accordance with    fair use or other relevant copyright exceptions, you must obtain    permission from the copyright owner.    We respect the intellectual property rights of others. If you    believe that you own the copyright to material made available on this    site, please contact us and we will address your concerns. Please    refer to NYU&#039;s Copyright and Fair Use page, with contact information, at    http://www.nyu.edu/footer/copyright-and-fair-use.html.</div></div></div>      </div>
-          </div>
-  </div>
-  <div 
-    role="presentation" 
-    aria-hidden="true" 
-    id="display" 
-    class="pane display"
-  >
-    <div
-      id='openseadragon1'
-      class='dlts_image_map dlts_viewer_map'
-      data-type='books'
-      data-identifier='tamwag_palante000011'
-      data-sequence='1'
-      data-sequence-count='20'
-      data-view='single'
-      data-manifest='http://192.168.0.22/projects/viewer/api/image/books/tamwag_palante000011/1/info.json'
-      data-service='https://stage-sites.dlib.nyu.edu/viewer/api/image'
-      data-uri='http://192.168.0.22/projects/viewer/books/tamwag_palante000011'
-    ></div>
-   <div
-      id="thumbnails" 
-      role="presentation"
-      class="views-g pane thumbnails" 
-      style="display: none; visibility: hidden;"
-      data-state="0"
-      aria-hidden="true" 
-      hidden="true">
+            </svg></span>Low resolution PDF <span class="filesize">13.93 MB</span></a></div></div></div><div dir="ltr" class="field field-name-field-author field-type-text field-label-inline clearfix"><div dir="ltr" class="field-label">Author/Contributor:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">Bisagno, Francesco Domenico.</div></div></div><div dir="ltr" class="field field-name-field-publication-location field-type-text field-label-inline clearfix"><div dir="ltr" class="field-label">Place of Publication:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">In Venetia</div></div></div><div dir="ltr" class="field field-name-field-publisher field-type-text field-label-inline clearfix"><div dir="ltr" class="field-label">Publisher:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">per li Giunti</div></div></div><div dir="ltr" class="field field-name-field-publication-date-text field-type-text field-label-inline clearfix"><div dir="ltr" class="field-label">Date of Publication:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">1642</div></div></div><div dir="ltr" class="field field-name-field-subject field-type-taxonomy-term-reference field-label-inline clearfix"><div dir="ltr" class="field-label">Subject:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">Painting -- Early works to 1800</div></div></div><div dir="ltr" class="field field-name-field-call-number field-type-text field-label-above"><div dir="ltr" class="field-label">Call Number:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">ND1130 .B57 1642</div></div></div><div dir="ltr" class="field field-name-field-language field-type-text field-label-above"><div dir="ltr" class="field-label">Language:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">Italian</div></div></div><div dir="ltr" class="field field-name-field-handle field-type-link-field field-label-inline clearfix"><div dir="ltr" class="field-label">Permanent Link:&nbsp;</div><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">http://hdl.handle.net/2333.1/8kprr6n5</div></div></div><div dir="ltr" class="field field-name-field-rights field-type-text-long field-label-hidden"><div dir="ltr" class="field-items"><div dir="ltr" class="field-item even">New York University has determined to the best of its ability that all      works presented as part of the Friedlaender Collection are in the      public domain. The images available on this website may be freely      reproduced, distributed and transmitted by anyone for any purpose,      commercial or non-commercial. We respect the intellectual property      rights of others. If you believe that you own the copyright to      material made available on this site, please contact us and we will      address your concerns. Please refer to NYU&#039;s Copyright and Fair Use      page, with contact information, at      http://www.nyu.edu/footer/copyright-and-fair-use.html.</div></div></div>
+        </div>
+      </aside>
+      <div role="presentation" aria-hidden="true" id="display" class="pane display">
+        <div
+          id='openseadragon1'
+          class='dlts_image_map dlts_viewer_map'
+          data-type='books'
+          data-identifier='ifa_frdl_book000067'
+          data-sequence='1'
+          data-sequence-count='260'
+          data-view='single'
+          data-manifest='http://192.168.0.18:9000/api/image/books/ifa_frdl_book000067/1/info.json'
+          data-service='https://stage-sites.dlib.nyu.edu/viewer/api/image'
+          data-uri='http://192.168.0.18:9000/books/ifa_frdl_book000067'
+        ></div>
+        <div
+          id="thumbnails" 
+          role="presentation"
+          class="views-g pane thumbnails" 
+          style="display: none; visibility: hidden;"
+          data-state="0"
+          aria-hidden="true" 
+          hidden="true">
+        </div>
+      </div>
+      <div class="pane load loading" role="presentation" aria-hidden="true">
+        <div id="squaresWaveG">
+          <span id="squaresWaveG_1" class="squaresWaveG"></span>
+          <span id="squaresWaveG_2" class="squaresWaveG"></span>
+          <span id="squaresWaveG_3" class="squaresWaveG"></span>
+          <span id="squaresWaveG_4" class="squaresWaveG"></span>
+          <span id="squaresWaveG_5" class="squaresWaveG"></span>
+          <span id="squaresWaveG_6" class="squaresWaveG"></span>
+          <span id="squaresWaveG_7" class="squaresWaveG"></span>
+          <span id="squaresWaveG_8" class="squaresWaveG"></span>
+        </div>
+        <p>Loading Page <span class="current_page">1</span> of <span class="sequence_count">260</span></p>
+      </div>
+    </div>
+    <div id="pager" class="pane pager" dir="ltr">
+      <form id="form-update-sequence" role="navigation">
+        <input id="range_weight" type="range" min="1" max="260" value="1" class="slider" oninput="slider_value.value = range_weight.value">
+        <input id="slider_value" value="1" aria-label="Page to jump to">
+      </form>
+      <span>/</span> 
+      <span class="sequence_count">260</span>
     </div>
   </div>
-  <div class="pane load loading" role="presentation" aria-hidden="true">
-    <div id="squaresWaveG">
-      <span id="squaresWaveG_1" class="squaresWaveG"></span>
-      <span id="squaresWaveG_2" class="squaresWaveG"></span>
-      <span id="squaresWaveG_3" class="squaresWaveG"></span>
-      <span id="squaresWaveG_4" class="squaresWaveG"></span>
-      <span id="squaresWaveG_5" class="squaresWaveG"></span>
-      <span id="squaresWaveG_6" class="squaresWaveG"></span>
-      <span id="squaresWaveG_7" class="squaresWaveG"></span>
-      <span id="squaresWaveG_8" class="squaresWaveG"></span>
-    </div>
-    <p>Loading Page <span class="current_page">1</span></p>
-  </div>
-</div>
-<div id="pager" class="pane pager" dir="ltr">
-  <span 
-  id="1" 
-  aria-hidden="true">
-    <input 
-      id="range_weight"
-      type="range" 
-      min="1" 
-      max="20" 
-      value="1" 
-      class="slider" 
-      style="width: 90%; vertical-align: middle;"
-      oninput="slider_value.value = range_weight.value"
-    >
-</span> 
-<span role="navigation">
-  <form>
-    <input 
-      id="slider_value" 
-      value="1" 
-      aria-label="Page to jump to">
-    </form> 
-    <span>/</span> 
-    <span class="sequence_count">20</span>
-</span>
-</div>
-  </div>
-  <script type="text/javascript" src="./bundle.js"></script>
+  <script type="text/javascript" src="./polyfill.bundle.js"></script>
+  <script type="text/javascript" src="./books.bundle.js"></script>
 </body>
 </html>

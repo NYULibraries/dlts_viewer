@@ -30,7 +30,7 @@
 
 // Create Link colors
 @mixin set-link-colors($link-color, $mode: saturation default, $amount-1: 10%, $amount-2: -20%) {
-  
+
   $link-color-over: adjust-saturation($link-color, $amount-1);
   $link-color-visited: adjust-saturation($link-color, $amount-2);
   
