@@ -1,54 +1,63 @@
-import { get } from 'axios'
-import { seqmap } from './componets/seqmap.mjs'
-import { hide } from './componets/hide.mjs'
-import { show } from './componets/show.mjs'
-import { delegate } from './componets/delegate.mjs'
-import { decrease } from './componets/decrease-sequence.js'
-import { increase } from './componets/increase-sequence.js'
-import { change } from './componets/change-sequence.mjs'
-import { tiles }  from './componets/tile-sources.js'
-import { toggleview } from './componets/toggleview-sequence.js'
-
 async function ViewerApp(Y) {
-
-  window.top.postMessage(JSON.stringify({ fire: 'viewer:init', message: {} }), '*')
 
   Y.Viewer = null
 
   Y.isFullyLoaded = false
 
-  Y.seqmap = []
+  Y.seqmap = {}
 
-  function on_button_click(e) {
-    e.preventDefault();
-    const current_target = e.currentTarget
-    let event_prefix, event_id
-    /** don't waste time if the button is inactive */
-    if (current_target.classList.contains('inactive')) return
-    /** current target is the main target */
-    else {
-      event_id = current_target.id
-      event_prefix = 'button:' + event_id
+  Y.nodes = {}
+
+  Y.nodes.body = document.querySelector('body')
+
+  Y.nodes.thumbnails = document.querySelector('#thumbnails')
+
+  Y.nodes.buttonMetadata = document.querySelector('#button-metadata')
+
+  Y.nodes.rotate = document.querySelector('#control-rotate')
+
+  Y.nodes.pagemeta = document.querySelector('#pagemeta')
+
+  Y.nodes.osd = document.querySelector('#openseadragon1')
+
+  Y.nodes.display = document.getElementById('#display')
+
+  Y.nodes.togglePage = document.getElementById('toggle-page')
+
+  Y.nodes.controlZoomOut = document.getElementById('control-zoom-out')
+
+  Y.nodes.controlZoomIn = document.getElementById('control-zoom-in')
+
+  Y.nodes.toggleLanguage = document.querySelector('body .language')
+
+  Y.nodes.slider = document.querySelector('#range_weight')
+
+  Y.nodes.slider_value = document.querySelector('#slider_value')
+
+  Y.nodes.next = document.querySelectorAll('.paging.next')
+
+  Y.nodes.previous = document.querySelectorAll('.paging.previous')
+
+  const { 
+    view, 
+    sequence, 
+    sequenceCount, 
+    current 
+  } = Y.nodes.osd.dataset
+
+  Y.count = Number(sequenceCount)
+
+  function postMessage(fire, message) {
+    window.top.postMessage(JSON.stringify({ fire, message }), '*')
+  }
+
+  function toggleview(props) {
+    const { view } = props.dataset
+    if (view == 'single') {
+      props.dataset.view = 'doublepage'
+    } else if (view == 'doublepage') {
+      props.dataset.view = 'single'
     }
-    if (current_target.classList.contains('on')) {
-      current_target.classList.remove('on')
-      current_target.classList.add('off')
-      console.log(`${event_prefix}:off`)
-      document.dispatchEvent(
-        new CustomEvent(`${event_prefix}:off`, e)
-      );
-    }
-    else {
-      current_target.classList.add('on')
-      current_target.classList.remove('off')
-      console.log(`${event_prefix}:on`)
-      document.dispatchEvent(
-        new CustomEvent(`${event_prefix}:on`, e)
-      )
-    }
-    document.dispatchEvent(
-      new CustomEvent(`${event_prefix}:toggle`, e)
-    )
   }
 
   function on_paging_click(e) {
@@ -92,7 +101,7 @@ async function ViewerApp(Y) {
     if (top) {
       button.classList.add('hidden')
     }
-    window.top.postMessage(JSON.stringify({ fire: 'button:button-fullscreen:on', message: {} }), '*')
+    postMessage('button:button-fullscreen:on', {})
   }
 
   function fullscreen_off() {
@@ -112,16 +121,53 @@ async function ViewerApp(Y) {
     if (top) {
       top.classList.remove('hidden')
     }
-    window.top.postMessage(JSON.stringify({ fire: 'button:button-fullscreen:off', message: {} }), '*')
+    postMessage('button:button-fullscreen:off', {})
+  }
+
+  async function seqmap(props) {
+    const { count, view, sequence } = props
+    const sequences = []
+    switch (view) {
+      case 'doublepage':
+        const seq = Math.ceil(Number(count) / 2) + 1
+        Array(seq).fill().map((_, index) => {
+          sequences.push([ index * 2, index * 2 + 1 ])
+        })
+        // Remove 0 from first index.
+        sequences[0].shift()
+        // Make sure last index does not includes outbound sequences.
+        if (sequences[sequences.length - 1][1] > count) {
+          sequences[sequences.length - 1].pop()
+        }
+        if (sequences[sequences.length - 1][0] > count) {
+          sequences.pop()
+        }
+        return {
+          sequences,
+          count,
+          view,          
+          sequence: sequences.find(value => value.includes(sequence) === true),
+        }
+      case 'single':
+        Array(Number(count)).fill().map((_, index) => {
+          sequences.push([ index + 1])
+        })
+        return {
+          sequences, 
+          count,
+          view,
+          sequence: [ sequences.find(value => Number(value) === Number(sequence)) ],
+        }
+    }
   }
 
   async function load_sequence(e) {
     try {
-      let items = []
       const osd = Y.nodes.osd
       const dataset = osd.dataset
-
-      switch (e.detail.operation) {
+      const { operation, to }  = e.detail
+      const fire = `viewer:sequence:${operation}`
+      switch (operation) {
         case 'increase':
           await increase(osd)
           break
@@ -129,47 +175,51 @@ async function ViewerApp(Y) {
           await decrease(osd)
           break
         case 'change':
-          await change(e.detail.to, osd)
+          await change(to, osd)
           break
         case 'toggleview':
-          Y.seqmap = await toggleview(osd, Y.seqmap)
+          toggleview(osd)
           break
       }
-
-      /** Configuration for the new book page */
-      const config = {
+      // Configuration for the new sequence.
+      const message = {
         id: osd.id,
-        title: osd.dataset.title,
-        sequence: osd.dataset.sequence,
-        sequenceCount: Y.seqmap.count,
-        uri: osd.dataset.uri,
+        title: dataset.title,
+        count: Y.count,
+        view: dataset.view,
+        current: Number(dataset.current),
+        sequence: Number(dataset.sequence),
+        identifier: dataset.identifier,
+        uri: `${dataset.uri}/${dataset.sequence}`,
       }
 
-     window.top.postMessage(JSON.stringify({ fire: `viewer:sequence:${e.detail.operation}`, message: config }), '*')
+      Y.seqmap = await seqmap(message)
 
-    const tileSources = await tiles(Y.seqmap, dataset)
+      postMessage({ fire, message })
 
-    Y.nodes.loadingMsg.textContent = items.join(' - ')
+      const tileSources = await tiles(Y.seqmap, dataset)
 
-    Y.nodes.next.forEach((item) => {
-      if (dataset.sequence >= Y.seqmap.count) {
-        item.classList.add('inactive')
-      } else {
-        if (item.classList.contains('inactive')) {
-          item.classList.remove('inactive')
+      document.querySelector('.current_page').textContent = Y.seqmap.sequence.join(' - ')
+
+      Y.nodes.next.forEach((item) => {
+        if (dataset.sequence >= Y.seqmap.count) {
+          item.classList.add('inactive')
+        } else {
+          if (item.classList.contains('inactive')) {
+            item.classList.remove('inactive')
+          }
         }
-      }
-    })
+      })
 
-    Y.nodes.previous.forEach((item) => {
-      if (dataset.sequence <= 1) {
-        item.classList.add('inactive')
-      } else {
-        if (item.classList.contains('inactive')) {
-          item.classList.remove('inactive')
+      Y.nodes.previous.forEach((item) => {
+        if (dataset.sequence <= 1) {
+          item.classList.add('inactive')
+        } else {
+          if (item.classList.contains('inactive')) {
+            item.classList.remove('inactive')
+          }
         }
-      }
-    })
+      })
 
       Y.nodes.togglePage.classList.add('active')
 
@@ -185,8 +235,8 @@ async function ViewerApp(Y) {
 
       Y.isFullyLoaded = true
 
-    } catch(e) {
-      console.log(e)
+    } catch (error) {
+      console.log(error)
     }
   }
 
@@ -197,15 +247,10 @@ async function ViewerApp(Y) {
     button.classList.remove('off')
     button.classList.add('on')
     element.closest('.pane-body').classList.remove('pagemeta-hidden')
-    indow.top.postMessage(
-      JSON.stringify(
-        {
-          fire: 'button:button-metadata:on' ,
-          message: {}
-        }
-      ),
-      '*'
-    )
+    postMessage({
+      fire: 'button:button-metadata:on',
+      message: {}
+    })
   }
 
   function on_button_metadata_off() {
@@ -215,15 +260,10 @@ async function ViewerApp(Y) {
     button.classList.add('off')
     element.classList.add('hidden')
     element.closest('.pane-body').classList.add('pagemeta-hidden')
-    window.top.postMessage(
-      JSON.stringify(
-        {
-          fire: 'button:button-metadata:off' ,
-          message: {}
-        }
-      ),
-      '*'
-    )
+    postMessage({
+      fire: 'button:button-metadata:off',
+      message: {}
+    })
   }
 
   function tiles_loading() {
@@ -241,15 +281,10 @@ async function ViewerApp(Y) {
     if (Y.isFullyLoaded) {
       Y.nodes.body.classList.remove('openlayers-loading')
       hide('.pane.load')
-      window.top.postMessage(
-        JSON.stringify(
-          {
-            fire: 'viewer:loaded',
-            message: {}
-          }
-        ),
-        '*'
-      )
+      postMessage({
+        fire: 'viewer:loaded',
+        message: {}
+      })
     }
   }
 
@@ -282,7 +317,7 @@ async function ViewerApp(Y) {
 
     const { sequenceCount, sequence } = osd.dataset
 
-    Y.nodes.html.classList.remove('thumbnails-view')
+    document.querySelector('html').classList.remove('thumbnails-view')
 
     hide('#thumbnails')
 
@@ -320,7 +355,7 @@ async function ViewerApp(Y) {
 
     const height = '150'
 
-    Y.nodes.html.classList.add('thumbnails-view')
+    document.querySelector('html').classList.add('thumbnails-view')
 
     Y.nodes.controlZoomOut.classList.remove('active')
     Y.nodes.controlZoomOut.classList.add('inactive')
@@ -342,7 +377,7 @@ async function ViewerApp(Y) {
     })
 
     if (parseInt(state, 10) === 0) {
-      get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
+      axios.get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
         if (response.status === 200) {
           const parser = new DOMParser()
           const doc = parser.parseFromString(response.data, 'text/html')
@@ -366,14 +401,13 @@ async function ViewerApp(Y) {
 
   function onThumbnailsClick(event) {
     event.preventDefault()
-    Y.nodes.html.classList.remove('thumbnails-view')
-    if (Y.nodes.buttonThumbnails.classList.contains('on')) {
-      Y.nodes.buttonThumbnails.classList.remove('on')
-      Y.nodes.buttonThumbnails.classList.add('off')
+    const buttonThumbnails = document.getElementById('button-thumbnails')
+    document.querySelector('html').classList.remove('thumbnails-view')
+    if (buttonThumbnails.classList.contains('on')) {
+      buttonThumbnails.classList.remove('on')
+      buttonThumbnails.classList.add('off')
     }
-
     hide('#thumbnails')
-
     document.dispatchEvent(
       new CustomEvent('load:sequence', {
         detail: {
@@ -395,53 +429,99 @@ async function ViewerApp(Y) {
     )
   }
 
-  Y.nodes = {}
-
-  Y.nodes.html = document.querySelector('html')
-
-  Y.nodes.body = document.querySelector('body')
-
-  Y.nodes.thumbnails = document.querySelector('#thumbnails')
-
-  Y.nodes.buttonMetadata = document.querySelector('#button-metadata')
-
-  Y.nodes.rotate = document.querySelector('#control-rotate')
-
-  Y.nodes.pagemeta = document.querySelector('#pagemeta')
-
-  Y.nodes.osd = document.querySelector('#openseadragon1')
-
-  Y.nodes.display = document.getElementById('#display')
-
-  Y.nodes.togglePage = document.getElementById('toggle-page')
-
-  Y.nodes.controlZoomOut = document.getElementById('control-zoom-out')
-
-  Y.nodes.controlZoomIn = document.getElementById('control-zoom-in')
-
-  Y.nodes.toggleLanguage = document.querySelector('body .language')
-
-  Y.nodes.slider = document.querySelector('#range_weight')
-
-  Y.nodes.slider_value = document.querySelector('#slider_value')
-
-  Y.nodes.loadingMsg = document.querySelector('.current_page')
-
-  Y.nodes.buttonThumbnails = document.getElementById('button-thumbnails')
-
-  Y.nodes.next = document.querySelectorAll('.paging.next')
-
-  Y.nodes.previous = document.querySelectorAll('.paging.previous')
-
-  const { view, sequence, sequenceCount } = Y.nodes.osd.dataset
-
-  const params = new URLSearchParams(window.location.search)
-
-  let req_sequence = params.get('sequence')
-
-  if (!req_sequence) {
-    req_sequence = sequence
+  async function decrease(props) {
+    const { view, identifier, type } = props.dataset
+    const to = Math.min(...Y.seqmap.sequence) - 1
+    if (to < 1) {
+      return to
+    } else {
+      props.dataset.sequence = to.toString()
+      document.querySelector('#range_weight').value = to
+      document.querySelector('#slider_value').value = to
+      window.history.pushState({ view, sequence: to, identifier, type }, '', `/${type}/${identifier}/${to}`)
+    }
   }
+
+  async function change(to, props) {
+    const { identifier, type, sequenceCount } = props.dataset
+    const sequence = Number(to)
+    const sequence_count = Number(sequenceCount)
+    if (sequence < 1) {
+      return 1
+    } else if (sequence > sequence_count) {
+      return sequence_count
+    } else {
+      props.dataset.sequence = sequence.toString()
+      document.querySelector('#range_weight').value = sequence  
+      document.querySelector('#slider_value').value = sequence
+      window.history.pushState({ view, sequence, identifier, type }, '', `/${type}/${identifier}/${sequence}`)
+    }
+  }
+
+  function delegate(selector, eventType, childSelector, eventHandler) {
+    const elements = document.querySelectorAll(selector)
+    for (let element of elements) {
+      element.addEventListener(eventType, eventOnElement => {
+        if (eventOnElement.target.matches(childSelector)) {
+          eventHandler(eventOnElement)
+        }
+      })
+    }
+  }
+
+  function hide(selector) {
+    document.querySelectorAll(selector).forEach(elm => {
+      elm.style.display = null
+      elm.style.visibility = null
+      elm.hidden = null
+      elm.height = 0
+    })
+  }
+
+  async function increase(props) {
+    const {
+      identifier, 
+      type, 
+      view, 
+      sequenceCount
+    } = props.dataset
+
+    const to = Math.max(...Y.seqmap.sequence) + 1
+    
+    if (to > Number(sequenceCount)) {
+      return sequenceCount
+    } else {
+      props.dataset.sequence = to.toString()
+      document.querySelector('#range_weight').value = to
+      document.querySelector('#slider_value').value = to
+      window.history.pushState({ view, sequence: to, identifier, type }, '', `/${type}/${identifier}/${to}`)
+    }
+  }
+
+  function show(selector) {
+    document.querySelectorAll(selector).forEach(elm => {
+      elm.style.display = null
+      elm.style.visibility = null
+      elm.hidden = null
+    })
+  }
+
+  async function tiles(seqmap, dataset) {
+    return seqmap.sequence.map((sequence, x) => {
+      return {
+        tileSource: `${dataset.service}/${dataset.type}/${dataset.identifier}/${sequence}/info.json`, x
+      }
+    })
+  }
+
+  postMessage('viewer:init', {})
+
+  postMessage('viewer:contentready', {})
+
+  // Calls tiles loading.
+  document.dispatchEvent(
+    new CustomEvent('viewer:contentready')
+  )
 
   if (view == 'doublepage') {
     if (Y.nodes.togglePage.classList.contains('page-double')) {
@@ -450,9 +530,17 @@ async function ViewerApp(Y) {
     }
   }
 
-  Y.seqmap = await seqmap({ count: sequenceCount, view })
+  Y.seqmap = await seqmap({ 
+    count: Y.count, 
+    view, 
+    sequence, 
+    current
+  })
 
-  document.querySelector('.current_page').textContent = Y.nodes.osd.dataset.sequence = Y.nodes.slider.value = Y.nodes.slider_value.value = req_sequence
+  document.querySelector('.current_page').textContent = 
+    Y.nodes.osd.dataset.sequence = 
+    Y.nodes.slider.value = 
+    Y.nodes.slider_value.value = sequence
 
   Y.nodes.slider.max = Y.seqmap.count
 
@@ -475,11 +563,6 @@ async function ViewerApp(Y) {
     sequenceMode: false,
     tileSources: tileSources,
   })
-
-  // Calls tiles loading
-  document.dispatchEvent(
-    new CustomEvent('viewer:contentready')
-  )
 
   // OpenSeadragon event.
   Y.Viewer.world.addHandler('add-item', add_item_handler)
@@ -601,12 +684,50 @@ async function ViewerApp(Y) {
   })
 
   document.querySelectorAll('a.button').forEach(item => {
-    item.addEventListener('click', on_button_click)
+    item.addEventListener('click', (event) => {
+      event.preventDefault()
+      const current_target = event.currentTarget
+      let event_prefix = `button:${current_target.id}`
+      /** don't waste time if the button is inactive */
+      if (current_target.classList.contains('inactive')) {
+        return false
+      }
+      if (current_target.classList.contains('on')) {
+        current_target.classList.remove('on')
+        current_target.classList.add('off')
+        document.dispatchEvent(
+          new CustomEvent(`${event_prefix}:off`, event)
+        )
+      }
+      else {
+        current_target.classList.add('on')
+        current_target.classList.remove('off')
+        document.dispatchEvent(
+          new CustomEvent(`${event_prefix}:on`, event)
+        )
+      }
+      document.dispatchEvent(
+        new CustomEvent(`${event_prefix}:toggle`, event)
+      )
+    })
   })
 
   Y.nodes.slider.addEventListener('change', slide_value_change)
 
   document.addEventListener('load:sequence', load_sequence)
+
+  window.addEventListener('popstate', (e) => {
+    console.log(e)
+    console.log(history.state.sequence)
+    // document.dispatchEvent(
+    //   new CustomEvent('load:sequence', {
+    //     detail: {
+    //       operation: 'change',
+    //       to: history.state.sequence,
+    //     }
+    //   })
+    // )
+  })
 
   document.addEventListener('button:button-metadata:on', on_button_metadata_on)
 
@@ -622,10 +743,10 @@ async function ViewerApp(Y) {
 
   document.addEventListener('button:button-thumbnails:off', on_hide_thumbnails_view)
 
-  // Language
+  // Language.
   delegate('body', 'change', '.lang-options select', event => {
     const current_target = event.target
-    get(current_target.value).then(response => {
+    axios.get(current_target.value).then(response => {
       if (response.status === 200) {
         const parser = new DOMParser()
         const doc = parser.parseFromString(response.data, 'text/html')
@@ -644,7 +765,7 @@ async function ViewerApp(Y) {
     })
   })
 
-  // Volume
+  // Volume.
   delegate('body', 'change', '.view-mv select', event => {
     const current_target = event.target
     const value = current_target.value
@@ -654,18 +775,13 @@ async function ViewerApp(Y) {
     if (window.self === window.top) {
       window.location.assign(url)
     } else {
-      window.top.postMessage(
-        JSON.stringify(
-          {
-            fire: 'change:option:multivolume' ,
-            message: { url }
-          }
-        ),
-        '*'
-      )
+      postMessage({
+        fire: 'change:option:multivolume',
+        message: { url }
+      })
     }
   })
 
 }
 
-ViewerApp({ OpenSeadragon: window.OpenSeadragon})
+ViewerApp({ OpenSeadragon: window.OpenSeadragon, axios })

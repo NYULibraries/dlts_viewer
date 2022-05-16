@@ -457,15 +457,16 @@ function theme_field__field_pdf_file(&$variables) {
 function theme_dlts_viewer_openseadragon_image($variables) {
   $classList = implode(' ', $variables['classList']);
   return "<div
-     id='$variables[id]'
-     class='$classList'
-     data-type='$variables[type]'
-     data-identifier='$variables[identifier]'
-     data-sequence='$variables[sequence]'
-     data-sequence-count='$variables[count]'
-     data-view='$variables[view]'
-     data-manifest='$variables[manifest]'
-     data-service='$variables[service]'
-     data-uri='$variables[uri]'
-   ></div>";
+    id='$variables[id]'
+    class='$classList'
+    data-type='$variables[type]'
+    data-identifier='$variables[identifier]'
+    data-current='$variables[sequence]'
+    data-sequence='$variables[sequence]'
+    data-sequence-count='$variables[count]'
+    data-view='$variables[view]'
+    data-manifest='$variables[manifest]'
+    data-service='$variables[service]'
+    data-uri='$variables[uri]'
+  ></div>";
 }

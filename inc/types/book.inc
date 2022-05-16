@@ -105,6 +105,24 @@ function dlts_viewer_full_book_view($entity) {
   $inline = file_get_contents(DRUPAL_ROOT . '/' . $module_path . '/dist/viewer.css');
 
   drupal_add_css($inline, [ 'type' => 'inline', 'group' => CSS_THEME, 'every_page' => FALSE, ]);
+  
+  drupal_add_js(
+    'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
+    'external',
+    array(
+      'group' => JS_LIBRARY,
+      'weight' => -101,
+    )
+  );
+
+  drupal_add_js(
+    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
+    'external',
+    array(
+      'group' => JS_LIBRARY,
+      'weight' => -101,
+    )
+  );
 
   // JS_LIBRARY
   drupal_add_js('sites/all/libraries/openseadragon/openseadragon.min.js', [
