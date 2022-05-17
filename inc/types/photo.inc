@@ -113,9 +113,27 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
 
   drupal_add_css($module_path . '/dist/viewer.css', [ 'group' => CSS_DEFAULT, 'every_page' => TRUE ]);
 
-  drupal_add_js($module_path . '/dist/polyfill.bundle.js', [ 'type' => 'file', 'scope' => 'footer' ]);
+  drupal_add_js(
+    'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
+    'external',
+    array(
+      'group' => JS_LIBRARY,
+      'weight' => -101,
+    )
+  );
 
-  drupal_add_js($module_path . '/dist/photos.bundle.js', [ 'type' => 'file', 'scope' => 'footer' ]);
+  drupal_add_js(
+    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
+    'external',
+    array(
+      'group' => JS_LIBRARY,
+      'weight' => -101,
+    )
+  );
+
+  drupal_add_js($module_path . '/dist/polyfill.bundle.js', [ 'type' => 'file', 'scope' => 'footer' ]);
+ 
+  drupal_add_js($module_path . '/dist/books.bundle.js', [ 'type' => 'file', 'scope' => 'footer' ]);
 
   // Test if resource, will return the maped type of resource (e.g., books, photos).
   $is_resource = dlts_viewer_is_resource();

@@ -124,12 +124,6 @@ function dlts_viewer_full_book_view($entity) {
     )
   );
 
-  // JS_LIBRARY
-  drupal_add_js('sites/all/libraries/openseadragon/openseadragon.min.js', [
-    'type' => 'file',
-    'scope' => 'footer',
-  ]);
-
   drupal_add_js($module_path . '/dist/polyfill.bundle.js', [
     'type' => 'file', 
     'scope' => 'footer',

@@ -30,13 +30,13 @@ async function ViewerApp(Y) {
 
   Y.nodes.toggleLanguage = document.querySelector('body .language')
 
-  Y.nodes.slider = document.querySelector('#range_weight')
-
-  Y.nodes.slider_value = document.querySelector('#slider_value')
-
   Y.nodes.next = document.querySelectorAll('.paging.next')
 
   Y.nodes.previous = document.querySelectorAll('.paging.previous')
+
+  Y.nodes.slider = document.querySelector('#range_weight')
+
+  Y.nodes.slider_value = document.querySelector('#slider_value')  
 
   const { 
     view, 
@@ -221,9 +221,11 @@ async function ViewerApp(Y) {
         }
       })
 
-      Y.nodes.togglePage.classList.add('active')
-
-      Y.nodes.togglePage.classList.remove('inactive')
+      // Toggle view of books page icon.
+      if (Y.nodes.togglePage) {
+        Y.nodes.togglePage.classList.add('active')
+        Y.nodes.togglePage.classList.remove('inactive')
+      }
 
       show('#openseadragon1')
 
@@ -321,8 +323,11 @@ async function ViewerApp(Y) {
 
     hide('#thumbnails')
 
-    Y.nodes.togglePage.classList.remove('inactive')
-    Y.nodes.togglePage.classList.add('active')
+    // Toggle view of books page icon.
+    if (Y.nodes.togglePage) {
+      Y.nodes.togglePage.classList.remove('inactive')
+      Y.nodes.togglePage.classList.add('active')
+    }
 
     Y.nodes.next.forEach(item => {
       item.classList.remove('active')
@@ -363,8 +368,11 @@ async function ViewerApp(Y) {
     Y.nodes.controlZoomIn.classList.remove('active')
     Y.nodes.controlZoomIn.classList.add('inactive')
 
-    Y.nodes.togglePage.classList.remove('active')
-    Y.nodes.togglePage.classList.add('inactive')
+    // Toggle view of books page icon.
+    if (Y.nodes.togglePage) {
+      Y.nodes.togglePage.classList.remove('active')
+      Y.nodes.togglePage.classList.add('inactive')
+    }
 
     Y.nodes.next.forEach(item => {
       item.classList.remove('active')
@@ -436,8 +444,12 @@ async function ViewerApp(Y) {
       return to
     } else {
       props.dataset.sequence = to.toString()
-      document.querySelector('#range_weight').value = to
-      document.querySelector('#slider_value').value = to
+      const range_weight = document.querySelector('#range_weight')
+      const slider_value = document.querySelector('#slider_value')
+      if (range_weight && slider_value) {
+        range_weight.value = to
+        slider_value.value = to
+      }
       window.history.pushState({ view, sequence: to, identifier, type }, '', `/${type}/${identifier}/${to}`)
     }
   }
@@ -452,8 +464,12 @@ async function ViewerApp(Y) {
       return sequence_count
     } else {
       props.dataset.sequence = sequence.toString()
-      document.querySelector('#range_weight').value = sequence  
-      document.querySelector('#slider_value').value = sequence
+      const range_weight = document.querySelector('#range_weight')
+      const slider_value = document.querySelector('#slider_value')
+      if (range_weight && slider_value) {
+        range_weight.value = to
+        slider_value.value = to
+      }
       window.history.pushState({ view, sequence, identifier, type }, '', `/${type}/${identifier}/${sequence}`)
     }
   }
@@ -492,8 +508,12 @@ async function ViewerApp(Y) {
       return sequenceCount
     } else {
       props.dataset.sequence = to.toString()
-      document.querySelector('#range_weight').value = to
-      document.querySelector('#slider_value').value = to
+      const range_weight = document.querySelector('#range_weight')
+      const slider_value = document.querySelector('#slider_value')
+      if (range_weight && slider_value) {
+        range_weight.value = to
+        slider_value.value = to
+      }
       window.history.pushState({ view, sequence: to, identifier, type }, '', `/${type}/${identifier}/${to}`)
     }
   }
@@ -524,25 +544,26 @@ async function ViewerApp(Y) {
   )
 
   if (view == 'doublepage') {
-    if (Y.nodes.togglePage.classList.contains('page-double')) {
+    if (Y.nodes.togglePage && Y.nodes.togglePage.classList.contains('page-double')) {
       Y.nodes.togglePage.classList.remove('page-double')
       Y.nodes.togglePage.classList.add('page-single')
     }
   }
 
-  Y.seqmap = await seqmap({ 
-    count: Y.count, 
-    view, 
-    sequence, 
-    current
-  })
+  Y.seqmap = await seqmap({ count: Y.count, view, sequence, current })
 
   document.querySelector('.current_page').textContent = 
-    Y.nodes.osd.dataset.sequence = 
-    Y.nodes.slider.value = 
+    Y.nodes.osd.dataset.sequence = sequence
+  
+  if (Y.nodes.slider) {
+    Y.nodes.slider.value = sequence
+  }
+  
+  if (Y.nodes.slider_value) {
     Y.nodes.slider_value.value = sequence
+  }
 
-  Y.nodes.slider.max = Y.seqmap.count
+  // Y.nodes.slider.max = Y.seqmap.count
 
   document.querySelectorAll('.sequence_count').forEach(item => {
     item.textContent = Y.seqmap.count
@@ -607,16 +628,19 @@ async function ViewerApp(Y) {
 
   })
 
-  document.querySelector('#form-update-sequence').onsubmit = (event) => {
-    event.preventDefault()
-    document.dispatchEvent(
-      new CustomEvent('load:sequence', {
-        detail: {
-          operation: 'change',
-          to: Y.nodes.slider_value.value,
-        }
-      })
-    )
+  const formSequence = document.querySelector('#form-update-sequence')
+  if (formSequence && Y.nodes.slider_value) {
+    formSequence.onsubmit = (event) => {
+      event.preventDefault()
+      document.dispatchEvent(
+        new CustomEvent('load:sequence', {
+          detail: {
+            operation: 'change',
+            to: Y.nodes.slider_value.value,
+          }
+        })
+      )
+    }
   }
 
   // Zoom in click event.
@@ -659,24 +683,26 @@ async function ViewerApp(Y) {
     Y.Viewer.viewport.setRotation(Y.Viewer.viewport.degrees + 90)
   }
 
-  Y.nodes.togglePage.onclick = (e) => {
-    e.preventDefault()
-    if (e.currentTarget.classList.contains('inactive')) return false
-    if (Y.nodes.togglePage.classList.contains('page-double')) {
-      Y.nodes.togglePage.classList.remove('page-double')
-      Y.nodes.togglePage.classList.add('page-single')
+  if (Y.nodes.togglePage) {
+    Y.nodes.togglePage.onclick = (e) => {
+      e.preventDefault()
+      if (e.currentTarget.classList.contains('inactive')) return false
+      if (Y.nodes.togglePage.classList.contains('page-double')) {
+        Y.nodes.togglePage.classList.remove('page-double')
+        Y.nodes.togglePage.classList.add('page-single')
+      }
+      else {
+        Y.nodes.togglePage.classList.remove('page-single')
+        Y.nodes.togglePage.classList.add('page-double')
+      }
+      document.dispatchEvent(
+        new CustomEvent('load:sequence', {
+          detail: {
+            operation: e.currentTarget.dataset.operation,
+          }
+        })
+      )
     }
-    else {
-      Y.nodes.togglePage.classList.remove('page-single')
-      Y.nodes.togglePage.classList.add('page-double')
-    }
-    document.dispatchEvent(
-      new CustomEvent('load:sequence', {
-        detail: {
-          operation: e.currentTarget.dataset.operation,
-        }
-      })
-    )
   }
 
   document.querySelectorAll('a.paging').forEach(item => {
@@ -712,7 +738,9 @@ async function ViewerApp(Y) {
     })
   })
 
-  Y.nodes.slider.addEventListener('change', slide_value_change)
+  if (Y.nodes.slider) {
+    Y.nodes.slider.addEventListener('change', slide_value_change)
+  }  
 
   document.addEventListener('load:sequence', load_sequence)
 
