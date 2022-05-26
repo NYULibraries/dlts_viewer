@@ -3,11 +3,11 @@
   "author": "",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "build": "webpack --config webpack.prod.js",
+    "build": "NODE_ENV=production webpack --config webpack.prod.js",
     "serve": "./node_modules/http-server/bin/http-server dist",
-    "dev": "webpack serve"
+    "dev": "NODE_ENV=development webpack serve"
   },
   "license": "ISC",
   "bugs": {
@@ -41,8 +41,6 @@
     "html-webpack-plugin": "^5.5.0"    
   },
   "dependencies": {
-    "@babel/runtime": "^7.17.7",
-    "axios": "^0.26.1",
-    "openseadragon": "^3.0.0"
+    "@babel/runtime": "^7.17.7"
   }
 }

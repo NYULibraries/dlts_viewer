@@ -1,30 +1,30 @@
 const path = require('path')
-const MiniCssExtractPlugin = require("mini-css-extract-plugin")
-const devMode = process.env.NODE_ENV !== "production"
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const devMode = process.env.NODE_ENV !== 'production'
 
 module.exports = {
-  mode: "development",
-  devtool: "source-map",
+  mode: 'development',
+  devtool: 'source-map',
   devServer: {
+    port: 8008,
     static: {
       directory: path.join(__dirname, 'dist'),
     },
     headers: {
-      "Access-Control-Allow-Origin": "*",
-    },   
+      'Access-Control-Allow-Origin': '*',
+    },
     compress: true,
-    port: 9000,
   },
   watchOptions: {
     ignored: /node_modules/,
   },
   entry: [
-    "babel-polyfill",
-    "./sass/viewer.scss",
-    "./js/viewer.js"
+    'babel-polyfill',
+    './sass/viewer.scss',
+    './js/viewer.js'
   ],
   output: {
-    filename: "bundle.js",
+    filename: 'bundle.js',
   },
   module: {
     rules: [
@@ -42,10 +42,10 @@ module.exports = {
         test: /\.(sa|sc|c)ss$/i,
         use: [
           MiniCssExtractPlugin.loader,
-          "css-loader",
-          "postcss-loader",
+          'css-loader',
+          'postcss-loader',
           {
-            loader: "sass-loader",
+            loader: 'sass-loader',
             options: {
               sourceMap: true,
             },
@@ -54,14 +54,14 @@ module.exports = {
       },
       {
         test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/i,
-        type: "asset",
+        type: 'asset',
       },
     ]
   },
   plugins: [
     new MiniCssExtractPlugin({
-      filename: "main.css",
-      chunkFilename: "[id].css",
+      filename: 'main.css',
+      chunkFilename: '[id].css',
     }),
   ],
-};
+}

@@ -565,7 +565,7 @@ async function ViewerApp(Y) {
     sequenceMode: false,
     tileSources: tileSources,
   }
-  
+
   if (type == 'maps') {
     options.showNavigator = true
   }

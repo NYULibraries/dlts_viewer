@@ -6,12 +6,11 @@ module.exports = {
     polyfill: 'babel-polyfill',
     viewer: './sass/viewer.scss',
     books: './js/viewer.js',
-    photos: './js/viewer.photos.js',
   },
   plugins: [
     new MiniCssExtractPlugin({
-      filename: "[name].css",
-      chunkFilename: "[id].css",
+      filename: '[name].css',
+      chunkFilename: '[id].css',
     }),
   ],
   output: {
@@ -33,21 +32,25 @@ module.exports = {
       },
       {
         test: /\.(sa|sc|c)ss$/i,
-        use: [
-          MiniCssExtractPlugin.loader,
-          "css-loader",
-          "postcss-loader",
+        use: [          
+          process.env.NODE_ENV !== 'production'
+          ? 'style-loader'
+          : MiniCssExtractPlugin.loader,
+          'css-loader',
+          'postcss-loader',          
           {
-            loader: "sass-loader",
+            loader: 'sass-loader',
             options: {
+              implementation: require('sass'),
               sourceMap: true,
             },
           },
+
         ],
       },
       {
         test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/i,
-        type: "asset",
+        type: 'asset',
       },
     ]
   }
