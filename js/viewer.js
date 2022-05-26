@@ -319,27 +319,27 @@ async function ViewerApp(Y) {
     const { sequenceCount, sequence } = osd.dataset
     document.querySelector('html').classList.remove('thumbnails-view')
     hide('#thumbnails')
+
     // Toggle view of books page icon.
     if (Y.nodes.togglePage) {
       Y.nodes.togglePage.classList.remove('inactive')
       Y.nodes.togglePage.classList.add('active')
     }
-    Y.nodes.next.forEach(item => {
-      item.classList.remove('active')
-      item.classList.add('inactive')
-    })
-    Y.nodes.previous.forEach(item => {
-      if (sequence > 1) {
-        item.classList.remove('inactive')
-        item.classList.add('active')
-      }
-    })
+    
     Y.nodes.next.forEach(item => {
       if (sequence < sequenceCount) {
         item.classList.remove('inactive')
         item.classList.add('active')
       }
     })
+
+    Y.nodes.previous.forEach(item => {
+      if (sequence > 1) {
+        item.classList.remove('inactive')
+        item.classList.add('active')
+      }
+    })
+
   }
 
   function on_open_thumbnails_view() {
@@ -347,25 +347,38 @@ async function ViewerApp(Y) {
     const { state } = Y.nodes.thumbnails.dataset
     const width = '230'
     const height = '150'
+
     document.querySelector('html').classList.add('thumbnails-view')
-    Y.nodes.controlZoomOut.classList.remove('active')
-    Y.nodes.controlZoomOut.classList.add('inactive')
-    Y.nodes.controlZoomIn.classList.remove('active')
-    Y.nodes.controlZoomIn.classList.add('inactive')
+    const zoomIn = document.querySelector('#control-zoom-in')
+    const zoomOut = document.querySelector('#control-zoom-out')
+
+    zoomIn.classList.remove('active')
+    zoomIn.classList.add('inactive')
+    zoomIn.setAttribute('aria-disabled', 'true')
+
+    zoomOut.classList.remove('active')
+    zoomOut.classList.add('inactive')
+    zoomOut.setAttribute('aria-disabled', 'true')
+
     // Toggle view of books page icon.
     if (Y.nodes.togglePage) {
       Y.nodes.togglePage.classList.remove('active')
       Y.nodes.togglePage.classList.add('inactive')
+      Y.nodes.togglePage.setAttribute('aria-disabled', 'true')
     }
     Y.nodes.next.forEach(item => {
       item.classList.remove('active')
       item.classList.add('inactive')
+      item.setAttribute('aria-disabled', 'true')
     })
+
     Y.nodes.previous.forEach(item => {
       item.classList.remove('active')
       item.classList.add('inactive')
+      item.setAttribute('aria-disabled', 'true')
     })
-    if (parseInt(state, 10) === 0) {
+
+    if (Number(state) === 0) {
       axios.get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
         if (response.status === 200) {
           const parser = new DOMParser()
@@ -418,7 +431,6 @@ async function ViewerApp(Y) {
   }
 
   async function decrease(props) {
-    const { view, identifier, type } = props.dataset
     const to = Math.min(...Y.seqmap.sequence) - 1
     if (to < 1) {
       return to
@@ -430,12 +442,11 @@ async function ViewerApp(Y) {
         range_weight.value = to
         slider_value.value = to
       }
-      // window.history.pushState({ view, sequence: to, identifier, type }, '', `/${type}/${identifier}/${to}`)
     }
   }
 
   async function change(to, props) {
-    const { identifier, type, sequenceCount } = props.dataset
+    const { sequenceCount } = props.dataset
     const sequence = Number(to)
     const sequence_count = Number(sequenceCount)
     if (sequence < 1) {
@@ -450,7 +461,6 @@ async function ViewerApp(Y) {
         range_weight.value = to
         slider_value.value = to
       }
-      // window.history.pushState({ view, sequence, identifier, type }, '', `/${type}/${identifier}/${sequence}`)
     }
   }
 
@@ -476,9 +486,6 @@ async function ViewerApp(Y) {
 
   async function increase(props) {
     const {
-      identifier, 
-      type, 
-      view, 
       sequenceCount
     } = props.dataset
 
@@ -494,7 +501,6 @@ async function ViewerApp(Y) {
         range_weight.value = to
         slider_value.value = to
       }
-      // window.history.pushState({ view, sequence: to, identifier, type }, '', `/${type}/${identifier}/${to}`)
     }
   }
 

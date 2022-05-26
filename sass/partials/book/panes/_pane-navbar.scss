@@ -42,7 +42,7 @@ $break-large: 1200px;
     a:focus {
       outline: $outline-focus;
       opacity: $active-opacity;
-      color: $navbar-on-color;      
+      color: $navbar-on-color;
     }
     a,
     a.active {
@@ -173,6 +173,23 @@ $break-large: 1200px;
   }
 }
 
+html.thumbnails-view {
+  #control-zoom-in, 
+  #control-zoom-out,
+  #control-rotate,
+  [aria-disabled="true"],
+  #navbar a.inactive {
+    outline: none;
+    opacity: $dimmed-opacity !important;
+    @include box-shadow(none !important);
+    cursor: default !important;
+    &:hover, &:focus {
+      outline: none;      
+      opacity: $dimmed-opacity !important;
+    }
+  }
+}
+
 @media screen and (max-width: $break-medium) {
   .navbar-left,
   .navbar-middle,
@@ -195,3 +212,4 @@ $break-large: 1200px;
     display: none;
   }
 }
+
