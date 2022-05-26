@@ -93,8 +93,7 @@
       title="<?php echo t('Toggle fullscreen') ?>" 
       class="button fullscreen off" 
       id="button-fullscreen"
-      tabindex="-1"
-      >
+    >
       <span><?php echo t('Toggle fullscreen') ?></span>
     </a>
   </li>
