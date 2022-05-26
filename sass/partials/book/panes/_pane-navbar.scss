@@ -132,7 +132,7 @@ $break-large: 1200px;
     }
     .thumbnails {
       &:before {
-        content: "\e007";
+        content: "\e008";
       }
     }
     .pager-right {
@@ -152,7 +152,7 @@ $break-large: 1200px;
     }
     .rotate {
       &:before {
-        content: "\e001";
+        content: "\e900";
       }
     }
     .search {
