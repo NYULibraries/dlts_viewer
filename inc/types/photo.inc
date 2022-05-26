@@ -116,19 +116,29 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
   drupal_add_js(
     'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
     'external',
-    array(
+    [
       'group' => JS_LIBRARY,
       'weight' => -101,
-    )
+    ]
   );
+
+  drupal_add_js(
+    'https://cdnjs.cloudflare.com/ajax/libs/keyboardjs/2.6.2/keyboard.min.js',
+    'external',
+    [
+      'group' => JS_LIBRARY,
+      'weight' => -101,
+    ]
+  );
+  
 
   drupal_add_js(
     'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
     'external',
-    array(
+    [
       'group' => JS_LIBRARY,
       'weight' => -101,
-    )
+    ]
   );
 
   drupal_add_js($module_path . '/dist/polyfill.bundle.js', [ 'type' => 'file', 'scope' => 'footer' ]);
