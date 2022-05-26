@@ -1,7 +1,5 @@
 async function ViewerApp(Y) {
 
-  console.log('ViewerApp')
-
   Y.Viewer = null
 
   Y.isFullyLoaded = false
@@ -165,7 +163,6 @@ async function ViewerApp(Y) {
   }
 
   async function load_sequence(e) {
-    console.log('load_sequence', e)
     try {
       const osd = Y.nodes.osd
       const dataset = osd.dataset
@@ -433,7 +430,7 @@ async function ViewerApp(Y) {
         range_weight.value = to
         slider_value.value = to
       }
-      window.history.pushState({ view, sequence: to, identifier, type }, '', `/${type}/${identifier}/${to}`)
+      // window.history.pushState({ view, sequence: to, identifier, type }, '', `/${type}/${identifier}/${to}`)
     }
   }
 
@@ -453,7 +450,7 @@ async function ViewerApp(Y) {
         range_weight.value = to
         slider_value.value = to
       }
-      window.history.pushState({ view, sequence, identifier, type }, '', `/${type}/${identifier}/${sequence}`)
+      // window.history.pushState({ view, sequence, identifier, type }, '', `/${type}/${identifier}/${sequence}`)
     }
   }
 
@@ -497,7 +494,7 @@ async function ViewerApp(Y) {
         range_weight.value = to
         slider_value.value = to
       }
-      window.history.pushState({ view, sequence: to, identifier, type }, '', `/${type}/${identifier}/${to}`)
+      // window.history.pushState({ view, sequence: to, identifier, type }, '', `/${type}/${identifier}/${to}`)
     }
   }
 
