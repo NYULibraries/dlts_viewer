@@ -40,11 +40,12 @@ async function ViewerApp(Y) {
 
   Y.nodes.slider_value = document.querySelector('#slider_value')  
 
-  const { 
+  const {
     view, 
     sequence, 
     sequenceCount, 
-    current 
+    current,
+    type
   } = Y.nodes.osd.dataset
 
   Y.count = Number(sequenceCount)
@@ -551,7 +552,7 @@ async function ViewerApp(Y) {
 
   const tileSources = await tiles(Y.seqmap, Y.nodes.osd.dataset)
 
-  Y.Viewer = Y.OpenSeadragon({
+  const options = {
     id: Y.nodes.osd.id,
     preserveViewport: true,
     showNavigationControl: false,
@@ -563,7 +564,13 @@ async function ViewerApp(Y) {
     defaultZoomLevel: 0,
     sequenceMode: false,
     tileSources: tileSources,
-  })
+  }
+  
+  if (type == 'maps') {
+    options.showNavigator = true
+  }
+
+  Y.Viewer = Y.OpenSeadragon(options)
 
   // OpenSeadragon event.
   Y.Viewer.world.addHandler('add-item', add_item_handler)
