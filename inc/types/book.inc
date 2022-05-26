@@ -400,8 +400,6 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
     
     $entity->navbar = theme('dlts_viewer_navbar', $navbar_options);
     
-    // $entity->book_page_data = $arg;
-  
     $entity->pane_metadata_hidden = $is_mobile;
     
     $entity->sequence_count = $sequence_count;
