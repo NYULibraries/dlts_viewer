@@ -1,42 +1,7 @@
 #openseadragon1 {
   height: 100%;
 }
-
-.thumbnails-view {
-  overflow: initial;
-  #openseadragon1, #pager {
-    height: 0;
-    width: 0;
-    display: none;
-    visibility: hidden;
-  }
-}
-
-.thumbnails.container {
-  background: #fff;
-  width: auto;
-  display: flex;
-  flex-flow: row wrap;
-  position: relative;
-}
-  
-.thumbnails.item {
-  background: #fff;
-  margin: 4px;
-  flex: 0 1 calc(20% - 8px); /* <-- adjusting for margin */
-}
-  
-#thumbnails {
-  position: initial;
-  bottom: initial;
-  top: initial;
-  background: #fff;
-  padding-left: 300px;
-  padding-right: 2em;
-  padding-top: 2em;
-  padding-bottom: 2em;
-}
-  
+ 
 .pagemeta-hidden {
   margin-left: initial;
   padding-right: initial;
@@ -54,9 +19,4 @@
 #pager {
   padding-left: 1em;
 }
-  
-.thumbnails.container img {
-  width: 150px;
-  height: 220px;
-}
-  
+
