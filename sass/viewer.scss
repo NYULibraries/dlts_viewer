@@ -24,8 +24,8 @@
 
 .page-books {
   .contextual-links-wrapper {
-      display: none;
-      visibility: hidden;
+    display: none;
+    visibility: hidden;
   }
 }
 
@@ -49,4 +49,20 @@
 #range_weight {
   width: 90%;
   vertical-align: middle;
+}
+
+@keyframes slide-to-left {
+  to { 
+    transform: translateX(-100%); 
+  }
+}
+
+@keyframes slide-from-right {
+  to { 
+    transform: translateX(100%);
+  }
+}
+
+.pagemeta-hidden #pagemeta {
+  animation: 500ms ease-out both slide-to-left;
 }

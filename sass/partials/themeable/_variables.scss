@@ -6,6 +6,9 @@ $link-color: $lib-red;
 $navbar-on-color: #ffffff;
 $special-titlebar-color: $lib-red;
 
+// accessible focus
+$outline-focus: #e5e5e5 solid 2px;
+
 // Default values! change only if you need to
 $navbar-overlay: $navbar-background;
 $slider-overlay: $light-background;

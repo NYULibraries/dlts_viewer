@@ -23,14 +23,16 @@ html.page-maps {
     height: inherit;
     width: inherit;
   }
+  &.thumbnails-view {
+    overflow: scroll;
+  }
 }
 
-//
 // Always hide an element when it has the `hidden` HTML attribute.
-//
 .element-invisible, 
 .hidden,
 [hidden] {
   display: none;
   visibility: hidden;
 }
+

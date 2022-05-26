@@ -1,5 +1,7 @@
 async function ViewerApp(Y) {
 
+  console.log('ViewerApp')
+
   Y.Viewer = null
 
   Y.isFullyLoaded = false
@@ -162,6 +164,7 @@ async function ViewerApp(Y) {
   }
 
   async function load_sequence(e) {
+    console.log('load_sequence', e)
     try {
       const osd = Y.nodes.osd
       const dataset = osd.dataset
@@ -314,76 +317,56 @@ async function ViewerApp(Y) {
   }
 
   function on_hide_thumbnails_view() {
-
     const osd = Y.nodes.osd
-
     const { sequenceCount, sequence } = osd.dataset
-
     document.querySelector('html').classList.remove('thumbnails-view')
-
     hide('#thumbnails')
-
     // Toggle view of books page icon.
     if (Y.nodes.togglePage) {
       Y.nodes.togglePage.classList.remove('inactive')
       Y.nodes.togglePage.classList.add('active')
     }
-
     Y.nodes.next.forEach(item => {
       item.classList.remove('active')
       item.classList.add('inactive')
     })
-
     Y.nodes.previous.forEach(item => {
       if (sequence > 1) {
         item.classList.remove('inactive')
         item.classList.add('active')
       }
     })
-
     Y.nodes.next.forEach(item => {
       if (sequence < sequenceCount) {
         item.classList.remove('inactive')
         item.classList.add('active')
       }
     })
-
   }
 
   function on_open_thumbnails_view() {
-
     const { uri } = Y.nodes.osd.dataset
-
     const { state } = Y.nodes.thumbnails.dataset
-
     const width = '230'
-
     const height = '150'
-
     document.querySelector('html').classList.add('thumbnails-view')
-
     Y.nodes.controlZoomOut.classList.remove('active')
     Y.nodes.controlZoomOut.classList.add('inactive')
-
     Y.nodes.controlZoomIn.classList.remove('active')
     Y.nodes.controlZoomIn.classList.add('inactive')
-
     // Toggle view of books page icon.
     if (Y.nodes.togglePage) {
       Y.nodes.togglePage.classList.remove('active')
       Y.nodes.togglePage.classList.add('inactive')
     }
-
     Y.nodes.next.forEach(item => {
       item.classList.remove('active')
       item.classList.add('inactive')
     })
-
     Y.nodes.previous.forEach(item => {
       item.classList.remove('active')
       item.classList.add('inactive')
     })
-
     if (parseInt(state, 10) === 0) {
       axios.get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
         if (response.status === 200) {
@@ -397,9 +380,7 @@ async function ViewerApp(Y) {
           })
           Y.nodes.thumbnails.dataset.state = 1
         }
-
         show('#thumbnails')
-
       })
       .catch(error => {
         console.log(error)
@@ -432,6 +413,7 @@ async function ViewerApp(Y) {
         detail: {
           operation: 'change',
           to: event.currentTarget.value,
+          trigger: 'change',
         }
       })
     )
@@ -563,8 +545,6 @@ async function ViewerApp(Y) {
     Y.nodes.slider_value.value = sequence
   }
 
-  // Y.nodes.slider.max = Y.seqmap.count
-
   document.querySelectorAll('.sequence_count').forEach(item => {
     item.textContent = Y.seqmap.count
   })
@@ -637,6 +617,7 @@ async function ViewerApp(Y) {
           detail: {
             operation: 'change',
             to: Y.nodes.slider_value.value,
+            trigger: 'onsubmit',
           }
         })
       )
@@ -644,7 +625,8 @@ async function ViewerApp(Y) {
   }
 
   // Zoom in click event.
-  Y.nodes.controlZoomIn.onclick = () => {
+  Y.nodes.controlZoomIn.onclick = (e) => {
+    e.preventDefault()
     const actualZoom = Y.Viewer.viewport.getZoom()
     const maxZoom = Y.Viewer.viewport.getMaxZoom()
     const minZoom = Y.Viewer.viewport.getMinZoom()
@@ -664,7 +646,8 @@ async function ViewerApp(Y) {
   }
 
   // Zoom out click event.
-  Y.nodes.controlZoomOut.onclick = () => {
+  Y.nodes.controlZoomOut.onclick = (e) => {
+    e.preventDefault()
     const actualZoom = Y.Viewer.viewport.getZoom()
     const minZoom = Y.Viewer.viewport.getMinZoom()
     const zoom = actualZoom / 2
@@ -744,18 +727,17 @@ async function ViewerApp(Y) {
 
   document.addEventListener('load:sequence', load_sequence)
 
-  window.addEventListener('popstate', (e) => {
-    console.log(e)
-    console.log(history.state.sequence)
+  // window.addEventListener('popstate', (e) => {
     // document.dispatchEvent(
     //   new CustomEvent('load:sequence', {
     //     detail: {
     //       operation: 'change',
     //       to: history.state.sequence,
+    //       trigger: 'popstate',
     //     }
     //   })
     // )
-  })
+  // })
 
   document.addEventListener('button:button-metadata:on', on_button_metadata_on)
 
@@ -810,6 +792,61 @@ async function ViewerApp(Y) {
     }
   })
 
+  // up arrow (or i) - nudge up
+  Y.keyboardJS.bind(['i', 'up'], () => {
+    console.log(['i', 'up'])
+  })
+
+  // down arrow (or m) - nudge down
+  Y.keyboardJS.bind(['m', 'down'], () => {
+    console.log(['m', 'down'])
+  })
+
+  // right arrow (or k) - nudge right
+  Y.keyboardJS.bind(['k', 'right'], () => {
+    console.log(['k', 'right'])
+  })
+
+  // left arrow (or j) - nudge left
+  Y.keyboardJS.bind(['j', 'left'], () => {
+    console.log(['j', 'left'])
+  })
+
+  // shift + right (or shift + k) - load page to the right of this one (previous or next depending13 on language)
+  Y.keyboardJS.bind(['shift + right', 'shift + k'], () => {
+    console.log(['shift + right', 'shift + k'])
+  })
+  
+  // shift + left (or shift + j) - load page to the left of this one (previous or next depending on language)
+  Y.keyboardJS.bind(['shift + left', 'shift + j'], () => {
+    console.log(['shift + left', 'shift + j'])
+  })
+
+  // shift + up arrow (or shift + i) - zoom in one level
+  Y.keyboardJS.bind(['shift + up', 'shift + i'], () => {
+    console.log(['shift + up', 'shift + i'])
+  })
+
+  // shift + down (or shift + m) - zoom out one level
+  Y.keyboardJS.bind(['shift + down', 'shift + m'], () => {
+    console.log(['shift + down', 'shift + m'])
+  })
+
+  // 1 - zoom to fit in window
+  Y.keyboardJS.bind(['1'], () => {
+    console.log(['1'])
+  })
+
+  // / or ? - show/hide help
+  Y.keyboardJS.bind(['/', '?'], () => {
+    console.log(['/', '?'])
+  })
+
+  // / spacebar - show/hide metadata panel  
+  Y.keyboardJS.bind(['spacebar'], () => {
+    console.log('spacebar')
+  })
+
 }
 
-ViewerApp({ OpenSeadragon: window.OpenSeadragon, axios })
+ViewerApp({ OpenSeadragon: window.OpenSeadragon, axios, keyboardJS })
