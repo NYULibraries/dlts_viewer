@@ -45,7 +45,7 @@
 </div>
 
 <?php if (isset($read_order)) : ?>
-<div id="pager" class="pane pager" dir="<?php print $read_order ?>">
+<div id="pager" role="navigation" aria-label="<?php print t('Select image in sequence') ?>" class="pane pager" dir="<?php print $read_order ?>">
   <?php if (isset($slider)) : ?>
     <?php print $slider ?>
   <?php endif ?>
