@@ -15,7 +15,7 @@
       <?php if (!empty($drupal_render_children)) : print $drupal_render_children; endif; ?>
     </div>
   </div>
-  <div role="presentation" aria-hidden="true" id="display" class="pane display">
+  <div role="presentation" id="display" class="pane display">
     <?php print $book_page ?>
     <?php if (isset($button_previous)) print $button_previous ?>
     <?php if (isset($button_next)) print $button_next ?>
