@@ -24,13 +24,15 @@ body {
     width: inherit;
     height: inherit;
     float: left;
+
     /**
      * https://jira.nyu.edu/browse/DLTSVIEWER-9 
      */
-    div.olMap, div.node.pjax {
-      width: 100%;
-      height: 100%;
-    }
+    // div.olMap, div.node.pjax {
+    //   width: 100%;
+    //   height: 100%;
+    // }
+
     .pager-right {
       right: -20px;
     }

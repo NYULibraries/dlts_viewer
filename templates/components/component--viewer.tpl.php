@@ -41,7 +41,7 @@
     </div>
   </div>
 <?php if (isset($slider) && !isset($off)) : ?>
-  <div id="pager" dir="<?php print $language_dir ?>" class="pane pager">
+  <div id="pager" dir="<?php print $language_dir ?>" class="pane pager" role="navigation" aria-label="<?php print t('Select image in sequence') ?>">
     <?php print $slider ?>
   </div>
 <?php endif ?>
