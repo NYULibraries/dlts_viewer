@@ -120,17 +120,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
       'group' => JS_LIBRARY,
       'weight' => -101,
     ]
-  );
-
-  drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/keyboardjs/2.6.2/keyboard.min.js',
-    'external',
-    [
-      'group' => JS_LIBRARY,
-      'weight' => -101,
-    ]
-  );
-  
+  );  
 
   drupal_add_js(
     'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
@@ -237,6 +227,8 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
 
   // Change to $base_url.
   $servie_url = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
+
+  $entity->manifest = t('<a href="@url">IIIF Presentation v. 3.0.0</a>', [ '@url' => url("$base_url/api/image/$is_resource/$entity->identifier/$entity->sequence/info.json") ]);
 
   $viewer = [
     'book_page' => theme(

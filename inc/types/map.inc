@@ -61,17 +61,7 @@ function dlts_viewer_map_dispatcher($entity, array $arg) {
       'group' => JS_LIBRARY,
       'weight' => -101,
     ]
-  );
-
-  drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/keyboardjs/2.6.2/keyboard.min.js',
-    'external',
-    [
-      'group' => JS_LIBRARY,
-      'weight' => -101,
-    ]
-  );
-  
+  );  
 
   drupal_add_js(
     'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
@@ -183,6 +173,8 @@ function dlts_viewer_map_dispatcher($entity, array $arg) {
   $entity->sequence_count = 1;
 
   $entity->sequence = 1;
+
+  $entity->manifest = t('<a href="@url">IIIF Presentation v. 3.0.0</a>', [ '@url' => url("$base_url/api/image/$is_resource/$identifier/$entity->sequence/info.json") ]);
 
   $entity->book_page = theme(
     'dlts_viewer_openseadragon_image', 

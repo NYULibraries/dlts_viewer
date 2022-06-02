@@ -802,61 +802,6 @@ async function ViewerApp(Y) {
     }
   })
 
-  // up arrow (or i) - nudge up
-  Y.keyboardJS.bind(['i', 'up'], () => {
-    console.log(['i', 'up'])
-  })
-
-  // down arrow (or m) - nudge down
-  Y.keyboardJS.bind(['m', 'down'], () => {
-    console.log(['m', 'down'])
-  })
-
-  // right arrow (or k) - nudge right
-  Y.keyboardJS.bind(['k', 'right'], () => {
-    console.log(['k', 'right'])
-  })
-
-  // left arrow (or j) - nudge left
-  Y.keyboardJS.bind(['j', 'left'], () => {
-    console.log(['j', 'left'])
-  })
-
-  // shift + right (or shift + k) - load page to the right of this one (previous or next depending13 on language)
-  Y.keyboardJS.bind(['shift + right', 'shift + k'], () => {
-    console.log(['shift + right', 'shift + k'])
-  })
-  
-  // shift + left (or shift + j) - load page to the left of this one (previous or next depending on language)
-  Y.keyboardJS.bind(['shift + left', 'shift + j'], () => {
-    console.log(['shift + left', 'shift + j'])
-  })
-
-  // shift + up arrow (or shift + i) - zoom in one level
-  Y.keyboardJS.bind(['shift + up', 'shift + i'], () => {
-    console.log(['shift + up', 'shift + i'])
-  })
-
-  // shift + down (or shift + m) - zoom out one level
-  Y.keyboardJS.bind(['shift + down', 'shift + m'], () => {
-    console.log(['shift + down', 'shift + m'])
-  })
-
-  // 1 - zoom to fit in window
-  Y.keyboardJS.bind(['1'], () => {
-    console.log(['1'])
-  })
-
-  // / or ? - show/hide help
-  Y.keyboardJS.bind(['/', '?'], () => {
-    console.log(['/', '?'])
-  })
-
-  // / spacebar - show/hide metadata panel  
-  Y.keyboardJS.bind(['spacebar'], () => {
-    console.log('spacebar')
-  })
-
 }
 
-ViewerApp({ OpenSeadragon: window.OpenSeadragon, axios, keyboardJS })
+ViewerApp({ OpenSeadragon: window.OpenSeadragon, axios })
