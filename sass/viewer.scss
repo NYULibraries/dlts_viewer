@@ -1,0 +1,68 @@
+@import "libraries/compass-mixins/lib/compass/functions";
+@import "libraries/compass-mixins/lib/compass/typography";
+@import "libraries/compass-mixins/lib/compass/css3";
+@import "libraries/compass-animate/_animations";
+@import "partials/book/defaults/_variables";
+@import "partials/book/defaults/_mixins";
+@import "partials/themeable/_variables";
+@import "partials/base/_views-grid";
+@import "partials/base/_base-typography";
+@import "partials/base/_reset";
+@import "partials/base/_range";
+@import "partials/book/pages/_base";
+@import "partials/book/panes/_pane-base";
+@import "partials/book/panes/_pane-navbar";
+@import "partials/book/panes/_pane-metadata";
+@import "partials/book/panes/_pane-display";
+@import "partials/book/panes/_pane-options";
+@import "partials/book/panes/_pane-slider";
+@import "partials/book/panes/_pane-loading";
+@import "partials/book/panes/_pane-pager";
+@import "partials/book/panes/_pane-thumbnails";
+@import "partials/photo/_base.scss";
+@import "partials/base/_openseadragon";
+
+.page-books {
+  .contextual-links-wrapper {
+    display: none;
+    visibility: hidden;
+  }
+}
+
+.en {
+  #pager {
+    padding-left: 1em;
+    padding-right: initial;
+  }  
+}
+
+.ar {
+  .navbar-pager-left {
+    float: right !important
+  }
+  #pager {
+    padding-left: initial;
+    padding-right: 1em;
+  }
+}
+
+#range_weight {
+  width: 90%;
+  vertical-align: middle;
+}
+
+@keyframes slide-to-left {
+  to { 
+    transform: translateX(-100%); 
+  }
+}
+
+@keyframes slide-from-right {
+  to { 
+    transform: translateX(100%);
+  }
+}
+
+.pagemeta-hidden #pagemeta {
+  animation: 500ms ease-out both slide-to-left;
+}

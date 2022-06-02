@@ -9,6 +9,7 @@
  * Index Map.
  */
  function dlts_solr_index_map(&$document, &$entity, $entity_type, $env_id) {
+  global $base_url;
   // Datasource.
   module_load_include('inc', 'dlts_viewer', 'inc/datasource');
   // Add image server helper.
@@ -51,7 +52,11 @@
 
   if (!empty($handle)) {
     $document->addField('ss_handle', $handle['url']);
+    $noid = explode('/', $handle['url']);
+    $document->addField('ss_noid', $noid[count($noid) - 1]);    
   }
+
+  $document->addField('ss_manifest', "$base_url/api/presentation/maps/$identifier/manifest.json");
 
   /*
    * Title (field_title)

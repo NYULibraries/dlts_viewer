@@ -143,7 +143,9 @@ function dlts_viewer_is_resource() {
     // to it's route. Get the route values as array.
     $types = array_values($object_types);
     // Check if DLTS Vierwer render the object requested.
-    $is_resource = in_array($route_argument, $types);
+    if (in_array($route_argument, $types)) {
+      $is_resource = $route_argument;
+    }
   }
   return $is_resource;
 }
@@ -222,19 +224,7 @@ function dlts_viewer_is_pjax() {
  *   Return a boolean indicating whether this is a embeded view request.
  */
 function dlts_viewer_is_embed() {
-  $is_embed = &drupal_static('is_embed');
-  if (!isset($is_embed)) {
-    $params = drupal_get_query_parameters();
-    if (isset($params['embed'])) {
-      if ($params['embed'] === '1' || $params['embed'] === 'true') {
-        $is_embed = TRUE;
-      }
-      else {
-        $is_embed = FALSE;
-      }
-    }
-  }
-  return $is_embed;
+  $is_embed = TRUE;
 }
 
 /**

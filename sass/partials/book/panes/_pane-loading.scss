@@ -1,3 +1,5 @@
+@use "sass:math";
+
 .pane.load {
   position: fixed;
   text-align: center;
@@ -5,8 +7,8 @@
   left: 50%;
   height: $loading-segments-height + 20px;
   width: $loading-segments-total-width;
-  $halfwidth: -($loading-segments-total-width / 2);
-  margin-left: $halfwidth + 240 / 2;
+  $halfwidth: -(math.div($loading-segments-total-width,2));
+  margin-left: $halfwidth + math.div(240,2);
   p {
     color: #333;
     padding-top: 10px;
@@ -15,7 +17,7 @@
 }
 
 body.pagemeta-hidden .pane.load {
-  margin-left: -($loading-segments-total-width / 2);
+  margin-left: -(math.div($loading-segments-total-width,2));
 }
 
 .pane {

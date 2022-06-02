@@ -10,168 +10,164 @@
  * @link http://api.drupal.org/api/drupal/modules--system--system.api.php/function/hook_custom_theme/7
  */
 function dlts_viewer_theme() {
-  return array(
-    'dlts_viewer_pager_button' => array(
-      'variables' => array(),
-    ),
-    'dlts_viewer_field__field_pdf_file' => array(
-      'variables' => array(),
+  return [
+    'dlts_viewer_pager_button' => [
+      'variables' => [],
+    ],
+    'dlts_viewer_field__field_pdf_file' => [
+      'variables' => [],
       'render element' => 'content',
       'base hook' => 'node',
-    ),
-    'field__field_pdf_file' => array(
-      'variables' => array(),
-    ),
-    'thumbnails_pager' => array(
-      'variables' => array(
-        'tags' => array(),
+    ],
+    'field__field_pdf_file' => [
+      'variables' => [],
+    ],
+    'thumbnails_pager' => [
+      'variables' => [
+        'tags' => [],
         'limit' => 10,
         'element' => 0,
-        'parameters' => array(),
+        'parameters' => [],
         'quantity' => 9,
-      ),
-    ),
-    'thumbnails_photo_pager' => array(
-      'variables' => array(
-        'tags' => array(),
+      ],
+    ],
+    'thumbnails_photo_pager' => [
+      'variables' => [
+        'tags' => [],
         'limit' => 10,
         'element' => 0,
         'current_page' => 0,
-        'parameters' => array(),
+        'parameters' => [],
         'quantity' => 9,
-      ),
-    ),
-    'dlts_viewer_openlayers_image' => array(
-      'variables' => array(),
-    ),
-    'dlts_viewer_navbar_item' => array(
-      'variables' => array(),
-    ),
-    'dlts_viewer_loading' => array(
+      ],
+    ],
+    'dlts_viewer_openseadragon_image' => [
+      'variables' => [],
+    ],
+    'dlts_viewer_navbar_item' => [
+      'variables' => [],
+    ],
+    'dlts_viewer_loading' => [
       'template' => 'templates/components/component--loading',
-      'variables' => array(
+      'variables' => [
         'sequence_number' => 0,
-      ),
-    ),
-    'dlts_viewer_slider' => array(
+      ],
+    ],
+    'dlts_viewer_slider' => [
       'template' => 'templates/components/component--slider',
-      'variables' => array(
+      'variables' => [
         'slider_id' => 'slider',
         'uri' => base_path(),
         'lang_dir' => 'rtl',
         'sequence_number' => 0,
         'sequence_count' => 0,
-      ),
-    ),
-    'dlts_viewer_navbar' => array(
+      ],
+    ],
+    'dlts_viewer_navbar' => [
       'template' => 'templates/components/component--navbar',
-      'variables' => array(),
-    ),
-    'dlts_viewer_thumbnails' => array(
+      'variables' => [],
+    ],
+    'dlts_viewer_thumbnails' => [
       'template' => 'templates/components/component--thumbnails',
-      'variables' => array(),
-    ),
-    'dlts_viewer_set' => array(
+      'variables' => [],
+    ],
+    'dlts_viewer_set' => [
       'template' => 'templates/set',
-      'variables' => array(),
-    ),
-    'dlts_viewer_controlpanel' => array(
-      'template' => 'templates/components/component--control_panel',
-      'variables' => NULL,
-    ),
-    'viewer' => array(
+      'variables' => [],
+    ],
+    'viewer' => [
       'template' => 'templates/components/component--viewer',
-      'variables' => array(),
-    ),
-    'photo' => array(
+      'variables' => [],
+    ],
+    'photo' => [
       'template' => 'templates/components/component--photo',
-      'variables' => array(),
-    ),
-    'viewer_page' => array(
+      'variables' => [],
+    ],
+    'viewer_page' => [
       'template' => 'templates/components/component--bookpage',
-      'variables' => array(),
-    ),
-    'viewer_map' => array(
+      'variables' => [],
+    ],
+    'viewer_map' => [
       'template' => 'templates/components/component--map',
-      'variables' => array(),
-    ),
-    'viewer_display' => array(
+      'variables' => [],
+    ],
+    'viewer_display' => [
       'template' => 'templates/components/component--display',
-      'variables' => array(),
-    ),
-    'dlts_viewer_oembed' => array(
+      'variables' => [],
+    ],
+    'dlts_viewer_oembed' => [
       'template' => 'templates/components/component--oembed',
-      'variables' => array(),
-    ),
-    'dlts_viewer_top' => array(
+      'variables' => [],
+    ],
+    'dlts_viewer_top' => [
       'template' => 'templates/components/component--top',
-      'variables' => array(),
-    ),
-    'html__viewer' => array(
+      'variables' => [],
+    ],
+    'html__viewer' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/html',
-    ),
-    'html__viewer_pjax' => array(
+    ],
+    'html__viewer_pjax' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/html.pjax',
-    ),
-    'page__viewer' => array(
+    ],
+    'page__viewer' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/page',
-    ),
-    'page__viewer_pjax' => array(
+    ],
+    'page__viewer_pjax' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/page.pjax',
-    ),
-    'ds_1col__node_metadata' => array(
+    ],
+    'ds_1col__node_metadata' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/ds-1col--node-metadata',
-    ),
-    'node__display' => array(
+    ],
+    'node__display' => [
       'render element' => 'content',
       'base hook' => 'node',
       'template' => 'templates/display',
-    ),
-    'block__content' => array(
+    ],
+    'block__content' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/block',
-    ),
-    'region__content' => array(
+    ],
+    'region__content' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/region',
-    ),
-    'node__dlts_book' => array(
+    ],
+    'node__dlts_book' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/node',
-    ),
-    'node__dlts_book_pjax' => array(
+    ],
+    'node__dlts_book_pjax' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/node.pjax',
-    ),
-    'node__dlts_map' => array(
+    ],
+    'node__dlts_map' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/node',
-    ),
-    'node__dlts_map_pjax' => array(
+    ],
+    'node__dlts_map_pjax' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/node.pjax',
-    ),
-    'viewer_documentation_page' => array(
+    ],
+    'viewer_documentation_page' => [
       'template' => 'templates/documentation',
       'variables' => [],
-    ),
-  );
+    ],
+  ];
 }
 
 function dlts_viewer_theme_registry_alter(&$theme_registry) {
@@ -203,30 +199,34 @@ function dlts_viewer_theme_field($variables) {
 }
 
 function theme_dlts_viewer_pager_button($variables) {
-  $classes = array('paging');
+  $classes = ['paging'];
   if (isset($variables['classes'])) {
     $classes = array_merge($classes, $variables['classes']);
   }
   if (dlts_viewer_is_pjax()) {
     $classes[] = 'pjax';
   }
-  $render_array = array(
-    'markup' => array(
+  $attributes = array_merge(
+    [
+      'title' => $variables['text'],
+      'href' => $variables['url'],
+      'class' =>  $classes,
+    ], 
+    $variables['attributes']
+  );
+  $render_array = [
+    'markup' => [
       '#theme' => 'html_tag',
       '#tag' => 'a',
       '#value' => '<span>' . $variables['text'] . '</span>',
-      '#attributes' => array(
-        'title' => $variables['text'],
-        'href' => $variables['url'],
-        'class' =>  $classes,
-      ),
-    ),
-  );
+      '#attributes' => $attributes,
+    ],
+  ];
   return drupal_render($render_array);
 }
 
 function theme_dlts_viewer_navbar_item($variables) {
-  $parts = array('html' => TRUE);
+  $parts = ['html' => TRUE];
   if (isset($variables['fragment'])) {
         $parts = array_merge($parts, array('fragment' => $variables['fragment']));
   }
@@ -246,116 +246,6 @@ function theme_dlts_viewer_navbar_item($variables) {
 }
 
 /**
- * Returns HTML for a high-resolution JPEG 2000 image.
- *
- * This function returns the necessary HTML elements, and sets certain
- * JavaScript settings for the file being displayed. The given elements are
- * then replaced by OpenLayers with a zoomable version of the image.
- *
- * @ingroup themable
- */
-function theme_dlts_viewer_openlayers_image($variables) {
-
-  $file = $variables['file'];
-
-  $fid = 'id-' . $file['fid'];
-
-  $file_uri = file_create_url($file['uri']);
-
-  if (isset($file['timestamp'])) {
-    $file_uri = $file_uri . '?v=' . $file['timestamp'];
-  }
-
-  // Check if zoom its part of the request.
-  if (isset($file['zoom'])) {
-    $zoom = $file['zoom'];
-  }
-  else {
-    // We default zoom to 1 (tablets and "desktops").
-    $zoom = 1;
-    // Mobile_Detect.
-    $detect = dlts_viewer_mobile_detect();
-    // We give phone users the smallest possible image by default
-    // see https://jira.nyu.edu/jira/browse/DLTSVIEWER-74
-    // Mobiles zoom default 0, exclude tablets.
-    if ($detect->isMobile() && !$detect->isTablet()) {
-      $zoom = 0;
-    }
-  }
-
-  $openlayers_options = array(
-    'service' => $GLOBALS['base_url'] . '/api/v1/image',
-    'imgMetadata' => array(
-      'width' => $file['width'],
-      'height' => $file['height'],
-      'levels' => $file['levels'],
-      'dwtLevels' => $file['dwtLevels'],
-      'compositingLayerCount' => $file['compositingLayerCount'],
-    ),
-    'zoom' => $zoom,
-  );
-
-  $json_data = json_encode($openlayers_options);
-
-  $js_inline = '(function(O){O.DLTS.Page("' . $fid . '","' .  $file_uri . '",' . $json_data . ')})(OpenLayers);';
-
-  $js_options = array(
-    'group' => JS_DEFAULT,
-    'type' => 'inline',
-    'every_page' => FALSE,
-    'weight' => 5,
-    'scope' => 'footer',
-    'cache' => TRUE,
-    'defer' => TRUE,
-  );
-
-  drupal_add_js($js_inline, $js_options);
-
-  if (!isset($file['thumbnailsUrl'])) {
-    $file['thumbnailsUrl'] = 'undefined';
-  }
-
-  if (!isset($file['thumbnailsRows'])) {
-    $file['thumbnailsRows'] = 0;
-  }
-
-  if (!isset($file['thumbnailsPage'])) {
-    $file['thumbnailsPage'] = 0;
-  }
-
-  $options = array(
-    '@id' => $fid,
-    '@uri' => $file_uri,
-    '@width' => $file['width'],
-    '@height' => $file['height'],
-    '@levels' => $file['levels'],
-    '@dwtLevels' => $file['dwtLevels'],
-    '@layer' => $file['compositingLayerCount'],
-    '@sequence' => array_shift($file['sequence']),
-    '@thumbnailsUrl' => $file['thumbnailsUrl'],
-    '@thumbnailsRows' => $file['thumbnailsRows'],
-    '@thumbnailsPage' => $file['thumbnailsPage'],
-    '@pageView' => 'single',
-  );
-
-  return t('<div
-    id="@id"
-    class="dlts_image_map dlts_viewer_map"
-    data-sequence="@sequence"
-    data-pageView="@pageView"
-    data-uri="@uri"
-    data-width="@width"
-    data-height="@height"
-    data-levels="@levels"
-    data-dwtLevels="@dwtLevels"
-    data-compositing-layer="@layer"
-    data-thumbnails-url="@thumbnailsUrl"
-    data-thumbnails-rows="@thumbnailsRows"
-    data-thumbnails-page="@thumbnailsPage"
-  ></div>', $options);
-}
-
-/**
  * Override of theme_pager().
  * Easily one of the most obnoxious theming jobs in Drupal core.
  * Goals: consolidate functionality into less than 5 functions and
@@ -368,56 +258,64 @@ function theme_thumbnails_pager($vars) {
   $parameters = $vars['parameters'];
   $quantity = $vars['quantity'];
   $pager_list = theme('pager_list', $vars);
-  $links = array();
+  $links = [];
   $links['pager-first'] = theme(
     'pager_first',
-    array(
+    [
       'text' => (isset($tags[0]) ? $tags[0] : t('First')),
       'element' => $element,
       'parameters' => $parameters,
-    )
+    ]
   );
   $links['pager-previous'] = theme(
     'pager_previous',
-    array(
+    [
       'text' => (isset($tags[1]) ? $tags[1] : t('Prev')),
       'element' => $element,
       'interval' => 1,
       'parameters' => $parameters,
-    )
+    ]
   );
-  $links['pager-next'] = theme('pager_next', array(
-    'text' => (isset($tags[3]) ? $tags[3] : t('Next')),
-    'element' => $element,
-    'interval' => 1,
-    'parameters' => $parameters,
-  ));
-  $links['pager-last'] = theme('pager_last', array(
-    'text' => (isset($tags[4]) ? $tags[4] : t('Last')),
-    'element' => $element,
-    'parameters' => $parameters,
-  ));
-  $links['close'] = array(
+  $links['pager-next'] = theme(
+    'pager_next', 
+    [
+      'text' => (isset($tags[3]) ? $tags[3] : t('Next')),
+      'element' => $element,
+      'interval' => 1,
+      'parameters' => $parameters,
+    ]
+  );
+
+  $links['pager-last'] = theme(
+    'pager_last', 
+    [
+      'text' => (isset($tags[4]) ? $tags[4] : t('Last')),
+      'element' => $element,
+      'parameters' => $parameters,
+    ]
+  );
+  
+  $links['close'] = [
     'title' => t('Close [x]'),
     'href' => '#',
-    'attributes'
-    => array(
-      'class' =>
-        array(
-          'close',
-        ),
-    ),
-  );
+    'attributes' => [
+      'class' => [ 'close' ]
+    ],
+  ];
+
   $links = array_filter($links);
-  $pager_links = theme('links', array(
+
+  $pager_links = theme('links', [
     'links' => $links,
-    'attributes' => array(
+    'attributes' => [
       'class' => 'links pager pager-links',
-    ),
-  ));
+    ],
+  ]);
+
   if ($pager_list) {
     return '<div class="pager clearfix">' . $pager_list . ' ' . $pager_links . '</div>';
   }
+
 }
 
 function theme_thumbnails_photo_pager($vars) {
@@ -434,7 +332,7 @@ function theme_thumbnails_photo_pager($vars) {
       if ($i == $current_page) {
         $context_index = $i + 1;
         $links[''.$i] =  array('title' => ''. $context_index);
-      } 
+      }
       else {
           $links['' . $i] = theme('pager_link', array(
               'text' => (isset($tags[0]) ? $tags[0] : t('' . ($i + 1))),
@@ -488,7 +386,7 @@ function theme_thumbnails_photo_pager($vars) {
 }
 
 // See ticker https://jira.nyu.edu/jira/browse/DLTSVIEWER-95
-function theme_field__field_pdf_file (&$variables) {
+function theme_field__field_pdf_file(&$variables) {
   $out = '';
   $dir = dlts_viewer_viewer_language((array)$variables['element']['#object']);
   if ($variables['element']['#view_mode'] == 'metadata') {
@@ -545,4 +443,30 @@ function theme_field__field_pdf_file (&$variables) {
     $out .= '</div>';
     return $out;
   }
+}
+
+/**
+ * Returns HTML for a high-resolution JPEG 2000 image.
+ *
+ * This function returns the necessary HTML elements, and sets certain
+ * JavaScript settings for the file being displayed. The given elements are
+ * then replaced by OpenLayers with a zoomable version of the image.
+ *
+ * @ingroup themable
+ */
+function theme_dlts_viewer_openseadragon_image($variables) {
+  $classList = implode(' ', $variables['classList']);
+  return "<div
+    id='$variables[id]'
+    class='$classList'
+    data-type='$variables[type]'
+    data-identifier='$variables[identifier]'
+    data-current='$variables[sequence]'
+    data-sequence='$variables[sequence]'
+    data-sequence-count='$variables[count]'
+    data-view='$variables[view]'
+    data-manifest='$variables[manifest]'
+    data-service='$variables[service]'
+    data-uri='$variables[uri]'
+  ></div>";
 }
