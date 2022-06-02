@@ -174,7 +174,9 @@ function dlts_viewer_map_dispatcher($entity, array $arg) {
 
   $entity->sequence = 1;
 
-  $entity->manifest = t('<a href="@url">IIIF Presentation v. 3.0.0</a>', [ '@url' => url("$base_url/api/image/$is_resource/$identifier/$entity->sequence/info.json") ]);
+  $entity->manifest = "$base_url/api/image/$is_resource/$entity->identifier/$entity->sequence/info.json";
+
+  $entity->presentation = t('<a href="@url">IIIF Presentation</a>', [ '@url' => url("$base_url/api/presentation/$is_resource/$entity->identifier/manifest.json") ]);
 
   $entity->book_page = theme(
     'dlts_viewer_openseadragon_image', 
