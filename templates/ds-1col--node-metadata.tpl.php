@@ -17,7 +17,7 @@
         <div dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" class="field-label">Manifest:&nbsp;</div>
         <div dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" class="field-items">
           <div dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" class="field-item even">
-            <?php print $manifest ?>
+            <?php print $presentation ?>
           </div>
         </div>
       </div>
