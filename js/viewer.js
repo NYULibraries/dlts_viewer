@@ -50,7 +50,6 @@ async function ViewerApp(Y) {
 
   function postMessage(fire, message) {
     const post = JSON.stringify({ fire, message })
-    console.log(post)
     window.top.postMessage(post, '*')
   }
 
