@@ -49,7 +49,9 @@ async function ViewerApp(Y) {
   Y.count = Number(sequenceCount)
 
   function postMessage(fire, message) {
-    window.top.postMessage(JSON.stringify({ fire, message }), '*')
+    const post = JSON.stringify({ fire, message })
+    console.log(post)
+    window.top.postMessage(post, '*')
   }
 
   function toggleview(props) {
@@ -196,7 +198,7 @@ async function ViewerApp(Y) {
 
       Y.seqmap = await seqmap(message)
 
-      postMessage({ fire, message })
+      postMessage(fire, message)
 
       const tileSources = await tiles(Y.seqmap, dataset)
 
@@ -250,10 +252,7 @@ async function ViewerApp(Y) {
     button.classList.remove('off')
     button.classList.add('on')
     element.closest('.pane-body').classList.remove('pagemeta-hidden')
-    postMessage({
-      fire: 'button:button-metadata:on',
-      message: {}
-    })
+    postMessage('button:button-metadata:on', {})
   }
 
   function on_button_metadata_off() {
@@ -263,10 +262,7 @@ async function ViewerApp(Y) {
     button.classList.add('off')
     element.classList.add('hidden')
     element.closest('.pane-body').classList.add('pagemeta-hidden')
-    postMessage({
-      fire: 'button:button-metadata:off',
-      message: {}
-    })
+    postMessage('button:button-metadata:off', {})
   }
 
   function tiles_loading() {
@@ -284,10 +280,7 @@ async function ViewerApp(Y) {
     if (Y.isFullyLoaded) {
       Y.nodes.body.classList.remove('openlayers-loading')
       hide('.pane.load')
-      postMessage({
-        fire: 'viewer:loaded',
-        message: {}
-      })
+      postMessage('viewer:loaded', {})
     }
   }
 
@@ -538,13 +531,12 @@ async function ViewerApp(Y) {
 
   Y.seqmap = await seqmap({ count: Y.count, view, sequence, current })
 
-  document.querySelector('.current_page').textContent = 
-    Y.nodes.osd.dataset.sequence = sequence
-  
+  document.querySelector('.current_page').textContent =  Y.nodes.osd.dataset.sequence = sequence
+
   if (Y.nodes.slider) {
     Y.nodes.slider.value = sequence
   }
-  
+
   if (Y.nodes.slider_value) {
     Y.nodes.slider_value.value = sequence
   }
@@ -737,17 +729,18 @@ async function ViewerApp(Y) {
 
   document.addEventListener('load:sequence', load_sequence)
 
-  // window.addEventListener('popstate', (e) => {
-    // document.dispatchEvent(
-    //   new CustomEvent('load:sequence', {
-    //     detail: {
-    //       operation: 'change',
-    //       to: history.state.sequence,
-    //       trigger: 'popstate',
-    //     }
-    //   })
-    // )
-  // })
+  window.addEventListener('popstate', (e) => {
+    console.log(e)
+    document.dispatchEvent(
+      new CustomEvent('viewer:popstate', {
+        detail: {
+          operation: 'change',
+          to: history.state.sequence,
+          trigger: 'popstate',
+        }
+      })
+    )
+  })
 
   document.addEventListener('button:button-metadata:on', on_button_metadata_on)
 
@@ -795,10 +788,7 @@ async function ViewerApp(Y) {
     if (window.self === window.top) {
       window.location.assign(url)
     } else {
-      postMessage({
-        fire: 'change:option:multivolume',
-        message: { url }
-      })
+      postMessage('change:option:multivolume', url)
     }
   })
 
