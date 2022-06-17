@@ -184,8 +184,8 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
         'type' => $is_resource,
         'href' => "$base_url/photos/$identifier",
         'id' => 'button-thumbnails',
-        'target' => '_self',
         'class' => implode(' ', [
+          'button',
           'thumbnails', 
           'off',
         ])
