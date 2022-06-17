@@ -335,9 +335,18 @@ async function ViewerApp(Y) {
   }
 
   function on_open_thumbnails_view() {
-    const { uri } = Y.nodes.osd.dataset
+
+    const { uri, type } = Y.nodes.osd.dataset
+
+    if (type === 'photos') {
+      window.location = document.querySelector('#button-thumbnails').href
+      return
+    }
+
     const { state } = Y.nodes.thumbnails.dataset
+    
     const width = '230'
+    
     const height = '150'
 
     document.querySelector('html').classList.add('thumbnails-view')
