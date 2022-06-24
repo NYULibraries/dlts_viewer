@@ -514,6 +514,10 @@ async function ViewerApp(Y) {
   }
 
   async function tiles(seqmap, dataset) {
+    const language_dir = 'rtl'
+    if (language_dir === 'rtl') {
+      seqmap.sequence = seqmap.sequence.reverse()
+    }
     return seqmap.sequence.map((sequence, x) => {
       return {
         tileSource: `${dataset.service}/${dataset.type}/${dataset.identifier}/${sequence}/info.json`, x
@@ -738,7 +742,6 @@ async function ViewerApp(Y) {
   document.addEventListener('load:sequence', load_sequence)
 
   window.addEventListener('popstate', (e) => {
-    console.log(e)
     document.dispatchEvent(
       new CustomEvent('viewer:popstate', {
         detail: {
