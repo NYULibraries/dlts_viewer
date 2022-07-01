@@ -556,8 +556,6 @@ async function ViewerApp(Y) {
     item.textContent = Y.seqmap.count
   })
 
-  console.log(Y.nodes.osd.dataset)
-
   const tileSources = await tiles(Y.seqmap, Y.nodes.osd.dataset)
 
   const options = {
