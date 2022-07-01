@@ -22,7 +22,7 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
 
   $module_path = drupal_get_path('module', 'dlts_viewer');
-  
+
   drupal_add_css("$module_path/dist/viewer.css", [ 'group' => CSS_DEFAULT,  'every_page' => TRUE ]);
 
   // Test if resource, will return the maped type of resource (e.g., books, photos).
@@ -42,7 +42,7 @@ function dlts_viewer_photo_set_dispatcher($entity) {
 
   // Collection.
   $field_collection = $wrapper->field_collection->value();
-  
+
   // Partner.
   $field_partner = $wrapper->field_partner->value();
 
@@ -52,11 +52,11 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   $service = "$base_url/api/image";
 
   $index = 0;
-  
+
   $resources = [];
 
   $width = 150;
-  
+
   $height = '';
 
   while ($index < $count) {
@@ -72,7 +72,7 @@ function dlts_viewer_photo_set_dispatcher($entity) {
     ];
     $index++;
   }
- 
+
   $collections = [];
 
   foreach ($field_collection as $collection) {
@@ -83,14 +83,14 @@ function dlts_viewer_photo_set_dispatcher($entity) {
       'identifier' => $collection_wrapper->field_identifier->value(),
     ];
   }
-  
+
   $collection_title = $collections[0]->label;
 
   $page_title = "$collection_title - $title";
 
   drupal_set_title($page_title);
- 
-  return theme('dlts_viewer_set', [ 
+
+  return theme('dlts_viewer_set', [
     'title' => $page_title,
     'identifier' => $identifier,
     'resources' => $resources,
@@ -106,9 +106,9 @@ function dlts_viewer_photo_set_dispatcher($entity) {
  *   Node.
  */
 function dlts_viewer_photo_dispatcher($entity, $sequence) {
-  
+
   global $base_url;
-  
+
   $module_path = drupal_get_path('module', 'dlts_viewer');
 
   drupal_add_css($module_path . '/dist/viewer.css', [ 'group' => CSS_DEFAULT, 'every_page' => TRUE ]);
@@ -120,7 +120,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
       'group' => JS_LIBRARY,
       'weight' => -101,
     ]
-  );  
+  );
 
   drupal_add_js(
     'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
@@ -132,7 +132,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
   );
 
   drupal_add_js($module_path . '/dist/polyfill.bundle.js', [ 'type' => 'file', 'scope' => 'footer' ]);
- 
+
   drupal_add_js($module_path . '/dist/books.bundle.js', [ 'type' => 'file', 'scope' => 'footer' ]);
 
   // Test if resource, will return the maped type of resource (e.g., books, photos).
@@ -175,7 +175,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
 
   if ($entity->sequence == 1) {
     $previous_page_active = FALSE;
-  } 
+  }
   $navbar_options = [];
   if ($sequence_count > 1) {
     $navbar_options = [
@@ -186,7 +186,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
         'id' => 'button-thumbnails',
         'class' => implode(' ', [
           'button',
-          'thumbnails', 
+          'thumbnails',
           'off',
         ])
       ],
@@ -202,11 +202,11 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
       'operation' => 'decrease',
       'class' => implode(' ', [
         'paging',
-        'previous', 
+        'previous',
         'pager-left',
         ($previous_page_active ? 'active' : 'inactive'),
       ])
-    ];  
+    ];
     $navbar_options['next'] = [
       'id' => 'next-page',
       'label' => t('Go to next page'),
@@ -218,7 +218,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
       'operation' => 'increase',
       'class' => implode(' ', [
         'paging',
-        'next', 
+        'next',
         'pager-right',
         ($next_page_active ? 'active' : 'inactive'),
       ])
@@ -234,7 +234,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
 
   $viewer = [
     'book_page' => theme(
-      'dlts_viewer_openseadragon_image', 
+      'dlts_viewer_openseadragon_image',
       [
         'id' => 'openseadragon1',
         'view' => 'single',
@@ -245,6 +245,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
         'manifest' => "$base_url/api/image/$is_resource/$identifier/$entity->sequence/info.json",
         'service' => $servie_url ,
         'uri' => "$base_url/$is_resource/$identifier",
+        'dir' => $entity->read_order,
         'classList' => [
           'dlts_image_map',
           'dlts_viewer_map',
@@ -294,7 +295,7 @@ function dlts_viewer_photo_embed_redirect($entity) {
 
 /**
  * Redirect request and delivers photo thumbail.
- * E.g., 
+ * E.g.,
  * - http://{host}/photos/AD_MC_036_ref349/1/mode/thumb
  * - http://192.168.0.18:9000/photos/AD_MC_036_ref349/1/mode/thumb
  */

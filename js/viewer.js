@@ -36,12 +36,12 @@ async function ViewerApp(Y) {
 
   Y.nodes.slider = document.querySelector('#range_weight')
 
-  Y.nodes.slider_value = document.querySelector('#slider_value')  
+  Y.nodes.slider_value = document.querySelector('#slider_value')
 
   const {
-    view, 
-    sequence, 
-    sequenceCount, 
+    view,
+    sequence,
+    sequenceCount,
     current,
     type
   } = Y.nodes.osd.dataset
@@ -147,7 +147,7 @@ async function ViewerApp(Y) {
         return {
           sequences,
           count,
-          view,          
+          view,
           sequence: sequences.find(value => value.includes(sequence) === true),
         }
       case 'single':
@@ -155,7 +155,7 @@ async function ViewerApp(Y) {
           sequences.push([ index + 1])
         })
         return {
-          sequences, 
+          sequences,
           count,
           view,
           sequence: [ sequences.find(value => Number(value) === Number(sequence)) ],
@@ -317,7 +317,7 @@ async function ViewerApp(Y) {
       Y.nodes.togglePage.classList.remove('inactive')
       Y.nodes.togglePage.classList.add('active')
     }
-    
+
     Y.nodes.next.forEach(item => {
       if (sequence < sequenceCount) {
         item.classList.remove('inactive')
@@ -344,9 +344,9 @@ async function ViewerApp(Y) {
     }
 
     const { state } = Y.nodes.thumbnails.dataset
-    
+
     const width = '230'
-    
+
     const height = '150'
 
     document.querySelector('html').classList.add('thumbnails-view')
@@ -491,7 +491,7 @@ async function ViewerApp(Y) {
     } = props.dataset
 
     const to = Math.max(...Y.seqmap.sequence) + 1
-    
+
     if (to > Number(sequenceCount)) {
       return sequenceCount
     } else {
@@ -514,8 +514,7 @@ async function ViewerApp(Y) {
   }
 
   async function tiles(seqmap, dataset) {
-    const language_dir = 'rtl'
-    if (language_dir === 'rtl') {
+    if (dataset.dir == 'rtl') {
       seqmap.sequence = seqmap.sequence.reverse()
     }
     return seqmap.sequence.map((sequence, x) => {
@@ -556,6 +555,8 @@ async function ViewerApp(Y) {
   document.querySelectorAll('.sequence_count').forEach(item => {
     item.textContent = Y.seqmap.count
   })
+
+  console.log(Y.nodes.osd.dataset)
 
   const tileSources = await tiles(Y.seqmap, Y.nodes.osd.dataset)
 
@@ -737,7 +738,7 @@ async function ViewerApp(Y) {
 
   if (Y.nodes.slider) {
     Y.nodes.slider.addEventListener('change', slide_value_change)
-  }  
+  }
 
   document.addEventListener('load:sequence', load_sequence)
 

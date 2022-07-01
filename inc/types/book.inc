@@ -44,12 +44,12 @@ function dlts_viewer_dispatch_thumbnails(object $entity) {
   $title = $wrapper->field_title->value();
 
   $int_read_order = 0;
-    
+
   if (isset($wrapper->field_read_order)) {
     $int_read_order = $wrapper->field_read_order->value();
   }
 
-  $entity->read_order = ($int_read_order == 1) ? 'rtl' : 'ltr';  
+  $entity->read_order = ($int_read_order == 1) ? 'rtl' : 'ltr';
 
   // Check for mobile devices.
   $is_mobile = dlts_viewer_is_mobile();
@@ -71,16 +71,16 @@ function dlts_viewer_dispatch_thumbnails(object $entity) {
   $width = '150';
 
   $out = '<div class="node">';
-  $out .= '<div class="thumbnails container" dir="' . $entity->read_order . '">'; 
+  $out .= '<div class="thumbnails container" dir="' . $entity->read_order . '">';
   while (true) {
     $out .= '<div class="thumbnails item">'; // @todo: Set current-page
-    $out .= "  <a href='$base_url/$type/$identifier/$sequence' data-sequence='$sequence' class='thumbnails sequence'>"; 
+    $out .= "  <a href='$base_url/$type/$identifier/$sequence' data-sequence='$sequence' class='thumbnails sequence'>";
     $out .= "    <img class='thumbItem' height='$height' width='$width' loading='lazy' alt='' src='$service/$type/$identifier/$sequence/full/$width,/0/default.jpg'>";
     // $out .= "    <img class='thumbItemloader' src='$placeholder' height='$height' width='$width'>";
     // $out .= "    <img class='thumbItembg' src='$placeholder' height='$height' width='$width'>";
     // $out .= "    <span class='page-number'>$sequence</span>";
-    $out .= '  </a>'; 
-    $out .= '</div>'; 
+    $out .= '  </a>';
+    $out .= '</div>';
     if ($sequence === $sequence_count) {
       break;
     }
@@ -105,7 +105,7 @@ function dlts_viewer_full_book_view($entity) {
   $inline = file_get_contents(DRUPAL_ROOT . '/' . $module_path . '/dist/viewer.css');
 
   drupal_add_css($inline, [ 'type' => 'inline', 'group' => CSS_THEME, 'every_page' => FALSE, ]);
-  
+
   drupal_add_js(
     'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
     'external',
@@ -125,12 +125,12 @@ function dlts_viewer_full_book_view($entity) {
   );
 
   drupal_add_js($module_path . '/dist/polyfill.bundle.js', [
-    'type' => 'file', 
+    'type' => 'file',
     'scope' => 'footer',
   ]);
 
   drupal_add_js($module_path . '/dist/books.bundle.js', [
-    'type' => 'file', 
+    'type' => 'file',
     'scope' => 'footer',
   ]);
 
@@ -219,7 +219,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
     $volume_number_str = $multivolume_book_wrapper->field_volume_number_str->value();
     // Change entity title.
     $entity->title = t(
-      '@title @volume', 
+      '@title @volume',
       [
         '@title' => $entity->title,
         '@volume' => $volume_number_str
@@ -252,10 +252,10 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
     if ($is_pjax) {
       $display_type = 'book_page_pjax';
     }
-    
+
     // Default single page view.
     $is_single_page = TRUE;
-    
+
     $sequence = $arg['sequence'];
 
     if (is_array($sequence)) {
@@ -275,9 +275,9 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
     }
 
     $sequence_count = $wrapper->field_sequence_count->value();
-    
+
     $int_read_order = 0;
-    
+
     if (isset($wrapper->field_read_order)) {
       $int_read_order = $wrapper->field_read_order->value();
     }
@@ -315,7 +315,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
       'operation' => 'decrease',
       'class' => implode(' ', [
         'paging',
-        'previous', 
+        'previous',
         $entity->read_order,
         ($entity->read_order === 'ltr') ? 'pager-left' : 'pager-right',
         ($previous_page_active ? 'active' : 'inactive'),
@@ -336,12 +336,12 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         $entity->read_order,
         ($entity->read_order === 'ltr') ? 'pager-right' : 'pager-left',
         ($next_page_active ? 'active' : 'inactive'),
-      ])      
+      ])
     ];
-   
+
     // Book page sequence number.
     $entity->book_page_sequence_number = $entity->sequence;
-  
+
     $navbar_options = [
       'next' => $button_next,
       'previous' => $button_previous,
@@ -355,8 +355,8 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         'count' => $sequence_count,
         'operation' => 'increase',
         'class' => implode(' ', [
-          'button', 
-          'thumbnails', 
+          'button',
+          'thumbnails',
           'off',
         ])
       ],
@@ -368,7 +368,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         'identifier' => $entity->identifier,
         'sequence' => $entity->sequence,
         'count' => $sequence_count,
-        'operation' => 'toggleview',      
+        'operation' => 'toggleview',
         'class' => implode(' ', [
           'toggle',
           'active',
@@ -377,29 +377,29 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
       ],
       'metadata' => [
         'label' => t('Show/hide metadata'),
-        'operation' => 'togglemetadata',  
+        'operation' => 'togglemetadata',
         'href' => '#metadata',
         'class' => implode(' ', [
-          'button', 
-          'metadata', 
+          'button',
+          'metadata',
           (($is_mobile) ? 'off' : 'on')
         ]),
         'id' => 'button-metadata',
       ],
     ];
-    
+
     $entity->navbar = theme('dlts_viewer_navbar', $navbar_options);
-    
+
     $entity->pane_metadata_hidden = $is_mobile;
-    
+
     $entity->sequence_count = $sequence_count;
 
     $entity->manifest = "$base_url/api/image/$is_resource/$entity->identifier/$entity->sequence/info.json";
 
     $entity->presentation = t('<a href="@url">IIIF Presentation</a>', [ '@url' => url("$base_url/api/presentation/$is_resource/$entity->identifier/manifest.json") ]);
-        
+
     $entity->slider = theme(
-      'dlts_viewer_slider', 
+      'dlts_viewer_slider',
       [
         'id' => 'slider',
         'max' => $sequence_count,
@@ -414,7 +414,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
     $servie_url = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
 
     $entity->book_page = theme(
-      'dlts_viewer_openseadragon_image', 
+      'dlts_viewer_openseadragon_image',
       [
         'id' => 'openseadragon1',
         'view' => 'single',
@@ -425,12 +425,13 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         'manifest' => $entity->manifest,
         'service' => $servie_url ,
         'uri' => "$base_url/$is_resource/$entity->identifier",
+        'dir' => $entity->read_order,
         'classList' => [
           'dlts_image_map',
           'dlts_viewer_map',
         ],
       ]
-    ); 
+    );
   }
 
   $entity->count = $sequence_count;
