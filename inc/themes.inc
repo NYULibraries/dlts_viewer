@@ -280,7 +280,8 @@ function theme_dlts_viewer_openseadragon_image($variables) {
     data-sequence-count='$variables[count]'
     data-view='$variables[view]'
     data-manifest='$variables[manifest]'
-    data-service='$variables[service]'
+    data-service='$variables[service]',
+    data-dir='$variables[dir]',
     data-uri='$variables[uri]'
   ></div>";
 }
