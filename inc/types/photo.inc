@@ -225,8 +225,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
     ];
   }
 
-  // Change to $base_url.
-  $servie_url = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
+  $servie_url = "$base_url/api/image";
 
   $entity->manifest = "$base_url/api/image/$is_resource/$entity->identifier/$entity->sequence/info.json";
 
