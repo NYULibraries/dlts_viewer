@@ -15,14 +15,14 @@
  *   Alias.
  */
 function dlts_viewer_get_bundle_alias($type) {
-  $types = array(
+  $types = [
     'dlts_book' => 'books',
     'dlts_map' => 'maps',
     'dlts_photo_set' => 'photos',
     'dlts_postcard' => 'postcards',
     'dlts_collection' => 'collections',
     'dlts_partner' => 'partners',
-  );
+  ];
   if (isset($types[$type])) {
     return $types[$type];
   }
@@ -60,14 +60,14 @@ function dlts_viewer_is_bundle($bundle) {
  *   Machine name of the content type.
  */
 function dlts_type_load($type) {
-  $types = array(
+  $types = [
     'books' => 'dlts_book',
     'maps' => 'dlts_map',
     'photos' => 'dlts_photo_set',
     'postcards' => 'dlts_postcard',
     'collections' => 'dlts_collection',
     'partners' => 'dlts_partner',
-  );
+  ];
   if (isset($types[$type])) {
     return $types[$type];
   }

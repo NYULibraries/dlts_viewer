@@ -8,6 +8,11 @@
 /**
  * Load MongoDB helper.
  */
+include_once 'inc/common.inc';
+
+/**
+ * Load MongoDB helper.
+ */
 include_once 'inc/mongodb.inc';
 
 /**
@@ -70,28 +75,28 @@ function dlts_viewer_custom_theme() {
  * Implements hook_permission().
  */
 function dlts_viewer_permission() {
-  return array(
+  return [
     'access dlts repository' => [
       'title' => t('Query repository'),
       'description' => t('Query repository and search objects.'),
     ],
-    'administer fileserver' => array(
+    'administer fileserver' => [
       'title' => t('administer fileserver'),
       'description' => t('Administer the settings for the fileServer.'),
-    ),
-    'dlts create object' => array(
+    ],
+    'dlts create object' => [
       'title' => t('Use DLTS Viewer API to create object'),
       'description' => t('Allow user to create object using DLTS Viewer API.'),
-    ),
-    'dlts topic api' => array(
+    ],
+    'dlts topic api' => [
       'title' => t('Allow user to see Topic API'),
       'description' => t('Allow user to see Topic API'),
-    ),
-    'access iiif content' => array(
+    ],
+    'access iiif content' => [
       'title' => t('Allow user to IIIF content'),
       'description' => t('Allow user to IIIF content'),
-    ),
-  );
+    ],
+  ];
 }
 
 /**
@@ -140,7 +145,6 @@ function dlts_viewer_preprocess_html(&$vars) {
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     /** we are not in admin page, default Viewer HTML template */
     $vars['theme_hook_suggestions'][] = 'html__viewer';
-    $vars['classes_array'][] = 'yui3-skin-sam';
     /** Check if this is a PJAX request */
     if (dlts_viewer_is_pjax()) {
       /** default Viewer PJAX HTML template */
@@ -156,7 +160,6 @@ function dlts_viewer_preprocess_html(&$vars) {
     else {
       $vars['classes_array'][] = 'not_mobile';
     }
-
     // See: https://jira.nyu.edu/jira/browse/DLTSVIEWER-81
     $language_default = language_default();
     $vars['resource_language_code'] = $language_default->language;
@@ -167,7 +170,6 @@ function dlts_viewer_preprocess_html(&$vars) {
     if ($resource_language_code) {
       $vars['resource_language_code'] = $resource_language_code;
     }
-
     /**
      * We use Drupal to render objects from MongoDB that don't have a record register
      * in Drupal's database. We don't want Drupal to manage this records. We need a
@@ -233,12 +235,9 @@ function dlts_viewer_process_page(&$vars) {
     $vars['theme_hook_suggestions'][] = 'page__viewer';
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     $vars['is_embed'] = $is_embed;
-    if ($is_pjax) {
-      $vars['theme_hook_suggestions'][] = 'page__viewer_pjax';
-    }
     // check if this is a embed request. Don't show title if is embeded
     if (!$is_embed) {
-      $top_options = array(
+      $top_options = [
         'is_admin' => $vars['is_admin'],
         'tabs' => render($vars['tabs']),
         'messages' => $vars['messages'],
@@ -247,7 +246,7 @@ function dlts_viewer_process_page(&$vars) {
         'title_prefix' => render($vars['title_prefix']),
         'title_suffix' => render($vars['title_suffix']),
         'help' => render($vars['page']['help']),
-      );
+      ];
       $vars['top'] = theme('dlts_viewer_top', $top_options);
     }
   }
@@ -263,21 +262,20 @@ function dlts_viewer_process_page(&$vars) {
  * @see FileFilesServerStreamWrapper
  */
 function dlts_viewer_stream_wrappers() {
-  $wrappers = array(
-    'fileserver' => array(
+  return [
+    'fileserver' => [
       'name' => t('Fileserver StreamWrapper'),
       'class' => 'FileFilesServerStreamWrapper',
       'description' => t('Access file from the FileServer.'),
       'type' => STREAM_WRAPPERS_WRITE_VISIBLE,
-    ),
-    'pdfserver' => array(
+    ],
+    'pdfserver' => [
       'name' => t('PDFServer StreamWrapper'),
       'class' => 'PDFServerStreamWrapper',
       'description' => t('Access PDF file from the PDFServer.'),
       'type' => STREAM_WRAPPERS_WRITE_VISIBLE,
-    ),
-  ) ;
-  return $wrappers;
+    ],
+  ];
 }
 
 function dlts_viewer_metadata_display($node) {
@@ -417,6 +415,36 @@ function dlts_viewer_flush_caches() {
 
 }
 
+function dlts_viewer_js_alter(&$javascript) {
+  if (dlts_viewer_is_resource()) {
+    $allow = [
+      'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/keyboardjs/2.6.2/keyboard.min.js',
+      'sites/all/modules/dlts_viewer/dist/polyfill.bundle.js',
+      'sites/all/modules/dlts_viewer/dist/books.bundle.js',
+    ];
+    foreach ($javascript as $key => $setting) {
+      if ((array_search($key, $allow)) === false) {
+        unset($javascript[$key]);
+      }
+    }
+  }
+}
+
+function dlts_viewer_css_alter(&$css) {
+  if (dlts_viewer_is_resource()) {
+    $allow = [
+      'sites/all/modules/dlts_viewer/dist/viewer.css',
+    ];
+    foreach ($css as $key => $setting) {
+      if ((array_search($key, $allow)) === false) {
+        unset($css[$key]);
+      }
+    }
+  }
+}
+
 // here we need to make sure we delete the record from Apache Solr
 function dlts_viewer_node_delete($node) {
   $records = db_query("SELECT document from {dlts_viewer_books_json} WHERE nid = :nid", array(":nid" => $node->nid));
@@ -431,7 +459,7 @@ function dlts_viewer_node_delete($node) {
 /**
  * Create the table which was missing during early stage of module development.
  */
- function dlts_viewer_update_7102() {
+function dlts_viewer_update_7102() {
   $table = array(
     'description' => 'Resource table',
     'fields' => array(

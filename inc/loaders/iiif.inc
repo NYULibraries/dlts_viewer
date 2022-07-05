@@ -16,10 +16,10 @@
  */
 function dlts_iiif_region_load($region) {
   // @link https://iiif.io/api/image/3.0/#41-region
-  $valid_regions = array(
+  $valid_regions = [
     'full',
     'square',
-  );
+  ];
   if (
     in_array($region, $valid_regions) ||
     preg_match('/^[0-9]*,{1}[0-9]*,{1}[0-9]*,{1}[0-9]*$/', $region) ||
@@ -58,12 +58,12 @@ function dlts_iiif_rotation_load($rotation) {
  */
 function dlts_iiif_quality_load($quality) {
   // @link https://iiif.io/api/image/3.0/#44-quality
-  $valid = array(
+  $valid = [
     'default.jpg',
     'gray.jpg',
     'color.jpg',
     'bitonal.jpg',
-  );
+  ];
   if (in_array($quality, $valid)) {
     return $quality;
   }
@@ -176,50 +176,41 @@ function dlts_resource_sequence_load($sequence, array $map, $resource_index) {
 
   $identifier = $wrapper->field_identifier->value();
 
-  module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
-
   $collection_name = dlts_viewer_mongodb_collections_by_type($type);
 
-  $result = dlts_viewer_mongodb_load_sequence(
-    $sequence,
-    $identifier,
-    $collection_name
-  );
+  $result = dlts_viewer_mongodb_load_sequence($sequence, $identifier, $collection_name);
 
   if (
     $result &&
     isset($result['cm']) &&
     !empty($result['cm']['uri'])
   ) {
-    return array(
+    return [
       'fid' => str_replace('fileserver://', '', $result['cm']['uri']),
       'sequence' => array_pop($result['sequence']),
       'url' => file_create_url($result['cm']['uri']),
       'uri' => $result['cm']['uri'],
       'width' => isset($result['cm']['width']) ? $result['cm']['width'] : NULL,
       'height' => isset($result['cm']['height']) ? $result['cm']['height'] : NULL,
-    );
+    ];
   }
 
   drupal_set_message(
     t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from @resource identify by identifier <strong>@identifier</strong> not found.',
-    array(
+    [
       '@identifier' => $identifier,
       '@sequence' => $sequence,
       '@resource' => $type,
-    )
-  ), 'error');
+    ]), 'error');
 
   watchdog(
     'MongoDB sequence not found',
     'Unable to find book sequence page <strong>%sequence</strong> from %resource <strong>%identifier</strong>.',
-    array(
+    [
       '%identifier' => $identifier,
       '%sequence' => $sequence,
       '%resource' => $type,
-    ),
-    WATCHDOG_NOTICE
-  );
+    ], WATCHDOG_NOTICE);
 
   // If $result is empty, retrun FALSE so that hook_menu can 404 redirect.
   return FALSE;

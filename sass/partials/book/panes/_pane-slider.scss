@@ -1,16 +1,8 @@
-// YUI Slider see http://yuilibrary.com/yui/docs/slider/
-.yui3-skin-sam .yui3-slider-x .yui3-slider-rail,
-.yui3-skin-sam .yui3-slider-x .yui3-slider-rail-cap-left,
-.yui3-skin-sam .yui3-slider-x .yui3-slider-rail-cap-right {
-  background-image: url(../images/slider/rail-x.png) !important;
-}
-
 #pager {
   width: 100%;
   flex: 0 0 40px;
   height:40px;
   background-color: $light-background;
-  @include embossed-gradient($slider-overlay, $slider-topbackground, $slider-bottombackground);
   color: #333;
   font-size: .853em;
   padding: 8px 0 0 0;
@@ -45,18 +37,5 @@
     color: #777;
     cursor: default;
   }
-  #slider_value {
-    &.error {
-      border: 1px solid #8C2E0B;
-      background-color: #DF3A01;
-      opacity: 1;
-      color: #fff !important;
-    }
-    &.warning {
-      border: 1px solid #FEFFBF;
-      background-color: #B2B300;
-      color: #fff !important;
-      opacity: 1;
-    }
-  }
+
 }
