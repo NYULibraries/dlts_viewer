@@ -168,7 +168,7 @@ function dlts_viewer_map_dispatcher($entity, array $arg) {
 
   $arg['pageView'] = $entity->pageView;
 
-  $servie_url = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
+  $servie_url = "$base_url/api/image";
 
   $entity->sequence_count = 1;
 

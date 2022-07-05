@@ -410,8 +410,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
       ]
     );
 
-    // Change to $base_url.
-    $servie_url = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
+    $servie_url = "$base_url/api/image";
 
     $entity->book_page = theme(
       'dlts_viewer_openseadragon_image',
