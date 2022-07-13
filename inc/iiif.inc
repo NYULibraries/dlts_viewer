@@ -60,10 +60,10 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
 
   $response = drupal_http_request(
     "$image_server/iiif/2/$uri/info.json",
-    array(
+    [
       'method' => 'GET',
       'timeout' => 15,
-    )
+    ]
   );
 
   if ($response) {

@@ -5,77 +5,65 @@
  * Admin page.
  */
 function dlts_viewer_admin($form, &$form_state) {
-  include_once 'djatoka.inc';
-
-  $djatoka = dlts_viewer_djatoka_request(
-    [
-      'uri' => 'http://memory.loc.gov/gmd/gmd433/g4330/g4330/np000066.jp2',
-    ]
-  );
-
-  if (isset($djatoka['error'])) {
-    drupal_set_message(t('Djatoka: Unable to request metadata from Djakota Jpeg 2000 Image Server. See: @message(code: @code)', array('@message' => $djatoka['message'], '@code' => $djatoka['code'] ) ), 'error' ) ;
-  }
-
-  $form['fileServer'] = [
+  
+  $form['fileserver'] = [
     '#type' => 'fieldset',
     '#title' => t('File Server'),
     '#collapsed' => FALSE,
     '#collapsible' => TRUE,
   ];
 
-  $form['fileServer']['dlts_viewer_fileserver_host'] = [
+  $form['fileserver']['dlts_viewer_fileserver_host'] = [
     '#type' => 'textfield',
     '#title' => t('Service path'),
     '#default_value' => variable_get('dlts_viewer_fileserver_host', 'http://dl-img.home.nyu.edu/adore-djatoka'),
     '#size' => 60,
     '#maxlength' => 256,
-    '#description' => t("Set host name. <acronym title='for example'>e.g.</acronym>, http://dlib.nyu.edu/files"),
+    '#description' => t("Set host name. <acronym title='for example'>e.g.</acronym>, https://dlib.nyu.edu/files"),
     '#required' => TRUE,
   ];
   
-  $form['djatoka'] = [
+  $form['imageserver'] = [
     '#type' => 'fieldset',
-    '#title' => t('Djatoka Jpeg 2000 Image Server'),
+    '#title' => t('IIIF Image Server'),
     '#collapsed' => FALSE,
     '#collapsible' => TRUE,
   ];
     
-  $form['djatoka']['dlts_viewer_djatoka_service'] = [
+  $form['imageserver']['dlts_viewer_image_service'] = [
     '#type' => 'textfield',
     '#title' => t('Service path'),
-    '#default_value' => variable_get('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka'),
+    '#default_value' => variable_get('dlts_viewer_image_service', 'https://image1.dlib.nyu.edu:8183'),
     '#size' => 60,
     '#maxlength' => 256,
-    '#description' => t("Set host name. <acronym title='for example'>e.g.</acronym>, http://HOST/adore-djatoka"),
+    '#description' => t("Set host name. <acronym title='for example'>e.g.</acronym>, http://HOST/iiif"),
     '#required' => TRUE,
   ];
 
-  $form['openlayers'] = [
+  $form['openseadragon'] = [
     '#type' => 'fieldset',
-    '#title' => t('OpenLayers'),
+    '#title' => t('OpenSeadragon'),
     '#collapsed' => FALSE,
     '#collapsible' => TRUE,
   ];
 
-  $available_files_lib = file_scan_directory(libraries_get_path('openlayers') . '/lib', '/.*\.js$/', ['recurse' => FALSE]);
-  
-  $available_files_build = file_scan_directory(libraries_get_path('openlayers') . '/build', '/.*\.js$/', ['recurse' => FALSE]);
-  
-  $available_files = array_merge((array) $available_files_lib, (array) $available_files_build);
-  
-  $js = [];
-
-  foreach ($available_files as $key => $value) {
-    $js[$key] = $value->uri;
-  }
-
-  $form['openlayers']['dlts_viewer_openlayers_source'] = [
-    '#type' => 'radios',
-    '#title' => t('Source filepath'),
-    '#default_value' => variable_get('dlts_viewer_openlayers_source', 'sites/all/libraries/openlayers/lib/OpenLayers.js'),
-    '#options' => $js,
+  $form['openseadragon']['dlts_viewer_openseadragon_cdn_code'] = [
+    '#type' => 'textfield',
+    '#title' => t('Code'),
+    '#default_value' => variable_get('dlts_viewer_openseadragon_cdn_code', 'https://cdn.jsdelivr.net/npm/openseadragon@3.1/build/openseadragon/openseadragon.min.js'),
+    '#required' => TRUE,
+    '#size' => 256,
+    '#maxlength' => 2048 ,    
   ];
+
+  $form['openseadragon']['dlts_viewer_openseadragon_cdn_images'] = [
+    '#type' => 'textfield',
+    '#title' => t('Images'),
+    '#default_value' => variable_get('dlts_viewer_openseadragon_cdn_images', 'https://cdn.jsdelivr.net/npm/openseadragon@3.1/build/openseadragon/images/'),
+    '#required' => TRUE,
+    '#size' => 256,
+    '#maxlength' => 2048 ,    
+  ];  
 
   $form['#submit'][] = 'dlts_viewer_image_service_admin_settings_submit';
 
@@ -87,138 +75,6 @@ function dlts_viewer_admin($form, &$form_state) {
  * Form submit handler for dlts_viewer admin settings form.
  */
 function dlts_viewer_image_service_admin_settings_submit($form, &$form_state) {
-  $form_state['values']['dlts_viewer_djatoka_service'] = rtrim($form_state['values']['dlts_viewer_djatoka_service'], '/');
+  $form_state['values']['dlts_viewer_image_service'] = rtrim($form_state['values']['dlts_viewer_image_service'], '/');
   $form_state['values']['dlts_viewer_fileserver_host'] = rtrim($form_state['values']['dlts_viewer_fileserver_host'], '/');
-}
-
-/**
- * Undocumented function.
- */
-function dlts_viewer_admin_list_topics($entity, $status = 1, $requestedLang = 'en') {
-  /*
-   * Include datasource helpers.
-   */
-  module_load_include('inc', 'dlts_viewer', 'inc/datasource');
-
-  $wrapper = entity_metadata_wrapper('node', $entity);
-
-  $sql = "
-    SELECT
-      DISTINCT field_identifier.field_identifier_value identifier,
-      GROUP_CONCAT(
-        DISTINCT topic.field_topic_value
-        SEPARATOR ' |*| '
-      ) topic
-    FROM node
-    LEFT JOIN field_data_field_identifier field_identifier
-      ON node.nid = field_identifier.entity_id
-    LEFT JOIN field_data_field_topic topic
-      ON node.nid = topic.entity_id
-    LEFT JOIN field_data_field_collection collection
-      ON node.nid = collection.entity_id
-    INNER JOIN field_data_field_code code
-      ON collection.field_collection_nid = code.entity_id
-      AND code.field_code_value = :collection_code
-    WHERE node.language = :language
-    AND node.status = :status
-    GROUP BY field_identifier.field_identifier_value
-    ORDER BY topic ASC
-    ";
-
-  $code = $wrapper->field_code->value();
-
-  $sql_args = [
-    ':language' => $requestedLang,
-    ':collection_code' => $code,
-    ':status' => $status,
-  ];
-
-  $results = db_query($sql, $sql_args)->fetchAll();
-
-  $header = [
-    'Identifier',
-    'Topic',
-  ];
-
-  header('Content-Type: text/csv');
-
-  header('Content-Disposition: attachment;filename=topics-' . $code . '.csv');
-
-  $fp = fopen('php://output', 'w');
-
-  fwrite($fp, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
-
-  fputcsv($fp, $header);
-
-  foreach ($results as $result) {
-    fputcsv($fp, array_values((array) $result), ',');
-  }
-
-  fclose($fp);
-
-  exit;
-
-}
-
-// $entity (collection entity) $date to filter by
-function dlts_viewer_admin_list_topics_($entity, $date, $requestedLang = 'en') {
-  $wrapper = entity_metadata_wrapper('node', $entity);
-  $status = 1;
-  $sql = "
-    SELECT
-      DISTINCT field_identifier.field_identifier_value identifier,
-      DATE_FORMAT(
-        FROM_UNIXTIME(node.created),
-        '%d-%m-%Y'
-      ) date,
-      GROUP_CONCAT(
-        DISTINCT topic.field_topic_value
-        SEPARATOR ' |*| '
-      ) topic,
-      field_data_field_call_number.field_call_number_value call_number
-    FROM node
-    LEFT JOIN field_data_field_identifier field_identifier
-      ON node.nid = field_identifier.entity_id
-    LEFT JOIN field_data_field_topic topic
-      ON node.nid = topic.entity_id
-    LEFT JOIN field_data_field_call_number
-      ON node.nid = field_data_field_call_number.entity_id
-    LEFT JOIN field_data_field_collection collection
-      ON node.nid = collection.entity_id
-    INNER JOIN field_data_field_code code
-      ON collection.field_collection_nid = code.entity_id
-      AND code.field_code_value = :collection_code
-    WHERE node.language = :language
-    AND DATE_FORMAT(FROM_UNIXTIME(node.created), '%d-%m-%Y') = :date
-    AND node.status = :status
-    GROUP BY field_identifier.field_identifier_value
-    ORDER BY node.created DESC";
-
-  $sql_args = [
-    ':language' => $requestedLang,
-    ':collection_code' => $wrapper->field_code->value(),
-    ':status' => $status,
-    ':date' => $date,
-  ];
-
-  $results = db_query($sql, $sql_args)->fetchAll();
-
-  // Send response headers to the browser.
-  header('Content-Type: text/csv');
-  header('Content-Disposition: attachment;filename=' . $date . '.csv');
-
-  $fp = fopen('php://output', 'w');
-
-  fputs($fp, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
-
-  fputcsv($fp, array('Identifier', 'Date', 'Topic', 'Call_number'));
-
-  foreach ($results as $result) {
-    fputcsv($fp, array_values((array) $result), ',');
-  }
-
-  fclose($fp);
-
-  exit;
-
 }
