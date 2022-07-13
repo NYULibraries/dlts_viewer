@@ -65,6 +65,7 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
   if (!file_exists($dir_path)) {
     mkdir($dir_path, 0755, TRUE);
   }
+
   if (file_exists("$dir_path/sequence.$sequence.json")) {
     $data = json_decode(
       file_get_contents("$dir_path/sequence.$sequence.json")
@@ -80,29 +81,15 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
         'width' => $result['cm']['width'],
         'height' => $result['cm']['height'],
         'timestamp' => $result['cm']['timestamp'],
-      ]; 
+      ];
       file_put_contents("$dir_path/sequence.$sequence.json", json_encode($resp), LOCK_EX);
       return $resp;
     }
   }
 
-  drupal_set_message(
-    t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.',
-    [
-      '@sequence' => $sequence,
-      '@identifier' => $isPartOf,
-    ]
-  ), 'error');
+  drupal_set_message(t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.', [ '@sequence' => $sequence, '@identifier' => $isPartOf, ]), 'error');
 
-  watchdog(
-    'MongoDB sequence not found',
-    'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.',
-    [
-      '%identifier' => $isPartOf,
-      '%sequence' => $sequence,
-    ],
-    WATCHDOG_NOTICE
-  );
+  watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', [ '%identifier' => $isPartOf, '%sequence' => $sequence, ], WATCHDOG_NOTICE);
 
   // If $result is empty, retrun FALSE so that hook_menu can 404 redirect.
   return FALSE;
@@ -152,26 +139,4 @@ function page_item_load($item) {
     }
   }
   return FALSE;
-}
-
-/**
- * Load sequence using Djakota as image server.
- *
- * @param object $sequence
- *   Sequence page.
- *
- * @return array
- *   Book sequence.
- */
-function djakota_book_page_load($sequence, array $map) {
-  if (isset($sequence['uri'])) {
-    // Load djatoka helper.
-    module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
-    return dlts_viewer_djatoka_request(
-      array(
-        'uri' => $sequence['uri'],
-      )
-    );
-  }
-  exit(1);
 }
