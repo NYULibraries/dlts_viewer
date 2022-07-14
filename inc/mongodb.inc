@@ -18,14 +18,14 @@
  */
 function dlts_viewer_mongodb_collections_by_type($type, $view = '') {
   // View modes, we map the views with their machine names in MongoDB.
-  $collections = array(
+  $collections = [
     'dlts_book' => 'dlts_books_page',
     'dlts_collection' => 'dlts_collection',
     'dlts_map' => 'dlts_map_page',
     'dlts_partner' => 'dlts_partner',
     'dlts_photo_set' => 'dlts_photo',
     'dlts_postcard' => 'dlts_postcard',
-  );
+  ];
   if (isset($collections[$type])) {
     return $collections[$type];
   }
@@ -335,12 +335,13 @@ function dlts_viewer_dispatch_mongodb_record($collection_type, $identifier) {
       $docs = $cursor->skip($per_page * $page);
       foreach ($docs as $doc) {
         $sequence = $doc['realPageNumber'];
-        $thumbnail = "<a href='$base_url/$collection_type/$identifier/$sequence'><span><img src='$base_url/api/image/$collection_type/$identifier/$sequence/full/100,/0/default.jpg' alt='Image thumbnail' style='width:100px' loading='lazy'></span></a>";
+        $thumbnail = "<a href='$base_url/$collection_type/$identifier/$sequence'>$sequence</a>";
         $height = isset($doc['cm']['height']) ? $doc['cm']['height'] : '';
         $width = isset($doc['cm']['width']) ? $doc['cm']['width'] : '';
+        $uri = $doc['cm']['uri'];
         $rows[] = [
           [ 'field' => 'sequence', 'data' => $thumbnail ],
-          [ 'field' => 'uri', 'data' => $doc['cm']['uri'] ],
+          [ 'field' => 'uri', 'data' => "<a href='$base_url/api/image/$collection_type/$identifier/$sequence/full/full/0/default.jpg'>$uri</a>" ],
           [ 'field' => 'height', 'data' => $height ],
           [ 'field' => 'width', 'data' => $width ],        
         ];

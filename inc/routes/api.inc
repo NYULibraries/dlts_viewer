@@ -186,18 +186,6 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
-  // @link http://localhost:9000/books.json
-  // @todo remove.
-  $items['books.json'] = [
-    'title' => 'All books in JSON format',
-    'access arguments' => [
-      'access content',
-    ],
-    'page callback' => 'dlts_viewer_books',
-    'delivery callback' => 'drupal_json_output',
-    'file' => 'inc/endpoints.inc',
-  ];
-
   $items['api/v1/noid/%dlts_noid'] = [
     'access arguments' => [
       'access content',
@@ -285,6 +273,7 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
+  // Remove.
   $items['api/v1/image/resolver'] = [
     'title' => 'Image resolver',
     'access arguments' => [

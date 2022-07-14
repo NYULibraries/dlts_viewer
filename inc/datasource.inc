@@ -106,7 +106,7 @@ function dlts_viewer_list_books() {
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_book')
-    ->propertyCondition('language', 'en')
+    ->propertyCondition('language', ['en', 'und'])
     ->propertyCondition('status', 1)
     ->addMetaData('account', user_load(0))
     ->execute();
