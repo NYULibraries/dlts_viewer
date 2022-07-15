@@ -52,84 +52,71 @@ function dlts_photo_set_load($identifier) {
  */
 function dlts_photo_load($sequence, array $map, $resource_index) {
 
+  // Load MongoDB helper.
+  module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
+
   $wrapper = entity_metadata_wrapper('node', $map[$resource_index - 1]);
 
   $isPartOf = $wrapper->field_identifier->value();
 
-  /*
-   * Load MongoDB helper
-   */
-  module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
+  $handle = $wrapper->field_handle->value();
+  
+  $parsed_url = parse_url($handle['url']);
+  
+  $noid = str_replace('/2333.1/', '', $parsed_url['path']);        
 
   $collection_name = 'dlts_photo';
 
   $result = dlts_viewer_mongodb_load_sequence($sequence, $isPartOf, $collection_name);
 
-  if ($result && isset($result['cm']) && !empty($result['cm']['uri'])) {
-
-    /*
-     * Found sequence in MongoDB but we need to request metadata.
-     */
-    if (empty($result['cm']['levels'])) {
-      /*
-       * Load connector.
-       */
-      module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
-      /*
-       * Pass over $result['cm'] as $file argument
-       */
-      $djatoka = dlts_viewer_djatoka_request($result['cm']);
-      /*
-       * No error, update MongoDB record
-       * @TODO: Consider using Drupal queue to update the record.
-       * See: https://api.drupal.org/api/drupal/modules!system!system.queue.inc/class/DrupalQueue/7
-       */
-      if (!isset($djatoka['error'])) {
-        /*
-         * Update $result reference with Image Server requested metadata.
-         */
-        $result['cm'] = array_merge($result['cm'], $djatoka);
-        /*
-         * Update sequence record.
-         */
-        dlts_viewer_mongodb_update_sequence($result, $collection_name);
-        /*
-         * Return sequence object.
-         */
-        return array(
-          'fid' => (string) $result['_id'],
-          'sequence' => $result['sequence'],
-          'uri' => file_create_url($result['cm']['uri']),
-          'width' => $djatoka['width'],
-          'height' => $djatoka['height'],
-          'levels' => $djatoka['levels'],
-          'dwtLevels' => $djatoka['dwtLevels'],
-          'compositingLayerCount' => $djatoka['compositingLayerCount'],
-          'timestamp' => $result['cm']['timestamp'],
-        );
-      }
-    }
-    else {
-      return array(
+  if (
+    $result && 
+    isset($result['cm']) && 
+    !empty($result['cm']['uri'])
+  ) {
+    if (!empty($result['cm']['width'])) {
+      return [
         'fid' => (string) $result['_id'],
         'sequence' => $result['sequence'],
         'uri' => file_create_url($result['cm']['uri']),
         'width' => $result['cm']['width'],
         'height' => $result['cm']['height'],
-        'levels' => $result['cm']['levels'],
-        'dwtLevels' => $result['cm']['dwtLevels'],
-        'compositingLayerCount' => $result['cm']['compositingLayerCount'],
-        'timestamp' => $result['cm']['timestamp'],
-      );
+      ];
+    } else {
+      $edit = $result;
+      // IIIF Image Server.
+      $image_server = variable_get('dlts_image_server', 'https://image1.dlib.nyu.edu:8183');
+      $uri = $result['cm']['uri'];
+      $image_id = urlencode(str_replace('fileserver://', '', $uri));    
+      $response = drupal_http_request("$image_server/iiif/2/$image_id/info.json", [ 'method' => 'GET', 'timeout' => 15 ]);
+      if ($response->code == '200' && isset($response->data)) {
+        $data = drupal_json_decode($response->data);
+        $edit['cm']['width'] = $data['width'];
+        $edit['cm']['height'] = $data['height'];
+        $edit['noid'] = $noid;
+        unset($edit['cm']['levels']);
+        unset($edit['cm']['dwtLevels']);
+        unset($edit['cm']['compositingLayerCount']);
+        unset($edit['cm']['timestamp']);
+        unset($edit['cm']['identifier']);
+        unset($edit['cm']['imagefile']);
+        dlts_viewer_mongodb_update_sequence($edit, $collection_name);
+        return [
+          'fid' => (string) md5(rand()),
+          'sequence' => $result['sequence'],
+          'uri' => file_create_url($result['cm']['uri']),
+          'width' => $result['cm']['width'],
+          'height' => $result['cm']['height'],
+        ];
+      } else {
+        watchdog('MongoDB metadata error', 'Unable to request metadata for sequence <strong>%sequence</strong> of resource <strong>%identifier</strong>.', [ '%identifier' => $isPartOf, '%sequence' => $sequence ], WATCHDOG_NOTICE);
+        return false;
+      }
     }
+  } else {
+    watchdog('MongoDB sequence not found', 'Unable to find sequence <strong>%sequence</strong> of resource <strong>%identifier</strong>.', [ '%identifier' => $isPartOf, '%sequence' => $sequence ], WATCHDOG_NOTICE);
+    return false;
   }
-
-  drupal_set_message(t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from set identify by identifier <strong>@identifier</strong> not found.', array('@sequence' => $sequence, '@identifier' => $isPartOf)), 'error');
-
-  watchdog('MongoDB sequence not found', 'Unable to find set sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', array('%identifier' => $isPartOf, '%sequence' => $sequence), WATCHDOG_NOTICE);
-
-  // If $result is empty, retrun FALSE so that hook_menu can 404 redirect.
-  return FALSE;
 }
 
 /**

@@ -16,13 +16,13 @@ function dlts_viewer_admin($form, &$form_state) {
   $form['fileserver']['dlts_viewer_fileserver_host'] = [
     '#type' => 'textfield',
     '#title' => t('Service path'),
-    '#default_value' => variable_get('dlts_viewer_fileserver_host', 'http://dl-img.home.nyu.edu/adore-djatoka'),
+    '#default_value' => variable_get('dlts_viewer_fileserver_host', 'https://dlib.nyu.edu/files'),
     '#size' => 60,
     '#maxlength' => 256,
     '#description' => t("Set host name. <acronym title='for example'>e.g.</acronym>, https://dlib.nyu.edu/files"),
     '#required' => TRUE,
   ];
-  
+
   $form['imageserver'] = [
     '#type' => 'fieldset',
     '#title' => t('IIIF Image Server'),

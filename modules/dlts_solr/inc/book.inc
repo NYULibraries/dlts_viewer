@@ -114,8 +114,6 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
   }
   // Add translations helper.
   module_load_include('inc', 'dlts_solr', 'inc/translations');
-  // Add image server helper.
-  module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
   // Wrapp multi-volume entity with Entity API wrapper.
   $wrapper = entity_metadata_wrapper('node', $entity);
   // Single-value field.
@@ -275,32 +273,14 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
     $document->addField('ss_number', $number);
   }
   unset($number);
-  /** Representative image (field_representative_image) */
-  /** single-value field */
-  $representative_image = $wrapper->field_representative_image->value();
-  if (!empty($representative_image)) {
-    $pathinfo = pathinfo($representative_image['uri']);
-    /** load Image Server util */
-    $ri = '';
-    if ($pathinfo['extension'] == 'jpg') {
-      $ri = file_create_url($representative_image['uri']);
-    }
-    elseif ($pathinfo['extension'] == 'jp2') {
-      $ri = dlts_viewer_djatoka_url($representative_image,false,true);
-    }
-    $dirname = $pathinfo['dirname'];
-    $dir_path = pathinfo($dirname);
-    $basename = $dir_path['basename'];
-    $site_image = $basename.'/'.$pathinfo['filename'];
-    $document->addField('ss_representative_image', $ri);
-    $document->addField('ss_site_image', $site_image);
-  }
-  unset($ri);
-  unset($dirname);
-  unset($dir_path);
-  unset($base_name);
-  unset($site_image);
-  unset($representative_image);
+
+  $ri = "$base_url/api/image/books/$identifier/1/full/full/0/default.jpg";
+
+  $document->addField('ss_representative_image', $ri);
+
+  $document->addField('ss_site_image', $ri);
+
+
   /** Author (field_author) */
   /** multi-value field */
   $authors = $wrapper->field_author->value();

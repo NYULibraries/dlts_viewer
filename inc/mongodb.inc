@@ -154,61 +154,6 @@ function dlts_viewer_mongodb_load_sequence(int $sequence, $isPartOf, $collection
 }
 
 /**
- * Load thumbnails.
- *
- * @param string $isPartOf
- *   Identifier.
- * @param int $page
- *   Pagination page.
- * @param int $per_page
- *   Items per page.
- * @param string $collection_name
- *   Name of collection to table to query.
- * @param string $content_type
- *   Type of resource.
- * @param bool $embeded_thumb
- *   True if embeded.
- *
- * @return array
- *   List of items and count.
- */
-function dlts_viewer_mongodb_load_thumbnails($isPartOf, $page = 0, $per_page = 10, $collection_name = NULL, $content_type = NULL, $embeded_thumb = FALSE) {
-  // Load helpers.
-  module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
-  $items = [];
-  $query = array('isPartOf' => $isPartOf);
-  $cursor = mongodb_collection($collection_name)->find($query);
-  $per_page = (int) $per_page;
-  $page = (int) $page;
-  // No need to continue if request does not have items.
-  $count = $cursor->count();
-  if ($cursor->count() > 0) {
-    // DLTSVIEWER-27.
-    // @link https://docs.mongodb.org/manual/reference/method/cursor.sort/
-    $cursor->sort(array('sequence' => 1));
-    $cursor->limit($per_page);
-    $cursor->skip($per_page * $page);
-    // DLTSVIEWER-27.
-    $cursor->sort(array('sequence' => 1));
-    $cursor->limit($per_page);
-    $thumbnails = $cursor->skip($per_page * $page);
-    foreach ($thumbnails as $thumbnail) {
-      if (is_array($thumbnail['sequence'])) {
-        $thumbnail['sequence'] = min($thumbnail['sequence']);
-      }
-      $thumbnail['url'] = url($content_type . '/' . $isPartOf . '/' . $thumbnail['sequence'], array('absolute' => TRUE));
-      if (dlts_viewer_is_embed() && $collection_name == 'dlts_photo') {
-        $thumbnail['url'] = url($thumbnail['url'], array('query' => array('embed' => 'true')));
-      }
-      $thumbnail['imageServeURI'] = dlts_viewer_djatoka_url($thumbnail['cm'], $embeded_thumb);
-      $items[] = $thumbnail;
-    }
-    return array('count' => $count, 'items' => $items);
-  }
-  return FALSE;
-}
-
-/**
  * Load resource by identifier.
  *
  * @param string $identifier
