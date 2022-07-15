@@ -271,6 +271,14 @@ function dlts_viewer_dispatch_mongodb_record($collection_type, $identifier) {
     $wrapper = entity_metadata_wrapper('node', $node);
     $handle = $wrapper->field_handle->value();
     $title = $wrapper->field_title->value();
+    $c = $wrapper->field_collection->value();
+    $cwrapper = entity_metadata_wrapper('node', $c[0]);
+    $collection = $cwrapper->field_name->value();
+  
+    $p = $wrapper->field_partner->value();
+    $pwrapper = entity_metadata_wrapper('node', $p[0]);
+    $partner = $pwrapper->field_name->value();
+
     $per_page = (int) $wrapper->field_sequence_count->value();
     $cursor = mongodb_collection($collection_name)->find([ 'isPartOf' => $identifier ]);
     $count = $cursor->count();
@@ -295,14 +303,6 @@ function dlts_viewer_dispatch_mongodb_record($collection_type, $identifier) {
       }
     }
   }
-
-  $c = $wrapper->field_collection->value();
-  $cwrapper = entity_metadata_wrapper('node', $c[0]);
-  $collection = $cwrapper->field_name->value();
-
-  $p = $wrapper->field_partner->value();
-  $pwrapper = entity_metadata_wrapper('node', $p[0]);
-  $partner = $pwrapper->field_name->value();
 
   $node_table = [
     'header' => [
