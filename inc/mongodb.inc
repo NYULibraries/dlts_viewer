@@ -265,6 +265,7 @@ function dlts_viewer_dispatch_mongodb_record($collection_type, $identifier) {
   $items = [];
   $query = [];
   $rows = [];
+  $node_rows = [];
   $nid = nid_by_identifier($identifier);
   if ($nid) {
     $node = node_load($nid);
