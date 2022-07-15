@@ -116,9 +116,9 @@ function dlts_viewer_drush_resources_list() {
 
 // DELETE FROM dlts_viewer_resource WHERE nid <> 'YOLO';
 
-// ./vendor/bin/drush list-resources --type=books
-// ./vendor/bin/drush list-resources --type=maps
-// ./vendor/bin/drush list-resources --type=photos
+// ./vendor/bin/drush add-resources --type=books
+// ./vendor/bin/drush add-resources --type=maps
+// ./vendor/bin/drush add-resources --type=photos
 function dlts_viewer_drush_add_resources() {
 
   global $base_url;
