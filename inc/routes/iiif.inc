@@ -58,7 +58,7 @@ function _dlts_viewer_menu_iiif() {
    * For the Image service we can not add the version to
    * the URL. If we add the version, the page arguments
    * for the request turns out to be 10 arguments, and
-   * looks like Drupal's router can not deal with this.
+   * Drupal's router can not deal with this.
    */
 
   // Proxy Image service.
@@ -66,10 +66,10 @@ function _dlts_viewer_menu_iiif() {
   $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence'] =
   $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/info.json'] = array(
     'title' => 'IIIF API - Request metadata',
-    'access arguments' => array('access iiif content'),
+    'access arguments' => [ 'access iiif content' ],
     'page callback' => 'dlts_viewer_iiif_api',
-    'page arguments' => array(2, 3, 4),
-    'load arguments' => array('%map', '%index'),
+    'page arguments' => [ 2, 3, 4 ],
+    'load arguments' => ['%map', '%index' ],
     'type' => MENU_CALLBACK,
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',

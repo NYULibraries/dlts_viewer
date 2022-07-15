@@ -70,12 +70,12 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
     if ($response->code == '200' && isset($response->data)) {
       drupal_register_shutdown_function(
         'dlts_viewer_cache_book_sequence',
-        array(
+        [
           'type' => $type,
           'resource' => $resource,
-          'sequence' => $sequence['sequence'][0],
+          'sequence' => $sequence,
           'data' => $response->data,
-        )
+        ]
       );
       return drupal_json_decode($response->data);
     }
