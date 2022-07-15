@@ -302,14 +302,7 @@ function dlts_viewer_dispatch_mongodb_record($collection_type, $identifier) {
         ];
       }
     }
-  }
-
-  $node_table = [
-    'header' => [
-      [ 'data' => 'Label', 'field' => 'label' ],
-      [ 'data' => 'Value', 'field' => 'value' ],
-    ],
-    'rows' => [
+    $node_rows = [
       [
         [ 'field' => 'label', 'data' => 'Title' ],
         [ 'field' => 'value', 'data' => $title ],
@@ -338,7 +331,15 @@ function dlts_viewer_dispatch_mongodb_record($collection_type, $identifier) {
         [ 'field' => 'label', 'data' => 'Partner' ],
         [ 'field' => 'value', 'data' => $partner ],
       ],                  
+    ];    
+  }
+
+  $node_table = [
+    'header' => [
+      [ 'data' => 'Label', 'field' => 'label' ],
+      [ 'data' => 'Value', 'field' => 'value' ],
     ],
+    'rows' => $node_rows,
     'attributes' => [],
     'empty' => 'No records found.',
     'sticky' => FALSE,
