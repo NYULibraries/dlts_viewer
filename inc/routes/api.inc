@@ -221,7 +221,7 @@ function _dlts_viewer_menu_api() {
     'access arguments' => [
       'access content',
     ],
-    'page callback' => 'dlts_viewer_djakota_book_page',
+    'page callback' => 'dlts_viewer_imageserver_book_page',
     'page arguments' => [4],
     'load arguments' => ['%map', '%index'],
     'delivery callback' => 'drupal_json_output',
@@ -273,7 +273,7 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
-  // Remove.
+  // @TODO: Remove route.
   $items['api/v1/image/resolver'] = [
     'title' => 'Image resolver',
     'access arguments' => [
