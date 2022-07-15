@@ -86,6 +86,11 @@ function dlts_viewer_drush_command() {
     ],
   ];
 
+  $items['viewer-test'] = [
+    'callback' => 'dlts_viewer_drush_viewer_test',
+    'description' => dt('Run test while developing.')
+  ];  
+
   return $items;
 
 }
@@ -100,6 +105,9 @@ function dlts_viewer_drush_help($section) {
   }
 }
 
+// ./vendor/bin/drush viewer-test
+function dlts_viewer_drush_viewer_test() {
+}
 
 // ./vendor/bin/drush resources-list-cleanup
 function dlts_viewer_drush_resources_list_cleanup() {
@@ -116,9 +124,9 @@ function dlts_viewer_drush_resources_list() {
 
 // DELETE FROM dlts_viewer_resource WHERE nid <> 'YOLO';
 
-// ./vendor/bin/drush list-resources --type=books
-// ./vendor/bin/drush list-resources --type=maps
-// ./vendor/bin/drush list-resources --type=photos
+// ./vendor/bin/drush add-resources --type=books
+// ./vendor/bin/drush add-resources --type=maps
+// ./vendor/bin/drush add-resources --type=photos
 function dlts_viewer_drush_add_resources() {
 
   global $base_url;

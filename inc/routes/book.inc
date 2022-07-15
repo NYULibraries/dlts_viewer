@@ -15,18 +15,6 @@ function _dlts_viewer_menu_book() {
 
   $items = [];
 
-  // /*
-  //  * Convinient way to edit a Book object
-  //  * e.g., http://{{HOST}}/{{SITE}}/books/{{IDENTIFIER}}/edit
-  //  */
-  // $items['books/%dlts_book/edit'] = [
-  //   'title' => 'Edit book',
-  //   'access arguments' => ['edit any dlts_book content'),
-  //   'page callback' => '_dlts_viewer_book_edit_redirect',
-  //   'page arguments' => [1),
-  //   'type' => MENU_CALLBACK,
-  // );
-
   /*
    * Render thumbnails for book pages
    * No need to load the Book object % instead of %dlts_book

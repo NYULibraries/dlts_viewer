@@ -431,9 +431,10 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         ],
       ]
     );
-  }
+    
+    $entity->count = $sequence_count;
 
-  $entity->count = $sequence_count;
+  }
 
   // Types of returns.
   switch ($display_type) {

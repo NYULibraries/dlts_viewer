@@ -12,8 +12,6 @@
   global $base_url;
   // Datasource.
   module_load_include('inc', 'dlts_viewer', 'inc/datasource');
-  // Add image server helper.
-  module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
   $language = $entity->language;
   $wrapper = entity_metadata_wrapper('node', $entity);
   // Single-value field.
@@ -23,31 +21,17 @@
     return;
   }
   $document->addField('ss_identifier', $identifier);
-  $document->addField('ss_uri', url("maps/$identifier/1", array('absolute' => TRUE)));
+  $document->addField('ss_uri', url("maps/$identifier/1", ['absolute' => TRUE]));
   // Searchable content; dump all you want to be searchable in this array.
   $searchableFields = array($document->content);
 
-  /*
-   * content type fields
-   */
-
-  /*
-   * Collection (field_collection)
-   */
-
-  // Multi-value field.
+  // Collection (field_collection): Multi-value field.
   dlts_solr_index_collection($wrapper->field_collection->value(), $document, $entity, $searchableFields);
 
-  /*
-   * Provider (field_partner)
-   * Multi-value field.
-   */
+  // Provider (field_partner): Multi-value field.
   dlts_solr_index_partners($wrapper->field_partner->value(), $document, $entity, $searchableFields);
 
-  /*
-   * Permanent Link (field_handle)
-   * single-value field.
-   */
+  // Permanent Link (field_handle): Single-value field.
   $handle = $wrapper->field_handle->value();
 
   if (!empty($handle)) {
@@ -58,10 +42,7 @@
 
   $document->addField('ss_manifest', "$base_url/api/presentation/maps/$identifier/manifest.json");
 
-  /*
-   * Title (field_title)
-   * single-value field
-   */
+  // Title (field_title): Single-value field.
   $title_long = $wrapper->field_title->value();
 
   if (!empty($title_long)) {
@@ -101,33 +82,12 @@
     $document->addField('ss_call_number', $call_number);
     $searchableFields[] = $call_number;
   }
+    
+  $ri = "$base_url/api/image/maps/$identifier/1/full/full/0/default.jpg";
 
-  /*
-   * Representative image (field_representative_image)
-   * single-value field
-   * @todo fix
-   */
-  $representative_image = $wrapper->field_representative_image->value();
+  $document->addField('ss_representative_image', $ri);
 
-  if (!empty($representative_image)) {
-    $pathinfo = pathinfo($representative_image['uri']);
-
-    /** load Image Server util */
-    $ri = '';
-    if ($pathinfo['extension'] == 'jpg') {
-      $ri = file_create_url($representative_image['uri']);
-    }
-    elseif ($pathinfo['extension'] == 'jp2') {
-      $ri = dlts_viewer_djatoka_url($representative_image, false, true);
-    }
-
-    $dirname = $pathinfo['dirname'];
-    $dir_path = pathinfo($dirname);
-    $basename = $dir_path['basename'];
-    $site_image = $basename . '/' . $pathinfo['filename'];
-    $document->addField('ss_representative_image', $ri);
-    $document->addField('ss_site_image', $site_image);
-  }
+  $document->addField('ss_site_image', $ri);
 
   /*
    * Author (field_author)
