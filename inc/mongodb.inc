@@ -200,6 +200,8 @@ function dlts_viewer_dispatch_mongodb($collection_type) {
     return MENU_NOT_FOUND;
   }
 
+  $rows = [];
+
   // Find only the ones with missing metadata.
   // Once we are done doing the clean-up, we can remove the filter.
   $filter = [ 'cm.width' => '' ];
