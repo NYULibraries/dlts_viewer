@@ -217,8 +217,13 @@ function dlts_viewer_list_resource_node($resource = null) {
  *  $ ./vendor/bin/drush total-resources-to-update
  */
 function dlts_viewer_drush_total_resources_to_update() {
-  $results = db_query('SELECT nid FROM dlts_viewer_resource WHERE proceed = 0 ORDER BY RAND() LIMIT 1')->fetchAll();
-  echo count($results);
+  $count_query = "SELECT DISTINCT COUNT(dlts_viewer_resource.nid) numFound FROM dlts_viewer_resource WHERE proceed = 0";
+  $count = db_query($count_query)->fetchField();
+  if (isset($count)) {
+    echo $count;
+  } else {
+    echo 0;
+  }
 }
 
 /**
@@ -275,7 +280,7 @@ function dlts_viewer_drush_update_resource_pages() {
   $page = 0;
 
   // MongoDB records limit.
-  $per_page = (int) drush_get_option('limit', 10);
+  $per_page = (int) drush_get_option('limit', 500);
 
   $types = [
     'dlts_book' => 'books',
