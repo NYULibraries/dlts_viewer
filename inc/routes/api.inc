@@ -110,29 +110,6 @@ function _dlts_viewer_menu_api() {
     'page arguments' => [2],
   ];
 
-  $items['content/%/nodeid'] = [
-    'title' => 'Return nid of node',
-    'page callback' => 'return_nodeid_json',
-    'delivery callback' => 'drupal_json_output',
-    'page arguments' => [1],
-    'access arguments' => [
-      'access content',
-    ],
-    'delivery callback' => 'drupal_json_output',
-    'type' => MENU_CALLBACK,
-  ];
-
-  $items['content/%/nodeid/%'] = [
-    'title' => 'Return nid of node',
-    'page callback' => 'return_nodeid_json',
-    'delivery callback' => 'drupal_json_output',
-    'page arguments' => [1, 3],
-    'access arguments' => [
-      'access content',
-    ],
-    'type' => MENU_CALLBACK,
-  ];
-
   $items['api/v1/maps/%dlts_map/json'] = [
     'title' => 'JSON representation of the book',
     'access arguments' => [
@@ -196,7 +173,6 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
-  // @todo remove.
   $items['api/v1/books'] = [
     'access arguments' => [
       'access content',

@@ -80,7 +80,6 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
         'uri' => file_create_url($result['cm']['uri']),
         'width' => $result['cm']['width'],
         'height' => $result['cm']['height'],
-        'timestamp' => $result['cm']['timestamp'],
       ];
       file_put_contents("$dir_path/sequence.$sequence.json", json_encode($resp), LOCK_EX);
       return $resp;

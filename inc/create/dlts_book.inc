@@ -9,6 +9,15 @@
  * Given a JSON representation of a book, create DLTS Books.
  */
 function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE) {
+
+  global $user;
+
+  $username = $user->name;
+
+  if (!user_access('dlts create object')) {
+    throw new Exception("Action not allowed for user $username.");
+  }
+
   module_load_include('inc', 'dlts_viewer', 'inc/save/dlts_book');
 
   $dimensions = NULL;
@@ -33,47 +42,47 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
 
   $title = NULL;
 
-  $pages_array = array();
+  $pages_array = [];
 
-  $partners = array();
+  $partners = [];
 
-  $multivols = array();
+  $multivols = [];
 
-  $other_versions = array();
+  $other_versions = [];
 
-  $isbns = array();
+  $isbns = [];
 
-  $authors = array();
+  $authors = [];
 
-  $topics = array();
+  $topics = [];
 
-  $languages = array();
+  $languages = [];
 
-  $collections = array();
+  $collections = [];
 
-  $contributors = array();
+  $contributors = [];
 
-  $creators = array();
+  $creators = [];
 
-  $editors = array();
+  $editors = [];
 
-  $publishers = array();
+  $publishers = [];
 
-  $pdf_files = array();
+  $pdf_files = [];
 
-  $language_codes = array();
+  $language_codes = [];
 
-  $ocr_text_files = array();
+  $ocr_text_files = [];
 
-  $subjects = array();
+  $subjects = [];
 
-  $read_order = array();
+  $read_order = [];
 
-  $scan_order = array();
+  $scan_order = [];
 
-  $binding_orientation = array();
+  $binding_orientation = [];
 
-  $series = array();
+  $series = [];
 
   $entity_title = $data['entity_title'];
 
@@ -82,21 +91,21 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
   $entity_identifier = $data['identifier'];
 
   if (!isset($data['metadata'])) {
-    $metadata = array();
+    $metadata = [];
   }
   else {
     $metadata = $data['metadata'];
   }
 
   if (!isset($data['multivolume'])) {
-    $multivolume = array();
+    $multivolume = [];
   }
   else {
     $multivolume = $data['multivolume'];
   }
 
   if (!isset($data['series'])) {
-    $series = array();
+    $series = [];
   }
   else {
     $series = $data['series'];
@@ -379,15 +388,15 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
           );
         }
         elseif (strpos($pdf_uri, '_lo')) {
-          $pdf_files[] = array(
+          $pdf_files[] = [
             'file' => $pdf_uri,
             'label' => 'Low-resolution',
-          );
+          ];
         }
         else {
-          $pdf_files[] = array(
+          $pdf_files[] = [
             'file' => $pdf_uri,
-          );
+          ];
         }
       }
     }
@@ -399,7 +408,7 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
     }
   }
 
-  $node = array(
+  $node = [
     'entity_title' => $entity_title,
     'entity_language' => $entity_language,
     'identifier' => $entity_identifier,
@@ -443,7 +452,7 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
     'multivol' => $multivols,
     'multivolume' => $multivolume,
     'series' => $series,
-  );
+  ];
 
   return save_dlts_book($node);
 

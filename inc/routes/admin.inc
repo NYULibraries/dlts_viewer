@@ -19,7 +19,7 @@ function _dlts_viewer_menu_admin() {
    * Admin page to administer the fileServer and the
    * fileServer stream wrapper
    */
-  $items['admin/config/viewer'] = [
+  $items['admin/viewer/config'] = [
     'title' => 'Viewer: Administer and configure',
     'description' => 'Administer and configure viewer.',
     'page callback' => 'drupal_get_form',

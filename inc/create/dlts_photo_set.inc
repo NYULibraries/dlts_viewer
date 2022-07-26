@@ -18,17 +18,23 @@
  */
 function save_dlts_photo_set($node, $node_language = 'en') {
 
+  global $user;
+
+  $username = $user->name;
+
   if (!user_access('dlts create object')) {
-    die('Not allowed.');
+    throw new Exception("Action not allowed for user $username.");
   }
 
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_collection');
+
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_partner');
-  global $user;
+
   // Force EN language.
   if ($node_language == LANGUAGE_NONE) {
     $node_language = 'en';
   }
+
   $photo_set_exist = photoset_nid($node['identifier'], $node_language);
 
   if ($photo_set_exist) {
@@ -36,20 +42,19 @@ function save_dlts_photo_set($node, $node_language = 'en') {
     $entity = node_load($photo_set_exist);
     // Wrap it with Entity API.
     $ewrapper = entity_metadata_wrapper('node', $entity);
-  }
-  else {
-    $entity = entity_create('node', array(
+  } else {
+    $entity = entity_create('node', [
       'type' => 'dlts_photo_set',
       'uid' => $user->uid,
       'status' => 1,
       'comment' => 0,
       'promote' => 0,
       'language' => $node_language,
-    ));
+    ]);
     $ewrapper = entity_metadata_wrapper('node', $entity);
   }
 
-  $collections_nids = array();
+  $collections_nids = [];
 
   if (!empty($node['entity_title'])) {
     $node['entity_title'] = trim($node['entity_title']);
@@ -58,15 +63,13 @@ function save_dlts_photo_set($node, $node_language = 'en') {
       $substr_title = substr($node['entity_title'], 0, 200);
     }
     $ewrapper->title->set($substr_title);
-  }
-  else {
+  } else {
     $ewrapper->title->set('Untitled');
   }
 
   if (!empty($node['identifier'])) {
     $ewrapper->field_identifier->set($node['identifier']);
-  }
-  else {
+  } else {
     die('Node identifier must not be empty');
   }
 
@@ -132,6 +135,28 @@ function save_dlts_photo_set($node, $node_language = 'en') {
     $ewrapper->field_title->set($node['entity_title']);
   }
 
-  return $ewrapper->save();
+  $saved = $ewrapper->save();
+  if ($saved) {
+
+    $nid = $ewrapper->getIdentifier();
+
+    $exists = db_query("SELECT nid FROM dlts_viewer_resource WHERE nid = '$nid'")->fetchAll();
+
+    if (count($exists) <= 0) {
+
+      $identifier = $node['identifier'];
+
+      $parsed_url = parse_url($node['handle']['url']);
+    
+      $noid = str_replace('/2333.1/', '', $parsed_url['path']);
+
+      $edit_query = "INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', 'dlts_photo_set', '0');";
+
+      $results = db_query($edit_query);
+
+    }
+  }
+
+  return $saved;
 
 }
