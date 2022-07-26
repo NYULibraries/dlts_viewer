@@ -17,10 +17,12 @@ function save_dlts_postcard($node, $language = 'en') {
   // Get the current user.
   $resource_type = 'dlts_postcard';
   global $base_url;
+  global $user;
+  $username = $user->name;  
   $is_new = TRUE;
   try {
     if (!user_access('dlts create object')) {
-      throw new Exception(__FUNCTION__ . ' user not allowed to run task');
+      throw new Exception(__FUNCTION__ . " user not allowed to run task $username");
     }
     if (empty($node['identifier'])) {
       throw new Exception('Document without identifier');

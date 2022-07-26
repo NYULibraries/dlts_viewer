@@ -289,33 +289,6 @@ function dlts_viewer_viewer_language($vars = NULL) {
 }
 
 /**
- * Retruns nodeid.
- *
- * @param string $dlts_id
- *   NOID.
- * @param string $lang_code
- *   Language code.
- *
- * @return array
- *   ISO 639-1.
- */
-function return_nodeid_json($dlts_id, $lang_code = NULL) {
-  $langs = $lang_code ? array($lang_code) : array('und', 'en');
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'node', '=')
-    ->propertyCondition('language', $langs, 'IN')
-    ->fieldCondition('field_identifier', 'value', $dlts_id, '=');
-  $result = $query->execute();
-  $nodeids = array();
-  if (isset($result['node'])) {
-    foreach ($result['node'] as $node) {
-      $nodeids[] = $node->nid;
-    }
-  }
-  return $nodeids;
-}
-
-/**
  * MAP ISO 639-2 to ISO 639-1 as described in the standard.
  * @link http://www.loc.gov/standards/iso639-2/php/code_list.php
  *

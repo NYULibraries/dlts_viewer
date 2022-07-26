@@ -1961,13 +1961,23 @@ function dlts_viewer_djakota_stream_book_page() {
  * Create book v1.
  */
 function dlts_viewer_api_v1_dlts_book_objects($source) {
-  module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book');
-  $apiVersion = 'v1';
   try {
+
+    global $user;
+    
+    $username = $user->name;
+
+    $apiVersion = 'v1';
+
+    if (!user_access('dlts create object')) {
+      throw new Exception("Action not allowed for user $username.");
+    }
 
     if ($source['entity_type'] !== 'dlts_book') {
       throw new Exception('Wrong entity type.');
     }
+
+    module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book');    
 
     // Check if request has all the keys we required.
     if (
@@ -1986,16 +1996,17 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
       if (!isset($source['identifier'])) {
         throw new Exception('Field identifier can not be empty.');
       }
+
       $entity = create_dlts_book_from_json($source);
+
       if ($entity) {
-        return array(
+        return [
           'data' => $entity,
-        );
+        ];
       }
     }
-  }
-  catch (Exception $e) {
-    watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
+  } catch (Exception $e) {
+    watchdog('dlts_viewer', $e->getMessage(), [], WATCHDOG_CRITICAL);
     die($e->getMessage());
   }
 
@@ -2008,7 +2019,7 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
   if (user_access('dlts create object')) {
     $apiVersion = 'v1.0.1';
 
-    $datasource = array();
+    $datasource = [];
 
     $entity_types = array(
       'book',
@@ -2232,15 +2243,18 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
  */
 function dlts_viewer_api_v1_objects($version = NULL) {
   // @todo Also filter by hosts with access
-  if (user_access('dlts create object') && $_SERVER['REQUEST_METHOD'] == 'POST') {
-    $datasource = array();
-    $entity_types = array(
+  if (
+    user_access('dlts create object') && 
+    $_SERVER['REQUEST_METHOD'] == 'POST'
+  ) {
+    $datasource = [];
+    $entity_types = [
       'image_set',
       'dlts_book',
       'dlts_photo_set',
       'dlts_postcard',
       'dlts_map',
-    );
+    ];
     $datasource = (array) json_decode(
       file_get_contents('php://input')
     );
@@ -2260,14 +2274,14 @@ function dlts_viewer_api_v1_objects($version = NULL) {
               return dlts_viewer_api_v1_dlts_postcard_objects($datasource);
           }
         }
+        break;
     }
-  }
-  elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {
+  } elseif (user_access('access content') && $_SERVER['REQUEST_METHOD'] == 'GET') {
     return dlts_viewer_list_resource();
   }
-  return array(
+  return [
     'error' => 'User not allowed.',
-  );
+  ];
 }
 
 /**

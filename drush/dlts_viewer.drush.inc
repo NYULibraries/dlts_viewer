@@ -13,6 +13,7 @@
  * description.
  */
 function dlts_viewer_drush_command() {
+
   $items = [];
 
   $items['solr-index-photos'] = [
@@ -28,20 +29,12 @@ function dlts_viewer_drush_command() {
     'description' => dt('List translation'),
   ];
 
-  $items['delete-book-by-identifier'] = [
-    'callback' => 'dlts_viewer_delete_book_by_identifier',
-    'description' => dt('Delete book by identifier'),
-    'options' => [
-      'identifier' => dt('Book identifier'),
-    ],
-  ];
-
   $items['update-handle'] = [
     'callback' => 'dlts_viewer_update_handle',
     'description' => dt('Update handle'),
     'options' => [
-      'identifier' => dt('Book identifier'),
-      'handle' => dt('Book handle'),
+      'identifier' => dt('Identifier'),
+      'handle' => dt('Handle'),
     ],
   ];
 
@@ -71,9 +64,16 @@ function dlts_viewer_drush_command() {
     'description' => dt('Delete all records from the resources list')
   ];
 
+  // $ ./vendor/bin/drush total-resources-to-update
   $items['total-resources-to-update'] = [
     'callback' => 'dlts_viewer_drush_total_resources_to_update',
     'description' => dt('Returns total of resources to update')
+  ];
+
+  // $ ./vendor/bin/drush resources-to-update
+  $items['resources-to-update'] = [
+    'callback' => 'dlts_viewer_drush_resources_to_update',
+    'description' => dt('Returns resource to update')
   ];
 
   $items['update-resource-pages'] = [
@@ -159,7 +159,7 @@ function dlts_viewer_drush_add_resources() {
   foreach ($nodes as $node) {
     $exists = db_query("SELECT nid FROM dlts_viewer_resource WHERE nid = '$node->nid'")->fetchAll();
     if (count($exists) <= 0) {
-      db_query("INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$node->nid', '', '', '$types[$type]', '0')");
+      db_query("INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$node->nid', '', '', '$type', '0')");
     }
   }
 
@@ -222,9 +222,46 @@ function dlts_viewer_drush_total_resources_to_update() {
 }
 
 /**
+ * Find resource to update.
+ *  $ ./vendor/bin/drush resources-to-update
+ */
+function dlts_viewer_drush_resources_to_update() {
+
+  $collections = [
+    'dlts_book' => 'dlts_books_page',
+    'dlts_map' => 'dlts_map_page',
+    'dlts_photo_set' => 'dlts_photo',
+    'dlts_postcard' => 'dlts_postcard',
+  ];
+
+  foreach ($collections as $collection) {    
+    $docs = mongodb_collection($collection)->distinct('isPartOf', [ 'cm.width' => '' ]);
+    foreach ($docs as $identifier) {
+      $rows[] = [ 
+        'collection' => $collection, 
+        'isPartOf' => $identifier
+      ];
+    }
+  }
+
+  if (!empty($rows)) {
+    echo json_encode([
+      'numFound' => count($rows),
+      'docs' => $rows,
+    ]);  
+  } else {
+    echo json_encode([
+      'numFound' => 0,
+      'docs' => [],
+    ]); 
+  }
+
+}
+
+/**
  * Update resource pages.
  *  $ ./vendor/bin/drush update-resource-pages
- *  $ ./vendor/bin/drush update-resource-pages --identifier=princeton_aco000070
+ *  $ ./vendor/bin/drush update-resource-pages --identifier=princeton_aco000064
  */
 function dlts_viewer_drush_update_resource_pages() {
 
@@ -351,7 +388,7 @@ function dlts_viewer_drush_index_node() {
     $node = node_load($nid);
     $wrapper = entity_metadata_wrapper('node', $node);
     $query = new EntityFieldQuery();
-    $keys = array();
+    $keys = [];
     $indexer_table = apachesolr_get_indexer_table($type);
     db_merge($indexer_table)->key(
       array(
@@ -384,7 +421,7 @@ function dlts_viewer_drush_list_translation() {
     ->propertyCondition('status', 1)
     ->fieldCondition('field_identifier', 'value', $identifier, '=')
     ->execute();
-  $langs = array();
+  $langs = [];
   if (!empty($result['node'])) {
     $keys = array_keys($result['node']);
     $nodes = node_load_multiple($keys);
@@ -398,25 +435,8 @@ function dlts_viewer_drush_list_translation() {
 }
 
 /**
- * Delete book query by identifier.
- */
-function dlts_viewer_delete_book_by_identifier() {
-  $identifier = drush_get_option('identifier', NULL);
-  $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
-  if (count($nids) > 0) {
-    drush_log("Removing nodes by identifier $identifier", 'ok');
-    foreach ($nids as $nid) {
-      node_delete($nid);
-      drush_log("Node $nid deleted", 'success');
-    }
-  }
-  else {
-    drush_log("Not found - nodes by identifier $identifier", 'ok');
-  }
-}
-
-/**
- * Update handle.
+ * Update handle by identifier.
+ * ./vendor/bin/drush update-handle --identifier=fales_mss208_cuid1097
  */
 function dlts_viewer_update_handle($identifier, $handle) {
   /*
@@ -473,50 +493,51 @@ function dlts_viewer_update_handle($identifier, $handle) {
  * @throws Exception
  *   When solr gives an error, throw an exception that solr is not available
  */
-function dlts_viewer_solr_index_photos() {
+function drush_dlts_viewer_solr_index_photos() {
+
   module_load_include('inc', 'apachesolr', 'apachesolr.index');
   $id = apachesolr_default_environment();
   try {
-    // Get the $solr object
-    $solr = apachesolr_get_solr($id);
-    // If there is no server available, don't continue.
-    if (!$solr->ping()) {
-      throw new Exception(t('No Solr instance available during indexing.'));
-    }
-
-
-    $docs = [78242, 79159];
-
-    foreach ($docs as $doc) {
-
-      $entity = node_load($doc);
-
-      $documents = apachesolr_convert_entity_to_documents($entity, 'node', $env_id);
-      
+      // Get the $solr object
+      $solr = apachesolr_get_solr($id);
+      // If there is no server available, don't continue.
+      if (!$solr->ping()) {
+        throw new Exception(t('No Solr instance available during indexing.'));
+      }
+  
+  
+      $docs = [78242, 79159];
+  
+      foreach ($docs as $doc) {
+  
+        $entity = node_load($doc);
+  
+        $documents = apachesolr_convert_entity_to_documents($entity, 'node', $env_id);
+        
+        $indexed = $solr->addDocuments($documents);
+    
+        print_r($indexed);
+      }
+  
+      $entity = node_load('78095');
+  
+      $documents = apachesolr_convert_entity_to_documents($entity, 'node', $env_id);    
+  
       $indexed = $solr->addDocuments($documents);
   
       print_r($indexed);
-    }
-
-    $entity = node_load('78095');
-
-    $documents = apachesolr_convert_entity_to_documents($entity, 'node', $env_id);    
-
-    $indexed = $solr->addDocuments($documents);
-
-    print_r($indexed);
-
-    $entity = node_load('27398');
-
-    $documents = apachesolr_convert_entity_to_documents($entity, 'node', $env_id);    
-
-    $indexed = $solr->addDocuments($documents);
-
-    print_r($indexed);    
-
+  
+      $entity = node_load('27398');
+  
+      $documents = apachesolr_convert_entity_to_documents($entity, 'node', $env_id);    
+  
+      $indexed = $solr->addDocuments($documents);
+  
+      print_r($indexed);
   }
   catch (Exception $e) {
     apachesolr_log_exception($env_id, $e);
     return FALSE;
   }
 }
+
