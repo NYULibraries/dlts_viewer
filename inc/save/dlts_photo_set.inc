@@ -2,7 +2,7 @@
 
 /**
  * @file
- * DLTS Viewer Create Photo resource.
+ * DLTS Viewer save photo resource.
  */
 
 /**
@@ -70,7 +70,7 @@ function save_dlts_photo_set($node, $node_language = 'en') {
   if (!empty($node['identifier'])) {
     $ewrapper->field_identifier->set($node['identifier']);
   } else {
-    die('Node identifier must not be empty');
+    die('Node identifier must not be empty.');
   }
 
   if (!empty($node['partners']) && is_array($node['partners']) && count($node['partners']) > 0) {
@@ -117,7 +117,7 @@ function save_dlts_photo_set($node, $node_language = 'en') {
   }
 
   if (!empty($node['handle'])) {
-    $ewrapper->field_handle->set(array('url' => $node['handle']));
+    $ewrapper->field_handle->set([ 'url' => $node['handle'] ]);
   }
 
   if (!empty($node['page_count'])) {
@@ -130,12 +130,12 @@ function save_dlts_photo_set($node, $node_language = 'en') {
 
   if (!empty($node['title_long'])) {
     $ewrapper->field_title->set($node['title_long']);
-  }
-  elseif (!empty($node['entity_title'])) {
+  } elseif (!empty($node['entity_title'])) {
     $ewrapper->field_title->set($node['entity_title']);
   }
 
   $saved = $ewrapper->save();
+
   if ($saved) {
 
     $nid = $ewrapper->getIdentifier();
@@ -146,9 +146,7 @@ function save_dlts_photo_set($node, $node_language = 'en') {
 
       $identifier = $node['identifier'];
 
-      $parsed_url = parse_url($node['handle']['url']);
-    
-      $noid = str_replace('/2333.1/', '', $parsed_url['path']);
+      $noid = $node['noid'];
 
       $edit_query = "INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', 'dlts_photo_set', '0');";
 

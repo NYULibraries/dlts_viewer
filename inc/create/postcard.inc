@@ -9,7 +9,9 @@
  * Given a JSON representation of a postcard, create DLTS Postcard.
  */
 function create_dlts_postcard_from_json($data) {
+  
   return $data['metadata'];
+
   module_load_include('inc', 'dlts_viewer', 'inc/save/postcard');
   $entity_title = $data['entity_title'];
   $entity_language = $data['entity_language'];

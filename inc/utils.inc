@@ -190,34 +190,6 @@ function dlts_viewer_mobile_detect() {
 }
 
 /**
- * Check if this is a PJAX request.
- *
- * @return bool
- *   Return a boolean indicating whether this is a PJAX request.
- */
-function dlts_viewer_is_pjax() {
-  $is_pjax = &drupal_static('is_pjax');
-  if (!isset($is_pjax) && function_exists('getallheaders')) {
-    $headers = getallheaders();
-    if (isset($headers['X-Pjax']) || isset($headers['X-PJAX'])) {
-      drupal_add_http_header('uri', request_uri());
-      $is_pjax = TRUE;
-    }
-    else {
-      $params = drupal_get_query_parameters();
-      if (isset($params['pjax'])) {
-        drupal_add_http_header('uri', base_path() . request_uri());
-        $is_pjax = TRUE;
-      }
-      else {
-        $is_pjax = FALSE;
-      }
-    }
-  }
-  return $is_pjax;
-}
-
-/**
  * Check if the client requested a embeded view.
  *
  * @return bool
@@ -559,4 +531,29 @@ function dlts_viewer_is_serialized($data, $strict = TRUE) {
       return (bool) preg_match("/^{$token}:[0-9.E+-]+;$end/", $data);
   }
   return FALSE;
+}
+
+function dlts_viewer_content_types_type($type) {
+  $content_type = node_type_get_type($type);
+  if (!$content_type) {
+    return;
+  }
+  $out = $fields = array();
+  $field_info_instances = field_info_instances('node', $content_type->type);
+  foreach ($field_info_instances as $field_name => $field_info_instance) {
+    $info = field_info_field($field_name);
+    $fields[] = array(
+      'label' => $field_info_instance['label'],
+      'field_name' => $field_info_instance['field_name'],
+      'type' => $field_info_instance['widget']['type'],
+      'cardinality' => (string) $info['cardinality'],
+      'settings' => array(
+        'allowed_values' => isset($info['settings']['allowed_values']) ? $info['settings']['allowed_values'] : NULL,
+      ),
+    );
+  }
+  return array(
+    'typeInfo' => $content_type,
+    'fields' => $fields,
+  );
 }

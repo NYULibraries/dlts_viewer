@@ -5,8 +5,6 @@ const uuid = 'mirador-app';
 
 const elem = document.getElementById(uuid);
 
-console.log(elem)
-
 const endpoint = elem.dataset.endpoint;
 
 const identifier = elem.dataset.identifier;

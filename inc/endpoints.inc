@@ -89,9 +89,7 @@ function dlts_viewer_book_metadata($node) {
       'status' => t('fail'),
     ];
   }
-  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.book');
-  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
-  $type = dlts_utilities_content_types_type($node->type);
+  $type = dlts_viewer_content_types_type($node->type);
   $collections = $subjects = $metadata = $fields = [];
   $ewrapper = entity_metadata_wrapper('node', $node);
   foreach ($type['fields'] as $field) {
@@ -100,29 +98,23 @@ function dlts_viewer_book_metadata($node) {
     $raw_value = $ewrapper->$field_name->value();
     if ($field['type'] == 'options_buttons') {
       $value = $field['settings']['allowed_values'][$raw_value];
-    }
-    elseif ($field['type'] == 'link_field' && isset($raw_value['url'])) {
+    } elseif ($field['type'] == 'link_field' && isset($raw_value['url'])) {
       $value = $raw_value['url'];
-    }
-    elseif ($field['type'] == 'file_generic') {
+    } elseif ($field['type'] == 'file_generic') {
       $value = [];
       foreach ((array) $raw_value as $pdf_file) {
         $value[] = file_create_url($pdf_file['uri']);
       }
-    }
-    elseif ($field['type'] == 'date_text') {
+    } elseif ($field['type'] == 'date_text') {
       $raw_value['value'];
-    }
-    elseif ($field['type'] == 'image_image') {
+    } elseif ($field['type'] == 'image_image') {
       $value = file_create_url($raw_value['uri']);
-    }
-    elseif ($field['type'] == 'taxonomy_autocomplete') {
+    } elseif ($field['type'] == 'taxonomy_autocomplete') {
       $value = [];
       foreach ($raw_value as $taxonomy) {
         $value[] = $taxonomy->name;
       }
-    }
-    else {
+    } else {
       $value = $raw_value;
     }
     $fields[$name] = [
@@ -307,13 +299,13 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
     ];
   }
   // Try to mimic Apache Solr response.
-  $response = array(
-    'response' => array(
+  $response = [
+    'response' => [
       'numFound' => (int) $count,
       'start' => (int) $start,
       'docs' => $nodes,
-    ),
-  );
+    ],
+  ];
   return $response;
 }
 
@@ -358,32 +350,32 @@ function dlts_viewer_list_collections(int $start = 0, int $length = 100) {
     ->execute();
 
   // Try to mimic Apache Solr response.
-  $response = array(
-    'response' => array(
+  $response = [
+    'response' => [
       'numFound' => $count,
       'start' => $start,
-      'docs' => array(),
-    ),
-  );
+      'docs' => [],
+    ],
+  ];
 
   foreach ($entities['node'] as $node) {
     $entity = node_load('node', $node->nid);
     $wrapper = entity_metadata_wrapper('node', $entity);
-    $partners = array();
+    $partners = [];
     foreach ($wrapper->field_partner->getIterator() as $delta => $partner_wrapper) {
       if ($partner_wrapper->getBundle() == 'dlts_partner') {
-        $partners[] = array(
+        $partners[] = [
           'name' => $partner_wrapper->field_name->value(),
           'code' => $partner_wrapper->field_code->value(),
-        );
+        ];
       }
     }
-    $response['response']['docs'][] = array(
+    $response['response']['docs'][] = [
       'title' => trim($wrapper->field_name->value()),
       'identifier' => $wrapper->field_identifier->value(),
       'code' => $wrapper->field_code->value(),
       'partners' => $partners,
-    );
+    ];
   }
 
   return $response;
@@ -960,8 +952,6 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
 
   global $base_url;
 
-  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
-
   $image_server = variable_get('dlts_viewer_image_server', 'http://127.0.0.1:8182');
 
   $fields = $series = $volumes = $collections = $pages = [];
@@ -1033,17 +1023,17 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
   // Default title of the book.
   $displayTitle = $title = trim($book->field_title->value());
 
-  $type = dlts_utilities_content_types_type($entity->type);
+  $type = dlts_viewer_content_types_type($entity->type);
 
   foreach ($type['fields'] as $field) {
     $name = str_replace('field_', '', $field['field_name']);
     $field_name = $field['field_name'];
     // Get the raw value of the field.
     $raw_value = $book->$field_name->value();
-    $fields[$name] = array(
+    $fields[$name] = [
       'label' => locale($field['label'], NULL, $requestedLang),
       'value' => NULL,
-    );
+    ];
     switch ($name) {
       case 'author':
       case 'contributor':
@@ -1073,7 +1063,7 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
         break;
 
       case 'collection':
-        $fields[$name]['value'] = array();
+        $fields[$name]['value'] = [];
         $collections = dlts_viewer_collections($raw_value);
         foreach ($collections as $collection) {
           unset($collection['title']);
@@ -1110,7 +1100,7 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
         break;
 
       case 'partner':
-        $partner_value = array();
+        $partner_value = [];
         foreach ($raw_value as $partner) {
           $partner_wrapper = entity_metadata_wrapper('node', $partner);
           $partner_value[] = array(
@@ -1124,15 +1114,15 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
         break;
 
       case 'pdf_file':
-        $fields[$name]['value'] = array(
-          'hi' => array(),
-          'lo' => array(),
-        );
+        $fields[$name]['value'] = [
+          'hi' => [],
+          'lo' => [],
+        ];
         foreach ($raw_value as $value) {
-          $data = array(
+          $data = [
             'uri' => $value['uri'],
             'label' => $value['label'],
-          );
+          ];
           $data['size'] = field_fileserver_get_pdf_filesize($data);
           $data['uri'] = file_create_url($data['uri']);
           $filename = pathinfo($data['uri'], PATHINFO_FILENAME);
@@ -1149,21 +1139,21 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
           if (isset($matches) && isset($matches[1])) {
             switch ($matches[1]) {
               case 'hi':
-                $fields[$name]['value']['hi'] = array(
+                $fields[$name]['value']['hi'] = [
                   'label' => locale('High-resolution', NULL, $requestedLang),
                   'uri' => $data['uri'],
                   'searchable' => $data['searchable'],
                   'filesize' => $data['size'],
-                );
+                ];
                 break;
 
               case 'lo':
-                $fields[$name]['value']['lo'] = array(
+                $fields[$name]['value']['lo'] = [
                   'label' => locale('Low-resolution', NULL, $requestedLang),
                   'uri' => $data['uri'],
                   'searchable' => $data['searchable'],
                   'filesize' => $data['size'],
-                );
+                ];
                 break;
             }
           }
@@ -1177,10 +1167,7 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
       case 'read_order':
         // [0] => Left to right
         // [1] => Right to left
-        $map = array(
-          0 => 'ltr',
-          1 => 'rtl',
-        );
+        $map = [ 0 => 'ltr', 1 => 'rtl', ];
         $worldDirection = $fields[$name]['value'] = $map[$raw_value];
         unset($map);
         break;
@@ -1196,10 +1183,7 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
       case 'scan_order':
         // [0] => Left to right
         // [1] => Right to left
-        $map = array(
-          0 => 'ltr',
-          1 => 'rtl',
-        );
+        $map = [ 0 => 'ltr', 1 => 'rtl', ];
         $fields[$name]['value'] = $map[$raw_value];
         unset($map);
         break;
@@ -1209,12 +1193,12 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
         break;
 
       case 'subject':
-        $subjects = array();
+        $subjects = [];
         foreach ($raw_value as $subject) {
-          $subjects[] = array(
+          $subjects[] = [
             'uuid' => $subject->uuid,
             'name' => $subject->name,
-          );
+          ];
         }
         $fields[$name]['value'] = $subjects;
         unset($subjects);
@@ -1225,7 +1209,7 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
         break;
 
       case 'topic':
-        $topics = array();
+        $topics = [];
         foreach ($raw_value as $topic) {
           $topics[] = locale($topic, NULL, $requestedLang);
         }
@@ -1241,7 +1225,7 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
     }
   }
 
-  $response = array(
+  $response = [
     'title' => $title,
     'displayTitle' => $displayTitle,
     'type' => 'map',
@@ -1253,7 +1237,7 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
     'representativeImage' => $representative_image,
     'thumbnail' => "$base_url/iiif/2/maps/$identifier/1/full/150,/0/default.jpg",
     'metadata' => $fields,
-  );
+  ];
 
   return $response;
 
@@ -1332,7 +1316,7 @@ function dlts_viewer_api_photo_json($entity, $requestedLang = 'en') {
   // Default title of the book.
   $displayTitle = $title = trim($wrapper->field_title->value());
 
-  $type = dlts_utilities_content_types_type($entity->type);
+  $type = dlts_viewer_content_types_type($entity->type);
 
   $bundle = dlts_viewer_get_bundle_alias($wrapper->getBundle());
 
@@ -1343,10 +1327,10 @@ function dlts_viewer_api_photo_json($entity, $requestedLang = 'en') {
     $field_name = $field['field_name'];
     // Get the raw value of the field.
     $raw_value = $wrapper->$field_name->value();
-    $fields[$name] = array(
+    $fields[$name] = [
       'label' => locale($field['label'], NULL, $requestedLang),
       'value' => NULL,
-    );
+    ];
     switch ($name) {
 
       case 'collection':
@@ -1535,7 +1519,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   // Default title of the book.
   $displayTitle = $title = trim($wrapper->field_title->value());
 
-  $type = dlts_utilities_content_types_type($entity->type);
+  $type = dlts_viewer_content_types_type($entity->type);
 
   $isMultivolume = FALSE;
 
@@ -2013,6 +1997,66 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
 }
 
 /**
+ * Create photo sequence.
+ */
+function dlts_viewer_api_v1_dlts_photo_set_sequences($source) {
+
+  module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_photo_set');
+
+  $apiVersion = 'v1';
+
+  try {
+    if ($source['entity_type'] == 'dlts_photo_set' || $source['entity_type'] == 'image_set') {
+      if (isset($source['identifier'])) {
+        $entity_identifier = $source['identifier'];
+      } else {
+        throw new Exception('Field identifier can not be empty.');
+      }
+      if (isset($source['pages'])) {
+        // IIIF Image Server.
+        $image_server = variable_get('dlts_image_server', 'https://image1.dlib.nyu.edu:8183');
+        $types = [
+          'dlts_book' => 'books',
+          'dlts_map' => 'maps',
+          'dlts_photo_set' => 'photos',
+          'dlts_postcard' => 'postcards',
+        ];      
+        $collections = [
+          'dlts_book' => 'dlts_books_page',
+          'dlts_collection' => 'dlts_collection',
+          'dlts_map' => 'dlts_map_page',
+          'dlts_partner' => 'dlts_partner',
+          'dlts_photo_set' => 'dlts_photo',
+          'dlts_postcard' => 'dlts_postcard',
+        ];
+        $collection_name = $collections[$source['entity_type']];
+        foreach ($source['pages']->page as $edit) {
+          $uri = $edit->cm->uri;
+          $image_id = urlencode(str_replace('fileserver://', '', $uri));
+          $response = drupal_http_request("$image_server/iiif/2/$image_id/info.json", [ 'method' => 'GET', 'timeout' => 15 ]);          
+          if ($response->code == '200' && isset($response->data)) {
+            $data = drupal_json_decode($response->data);
+            unset($edit->cm->levels);
+            unset($edit->cm->dwtLevels);
+            unset($edit->cm->compositingLayerCount);
+            unset($edit->cm->timestamp);
+            $edit->cm->width = $data['width'];
+            $edit->cm->height = $data['height'];
+            $update = dlts_viewer_mongodb_update_sequence((array) $edit, $collection_name);
+          }
+        }
+        return [
+          'data' => $source,
+        ];
+      }
+    }
+  } catch (Exception $e) {
+    watchdog('dlts_viewer', $e->getMessage(), [], WATCHDOG_CRITICAL);
+    die($e->getMessage());
+  }
+}
+
+/**
  * Create book v1.0.1.
  */
 function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
@@ -2021,11 +2065,11 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
 
     $datasource = [];
 
-    $entity_types = array(
+    $entity_types = [
       'book',
       'photo_set',
       'postcard',
-    );
+    ];
 
     $datasource = (array) json_decode(
       file_get_contents('php://input')
@@ -2047,19 +2091,18 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
           module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_postcard');
           $entity = create_dlts_dlts_postcard_from_json($datasource);
           if ($entity) {
-            return array(
+            return [
               'data' => $entity,
-            );
-          }
-          else {
+            ];
+          } else {
             throw new Exception('Unexpected error.');
           }
         }
         catch (Exception $e) {
-          watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
-          return array(
+          watchdog('dlts_viewer', $e->getMessage(), [], WATCHDOG_CRITICAL);
+          return [
             'error' => $e->getMessage(),
-          );
+          ];
         }
         break;
 
@@ -2078,11 +2121,10 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
           module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book.1.0.1');
           $entity = create_dlts_book_from_json_v1_0_1($datasource);
           if ($entity) {
-            return array(
+            return [
               'data' => $entity,
-            );
-          }
-          else {
+            ];
+          } else {
             throw new Exception('Unexpected error.');
           }
         }
@@ -2110,7 +2152,7 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
  */
 function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
 
-  module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_photo_set');
+  module_load_include('inc', 'dlts_viewer', 'inc/save/dlts_photo_set');
 
   $apiVersion = 'v1';
 
@@ -2152,15 +2194,13 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
       if ($containsSearch && count($expected_keys) == count($keys)) {
         if (isset($source['entity_title'])) {
           $entity_title = $source['entity_title'];
-        }
-        else {
+        } else {
           throw new Exception('Field entity_title can not be empty.');
         }
 
         if (isset($source['identifier'])) {
           $entity_identifier = $source['identifier'];
-        }
-        else {
+        } else {
           throw new Exception('Field identifier can not be empty.');
         }
 
@@ -2180,6 +2220,7 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
             ];
           }
         }
+
         // Collections the book belong.
         if (isset($metadata->collection)) {
           foreach ($metadata->collection->value as $value) {
@@ -2198,14 +2239,31 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
         if (isset($metadata->title)) {
           $title = $metadata->title->value[0];
         }
+
         if (isset($metadata->page_count) && !empty($metadata->page_count->value)) {
           $page_count = $metadata->page_count->value[0];
         }
+
         if (isset($metadata->sequence_count) && !empty($metadata->sequence_count->value)) {
           $sequence_count = $metadata->sequence_count->value[0];
         }
+
         if (isset($metadata->handle) && !empty($metadata->handle->value)) {
-          $handle = $metadata->handle->value[0];
+          $handle = trim($metadata->handle->value[0]);
+        }
+
+        $ticket = '';
+        if (isset($node['ticket'])) {
+          $ticket = trim($node['ticket']);
+        }
+      
+        $noid = '';
+        if (isset($source['noid'])) {
+          $noid = trim($source['noid']);
+        } elseif (isset($handle)) {
+          $parsed_url = parse_url($handle);
+          $handlepath = str_replace('/2333.1/', '', $parsed_url['path']);    
+          $noid = trim($handlepath);
         }
         $node = [
           'entity_title' => $entity_title,
@@ -2216,6 +2274,8 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
           'page_count' => $page_count,
           'handle' => $handle,
           'sequence_count' => $sequence_count,
+          'ticket' => $ticket,
+          'noid' => $noid,
         ];
         $entity = save_dlts_photo_set($node, $source['entity_language']);
         if ($entity) {
@@ -2223,19 +2283,60 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
             'data' => $node,
           ];
         }
-      }
-      else {
+      } else {
         throw new Exception('Keys: ' . implode($keys, ', ') . ' do not match the requierement: ' . implode($expected_keys, ', '));
       }
-    }
-    else {
+    } else {
       throw new Exception('Wrong entity type.');
     }
-  }
-  catch (Exception $e) {
+  } catch (Exception $e) {
     watchdog('dlts_viewer', $e->getMessage(), [], WATCHDOG_CRITICAL);
     die($e->getMessage());
   }
+}
+
+
+/**
+ * API callback.
+ */
+function dlts_viewer_api_v1_sequences($version = NULL) {
+  // @todo Also filter by hosts with access
+  if (
+    user_access('dlts create object') &&  $_SERVER['REQUEST_METHOD'] == 'POST'
+  ) {
+    $datasource = [];
+    $entity_types = [
+      'image_set',
+      'dlts_book',
+      'dlts_photo_set',
+      'dlts_postcard',
+      'dlts_map',
+    ];
+    $datasource = (array) json_decode(
+      file_get_contents('php://input')
+    );
+    switch ($version) {
+      case 'v1':
+        if (in_array($datasource['entity_type'], $entity_types)) {
+          switch ($datasource['entity_type']) {
+            // case 'dlts_book':
+            // return dlts_viewer_api_v1_dlts_book_objects($datasource);
+
+            case 'dlts_photo_set':
+            case 'image_set':
+              return dlts_viewer_api_v1_dlts_photo_set_sequences($datasource);
+
+            // case 'dlts_postcard':
+              // module_load_include('inc', 'dlts_viewer', 'inc/endpoints/postcard');
+              // return dlts_viewer_api_v1_dlts_postcard_objects($datasource);
+          }
+        }
+        break;
+    }
+  }
+  return [
+    'error' => 'User not allowed.',
+  ];
 }
 
 /**
@@ -2331,4 +2432,3 @@ function _dlts_viewer_noid_loader($node, $reset = FALSE) {
   }
   return $type;
 }
-

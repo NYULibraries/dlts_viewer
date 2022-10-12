@@ -13,46 +13,49 @@
  */
 function _dlts_viewer_menu_iiif() {
 
+  $items = [];
+
   /*
    * Canvas.
    *
    * @link http://localhost:9000/api/presentation/books/princeton_aco000102/canvas/1
    */
-  $items['api/presentation/%dlts_type/%dlts_resource/canvas/%dlts_canvas_page'] = array(
+  $items['api/presentation/%dlts_type/%dlts_resource/canvas/%dlts_canvas_page'] = [
     'title' => 'IIIF Presentation API 3 - Canvas',
-    'access arguments' => array('access iiif content'),
+    'access arguments' => [ 'access iiif content' ],
     'page callback' => 'dlts_viewer_iiif_resource_page_canvas',
-    'page arguments' => array(2, 3, 5),
-    'load arguments' => array('%map', '%index'),
+    'page arguments' => [ 2, 3, 5 ],
+    'load arguments' => [ '%map', '%index' ],
     'type' => MENU_CALLBACK,
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
-  );
+  ];
 
   // Annotation.
   // @link http://localhost:9000/api/v3/presentation/books/princeton_aco000102/annotation/painting/1
-  $items['api/presentation/%dlts_type/%dlts_resource/annotation/painting/%dlts_iiif_annotation_painting'] = array(
+  $items['api/presentation/%dlts_type/%dlts_resource/annotation/painting/%dlts_iiif_annotation_painting'] = [
     'title' => 'IIIF Presentation API 3 - Annotation painting',
-    'access arguments' => array('access iiif content'),
+    'access arguments' => [ 'access iiif content' ],
     'page callback' => 'dlts_viewer_iiif_annotation',
-    'page arguments' => array(2, 3, 6),
-    'load arguments' => array('%map', '%index'),
+    'page arguments' => [ 2, 3, 6 ],
+    'load arguments' => [ '%map', '%index' ],
     'type' => MENU_CALLBACK,
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
-  );
+  ];
+
   // AnnotationPage.
   // @link http://localhost:9000/api/v3/presentation/books/princeton_aco000102/page/1
-  $items['api/presentation/%dlts_type/%dlts_resource/page/%dlts_iiif_annotation_page'] = array(
+  $items['api/presentation/%dlts_type/%dlts_resource/page/%dlts_iiif_annotation_page'] = [
     'title' => 'IIIF Presentation API 3 - AnnotationPage',
-    'access arguments' => array('access iiif content'),
+    'access arguments' => [ 'access iiif content' ],
     'page callback' => 'dlts_viewer_iiif_book_page_annotation_page',
-    'page arguments' => array(2, 3, 5),
-    'load arguments' => array('%map', '%index'),
+    'page arguments' => [ 2, 3, 5 ],
+    'load arguments' => [ '%map', '%index' ],
     'type' => MENU_CALLBACK,
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
-  );
+  ];
 
   /*
    * For the Image service we can not add the version to
@@ -64,31 +67,31 @@ function _dlts_viewer_menu_iiif() {
   // Proxy Image service.
   // @link http://localhost:9000/api/image/books/uaena_aco000016/1/info.json
   $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence'] =
-  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/info.json'] = array(
+  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/info.json'] = [
     'title' => 'IIIF API - Request metadata',
     'access arguments' => [ 'access iiif content' ],
     'page callback' => 'dlts_viewer_iiif_api',
     'page arguments' => [ 2, 3, 4 ],
-    'load arguments' => ['%map', '%index' ],
+    'load arguments' => [ '%map', '%index' ],
     'type' => MENU_CALLBACK,
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
-  );
+  ];
 
   // Request image.
   // @link https://iiif.io/api/image/2.0
   // @link http://localhost:9000/api/image/books/princeton_aco000102/1/full/max/0/default.jpg
   // http://localhost:9000/api/image/books/princeton_aco000102/1/{region}/{size}/{rotation}/{quality}.{format}
-  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/%dlts_iiif_region/%dlts_iiif_size/%dlts_iiif_rotation/%dlts_iiif_quality'] = array(
+  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/%dlts_iiif_region/%dlts_iiif_size/%dlts_iiif_rotation/%dlts_iiif_quality'] = [
     'title' => 'IIIF API - Request image',
-    'access arguments' => array('access iiif content'),
+    'access arguments' => [ 'access iiif content' ],
     'page callback' => 'dlts_viewer_iiif_tile',
-    'page arguments' => array(2, 3, 4, 5, 6, 7, 8),
-    'load arguments' => array('%map', '%index'),
+    'page arguments' => [ 2, 3, 4, 5, 6, 7, 8 ],
+    'load arguments' => [ '%map', '%index' ],
     'type' => MENU_CALLBACK,
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
-  );
+  ];
 
   /*
    * Register IIIF Presentation Manifest routes.
@@ -99,16 +102,17 @@ function _dlts_viewer_menu_iiif() {
    * @return array
    *   IIIF Presentation Manifest.
    */
-  $items['api/presentation/%dlts_type/%dlts_resource/manifest.json'] = array(
+  $items['api/presentation/%dlts_type/%dlts_resource/manifest.json'] = [
     'title' => 'IIIF Presentation API 3 - Manifest',
-    'access arguments' => array('access iiif content'),
+    'access arguments' => [ 'access iiif content' ],
     'page callback' => 'dlts_viewer_iiif_resource_manifest',
-    'page arguments' => array(2, 3),
+    'page arguments' => [ 2, 3 ],
     'type' => MENU_CALLBACK,
-    'load arguments' => array('%map', '%index'),
+    'load arguments' => [ '%map', '%index' ],
     'delivery callback' => 'dlts_viewer_ldjson_iiif_presentation_3_output',
     'file' => 'inc/iiif.inc',
-  );
+  ];
 
   return $items;
+
 }

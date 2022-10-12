@@ -23,9 +23,6 @@ function dlts_viewer_preprocess_node_dlts_map(&$vars) {
     if ($count === 3 && $args[2] == 'display') {
       $vars['theme_hook_suggestions'][] = 'node__display';
     }
-    if (dlts_viewer_is_pjax()) {
-      $vars['theme_hook_suggestions'][] = 'page__viewer_pjax';
-    }
   }
 }
 
@@ -81,8 +78,6 @@ function dlts_viewer_map_dispatcher($entity, array $arg) {
 
   // Check for mobile devices.
   $is_mobile = dlts_viewer_is_mobile();
-  // Check request type.
-  $is_pjax = dlts_viewer_is_pjax();
 
   drupal_set_title($entity->title);
 
@@ -246,10 +241,6 @@ function _dlts_viewer_map_json($entity, $add_pages = TRUE) {
 
   header('Content-Type: application/json;charset=utf-8');
 
-  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.book');
-
-  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
-
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
 
   // Wrapp book entity with Entity API wrapper.
@@ -260,11 +251,11 @@ function _dlts_viewer_map_json($entity, $add_pages = TRUE) {
 
   $title = $entity->title;
 
-  $type = dlts_utilities_content_types_type($entity->type);
+  $type = dlts_viewer_content_types_type($entity->type);
 
-  $fields = array();
+  $fields = [];
 
-  $pages = array();
+  $pages = [];
 
   foreach ($type['fields'] as $field) {
     $name = str_replace('field_', '', $field['field_name']);

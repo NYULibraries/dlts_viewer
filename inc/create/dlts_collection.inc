@@ -19,17 +19,14 @@ function create_dlts_collection($node) {
   } else {
     // entity_create replaces the procedural steps in the first example of
     // creating a new object $node and setting its 'type' and uid property
-    $entity = entity_create('node', array(
+    $entity = entity_create('node', [
       'type' => 'dlts_collection',
       'uid' => $user->uid,
       'status' => 1,
       'comment' => 0,
       'promote' => 0,
       'language' => LANGUAGE_NONE,
-   ));
-    // The entity is now created, but we have not yet simplified use of it.
-    // Now create an entity_metadata_wrapper around the new node entity
-    // to make getting and setting values easier
+    ]);
     $ewrapper = entity_metadata_wrapper('node', $entity);
   }
 
@@ -60,11 +57,11 @@ function create_dlts_collection($node) {
   if (isset($node['partner'])) {
     $partner_nid = partner_nid($node['partner']->identifier);
     if ($partner_nid) {
-      $ewrapper->field_partner->set(array($partner_nid));
+      $ewrapper->field_partner->set([ $partner_nid ]);
     } else {
       $partner_nid = create_dlts_partner($node['partner']);
       if ($partner_nid) {
-        $ewrapper->field_partner->set(array($partner_nid));
+        $ewrapper->field_partner->set([ $partner_nid ]);
       }
     }
   }

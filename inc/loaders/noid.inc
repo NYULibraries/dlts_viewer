@@ -14,24 +14,21 @@
  * @return object
  *   A node object.
  */
-function dlts_noid_load($noid) {
-  $language = ['en', LANGUAGE_NONE];
-  $query_parameters = drupal_get_query_parameters();
-  if (isset($query_parameters['lang'])) {
-    $language = array(filter_xss($query_parameters['lang']));
-  }
-  $query = new EntityFieldQuery();
-  $result = $query
-    ->entityCondition('entity_type', 'node')
-    ->propertyCondition('language', $language)
-    ->propertyCondition('status', 1)
-    ->fieldCondition('field_handle', 'url', '%' . db_like($noid) . '%', 'LIKE')
-    ->addTag('node_access')
-    ->execute();
-  if (empty($result['node'])) {
+function dlts_noid_load($id) {
+  // id can be noid or identifier.
+  // proceed should be 1, but for now allow 0.
+  $results = db_query(
+    'SELECT * FROM dlts_viewer_resource 
+     WHERE noid = :id 
+     OR identifier = :id 
+     LIMIT 1', 
+    [ ':id' => $id ]
+    )->fetchAll();
+
+  if (empty($results)) {
     return FALSE;
+  } else {
+    $result = array_pop($results);
+    return $result;
   }
-  $keys = array_keys($result['node']);
-  $nid = array_pop($keys);
-  return node_load($nid);  
 }

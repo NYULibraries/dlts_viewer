@@ -235,12 +235,10 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
   $representative_image = [];
   if (isset($metadata->representative_image) && !empty($metadata->representative_image)) {
     if (!$legacy) {
-      $representative_image = array(
+      $representative_image = [
         'uri' => $metadata->representative_image->cm->uri,
-        'timestamp' => $metadata->representative_image->cm->timestamp,
-      );
-    }
-    else {
+      ];
+    } else {
       if (isset($metadata->representative_image->value)) {
         $timestamp = (isset($metadata->representative_image->value->timestamp) ? $metadata->representative_image->value->timestamp : time());
         $uri = $metadata->representative_image->value->fileserver;
@@ -331,8 +329,7 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
         'filesize' => $pdf->filesize,
       );
     }
-  }
-  elseif (isset($metadata->pdf_file)) {
+  } elseif (isset($metadata->pdf_file)) {
     // Deals with JSON new documents.
     if (!$legacy) {
       foreach ($metadata->pdf_file->value as $pdf_file) {
@@ -408,10 +405,27 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
     }
   }
 
+  $ticket = '';
+  if (isset($data['ticket'])) {
+    $ticket = trim($data['ticket']);
+  }
+  
+  $noid = '';
+  if (isset($data['noid'])) {
+    $noid = trim($data['noid']);
+  } elseif (isset($metadata->handle)) {
+    $handlepath = trim($metadata->handle->value[0]);
+    $parsed_url = parse_url($handlepath);
+    $handlepath = str_replace('/2333.1/', '', $parsed_url['path']);    
+    $noid = trim($handlepath);
+  }
+
   $node = [
     'entity_title' => $entity_title,
     'entity_language' => $entity_language,
     'identifier' => $entity_identifier,
+    'noid' => $noid,
+    'ticket' => $ticket,
     'partners' => $partners,
     'collections' => $collections,
     'title' => $title,

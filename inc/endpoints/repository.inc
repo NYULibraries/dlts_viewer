@@ -55,13 +55,11 @@ function dlts_viewer_search_repository_partner_code($code) {
         }
         $partners[$found_key]->collections = $collections;
         return $partners[$found_key];
-      }
-      else {
+      } else {
         throw new Exception('Request failed with status code ' . $request->code . '.');
       }
     }
-  }
-  else {
+  } else {
     return [
       'error' => "Partners with code $code not found."
     ];
@@ -117,17 +115,14 @@ function dlts_viewer_search_repository_collection_ses($partner, $collection) {
             $partners[$found_key]->collection->ses = $ses;
             return $partners[$found_key];
           }
-        }
-        else {
+        } else {
           return $partners[$found_key];
         }
-      }
-      else {
+      } else {
         throw new Exception('Request failed with status code ' . $request->code . '.');
       }
     }
-  }
-  else {
+  } else {
     return [
       'error' => "Partners with code $code not found."
     ];
@@ -162,7 +157,6 @@ function dlts_viewer_search_repository_partner() {
       $realpath = drupal_realpath('public://') . '/datasource';
       // Path to use to cache response/return value.
       $dir_path = $realpath . '/rsbe';
-
       /*
        * Not available. Search repository. NoId will not be set to null.
        */
@@ -220,27 +214,22 @@ function dlts_viewer_search_repository_partner() {
             $partOf['provider']['type'] = 'partner';
           }
           return $partOf;
-        }
-        else {
+        } else {
           throw new Exception('Request failed with status code ' . $request->code . '.');
         }
-      }
-      else {
+      } else {
         $requestUrl = $endpoint . '/api/v0/partners';
-
         $request = drupal_http_request($requestUrl);
         if ($request->code == '200') {
           $data = json_decode($request->data);
           return $data;
-        }
-        else {
+        } else {
           throw new Exception('Request failed with status code ' . $request->code . '.');
         }
       }
       throw new Exception('Fatal error, cause unknow.');
     }
-  }
-  catch (Exception $e) {
+  } catch (Exception $e) {
     return [
       'error' => $e->getMessage(),
     ];
@@ -417,32 +406,26 @@ function dlts_viewer_search_repository() {
                   $partOf['provider']['code'] = $partner_data->code;
                   $partOf['provider']['name'] = $partner_data->name;
                   $partOf['provider']['type'] = 'partner';
-                }
-                else {
+                } else {
                   throw new Exception('Unable to request partner data. Reqeust failed with status code ' . $request->code . '.');
                 }
-              }
-              else {
+              } else {
                 throw new Exception('Unable to request collection data. Reqeust failed with status code ' . $request->code . '.');
               }
             }
             $entity['isPartOf'][] = $partOf;
-          }
-          else {
+          } else {
             throw new Exception("Record with digi_id $digi_id not found.");
           }
-        }
-        else {
+        } else {
           throw new Exception('Request failed with status code ' . $request->code . '.');
         }
       }
-    }
-    else {
+    } else {
       throw new Exception('Incorrect configuration.');
     }
     return $entity;
-  }
-  catch (Exception $e) {
+  } catch (Exception $e) {
     return [
       'error' => $e->getMessage(),
     ];

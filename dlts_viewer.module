@@ -11,6 +11,11 @@
 include_once 'inc/common.inc';
 
 /**
+ * Include helpers and others.
+ */
+include_once 'inc/utils.inc';
+
+/**
  * Load MongoDB helper.
  */
 include_once 'inc/mongodb.inc';
@@ -41,14 +46,14 @@ include_once 'inc/views.inc';
 include_once 'inc/datasource.inc';
 
 /**
- * Include helpers and others.
- */
-include_once 'inc/utils.inc';
-
-/**
  * Include theme functions and hook_theme.
  */
 include_once 'inc/themes.inc';
+
+/**
+ * Include shutdown functions.
+ */
+include_once 'inc/shutdown.inc';
 
 /**
  * Implementation of hook_init().
@@ -150,11 +155,6 @@ function dlts_viewer_preprocess_html(&$vars) {
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     /** we are not in admin page, default Viewer HTML template */
     $vars['theme_hook_suggestions'][] = 'html__viewer';
-    /** Check if this is a PJAX request */
-    if (dlts_viewer_is_pjax()) {
-      /** default Viewer PJAX HTML template */
-      $vars['theme_hook_suggestions'][] = 'html__viewer_pjax';
-    }
     /** Check for  mobile */
     if (dlts_viewer_is_mobile()) {
       $vars['classes_array'][] = 'is_mobile';
@@ -223,9 +223,6 @@ function dlts_viewer_preprocess_node(&$vars) {
 function dlts_viewer_preprocess_page(&$vars) {
   if (dlts_viewer_is_resource()) {
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
-    if (dlts_viewer_is_pjax()) {
-      $vars['theme_hook_suggestions'][] = 'page__books_pjax';
-    }
   }
 }
 
@@ -236,7 +233,6 @@ function dlts_viewer_preprocess_page(&$vars) {
 function dlts_viewer_process_page(&$vars) {
   if (dlts_viewer_is_resource()) {
     $is_embed = dlts_viewer_is_embed();
-    $is_pjax = dlts_viewer_is_pjax();
     $vars['theme_hook_suggestions'][] = 'page__viewer';
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     $vars['is_embed'] = $is_embed;
@@ -450,15 +446,9 @@ function dlts_viewer_css_alter(&$css) {
   }
 }
 
-// here we need to make sure we delete the record from Apache Solr
+// Here we need to make sure we delete the record from Apache Solr
 function dlts_viewer_node_delete($node) {
-  $records = db_query("SELECT document from {dlts_viewer_books_json} WHERE nid = :nid", array(":nid" => $node->nid));
-  foreach ($records as $record) {
-    if (file_exists($record->document)) {
-      file_unmanaged_delete($record->document);
-    }
-  }
-  db_delete('dlts_viewer_books_json')->condition('nid', $node->nid)->execute();
+  db_delete('dlts_viewer_resource')->condition('nid', $node->nid)->execute();
 }
 
 /**

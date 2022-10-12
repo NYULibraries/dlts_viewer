@@ -59,7 +59,7 @@ function _dlts_viewer_menu_api() {
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints/repository.inc',
     'type' => MENU_CALLBACK,
-    'page arguments' => [4],
+    'page arguments' => [ 4 ],
   ];
 
   $items['api/v1/repository/partners/%/%'] = [
@@ -72,7 +72,7 @@ function _dlts_viewer_menu_api() {
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints/repository.inc',
     'type' => MENU_CALLBACK,
-    'page arguments' => [4, 5],
+    'page arguments' => [ 4, 5 ],
   ];
 
   $items['api/v1/repository/partners/%/%/%'] = [
@@ -85,7 +85,7 @@ function _dlts_viewer_menu_api() {
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints/repository.inc',
     'type' => MENU_CALLBACK,
-    'page arguments' => [4, 5, 6],
+    'page arguments' => [ 4, 5, 6 ],
   ];
 
   $items['api/v1/search'] = [
@@ -107,7 +107,7 @@ function _dlts_viewer_menu_api() {
     ],
     'page callback' => 'dlts_viewer_content_by_field',
     'delivery callback' => 'drupal_json_output',
-    'page arguments' => [2],
+    'page arguments' => [ 2 ],
   ];
 
   $items['api/v1/maps/%dlts_map/json'] = [
@@ -116,7 +116,7 @@ function _dlts_viewer_menu_api() {
       'access content',
     ],
     'page callback' => '_dlts_viewer_map_json',
-    'page arguments' => [3],
+    'page arguments' => [ 3 ],
     'delivery callback' => 'drupal_json_output',
     'type' => MENU_CALLBACK,
   ];
@@ -128,10 +128,21 @@ function _dlts_viewer_menu_api() {
     ],
     'page callback' => 'dlts_viewer_api_v1_objects',
     'delivery callback' => 'drupal_json_output',
-    'page arguments' => [1],
+    'page arguments' => [ 1 ],
     'file' => 'inc/endpoints.inc',
   ];
 
+  $items['api/v1/sequences'] = [
+    'title' => 'Create sequences',
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_api_v1_sequences',
+    'delivery callback' => 'drupal_json_output',
+    'page arguments' => [ 1 ],
+    'file' => 'inc/endpoints.inc',
+  ];
+  
   $items['api/v1/objects/books/%dlts_book'] = [
     'title' => 'Update book',
     'access arguments' => [
@@ -139,7 +150,7 @@ function _dlts_viewer_menu_api() {
     ],
     'page callback' => 'dlts_viewer_api_v1_update_book',
     'delivery callback' => 'drupal_json_output',
-    'page arguments' => [4],
+    'page arguments' => [ 4 ],
     'file' => 'inc/endpoints/book.inc',
   ];
 
@@ -150,7 +161,7 @@ function _dlts_viewer_menu_api() {
     ],
     'page callback' => 'dlts_viewer_api_v1_0_1_dlts_book_objects',
     'delivery callback' => 'drupal_json_output',
-    'page arguments' => [1],
+    'page arguments' => [ 1 ],
     'file' => 'inc/endpoints.inc',
   ];
 
@@ -169,7 +180,7 @@ function _dlts_viewer_menu_api() {
     ],
     'page callback' => '_dlts_viewer_noid_loader',
     'delivery callback' => 'drupal_json_output',
-    'page arguments' => [3],
+    'page arguments' => [ 3 ],
     'file' => 'inc/endpoints.inc',
   ];
 
@@ -198,8 +209,8 @@ function _dlts_viewer_menu_api() {
       'access content',
     ],
     'page callback' => 'dlts_viewer_imageserver_book_page',
-    'page arguments' => [4],
-    'load arguments' => ['%map', '%index'],
+    'page arguments' => [ 4 ],
+    'load arguments' => [ '%map', '%index' ],
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
   ];
@@ -211,8 +222,8 @@ function _dlts_viewer_menu_api() {
       'access content',
     ],
     'page callback' => 'dlts_viewer_dlts_photo_sequence_image_iiif',
-    'page arguments' => array(3, 4, 5, 6, 7, 8),
-    'load arguments' => ['%map', '%index'],
+    'page arguments' => [ 3, 4, 5, 6, 7, 8 ],
+    'load arguments' => [ '%map', '%index' ],
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints/photo.inc',
   ];
@@ -224,7 +235,7 @@ function _dlts_viewer_menu_api() {
     ],
     'page callback' => '_dlts_viewer_book_thumbnails_loader',
     'delivery callback' => 'drupal_json_output',
-    'page arguments' => [3],
+    'page arguments' => [ 3 ],
     'file' => 'inc/endpoints.inc',
   ];
 
@@ -235,7 +246,7 @@ function _dlts_viewer_menu_api() {
     ],
     'page callback' => '_dlts_viewer_book_loader',
     'delivery callback' => 'drupal_json_output',
-    'page arguments' => [3],
+    'page arguments' => [ 3 ],
     'file' => 'inc/endpoints.inc',
   ];
 

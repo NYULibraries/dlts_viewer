@@ -14,11 +14,11 @@ function dlts_solr_index_series($document, $entity, $entity_type, $env_id) {
   if ($language != 'en') {
     $prefix = $language . '_';
   }
-  $data = array();
-  $data['collections'] = array();
-  $data['books'] = array();
+  $data = [];
+  $nids = [];
+  $data['collections'] = [];
+  $data['books'] = [];
   $query = new EntityFieldQuery();
-  $nids = array();
   $series_wrapper = entity_metadata_wrapper('node', $entity);
   $series_identifier = $series_wrapper->field_identifier->value();
   // Field data from node.
@@ -30,7 +30,7 @@ function dlts_solr_index_series($document, $entity, $entity_type, $env_id) {
   // Find books associated with this series.
   $result = $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_series_book')
-    ->fieldCondition('field_series', 'nid', array($entity->nid))
+    ->fieldCondition('field_series', 'nid', [ $entity->nid ])
     ->execute();
   if (!empty($result['node'])) {
     $nids = array_keys($result['node']);

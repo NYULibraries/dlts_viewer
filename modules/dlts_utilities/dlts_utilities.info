@@ -6,7 +6,3 @@ version = "7.x-1.9"
 
 dependencies[] = entity
 
-files[] = dlts_utilities.metadata.inc
-files[] = dlts_utilities.filters.inc
-files[] = dlts_utilities.script.inc
-files[] = dlts_utilities.admin.inc

@@ -145,7 +145,7 @@ function dlts_viewer_full_book_view($entity) {
  *   Entity to render.
  */
 function dlts_viewer_book_metadata_view($entity) {
-  $element = node_view($entity, 'metadata', $entity->language);
+  $element = dlts_viewer_book_metadata_display($entity);
   return drupal_render($element);
 }
 
@@ -187,9 +187,6 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
 
   // Check if this collection has searchable PDFs.
   $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
-
-  // Check request type.
-  $is_pjax = dlts_viewer_is_pjax();
 
   // Check for mobile devices.
   $is_mobile = dlts_viewer_is_mobile();
@@ -242,17 +239,9 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
   if (!is_array($arg) && $arg == 'display') {
     // Type of request.
     $display_type = 'book_metadata';
-    if ($is_pjax) {
-      $display_type = 'book_metadata_pjax';
-    }
-  }
-  else {
+  } else {
     // Type of request.
     $display_type = 'book_page';
-    if ($is_pjax) {
-      $display_type = 'book_page_pjax';
-    }
-
     // Default single page view.
     $is_single_page = TRUE;
 
@@ -267,8 +256,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
       if (count($sequence) > 1) {
         $is_single_page = FALSE;
       }
-    }
-    else {
+    } else {
       // Get the first page of the requested sequence.
       $entity->sequence = $sequence_max = $sequence_min = $sequence;
       $is_single_page = TRUE;

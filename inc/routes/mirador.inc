@@ -15,12 +15,14 @@ function _dlts_viewer_menu_mirador() {
 
   $items = [];
 
-  // Render book metadata pane.
-  $items['mirador/%dlts_noid'] = [
+  // Render viewer.
+  // http://localhost/api/viewer/xsj3v3x1
+  // http://localhost/api/viewer/columbia_aco002609
+  $items['api/viewer/%dlts_noid'] = [
     'title' => 'Mirador viewer',
     'access arguments' => [ 'access content' ],
-    'page callback' => 'dlts_viewer_mirador_dispatcher',
-    'page arguments' => [ 1 ],
+    'page callback' => 'dlts_viewer_viewer_dispatcher',
+    'page arguments' => [ 2 ],
     'delivery callback' => 'drupal_deliver_html_page',
     'type' => MENU_CALLBACK,
   ];

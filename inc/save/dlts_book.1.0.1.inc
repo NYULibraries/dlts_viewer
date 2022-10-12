@@ -12,7 +12,6 @@
  */
 function save_dlts_book_v1_0_1($node, $language = 'en') {
   module_load_include('inc', 'node', 'node.pages');
-  module_load_include('inc', 'dlts_viewer', 'drush/inc/common');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_multivol_book');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_partner');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_collection');
@@ -23,7 +22,6 @@ function save_dlts_book_v1_0_1($node, $language = 'en') {
   global $base_url;
   global $user;
   $username = $user->name;
-
   $is_new = TRUE;
   try {
     if (!user_access('dlts create object')) {
@@ -38,11 +36,12 @@ function save_dlts_book_v1_0_1($node, $language = 'en') {
       if (strlen($entity_title) > 255) {
         $entity_title = $identifier;
       }
-    }
-    else {
+    } else {
       throw new Exception("Title for book $identifier can not be empty.");
     }
-    $collections_nids = array();
+
+    $collections_nids = [];
+
     $node_language = (isset($node['entity_language']) ? $node['entity_language'] : $language);
     // Make sure the language exists.
     $enabled_language = dlts_viewer_add_language($node_language);

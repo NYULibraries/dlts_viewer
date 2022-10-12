@@ -108,20 +108,10 @@ function dlts_viewer_theme() {
       'base hook' => 'page',
       'template' => 'templates/html',
     ],
-    'html__viewer_pjax' => [
-      'render element' => 'content',
-      'base hook' => 'page',
-      'template' => 'templates/html.pjax',
-    ],
     'page__viewer' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/page',
-    ],
-    'page__viewer_pjax' => [
-      'render element' => 'content',
-      'base hook' => 'page',
-      'template' => 'templates/page.pjax',
     ],
     'ds_1col__node_metadata' => [
       'render element' => 'content',
@@ -148,25 +138,19 @@ function dlts_viewer_theme() {
       'base hook' => 'page',
       'template' => 'templates/node',
     ],
-    'node__dlts_book_pjax' => [
-      'render element' => 'content',
-      'base hook' => 'page',
-      'template' => 'templates/node.pjax',
-    ],
     'node__dlts_map' => [
       'render element' => 'content',
       'base hook' => 'page',
       'template' => 'templates/node',
     ],
-    'node__dlts_map_pjax' => [
-      'render element' => 'content',
-      'base hook' => 'page',
-      'template' => 'templates/node.pjax',
-    ],
     'viewer_documentation_page' => [
       'template' => 'templates/documentation',
       'variables' => [],
     ],
+    'viewer_epubs_page' => [
+      'template' => 'templates/epubs',
+      'variables' => [],
+    ],    
   ];
 }
 
