@@ -43,7 +43,7 @@ function dlts_viewer_viewer_dispatcher($node) {
   // Set entity title.
   drupal_set_title($title);
 
-  $miradorpath = "$base_url/sites/all/modules/dlts_viewer/mirador/integration/webpack/dist/mirador.js";
+  $miradorpath = "$base_url/sites/all/modules/dlts_viewer/mirador/integration/dist/mirador.js";
 
   $out  = '';
   $out .= '<!doctype html>';

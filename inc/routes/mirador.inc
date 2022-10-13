@@ -12,9 +12,7 @@
  *   Items to register in the menu system.
  */
 function _dlts_viewer_menu_mirador() {
-
   $items = [];
-
   // Render viewer.
   // http://localhost/api/viewer/xsj3v3x1
   // http://localhost/api/viewer/columbia_aco002609
@@ -26,6 +24,5 @@ function _dlts_viewer_menu_mirador() {
     'delivery callback' => 'drupal_deliver_html_page',
     'type' => MENU_CALLBACK,
   ];
-
   return $items;
 }
