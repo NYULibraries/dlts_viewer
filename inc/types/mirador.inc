@@ -8,8 +8,6 @@
  */
 function dlts_viewer_viewer_dispatcher($node) {
 
-  die(__FUNCTION__);
-
   global $base_url;
 
   $language = 'en';
