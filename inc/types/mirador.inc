@@ -8,6 +8,8 @@
  */
 function dlts_viewer_viewer_dispatcher($node) {
 
+  die(__FUNCTION__);
+
   global $base_url;
 
   $language = 'en';
@@ -40,6 +42,8 @@ function dlts_viewer_viewer_dispatcher($node) {
 
   $title = html_entity_decode($title, ENT_QUOTES);
 
+  $lang = $node->language;
+
   // Set entity title.
   drupal_set_title($title);
 
@@ -47,13 +51,13 @@ function dlts_viewer_viewer_dispatcher($node) {
 
   $out  = '';
   $out .= '<!doctype html>';
-  $out .= '<html>';
+  $out .= "<html lang='$lang'>";
   $out .= '<head>';
   $out .= '<meta charset="utf-8" />';
   $out .= "  <title>$title</title>";
   $out .= '</head>';
   $out .= '<body>';
-  $out .= "<div id='mirador-app' data-endpoint='$base_url' data-type='$bundle' data-identifier='$identifier'></div>";
+  $out .= "<div id='mirador-app' data-language='$lang' data-endpoint='$base_url' data-type='$bundle' data-identifier='$identifier'></div>";
   $out .= "<script src='$miradorpath'></script>";
   $out .= '</body>';
   $out .= '</html>';
