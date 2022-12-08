@@ -419,8 +419,8 @@ function dlts_viewer_flush_caches() {
 function dlts_viewer_js_alter(&$javascript) {
   if (dlts_viewer_is_resource()) {
     $allow = [
-      'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.1.0/openseadragon.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.1/axios.min.js',
       'https://cdnjs.cloudflare.com/ajax/libs/keyboardjs/2.6.2/keyboard.min.js',
       'sites/all/modules/dlts_viewer/dist/polyfill.bundle.js',
       'sites/all/modules/dlts_viewer/dist/books.bundle.js',
