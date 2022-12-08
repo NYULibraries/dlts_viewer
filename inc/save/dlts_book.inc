@@ -12,6 +12,7 @@
  */
 function save_dlts_book($node, $language = 'en') {
   module_load_include('inc', 'node', 'node.pages');
+  module_load_include('inc', 'dlts_viewer', 'inc/common');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_multivol_book');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_partner');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_collection');
