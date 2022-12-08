@@ -12,7 +12,7 @@ function dlts_viewer_viewer_dispatcher($node) {
 
   $language = 'en';
 
-  $bundle = dlts_viewer_get_bundle_alias($node->document);
+  $bundle = $node->document;
 
   $identifier = $node->identifier;
 
@@ -31,6 +31,8 @@ function dlts_viewer_viewer_dispatcher($node) {
 
     $entity = node_load($node->nid);
 
+    $language = $entity->language;
+
     // Wrapp book entity with Entity API wrapper.
     $wrapper = entity_metadata_wrapper('node', $entity);
 
@@ -40,23 +42,21 @@ function dlts_viewer_viewer_dispatcher($node) {
 
   $title = html_entity_decode($title, ENT_QUOTES);
 
-  $lang = $node->language;
-
   // Set entity title.
   drupal_set_title($title);
 
-  $miradorpath = "$base_url/sites/all/modules/dlts_viewer/mirador/integration/dist/mirador.js";
+  $module = drupal_get_path('module', 'dlts_viewer');
 
   $out  = '';
   $out .= '<!doctype html>';
-  $out .= "<html lang='$lang'>";
+  $out .= "<html lang='$language'>";
   $out .= '<head>';
   $out .= '<meta charset="utf-8" />';
   $out .= "  <title>$title</title>";
   $out .= '</head>';
   $out .= '<body>';
-  $out .= "<div id='mirador-app' data-language='$lang' data-endpoint='$base_url' data-type='$bundle' data-identifier='$identifier'></div>";
-  $out .= "<script src='$miradorpath'></script>";
+  $out .= "<div id='mirador-app' data-language='$language' data-endpoint='$base_url' data-type='$bundle' data-identifier='$identifier'></div>";
+  $out .= "<script src='$base_url/$module/mirador/integration/dist/mirador.js'></script>";
   $out .= '</body>';
   $out .= '</html>';
 
