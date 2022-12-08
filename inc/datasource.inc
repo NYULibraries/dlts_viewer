@@ -48,7 +48,7 @@ function dlts_viewer_list_translation($identifier) {
  *   Identifier.
  */
 function dlts_viewer_get_translations_nid_by_identifier($identifier) {
-  $keys = array();
+  $keys = [];
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_book')

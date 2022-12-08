@@ -1,4 +1,4 @@
-<div class="dlts_viewer node pjax" data-identifier="<?php print $identifier ?>">
+<div class="dlts_viewer node" data-identifier="<?php print $identifier ?>">
   <?php if (isset($button_previous)) : ?>
     <?php print $button_togglepage ?>
   <?php endif ?>

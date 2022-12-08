@@ -18,7 +18,9 @@ function dlts_photo_handle_load($handle, array $map, $resource_index) {
   $language = ['en', LANGUAGE_NONE];
   $query_parameters = drupal_get_query_parameters();
   if (isset($query_parameters['lang'])) {
-    $language = array(filter_xss($query_parameters['lang']));
+    $language = [
+      filter_xss($query_parameters['lang']) 
+    ];
   }
   $query = new EntityFieldQuery();
   $result = $query

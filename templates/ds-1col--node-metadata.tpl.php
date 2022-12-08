@@ -10,9 +10,7 @@
           <div class="lang-options"><?php print locale('Available languages', NULL, $lang_language) ?>: <?php print render($lang_options) ; ?></div>
         </div>
       <?php endif; ?>
-
       <?php print $ds_content ?>
-
       <div dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" class="field field-name-field-handle field-type-link-field field-label-inline clearfix">
         <div dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" class="field-label">Manifest:&nbsp;</div>
         <div dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" class="field-items">
@@ -21,7 +19,6 @@
           </div>
         </div>
       </div>
-
       </<?php print $ds_content_wrapper ?>>
       <?php if (!empty($drupal_render_children)) : print $drupal_render_children; endif; ?>
     </div>

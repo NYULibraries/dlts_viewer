@@ -453,8 +453,6 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
 
   $cache = FALSE;
 
-  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
-
   $wrapper = entity_metadata_wrapper('node', $entity);
 
   $identifier = $wrapper->field_identifier->value();
@@ -637,8 +635,6 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
 function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
 
   global $base_url;
-
-  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
 
   $wrapper = entity_metadata_wrapper('node', $entity);
 
@@ -935,8 +931,6 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
 function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   global $base_url;
-
-  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
 
   $wrapper = entity_metadata_wrapper('node', $entity);
 
@@ -1353,13 +1347,12 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   //   unset($series_books);
   // }
 
-  drupal_register_shutdown_function(
-    'dlts_viewer_cache_manifest',
-    array(
+  drupal_register_shutdown_function('dlts_viewer_cache_manifest',
+    [
       'type' => $type,
       'resource' => $entity,
       'data' => $res,
-    )
+    ]
   );
 
   return $res;
@@ -1460,70 +1453,4 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
     ],
     'target' => "$base_url/api/presentation/$resource_type/$identifier/canvas/$sequence",
   ];
-}
-
-/**
- * Undocumented function.
- *
- * @todo document function
- */
-function dlts_viewer_cache_book_sequence($edit) {
-
-  $wrapper = entity_metadata_wrapper('node', $edit['resource']);
-
-  $identifier = $wrapper->field_identifier->value();
-
-  $type = $edit['type'];
-
-  $sequence = $edit['sequence'];
-
-  $realpath = drupal_realpath('public://');
-
-  $dir_path = $realpath . '/iiif/' . $type . '/' . $identifier;
-
-  $file_destination = "$dir_path/$sequence.json";
-
-  file_prepare_directory($dir_path, FILE_CREATE_DIRECTORY);
-
-  file_unmanaged_save_data($edit['data'], $file_destination, FILE_EXISTS_REPLACE);
-
-  // watchdog('dlts_viewer', 'Cached sequence %sequence for type %type with identifier equals to %identifier. See %uri', array(
-  //   '%identifier' => $identifier,
-  //   '%sequence' => $sequence,
-  //   '%type' => $type,
-  //   '%uri' => $file_destination,
-  // ), WATCHDOG_INFO);
-}
-
-/**
- * Undocumented function.
- *
- * @todo document function
- */
-function dlts_viewer_cache_manifest($edit) {
-
-  $wrapper = entity_metadata_wrapper('node', $edit['resource']);
-
-  $identifier = $wrapper->field_identifier->value();
-
-  $type = $edit['type'];
-
-  $realpath = drupal_realpath('public://');
-
-  $dir_path = $realpath . '/iiif/' . $type . '/' . $identifier;
-
-  $file_destination = "$dir_path/manifest.json";
-
-  file_prepare_directory($dir_path, FILE_CREATE_DIRECTORY);
-
-  file_unmanaged_save_data(
-    drupal_json_encode($edit['data']),
-    $file_destination,
-    FILE_EXISTS_REPLACE
-  );
-
-  watchdog('dlts_viewer', 'Cached manifest %manifest', array(
-    '%manifest' => $file_destination,
-  ), WATCHDOG_INFO);
-
 }

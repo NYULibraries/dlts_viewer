@@ -23,8 +23,8 @@ function _dlts_viewer_menu_admin() {
     'title' => 'Viewer: Administer and configure',
     'description' => 'Administer and configure viewer.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => ['dlts_viewer_admin'],
-    'access arguments' => ['administer fileserver'],
+    'page arguments' => [ 'dlts_viewer_admin' ],
+    'access arguments' => [ 'administer fileserver' ],
     'file' => 'inc/admin.inc',
   ];
 
@@ -33,10 +33,10 @@ function _dlts_viewer_menu_admin() {
    */
   $items['books/%dlts_resource/edit'] = $items['photos/%dlts_resource/edit'] = $items['maps/%dlts_resource/edit'] = [
     'title' => 'Edit object',
-    'access arguments' => ['edit any dlts_book content'],
+    'access arguments' => [ 'edit any dlts_book content' ],
     'page callback' => '_dlts_viewer_edit_redirect',
-    'page arguments' => [0, 1],
-    'load arguments' => ['%map', '%index'],
+    'page arguments' => [ 0, 1 ],
+    'load arguments' => [ '%map', '%index' ],
     'type' => MENU_CALLBACK,
   ];
 

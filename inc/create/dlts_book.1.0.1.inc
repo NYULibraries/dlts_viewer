@@ -36,47 +36,47 @@ function create_dlts_book_from_json_v1_0_1($data) {
 
   $title = NULL;
 
-  $pages_array = array();
+  $pages_array = [];
 
-  $partners = array();
+  $partners = [];
 
-  $multivols = array();
+  $multivols = [];
 
-  $other_versions = array();
+  $other_versions = [];
 
-  $isbns = array();
+  $isbns = [];
 
-  $authors = array();
+  $authors = [];
 
-  $topics = array();
+  $topics = [];
 
-  $languages = array();
+  $languages = [];
 
-  $collections = array();
+  $collections = [];
 
-  $contributors = array();
+  $contributors = [];
 
-  $creators = array();
+  $creators = [];
 
-  $editors = array();
+  $editors = [];
 
-  $publishers = array();
+  $publishers = [];
 
-  $pdf_files = array();
+  $pdf_files = [];
 
-  $language_codes = array();
+  $language_codes = [];
 
-  $ocr_text_files = array();
+  $ocr_text_files = [];
 
-  $subjects = array();
+  $subjects = [];
 
-  $read_order = array();
+  $read_order = [];
 
-  $scan_order = array();
+  $scan_order = [];
 
-  $binding_orientation = array();
+  $binding_orientation = [];
 
-  $series = array();
+  $series = [];
 
   $entity_title = $data['title'];
 
@@ -87,18 +87,18 @@ function create_dlts_book_from_json_v1_0_1($data) {
   $ocr_text_files = [];
 
   if (!isset($data['metadata'])) {
-    $metadata = array();
+    $metadata = [];
   }
   else {
     $metadata = $data['metadata'];
   }
 
-  $multivolume = array();
+  $multivolume = [];
   if ($data['isMultivolume']) {
     $multivolume = $metadata->multivolume;
   }
 
-  $series = array();
+  $series = [];
   if ($data['isSeries']) {
     $series = $metadata->series;
   }
@@ -328,10 +328,22 @@ function create_dlts_book_from_json_v1_0_1($data) {
     $ocr_text_files = $metadata->ocr_text->value;
   }
 
-  $node = array(
+  $ticket = '';
+  if (isset($data['ticket'])) {
+    $ticket = trim($data['ticket']);
+  }
+  
+  $noid = '';
+  if (isset($data['noid'])) {
+    $noid = trim($data['noid']);
+  }  
+
+  $node = [
     'entity_title' => $entity_title,
     'entity_language' => $entity_language,
     'identifier' => $entity_identifier,
+    'noid' => $noid,
+    'ticket' => $ticket,
     'partners' => $partners,
     'collections' => $collections,
     'title' => $title,
@@ -371,7 +383,7 @@ function create_dlts_book_from_json_v1_0_1($data) {
     'multivol' => $multivols,
     'multivolume' => $multivolume,
     'series' => $series,
-  );
+  ];
 
   return save_dlts_book_v1_0_1($node, $entity_language);
 

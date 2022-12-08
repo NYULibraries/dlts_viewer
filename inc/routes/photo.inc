@@ -12,6 +12,7 @@
  *   Items to register in the menu system.
  */
 function _dlts_viewer_menu_photo() {
+
   $items = [
     'photos/%dlts_photo_set' => [
       'title' => 'Book metadata display',
@@ -21,6 +22,7 @@ function _dlts_viewer_menu_photo() {
       'delivery callback' => 'drupal_deliver_html_page',
       'type' => MENU_CALLBACK,
     ],
+
     // deprecated: Same as photos/%dlts_photo_set
     'photos/%dlts_photo_set/set' => [
       'title' => 'Book metadata display',
@@ -30,6 +32,7 @@ function _dlts_viewer_menu_photo() {
       'delivery callback' => 'drupal_deliver_html_page',
       'type' => MENU_CALLBACK,
     ],
+
     // deprecated: Same as photos/%dlts_photo_set
     'photos/%dlts_photo_set/mode/embed' => [
       'title' => 'Book metadata display',
@@ -39,6 +42,7 @@ function _dlts_viewer_menu_photo() {
       'delivery callback' => 'drupal_deliver_html_page',
       'type' => MENU_CALLBACK,
     ],
+
     'photos/%dlts_photo_set/%dlts_photo' => [
       'title' => 'Photo page',
       'access arguments' => [ 'access content' ],
@@ -48,6 +52,7 @@ function _dlts_viewer_menu_photo() {
       'delivery callback' => 'drupal_deliver_html_page',
       'type' => MENU_CALLBACK,
     ],
+
     // deprecated
     'photos/%dlts_photo_set/%dlts_photo/mode/thumb' => [
       'title' => 'Book metadata display',

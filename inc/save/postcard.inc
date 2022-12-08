@@ -18,7 +18,7 @@ function save_dlts_postcard($node, $language = 'en') {
   $resource_type = 'dlts_postcard';
   global $base_url;
   global $user;
-  $username = $user->name;  
+  $username = $user->name;
   $is_new = TRUE;
   try {
     if (!user_access('dlts create object')) {
@@ -65,13 +65,11 @@ function save_dlts_postcard($node, $language = 'en') {
           $source_node = node_load($tnid);
           // Wrap it with Entity API.
           $source_node_ewrapper = entity_metadata_wrapper('node', $source_node);
-        }
-        else {
+        } else {
           throw new Exception("English version $identifier does not exist.");
         }
       }
-    }
-    else {
+    } else {
       $new_node = new stdClass();
       $new_node->type = $resource_type;
       $new_node->is_new = TRUE;
@@ -99,8 +97,7 @@ function save_dlts_postcard($node, $language = 'en') {
           $new_node->tnid = $tnid;
           // English is the default language for the object.
           $new_node->source = 'en';
-        }
-        else {
+        } else {
           throw new Exception("English version $identifier does not exist.");
         }
       }
@@ -158,9 +155,7 @@ function save_dlts_postcard($node, $language = 'en') {
       }
 
       if (!empty($node['handle'])) {
-        $ewrapper->field_handle->set([
-          'url' => $node['handle'],
-        ]);
+        $ewrapper->field_handle->set([ 'url' => $node['handle'] ]);
       }
 
       if (!empty($node['binding_orientation'])) {
@@ -195,22 +190,22 @@ function save_dlts_postcard($node, $language = 'en') {
         $ewrapper->field_call_number->set($node['call_number'][0]);
       }
 
-      $field_pdf_file = array();
+      $field_pdf_file = [];
       if (!empty($node['pdf_files'])) {
         foreach ($node['pdf_files'] as $pdf) {
           $label = (isset($pdf['label'])) ? $pdf['label'] : '';
-          $field_pdf_file[] = array(
+          $field_pdf_file[] = [
             'uri' => $pdf['uri'],
             'label' => $label,
             'data' => serialize(
-              array(
+              [
                 'label' => $label,
                 'uri' => $pdf['uri'],
                 'filesize' => $pdf['filesize'],
                 'searchable' => (isset($pdf['searchable']) && $pdf['searchable']) ? $pdf['searchable'] : FALSE,
-              )
+              ]
             ),
-          );
+          ];
           unset($label);
         }
         $ewrapper->field_pdf_file->set($field_pdf_file);
@@ -218,7 +213,7 @@ function save_dlts_postcard($node, $language = 'en') {
       unset($field_pdf_file);
       if (!empty($node['subject'])) {
         $vid = dlts_viewer_subject_vocabulary_vid();
-        $node_subjects = array();
+        $node_subjects = [];
         foreach ($node['subject'] as $subject) {
           if (!empty($subject)) {
             $subject_list = dlts_viewer_subject_tid($subject, $vid);
@@ -229,8 +224,7 @@ function save_dlts_postcard($node, $language = 'en') {
           $ewrapper->field_subject->set($node_subjects);
         }
       }
-    }
-    else {
+    } else {
       // Copy value from the source node.
       if ($source_node_ewrapper) {
         $field_partner = $source_node_ewrapper->field_partner->value();
@@ -349,27 +343,26 @@ function save_dlts_postcard($node, $language = 'en') {
       preg_match('/(^\d{4}-[0-3]{1}[0-9]{1}-[0-9]{2})/', $publication_date, $matches);
       if ($matches && $matches[0]) {
         $publication_date = $matches[0] . 'T00:00:00';
-        $ewrapper->field_publication_date->set(array('value' => $publication_date));
-      }
-      else {
+        $ewrapper->field_publication_date->set([ 'value' => $publication_date ]);
+      } else {
         $matches = NULL;
         preg_match('/(^\d{4}$)/', $publication_date, $matches);
         $m_value = $matches[0];
         if ($matches && $matches[0]) {
           $publication_date = $m_value . '-01-01T00:00:00';
-          $ewrapper->field_publication_date->set(array('value' => $publication_date));
+          $ewrapper->field_publication_date->set([ 'value' => $publication_date ]);
         }
       }
     }
     if (!empty($node['language']) && is_array($node['language'])) {
-      $languages = array();
+      $languages = [];
       foreach ($node['language'] as $language) {
         $languages[] = $language;
       }
       $ewrapper->field_language->set($languages);
     }
     if (!empty($node['language_code']) && is_array($node['language_code'])) {
-      $language_codes = array();
+      $language_codes = [];
       foreach ($node['language_code'] as $language_code) {
         $language_codes[] = $language_code;
       }
@@ -381,15 +374,13 @@ function save_dlts_postcard($node, $language = 'en') {
     $saved = $ewrapper->save();
     if ($saved) {
       return $entity;
-    }
-    else {
+    } else {
       throw new Exception("Fail to import $identifier.");
     }
-  }
-  catch (Exception $e) {
-    watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
-    return array(
+  } catch (Exception $e) {
+    watchdog('dlts_viewer', $e->getMessage(), [], WATCHDOG_CRITICAL);
+    return [
       'error' => $e->getMessage(),
-    );
+    ];
   }
 }

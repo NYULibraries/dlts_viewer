@@ -1,4 +1,4 @@
-<div class="dlts_viewer node pjax">
+<div class="dlts_viewer node">
   <?php if (isset($button_previous)) : ?>
     <?php print $button_previous ?>
   <?php endif ?>

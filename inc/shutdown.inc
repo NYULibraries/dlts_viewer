@@ -5,40 +5,53 @@
  * DLTS Viewer shutdown functions.
  */
 
-// function dlts_viewer_node_update_dlts_book($node) {
-// }
 
-// function dlts_viewer_node_insert_dlts_book($node) {
-// }
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
+function dlts_viewer_cache_manifest($edit) {
 
-// function dlts_viewer_node_update($node) {
-//   $wrapper = entity_metadata_wrapper('node', $node);
-//   $type = $wrapper->getBundle();
-//   $collections = array();
-//   if ($type == 'dlts_book') {
-//     foreach ($wrapper->field_collection->value() as $collection) {
-//       $c_wrapper = entity_metadata_wrapper('node', $collection);
-//       $collections[] = $c_wrapper->field_code->value();
-//     }
-//     $handle_field = $wrapper->field_handle->value();
-//     $handle = $handle_field['url'];
-//     $edits = array(
-//       'identifier' => $wrapper->field_identifier->value(),
-//       'collection' => array_shift($collections),
-//       'handle' => $handle,
-//       'type' => $type,
-//     );
-//     // we only have 1 handle, if we have more than one collection
-//     // there is nothing we can do at this point. Do not
-//     // register or try to update a handle
-//     if (count($edits['collection']) <= 1) {
-//       drupal_register_shutdown_function('dlts_viewer_node_update_dlts_book', $edits);
-//     }
-//   }
-// }
+  $wrapper = entity_metadata_wrapper('node', $edit['resource']);
+  
+  $identifier = $wrapper->field_identifier->value();
+ 
+  $realpath = drupal_realpath('public://');
+  
+  $dir_path = $realpath . '/iiif/' . $edit['type'] . '/' . $identifier;
+  
+  $file_destination = "$dir_path/manifest.json";
+  
+  file_prepare_directory($dir_path, FILE_CREATE_DIRECTORY);
+  
+  file_unmanaged_save_data(drupal_json_encode($edit['data']), $file_destination, FILE_EXISTS_REPLACE);
+  
+  watchdog('dlts_viewer', 'Cached manifest %manifest', [ '%manifest' => $file_destination ], WATCHDOG_INFO);
+  
+}
 
-// function dlts_viewer_node_insert($node) {
-//   if ($node->type == 'dlts_book') {
-//     drupal_register_shutdown_function('dlts_viewer_node_insert_dlts_book', $node);
-//   }
-// }
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
+function dlts_viewer_cache_book_sequence($edit) {
+
+  $wrapper = entity_metadata_wrapper('node', $edit['resource']);
+  
+  $identifier = $wrapper->field_identifier->value();
+  
+  $sequence = $edit['sequence'];
+  
+  $realpath = drupal_realpath('public://');
+  
+  $dir_path = $realpath . '/iiif/' . $edit['type'] . '/' . $identifier;
+  
+  $file_destination = "$dir_path/$sequence.json";
+  
+  file_prepare_directory($dir_path, FILE_CREATE_DIRECTORY);
+  
+  file_unmanaged_save_data($edit['data'], $file_destination, FILE_EXISTS_REPLACE); 
+
+}

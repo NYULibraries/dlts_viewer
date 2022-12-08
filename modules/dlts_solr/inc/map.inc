@@ -23,8 +23,7 @@
   $document->addField('ss_identifier', $identifier);
   $document->addField('ss_uri', url("maps/$identifier/1", ['absolute' => TRUE]));
   // Searchable content; dump all you want to be searchable in this array.
-  $searchableFields = array($document->content);
-
+  $searchableFields = [ $document->content ];
   // Collection (field_collection): Multi-value field.
   dlts_solr_index_collection($wrapper->field_collection->value(), $document, $entity, $searchableFields);
 
@@ -83,11 +82,9 @@
     $searchableFields[] = $call_number;
   }
     
-  $ri = "$base_url/api/image/maps/$identifier/1/full/full/0/default.jpg";
+  $document->addField('ss_representative_image', "$base_url/api/image/maps/$identifier/1/full/full/0/default.jpg");
 
-  $document->addField('ss_representative_image', $ri);
-
-  $document->addField('ss_site_image', $ri);
+  $document->addField('ss_site_image', "$base_url/api/image/maps/$identifier/1/full/full/0/default.jpg");
 
   /*
    * Author (field_author)

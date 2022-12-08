@@ -93,21 +93,21 @@
       $document->addField(
         'zm_partner',
         json_encode(
-          array(
+          [
             'name' => $label,
             'code' => $code,
             'nid' => $item->nid,
-          )
+          ]
         )
       );
       $document->addField(
         'zm_provider',
         json_encode(
-          array(
+          [
             'name' => $label,
             'code' => $code,
             'nid' => $item->nid,
-          )
+          ]
         )
       );
     }
@@ -115,7 +115,7 @@
 }
 
 function mbstring_binary_safe_encoding($reset = FALSE) {
-  static $encodings = array();
+  static $encodings = [];
   static $overloaded = NULL;
   if (is_null($overloaded)) {
     $overloaded = function_exists('mb_internal_encoding') && (ini_get('mbstring.func_overload') & 2);
@@ -137,4 +137,3 @@ function mbstring_binary_safe_encoding($reset = FALSE) {
 function reset_mbstring_encoding() {
   mbstring_binary_safe_encoding(TRUE);
 }
-

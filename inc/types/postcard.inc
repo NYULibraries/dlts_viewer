@@ -23,9 +23,6 @@ function dlts_viewer_preprocess_node_dlts_postcard(&$vars) {
     if ($count === 3 && $args[2] == 'display') {
       $vars['theme_hook_suggestions'][] = 'node__display';
     }
-    if (dlts_viewer_is_pjax()) {
-      $vars['theme_hook_suggestions'][] = 'node__viewer_pjax';
-    }
   }
 }
 
@@ -119,8 +116,6 @@ function dlts_viewer_postcard_dispatcher($entity, $arg) {
 
   $entity->title = $book_wrapper->field_title->value();
 
-  // Check request type.
-  $is_pjax = dlts_viewer_is_pjax();
   // Check for mobile devices.
   $is_mobile = dlts_viewer_is_mobile();
   // Get query parameters.
@@ -159,16 +154,10 @@ function dlts_viewer_postcard_dispatcher($entity, $arg) {
   if (!is_array($arg) && $arg == 'display') {
     // Type of request.
     $display_type = 'book_metadata';
-    if ($is_pjax) {
-      $display_type = 'book_metadata_pjax';
-    }
   }
   else {
     // Type of request.
     $display_type = 'book_page';
-    if ($is_pjax) {
-      $display_type = 'book_page_pjax';
-    }
     // Default single page view.
     $is_single_page = TRUE;
     $thumbnails_rows_per_page = 10;

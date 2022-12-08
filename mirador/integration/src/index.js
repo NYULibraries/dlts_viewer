@@ -1,50 +1,46 @@
-import Mirador from 'mirador/dist/es/src/index';
-import { miradorImageToolsPlugin } from 'mirador-image-tools';
+import Mirador from 'mirador/dist/es/src/index'
 
-const uuid = 'mirador-app';
+import { miradorImageToolsPlugin } from 'mirador-image-tools'
 
-const elem = document.getElementById(uuid);
+import { defaultConfig } from './viewerConfig.js'
 
-console.log(elem)
+const uuid = 'mirador-app'
 
-const endpoint = elem.dataset.endpoint;
+const elem = document.getElementById(uuid)
 
-const identifier = elem.dataset.identifier;
+const endpoint = elem.dataset.endpoint
 
-const resourceType = elem.dataset.type;
+const identifier = elem.dataset.identifier
 
-const canvasIndexValue = 0;
+const resourceType = elem.dataset.type
 
-const manifestId = `${endpoint}/api/presentation/${resourceType}/${identifier}/manifest.json`;
+const canvasIndexValue = 0 
 
-const config = {
-  id: uuid, 
-  workspaceControlPanel: {
-    enabled: false,
-  },
-  workspace: { 
-    isWorkspaceAddVisible: false,
-    allowNewWindows: false,
-  },
-  language: 'en',
-  windows: [
-    {
-      manifestId: manifestId,
-      imageToolsEnabled: true,
-      imageToolsOpen: false,
-      canvasIndex: canvasIndexValue,
-      view: 'single',
-    }
-  ],
-  window: {
-    allowClose: false,
-    defaultSideBarPanel: 'info',
-    sideBarOpenByDefault: true, 
-    showLocalePicker: true,
-    hideWindowTitle: true,
-  }, 
+const manifestId = `${endpoint}/api/presentation/${resourceType}/${identifier}/manifest.json`
+
+const config = { 
+  ...defaultConfig, 
+  ...{
+    id: uuid,
+    language: 'en',
+    availableLanguages: {
+      ar: 'Arabic',
+      en: 'English',
+    },
+    windows: [
+      {
+        manifestId: manifestId,
+        imageToolsEnabled: true,
+        imageToolsOpen: false,
+        canvasIndex: canvasIndexValue,
+        view: 'single',
+      }
+    ],
+  }
 }
+
+console.log(config)
 
 Mirador.viewer(config, [
   ...miradorImageToolsPlugin,
-]);
+])

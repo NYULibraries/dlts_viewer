@@ -38,13 +38,7 @@ async function ViewerApp(Y) {
 
   Y.nodes.slider_value = document.querySelector('#slider_value')
 
-  const {
-    view,
-    sequence,
-    sequenceCount,
-    current,
-    type
-  } = Y.nodes.osd.dataset
+  const { view, sequence, sequenceCount, current, type } = Y.nodes.osd.dataset
 
   Y.count = Number(sequenceCount)
 
@@ -76,7 +70,7 @@ async function ViewerApp(Y) {
           }
         })
       )
-    } catch(e) {
+    } catch (e) {
       console.log(e)
     }
   }
@@ -380,7 +374,7 @@ async function ViewerApp(Y) {
     })
 
     if (Number(state) === 0) {
-      axios.get(`${uri}/thumbnails?pjax=true&width=${width}&height=${height}`).then(response => {
+      axios.get(`${uri}/thumbnails?width=${width}&height=${height}`).then(response => {
         if (response.status === 200) {
           const parser = new DOMParser()
           const doc = parser.parseFromString(response.data, 'text/html')

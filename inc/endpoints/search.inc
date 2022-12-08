@@ -12,6 +12,7 @@
 function dlts_viewer_search_json() {
   $env_id = apachesolr_default_environment();
   $environment = apachesolr_environment_load($env_id);
+  // @TODO: Fix this.
   $discoveryUrl = 'http://discovery1.dlib.nyu.edu/solr/viewer';
   $cache = md5($_SERVER['QUERY_STRING']);
   $realpath = drupal_realpath('public://') . '/datasource';
@@ -33,11 +34,9 @@ function dlts_viewer_search_json() {
     if (is_array($explodeParameters) && count($explodeParameters) == 2) {
       if ($explodeParameters[0] == 'query') {
         $queryArray[] = 'q=' . $explodeParameters[1];
-      }
-      elseif ($explodeParameters[0] == 'wt') {
+      } elseif ($explodeParameters[0] == 'wt') {
         continue;
-      }
-      else {
+      } else {
         $queryArray[] = $explodeParameters[0] . '=' . $explodeParameters[1];
       }
     }

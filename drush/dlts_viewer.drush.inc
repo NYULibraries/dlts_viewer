@@ -76,6 +76,7 @@ function dlts_viewer_drush_command() {
     'description' => dt('Returns resource to update')
   ];
 
+  // $ ./vendor/bin/drush update-resource-pages
   $items['update-resource-pages'] = [
     'callback' => 'dlts_viewer_drush_update_resource_pages',
     'description' => dt('Update resource pages'),
@@ -89,10 +90,76 @@ function dlts_viewer_drush_command() {
   $items['viewer-test'] = [
     'callback' => 'dlts_viewer_drush_viewer_test',
     'description' => dt('Run test while developing.')
+  ];
+  
+  $items['total-resources'] = [
+    'callback' => 'dlts_viewer_drush_total_resources',
+    'description' => dt('Pick one identifier'),
+  ];
+
+  $items['pick-one-identifier'] = [
+    'callback' => 'dlts_viewer_pick_one_identifier',
+    'description' => dt('Pick one identifier'),
   ];  
+
+  $items['delete-by-identifier'] = [
+    'callback' => 'dlts_viewer_delete_by_identifier',
+    'description' => dt('Delete by identifier'),
+    'options' => [
+      'identifier' => dt('Identifier'),
+    ],
+  ];
 
   return $items;
 
+}
+
+/**
+ * Count documents.
+ *  $ ./vendor/bin/drush total-resources
+ */
+function dlts_viewer_drush_total_resources() {
+  $count_query = "SELECT DISTINCT COUNT(dlts_viewer_resource.nid) numFound FROM dlts_viewer_resource";
+  $count = db_query($count_query)->fetchField();
+  if (isset($count)) {
+    echo $count;
+  } else {
+    echo 0;
+  }
+}
+
+// $ ./vendor/bin/drush pick-one-identifier
+function dlts_viewer_pick_one_identifier() {  
+  $record = db_query("SELECT identifier FROM dlts_viewer_resource")->fetchField();
+  echo $record;
+}
+
+/**
+ * Delete by identifier.
+ * $ ./vendor/bin/drush delete-by-identifier --identifier=princeton_aco000150
+ */
+function dlts_viewer_delete_by_identifier() {
+  $identifier = drush_get_option('identifier', NULL);
+  $record = db_query("SELECT nid, document FROM dlts_viewer_resource WHERE identifier = '$identifier' LIMIT 1")->fetchAll();
+  $type = $record[0]->document;
+  if ($type == 'maps' || $type == 'photos') {
+    $nid = $record[0]->nid;
+    node_delete($nid);
+    drush_log("Node $nid deleted.", 'success');
+    db_query("DELETE FROM dlts_viewer_resource WHERE identifier = '$identifier'");    
+  } else {
+    $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
+    if (count($nids) > 0) {
+      drush_log("Deleting node by identifier $identifier.", 'ok');
+      foreach ($nids as $nid) {
+        node_delete($nid);
+        drush_log("Node $nid deleted", 'success');
+        db_query("DELETE FROM dlts_viewer_resource WHERE identifier = '$identifier'");
+      }
+    } else {
+      drush_log("Node not found. Identifier $identifier ");
+    }
+  }
 }
 
 /**
@@ -239,7 +306,7 @@ function dlts_viewer_drush_resources_to_update() {
     'dlts_postcard' => 'dlts_postcard',
   ];
 
-  foreach ($collections as $collection) {    
+  foreach ($collections as $collection) {
     $docs = mongodb_collection($collection)->distinct('isPartOf', [ 'cm.width' => '' ]);
     foreach ($docs as $identifier) {
       $rows[] = [ 

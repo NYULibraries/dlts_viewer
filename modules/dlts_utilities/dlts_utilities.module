@@ -4,23 +4,3 @@
  * @file
  * Include commons.
  */
-
-/**
- * Adds common utilities functionallities.
- */
-module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.common');
-
-/**
- * Getters for site site-specific metadata.
- */
-module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.metadata');
-
-/**
- * Text filters for DLTS use cases such as publishing content in EAD markup.
- */
-module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.filters');
-
-/**
- * Adds the ability to include any type of <script> file, setting, or inline code to the page.
- */
-module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.script');

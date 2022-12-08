@@ -22,8 +22,8 @@ function dlts_book_load($identifier) {
   }
   $query = new EntityFieldQuery();
   $identifier = filter_xss($identifier);
-  $result = $query->entityCondition('entity_type', 'node')->entityCondition('bundle', 'dlts_book')
-    // Only load books that are published.
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_book')
     ->propertyCondition('status', 1)
     ->propertyCondition('language', $language)
     ->fieldCondition('field_identifier', 'value', $identifier, '=')
@@ -129,8 +129,7 @@ function page_item_load($item) {
   if ($matches) {
     $sequence = (int) $matches[1];
     return dlts_book_page_load($sequence, arg(3));
-  }
-  else {
+  } else {
     preg_match('/^p{1}([\d]+)-image/', $item, $matches);
     if (!empty($matches)) {
       $sequence = (int) $matches[1];
