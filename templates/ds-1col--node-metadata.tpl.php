@@ -24,7 +24,7 @@
       <!-- Other viewers -->
       <?php if (isset($other_viewers) && !empty($other_viewers)) : ?>
       <div dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" class="field field-name-field-handle field-type-link-field field-label-inline clearfix">
-        <div dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" class="field-label">Other versions:&nbsp;</div>
+        <div dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" class="field-label">View other versions:&nbsp;</div>
         <div dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" class="field-items">
           <div dir="<?php print isset($lang_dir) ? $lang_dir : "ltr" ?>" class="field-item even">
             <ul>
