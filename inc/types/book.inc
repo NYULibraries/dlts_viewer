@@ -107,7 +107,7 @@ function dlts_viewer_full_book_view($entity) {
   drupal_add_css($inline, [ 'type' => 'inline', 'group' => CSS_THEME, 'every_page' => FALSE, ]);
 
   drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.1/axios.min.js',
     'external',
     [
       'group' => JS_LIBRARY,
@@ -116,9 +116,9 @@ function dlts_viewer_full_book_view($entity) {
   );
 
   drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.1.0/openseadragon.min.js',
     'external',
-    [
+    [ 
       'group' => JS_LIBRARY,
       'weight' => -101,
     ]
@@ -383,6 +383,8 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
     $entity->sequence_count = $sequence_count;
 
     $entity->manifest = "$base_url/api/image/$is_resource/$entity->identifier/$entity->sequence/info.json";
+
+    $entity->other_viewers = t('<a href="@url">Mirador</a>', [ '@url' => url("$base_url/api/viewer/$entity->identifier") ]);    
 
     $entity->presentation = t('<a href="@url">IIIF Presentation</a>', [ '@url' => url("$base_url/api/presentation/$is_resource/$entity->identifier/manifest.json") ]);
 
