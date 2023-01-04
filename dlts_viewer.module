@@ -114,10 +114,10 @@ function dlts_viewer_permission() {
  * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_entity_info_alter/7
  */
 function dlts_viewer_entity_info_alter(&$entity_info) {
-  $entity_info['node']['view modes']['metadata'] = array(
+  $entity_info['node']['view modes']['metadata'] = [
     'label' => t('Metadata List'),
     'custom settings' => TRUE,
-  );
+  ];
 }
 
 /**
@@ -455,15 +455,15 @@ function dlts_viewer_node_delete($node) {
  * Create the table which was missing during early stage of module development.
  */
 function dlts_viewer_update_7102() {
-  $table = array(
+  $table = [
     'description' => 'Resource table',
-    'fields' => array(
-      'nid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
-      'noid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
-      'identifier' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
-      'document' => array('type' => 'text'),
-      'proceed' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
-    )
-  );
+    'fields' => [
+      'nid' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
+      'noid' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
+      'identifier' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
+      'document' => [ 'type' => 'text' ],
+      'proceed' => [ 'type' => 'int', 'not null' => TRUE, 'default' => 0 ],
+    ]
+  ];
   db_create_table('dlts_viewer_resource', $table);
 }

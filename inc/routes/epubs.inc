@@ -16,8 +16,8 @@ function _dlts_viewer_menu_epubs() {
   $items = [];
 
   // epubs.
-  // http://192.168.0.5/admin/epubs
-  $items['admin/epubs'] = [
+  // http://192.168.0.10/epubs
+  $items['epubs'] = [
     'title' => 'Epubs',
     'description' => 'Epubs - List partner.',
     'access arguments' => [
@@ -29,28 +29,28 @@ function _dlts_viewer_menu_epubs() {
   ];
 
   // epubs.
-  // http://192.168.0.5/admin/epubs/partner
-  $items['admin/epubs/%'] = [
+  // http://192.168.0.5/epubs/%partner
+  $items['epubs/%'] = [
     'title' => 'Epubs',
     'description' => 'Epubs - Partner.',
     'access arguments' => [
       'access content',
     ],
-    'page arguments' => [ 2 ],
+    'page arguments' => [ 1 ],
     'page callback' => 'dlts_viewer_admin_epubs_partner',
     'file' => 'inc/endpoints/epubs.inc',
     'type' => MENU_CALLBACK,
   ];
 
   // epubs.
-  // http://192.168.0.5/admin/epubs/partner
-  $items['admin/epubs/%/%'] = [
+  // http://192.168.0.5/epubs/partner
+  $items['epubs/%/%'] = [
     'title' => 'Epubs - Partner',
     'description' => 'Epubs - Partner.',
     'access arguments' => [
       'access content',
     ],
-    'page arguments' => [ 2, 3 ],
+    'page arguments' => [ 1, 2 ],
     'page callback' => 'dlts_viewer_admin_epubs_partner_item',
     'file' => 'inc/endpoints/epubs.inc',
     'type' => MENU_CALLBACK,
@@ -64,7 +64,6 @@ function _dlts_viewer_menu_epubs() {
     'access arguments' => [
       'access content',
     ],
-    'page arguments' => [ 3 ],
     'page callback' => 'dlts_viewer_epubs',
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints/epubs.inc',
@@ -148,7 +147,34 @@ function _dlts_viewer_menu_epubs() {
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints/epubs.inc',
     'type' => MENU_CALLBACK,
-  ];  
+  ];
+  
+  // http://192.168.0.10/api/v0/supafolio
+  $items['api/v0/supafolio'] = [
+    'title' => 'Supafolio API',
+    'description' => 'Supafolio API.',
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_supafolio',
+    'file' => 'inc/endpoints/epubs.inc',
+    'type' => MENU_CALLBACK,
+    'delivery callback' => 'drupal_json_output',
+  ];
+
+  // http://192.168.0.10/api/v0/supafolio/9780814705384
+  $items['api/v0/supafolio/%'] = [
+    'title' => 'Supafolio API',
+    'description' => 'Supafolio API.',
+    'access arguments' => [
+      'access content',
+    ],
+    'page arguments' => [ 3 ],
+    'page callback' => 'dlts_viewer_supafolio_item',
+    'file' => 'inc/endpoints/epubs.inc',
+    'type' => MENU_CALLBACK,
+    'delivery callback' => 'drupal_json_output',
+  ];
 
   return $items;
 }
