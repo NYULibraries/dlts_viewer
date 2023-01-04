@@ -222,7 +222,6 @@ function dlts_viewer_epubs_versions_hash($partner, $identifier, $hash) {
       if (isset($data->permanent_url)) {
         $data->citation_link = $data->permanent_url;
       }
-
       return $data;
     }
   } else {
@@ -235,26 +234,20 @@ function dlts_viewer_epubs_versions_hash($partner, $identifier, $hash) {
  * Undocumented function.
  */
 function dlts_viewer_admin_epubs() {
-
   global $base_url;
-
   $realpath = drupal_realpath('public://') . '/epubs';
-
   $start = 0;
-
   $partners = [];
-
   if (file_exists($realpath)) {
     foreach (glob("$realpath/*") as $filename) {
       $partner = basename($filename);
       $partners[] = [
         'identifier' => $partner,
-        'epubs' => l(url("admin/epubs/$partner", [ 'absolute' => true, 'alias' => false  ]), "admin/epubs/$partner", [ 'attributes' => [ 'class' => 'link' ] ]),
+        'epubs' => l(url("epubs/$partner", [ 'absolute' => true, 'alias' => false  ]), "epubs/$partner", [ 'attributes' => [ 'class' => 'link' ] ]),
         'api' => l(url("api/v0/epubs/$partner", [ 'absolute' => true, 'alias' => false  ]), "api/v0/epubs/$partner", [ 'attributes' => [ 'class' => 'link' ] ]),
       ];
     }
   }
-
   $output = theme(
     'table', 
     [ 
@@ -268,40 +261,35 @@ function dlts_viewer_admin_epubs() {
       ]
     ]
   );
-
   return $output;
-
 }
 
 /**
  * Undocumented function.
  */
-function dlts_viewer_admin_epubs_partner($partner) {
+function dlts_viewer_admin_epubs_partner($partnercode) {
   global $base_url;
   $start = 0;
-  $realpath = drupal_realpath('public://') . "/epubs/$partner";
+  $realpath = drupal_realpath('public://') . "/epubs/$partnercode";
   $partners = [];
   if (file_exists($realpath)) {
     foreach (glob("$realpath/*") as $filename) {
-
+      $identifier = basename($filename);
       $data = json_decode(
         file_get_contents(
           "$filename/intake-descriptive.json"
         )
       );
-
-      // 'epubs' => l(url("admin/epubs/$partner", [ 'absolute' => true, 'alias' => false  ]), "admin/epubs/$partner", [ 'attributes' => [ 'class' => 'link' ] ]),
-
-      $identifier = basename($filename);
-
       $partners[] = [
-        'title' => l($data->title, "admin/epubs/$partner/$identifier", [ 'attributes' => [ 'class' => 'link' ] ] ),
+        'title' => l($data->title, "epubs/$partnercode/$identifier", [ 'attributes' => [ 'class' => 'link' ] ] ),
         'identifier' => $identifier,
         'code' => $data->collection_code,
       ];
     }
   }
-
+  $count = count($partners);
+  $partner = partner_by_code($partnercode);
+  drupal_set_title("Epubs - $partner->title ($count items)");
   $output = theme(
     'table', 
     [ 
@@ -319,9 +307,7 @@ function dlts_viewer_admin_epubs_partner($partner) {
       ]
     ]
   );
-
   return $output;
-
 }
 
 /**
@@ -446,28 +432,20 @@ function dlts_viewer_admin_epubs_partner_item($partner, $identifier) {
   $versions = [];
 
   foreach (glob("$realpath/states/*.json") as $filename) {
-    $basename = basename($filename);
-    
+    $basename = basename($filename);    
     $filemtime = filemtime($filename);
-
     preg_match('/intake-descriptive.(.*).json/', $basename, $matches);
-
     $hash = $matches[1];
-
     $dirty = json_decode(
       file_get_contents($filename)
     );
-
     $dirty->id = $dirty->identifier;
-
     if (!isset($dirty->collection_code)) {
       $dirty->collection_code = 'oa-books';
     }
-
     if (!isset($dirty->handle)) {
       $dirty->handle = $dirty->identifier;
-    }      
-
+    }
     $versions[] = [
       'hash' => $hash,
       'filename' => $basename,
@@ -485,4 +463,47 @@ function dlts_viewer_admin_epubs_partner_item($partner, $identifier) {
   ]);
 
   }
+}
+
+// https://developer.supadu.com/supafolio.html
+function dlts_viewer_supafolio() {
+  $realpath = drupal_realpath('public://') . "/epubs/supafolio.json";  
+  // Make sure cache directory exists.
+  if (!file_exists($realpath)) {
+    $rows = 1;    
+    $api = "http://api.supafolio.com/v2/search?amount=$rows&keyword=";    
+    $request = drupal_http_request($api, [
+      'headers' => [
+        "x-apikey" => variable_get('supafolioApiKey', NULL),
+      ]
+    ]);    
+    if ($request->code == 200) {
+      $data = json_decode($request->data, true);
+      file_put_contents($realpath, json_encode($data), LOCK_EX);
+    } else {
+      die('error');
+    }
+  } else {
+    $data = json_decode(file_get_contents($realpath));
+  }
+  return $data;  
+}
+
+function dlts_viewer_supafolio_item($item) {
+  // https://developer.supadu.com/supafolio.html
+  $api = "http://api.supafolio.com/v2/book/$item";
+
+  $key = variable_get('supafolioApiKey', NULL);
+
+  $request = drupal_http_request($api, [
+    'headers' => [
+      "x-apikey" => $key,
+    ]
+  ]);
+  
+  $data = json_decode($request->data, true);
+  print '<pre>';
+  print_r($data);
+  print '</pre>';
+  
 }

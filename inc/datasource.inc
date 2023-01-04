@@ -800,3 +800,23 @@ function dlts_viewer_admin_list_topics_($entity, $date, $requestedLang = 'en') {
   exit;
 
 }
+
+/**
+ * Get partner nid by code.
+ *
+ * @param string $code
+ *   Code.
+ */
+function partner_by_code($code) {
+  $query = new EntityFieldQuery();
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_partner')
+    ->fieldCondition('field_code', 'value', $code, '=')
+    ->execute();
+  if (empty($result['node'])) {
+    return FALSE;
+  }
+  $keys = array_keys($result['node']);
+  return node_load($keys[0]);
+}

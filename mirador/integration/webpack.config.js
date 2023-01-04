@@ -9,7 +9,8 @@ module.exports = {
     filename: "mirador.js",
     path: path.resolve(__dirname, "dist"),
     // publicPath: "./dist/",
-    publicPath: '/sites/all/modules/dlts_viewer/mirador/integration/dist/',
+    // publicPath: '/sites/all/modules/dlts_viewer/mirador/integration/dist/',
+    publicPath: '/viewer/sites/all/modules/dlts_viewer/mirador/integration/dist/',
   },
   plugins: [
     new CleanWebpackPlugin(),
