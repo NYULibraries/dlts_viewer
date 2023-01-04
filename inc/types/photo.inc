@@ -114,7 +114,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
   drupal_add_css($module_path . '/dist/viewer.css', [ 'group' => CSS_DEFAULT, 'every_page' => TRUE ]);
 
   drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.2/axios.min.js',
     'external',
     [
       'group' => JS_LIBRARY,
@@ -123,7 +123,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
   );
 
   drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.0.0/openseadragon.min.js',
     'external',
     [
       'group' => JS_LIBRARY,
