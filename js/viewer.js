@@ -1,3 +1,5 @@
+import fscreen from 'fscreen'
+
 async function ViewerApp(Y) {
 
   Y.Viewer = null
@@ -40,6 +42,11 @@ async function ViewerApp(Y) {
 
   const { view, sequence, sequenceCount, current, type } = Y.nodes.osd.dataset
 
+  // https://jira.nyu.edu/browse/FADESIGN-486
+  if (fscreen.fullscreenEnabled) {
+    document.querySelector('.navbar-fullscreen').classList.remove('hidden')
+  }
+
   Y.count = Number(sequenceCount)
 
   function postMessage(fire, message) {
@@ -76,48 +83,26 @@ async function ViewerApp(Y) {
   }
 
   function fullscreen_on() {
-    const docElm = document.documentElement
-    const top = document.querySelector('.top')
-    const button = document.querySelector('#button-metadata')
-    if (button) {
-      button.classList.remove('on')
+    if (fscreen.fullscreenEnabled && !fscreen.fullscreenElement) {
+      fscreen.requestFullscreen(document.documentElement)
+      postMessage('button:button-fullscreen:on', {})
     }
-    if (docElm.requestFullscreen) {
-      docElm.requestFullscreen()
-    }
-    else if (docElm.msRequestFullscreen) {
-      docElm.msRequestFullscreen()
-    }
-    else if (docElm.mozRequestFullScreen) {
-      docElm.mozRequestFullScreen()
-    }
-    else if (docElm.webkitRequestFullScreen) {
-      docElm.webkitRequestFullScreen()
-    }
-    if (top) {
-      button.classList.add('hidden')
-    }
-    postMessage('button:button-fullscreen:on', {})
   }
 
   function fullscreen_off() {
-    const top = document.querySelector('.top')
-    if (document.exitFullscreen) {
-      document.exitFullscreen()
+    if (fscreen.fullscreenEnabled && fscreen.fullscreenElement) {
+      fscreen.exitFullscreen()
+      postMessage('button:button-fullscreen:off', {})
     }
-    else if (document.msExitFullscreen) {
-      document.msExitFullscreen()
+  }
+
+  fscreen.onfullscreenchange = () => {
+    if (fscreen.fullscreenEnabled && fscreen.fullscreenElement === null) {
+      const button = document.querySelector('#button-fullscreen')
+      if (button.classList.contains('on')) {
+        button.classList.remove('on')
+      }
     }
-    else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen()
-    }
-    else if (document.webkitCancelFullScreen) {
-      document.webkitCancelFullScreen()
-    }
-    if (top) {
-      top.classList.remove('hidden')
-    }
-    postMessage('button:button-fullscreen:off', {})
   }
 
   async function seqmap(props) {
@@ -138,22 +123,14 @@ async function ViewerApp(Y) {
         if (sequences[sequences.length - 1][0] > count) {
           sequences.pop()
         }
-        return {
-          sequences,
-          count,
-          view,
-          sequence: sequences.find(value => value.includes(sequence) === true),
-        }
+        return { sequences, count, view, sequence: sequences.find(value => value.includes(sequence) === true) }
+
       case 'single':
         Array(Number(count)).fill().map((_, index) => {
           sequences.push([ index + 1])
         })
-        return {
-          sequences,
-          count,
-          view,
-          sequence: [ sequences.find(value => Number(value) === Number(sequence)) ],
-        }
+        return { sequences, count, view, sequence: [ sequences.find(value => Number(value) === Number(sequence)) ] }
+
     }
   }
 
@@ -616,6 +593,7 @@ async function ViewerApp(Y) {
   })
 
   const formSequence = document.querySelector('#form-update-sequence')
+
   if (formSequence && Y.nodes.slider_value) {
     formSequence.onsubmit = (event) => {
       event.preventDefault()

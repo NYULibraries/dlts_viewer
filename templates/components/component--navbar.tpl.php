@@ -86,7 +86,7 @@
   </li>
   <?php endif; ?>
 </ul>
-<ul class="navbar-fullscreen">
+<ul class="navbar-fullscreen hidden">
   <li class="navbar-item">
     <a 
       href="#fullscreen" 
