@@ -1,7 +1,5 @@
 <?php
 
-use SebastianBergmann\Diff\Differ;
-
 /**
  * @file
  * API ePubs callbacks.
@@ -13,19 +11,12 @@ use SebastianBergmann\Diff\Differ;
 function dlts_viewer_epubs() {
   global $base_url;
   $start = 0;
-  $files = [];
-  $realpath = drupal_realpath('public://') . '/epubs';
-  foreach (glob("$realpath/*") as $filename) {
-    $partner = basename($filename);
-    // aof1: for now a quick hack
-    if ($partner == 'supafolio.json') {
-      continue;
-    }
-    $files[] = [
-      'identifier' => $partner,
-      'uri' => "$base_url/api/v0/epubs/$partner",
-    ];    
-  }
+  $files = [
+    [
+      'identifier' => 'nyupress',
+      'uri' => "$base_url/api/v0/epubs/nyupress",
+    ]
+  ]; 
   return [
     'response' => [
       'start' => $start,
@@ -89,31 +80,61 @@ function dlts_viewer_epub_license($link) {
 /**
  * Undocumented function.
  */
-function dlts_viewer_epubs_partner($partner) {
+function dlts_viewer_epubs_partner($partner, $reset_cache = false) {
+  
   global $base_url;
+  
   $start = 0;
-  $files = [];
+
+  $books = [];
+
   $realpath = drupal_realpath('public://') . '/epubs';
-  foreach (glob("$realpath/$partner/*/intake-descriptive.json") as $filename) {
-    $rawdata = file_get_contents($filename);
-    $data = json_decode(
-      file_get_contents($filename)
+
+  $cache = "$realpath/epubs.$partner.json";
+
+  if (!$reset_cache && file_exists($cache)) {
+    $books = json_decode(
+      file_get_contents($cache)
     );
-    $files[] = [
-      'identifier' => $data->identifier,
-      'uri' => "$base_url/api/v0/epubs/$partner/$data->identifier",
-      'title' => $data->title,
-      'partner' => $partner,
-      'doi' => $data->permanent_url,
-    ];
+  } else {
+    
+    $data = json_encode( 
+      dlts_viewer_supafolio()
+    );
+    
+    $data = json_decode($data);
+
+    foreach ($data->data->search as $item) {
+      $publisher = str_replace('-', '', $item->publisher->seo_name);
+      if (!isset($books[$publisher])) $books[$publisher] = [];
+      // Looks like a good way to purge the ones that are not
+      // available is by testing if the resource has a doi.
+      if (!empty($item->custom->permanent_url)) {
+        $books[$publisher][] = (object) [
+          'label' => $item->title,
+          'identifier' => $item->isbn13,
+          'uri' => "$base_url/api/v0/epubs/$publisher/$item->isbn13",
+          'publisher' => $publisher,
+        ];
+      }
+    }
+
+    foreach (array_keys($books) as $publisher) {
+      file_put_contents("$realpath/epubs.$publisher.json", json_encode($books[$publisher]), LOCK_EX);
+    }
+
+    $books = $books[$partner];
+
   }
+
   return [
     'response' => [
       'start' => $start,
-      'numFound' => count($files),
-      'docs' => $files,
+      'numFound' => count($books),
+      'docs' => $books,
     ],
   ];
+
 }
 
 function dlts_viewer_epubs_metadata_v0($data) {
@@ -124,9 +145,11 @@ function dlts_viewer_epubs_metadata_v0($data) {
 
   $authors_display = [];
 
+  $series = [];
+
   $identifier = $data->isbn13;
 
-  $isbnForPrimaryFormat = $data->isbn13;
+  $isbnForPrimaryFormat = $identifier;
 
   $title = $data->title;
   
@@ -194,6 +217,20 @@ function dlts_viewer_epubs_metadata_v0($data) {
 
   $publisher = $data->publisher->name ? $data->publisher->name : 'NYU Press';
 
+  if (isset($data->series) && !empty($data->series)) {
+    foreach ($data->series as $_series) {
+      $series[] = $_series->series->name;
+      // $series[] = (object) [
+      //   'isPartOf' => $_series->series->name,
+      //   'number' => $_series->number_in_series,
+      // ];
+    }
+  }
+
+  if (isset($data->custom->open_access_series) && !empty($data->custom->open_access_series)) {
+    $series[] = $data->custom->open_access_series;
+  }
+
   $metadata = [
     'author' => $author,
     'author_sort' =>  $author_sort,
@@ -217,7 +254,7 @@ function dlts_viewer_epubs_metadata_v0($data) {
     'publisher' =>  $publisher,
     'rights' => 'All rights reserved',
     'rootUrl' => "epub_content/$identifier",
-    'series' => null,
+    'series' => $series,
     'subjects' => $unique_subjects,
     'subtitle' => $data->subtitle,    
     'thumbHref' => "epub_content/$identifier/ops/images/$identifier-th.jpg",
@@ -399,7 +436,7 @@ function dlts_viewer_supafolio_book($identifier, $reset_cache = false) {
 
   $realpath = drupal_realpath('public://') . '/epubs';
 
-  $metadata = "$realpath/supafolio.$identifier.json";
+  $metadata = "$realpath/$identifier.json";
   
   if (!$reset_cache && file_exists($metadata)) {
     return json_decode(
