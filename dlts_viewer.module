@@ -106,6 +106,10 @@ function dlts_viewer_permission() {
       'title' => t('Allow user to administer Viewer'),
       'description' => t('Allow user to administer Viewer'),
     ],
+    'access supafolio api' => [
+      'title' => t('Access Supafolio API'),
+      'description' => t('Access and search Supafolio API'),
+    ],
   ];
 }
 
