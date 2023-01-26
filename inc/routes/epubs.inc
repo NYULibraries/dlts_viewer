@@ -6,7 +6,7 @@
  */
 
 /**
- * Register Books routes.
+ * Register ePubs routes.
  *
  * @return array
  *   Items to register in the menu system.
@@ -16,48 +16,7 @@ function _dlts_viewer_menu_epubs() {
   $items = [];
 
   // epubs.
-  // http://192.168.0.10/epubs
-  $items['epubs'] = [
-    'title' => 'Epubs',
-    'description' => 'Epubs - List partner.',
-    'access arguments' => [
-      'access content',
-    ],
-    'page callback' => 'dlts_viewer_admin_epubs',
-    'file' => 'inc/endpoints/epubs.inc',
-    'type' => MENU_CALLBACK,
-  ];
-
-  // epubs.
-  // http://192.168.0.5/epubs/%partner
-  $items['epubs/%'] = [
-    'title' => 'Epubs',
-    'description' => 'Epubs - Partner.',
-    'access arguments' => [
-      'access content',
-    ],
-    'page arguments' => [ 1 ],
-    'page callback' => 'dlts_viewer_admin_epubs_partner',
-    'file' => 'inc/endpoints/epubs.inc',
-    'type' => MENU_CALLBACK,
-  ];
-
-  // epubs.
-  // http://192.168.0.5/epubs/partner
-  $items['epubs/%/%'] = [
-    'title' => 'Epubs - Partner',
-    'description' => 'Epubs - Partner.',
-    'access arguments' => [
-      'access content',
-    ],
-    'page arguments' => [ 1, 2 ],
-    'page callback' => 'dlts_viewer_admin_epubs_partner_item',
-    'file' => 'inc/endpoints/epubs.inc',
-    'type' => MENU_CALLBACK,
-  ];  
-
-  // epubs.
-  // http://192.168.0.5/api/v0/epubs
+  // http://HOST/api/v0/epubs
   $items['api/v0/epubs'] = [
     'title' => 'Query repository',
     'description' => 'Query epubs API.',
@@ -71,7 +30,7 @@ function _dlts_viewer_menu_epubs() {
   ];
 
   // epubs.
-  // http://192.168.0.5/api/v0/epubs/nyupress
+  // http://HOST/api/v0/epubs/nyupress
   $items['api/v0/epubs/%'] = [
     'title' => 'Query repository',
     'description' => 'Query epubs API.',
@@ -86,8 +45,8 @@ function _dlts_viewer_menu_epubs() {
   ];
 
   // epubs.
-  // http://192.168.0.5/api/v0/epubs/nyupress/9780814744758
-  // http://192.168.0.5/api/v0/epubs/nyupress/9780814753460
+  // http://HOST/api/v0/epubs/nyupress/9780814744758
+  // http://HOST/api/v0/epubs/nyupress/9780814753460
   $items['api/v0/epubs/%/%'] = [
     'title' => 'Query repository',
     'description' => 'Query epubs API.',
@@ -102,8 +61,24 @@ function _dlts_viewer_menu_epubs() {
   ];
 
   // epubs.
-  // http://192.168.0.5/api/v0/epubs/nyupress/9780814744758/opt/indexer
-  // http://192.168.0.5/api/v0/epubs/nyupress/9780814753460/opt/indexer
+  // http://HOST/api/v0/epubs/nyupress/9780814744758/opt/rebuild
+  // http://HOST/api/v0/epubs/nyupress/9780814753460/opt/rebuild
+  $items['api/v0/epubs/%/%/opt/rebuild'] = [
+    'title' => 'Query repository',
+    'description' => 'Query epubs API.',
+    'access arguments' => [
+      'access supafolio api',
+    ],
+    'page arguments' => [ 3, 4 ],
+    'page callback' => 'dlts_viewer_epubs_rebuild',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/epubs.inc',
+    'type' => MENU_CALLBACK,
+  ];
+
+  // epubs.
+  // http://HOST/api/v0/epubs/nyupress/9780814744758/opt/indexer
+  // http://HOST/api/v0/epubs/nyupress/9780814753460/opt/indexer
   $items['api/v0/epubs/%/%/opt/indexer'] = [
     'title' => 'Query repository',
     'description' => 'Query epubs API.',
@@ -117,44 +92,12 @@ function _dlts_viewer_menu_epubs() {
     'type' => MENU_CALLBACK,
   ];
 
-  // epubs.
-  // http://192.168.0.5/api/v0/epubs/nyupress/9780814744758/opt/version
-  // http://192.168.0.5/api/v0/epubs/nyupress/9780814753460/opt/version
-  $items['api/v0/epubs/%/%/opt/version'] = [
-    'title' => 'Epub version',
-    'description' => 'Epub version.',
-    'access arguments' => [
-      'access content',
-    ],
-    'page arguments' => [ 3, 4 ],
-    'page callback' => 'dlts_viewer_epubs_versions',
-    'delivery callback' => 'drupal_json_output',
-    'file' => 'inc/endpoints/epubs.inc',
-    'type' => MENU_CALLBACK,
-  ];
-
-  // epubs.
-  // http://192.168.0.5/api/v0/epubs/nyupress/9780814744758/opt/version
-  // http://192.168.0.5/api/v0/epubs/nyupress/9780814753460/opt/version
-  $items['api/v0/epubs/%/%/opt/version/%'] = [
-    'title' => 'Epub version',
-    'description' => 'Epub version.',
-    'access arguments' => [
-      'access content',
-    ],
-    'page arguments' => [ 3, 4, 7 ],
-    'page callback' => 'dlts_viewer_epubs_versions_hash',
-    'delivery callback' => 'drupal_json_output',
-    'file' => 'inc/endpoints/epubs.inc',
-    'type' => MENU_CALLBACK,
-  ];
-  
-  // http://192.168.0.10/api/v0/supafolio
+  // http://HOST/api/v0/supafolio
   $items['api/v0/supafolio'] = [
     'title' => 'Supafolio API',
     'description' => 'Supafolio API.',
     'access arguments' => [
-      'access content',
+      'access supafolio api',
     ],
     'page callback' => 'dlts_viewer_supafolio',
     'file' => 'inc/endpoints/epubs.inc',
@@ -162,19 +105,6 @@ function _dlts_viewer_menu_epubs() {
     'delivery callback' => 'drupal_json_output',
   ];
 
-  // http://192.168.0.10/api/v0/supafolio/9780814705384
-  $items['api/v0/supafolio/%'] = [
-    'title' => 'Supafolio API',
-    'description' => 'Supafolio API.',
-    'access arguments' => [
-      'access content',
-    ],
-    'page arguments' => [ 3 ],
-    'page callback' => 'dlts_viewer_supafolio_item',
-    'file' => 'inc/endpoints/epubs.inc',
-    'type' => MENU_CALLBACK,
-    'delivery callback' => 'drupal_json_output',
-  ];
-
   return $items;
+
 }
