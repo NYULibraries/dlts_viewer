@@ -97,9 +97,11 @@ function dlts_photo_load($sequence, array $map, $resource_index) {
         unset($edit['cm']['levels']);
         unset($edit['cm']['dwtLevels']);
         unset($edit['cm']['compositingLayerCount']);
-        unset($edit['cm']['timestamp']);
         unset($edit['cm']['identifier']);
         unset($edit['cm']['imagefile']);
+        if (isset($edit['cm']['timestamp'])) {
+          unset($edit['cm']['timestamp']);
+        }
         dlts_viewer_mongodb_update_sequence($edit, $collection_name);
         return [
           'fid' => (string) md5(rand()),

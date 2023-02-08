@@ -290,6 +290,17 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
+  $items['api/v1/epubs'] = [
+    'title' => 'Create object',
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_api_v1_objects',
+    'delivery callback' => 'drupal_json_output',
+    'page arguments' => [ 1 ],
+    'file' => 'inc/endpoints.inc',
+  ];  
+
   return $items;
 
 }

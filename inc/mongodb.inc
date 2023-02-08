@@ -140,11 +140,11 @@ function dlts_viewer_mongodb_load_by_item_identifier($isPartOf, $collection_name
  * @return array
  *   Sequence.
  */
-function dlts_viewer_mongodb_load_sequence(int $sequence, $isPartOf, $collection_name = 'dlts_books_page') {
+function dlts_viewer_mongodb_load_sequence($sequence = 1, $isPartOf, $collection_name = 'dlts_books_page') {
   // Prepare query.
   $query = [
     'isPartOf' => $isPartOf,
-    'sequence' => $sequence,
+    'sequence' => (int) $sequence,
   ];
   $cursor = mongodb_collection($collection_name);
   $result = $cursor->findOne($query);

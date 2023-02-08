@@ -16,7 +16,6 @@
  */
 function dlts_noid_load($id) {
   // id can be noid or identifier.
-  // proceed should be 1, but for now allow 0.
   $results = db_query(
     'SELECT * FROM dlts_viewer_resource 
      WHERE noid = :id 
