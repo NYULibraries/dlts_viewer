@@ -196,8 +196,6 @@ function dlts_viewer_drush_resources_list() {
 // ./vendor/bin/drush add-resources --type=photos
 function dlts_viewer_drush_add_resources() {
 
-  global $base_url;
-
   $type = drush_get_option('type', FALSE);
 
   if (!$type) {
@@ -216,18 +214,30 @@ function dlts_viewer_drush_add_resources() {
     drush_log('Type not supported.', 'error');
     exit();
   }
+  
+  $sql = '';
+  $sql .= "SELECT"; 
+  $sql .= " DISTINCT node.nid nid, identifier.field_identifier_value identifier, handle.field_handle_url handle";
+  $sql .= " FROM node";
+  $sql .= " LEFT JOIN field_data_field_identifier identifier";
+  $sql .= " ON node.nid = identifier.entity_id ";  
+  $sql .= " LEFT JOIN field_data_field_handle handle ";
+  $sql .= " ON node.nid = handle.entity_id ";
+  $sql .= " WHERE node.type = '$types[$type]'";
+  $sql .= " AND node.status = 1";
+  $sql .= " AND (node.language = 'und' OR  node.language = 'en')";
 
-  $type = $types[$type];
-
-  $sql = "SELECT DISTINCT nid FROM node WHERE type = '$type' AND status = 1 AND (language = 'und' OR language = 'en')";
+  db_query("DELETE FROM dlts_viewer_resource WHERE document = '$type';");
 
   $nodes = db_query($sql)->fetchAll();
 
   foreach ($nodes as $node) {
-    $exists = db_query("SELECT nid FROM dlts_viewer_resource WHERE nid = '$node->nid'")->fetchAll();
-    if (count($exists) <= 0) {
-      db_query("INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$node->nid', '', '', '$type', '0')");
-    }
+    $nid = $node->nid;
+    $identifier = $node->identifier;
+    $handlepathinfo = parse_url($node->handle);
+    $handle = explode('/', $handlepathinfo['path']);
+    $noid = trim($handle[2]);
+    db_query("INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', '$type', '1')");
   }
 
 }
