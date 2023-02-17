@@ -147,8 +147,8 @@ function dlts_viewer_theme() {
       'template' => 'templates/documentation',
       'variables' => [],
     ],
-    'viewer_epubs_page' => [
-      'template' => 'templates/epubs',
+    'viewer_embed_page' => [
+      'template' => 'templates/embed',
       'variables' => [],
     ],    
   ];

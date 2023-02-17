@@ -1,15 +1,13 @@
-const path = require("path");
-const webpack = require("webpack");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const path = require('path')
+const webpack = require('webpack')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = {
-  entry: "./src/index.js",
-  mode: "production",
+  entry: './src/index.js',
+  mode: 'production',
   output: {
-    filename: "mirador.js",
-    path: path.resolve(__dirname, "dist"),
-    // publicPath: "./dist/",
-    // publicPath: '/sites/all/modules/dlts_viewer/mirador/integration/dist/',
+    filename: 'mirador.js',
+    path: path.resolve(__dirname, 'dist'),
     publicPath: '/viewer/sites/all/modules/dlts_viewer/mirador/integration/dist/',
   },
   plugins: [
@@ -17,5 +15,5 @@ module.exports = {
     new webpack.IgnorePlugin({
       resourceRegExp: /@blueprintjs\/(core|icons)/, // ignore optional UI framework dependencies
     }),
-  ],
-};
+  ],  
+}

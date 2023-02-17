@@ -6,7 +6,7 @@
  * @param object $entity
  *   Entity.
  */
-function dlts_viewer_viewer_dispatcher($node) {
+function dlts_viewer_embed_dispatcher($node) {
 
   global $base_url;
 
@@ -47,19 +47,15 @@ function dlts_viewer_viewer_dispatcher($node) {
 
   $module = drupal_get_path('module', 'dlts_viewer');
 
-  $out  = '';
-  $out .= '<!doctype html>';
-  $out .= "<html lang='$language'>";
-  $out .= '<head>';
-  $out .= '<meta charset="utf-8" />';
-  $out .= "  <title>$title</title>";
-  $out .= '</head>';
-  $out .= '<body>';
-  $out .= "<div id='mirador-app' data-language='$language' data-endpoint='$base_url' data-type='$bundle' data-identifier='$identifier'></div>";
-  $out .= "<script src='$base_url/$module/mirador/integration/dist/mirador.js'></script>";
-  $out .= '</body>';
-  $out .= '</html>';
 
-  echo $out;
+  echo theme('viewer_embed_page', [
+    'appid' => 'mirador-app',
+    'title' => $title,
+    'language' => $language,
+    'endpoint' => $base_url,
+    'type' => $bundle,
+    'identifier' => $identifier,
+    'script' => "$base_url/$module/mirador/integration/dist/mirador.js",
+  ]);
 
 }

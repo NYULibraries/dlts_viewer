@@ -6,7 +6,7 @@
  */
 
  // Photo set
- // http://192.168.0.18:9000/photos/AD_MC_036_ref349
+ // https://[HOST]/photos/AD_MC_036_ref349
 
 /**
  * Photo set dispatcher.
@@ -295,8 +295,7 @@ function dlts_viewer_photo_embed_redirect($entity) {
 /**
  * Redirect request and delivers photo thumbail.
  * E.g.,
- * - http://{host}/photos/AD_MC_036_ref349/1/mode/thumb
- * - http://192.168.0.18:9000/photos/AD_MC_036_ref349/1/mode/thumb
+ * - https://[HOST]/photos/AD_MC_036_ref349/1/mode/thumb
  */
 function dlts_viewer_photo_thumb($entity, $page) {
   if (is_object($entity)) {

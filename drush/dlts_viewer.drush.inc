@@ -110,8 +110,108 @@ function dlts_viewer_drush_command() {
     ],
   ];
 
+  // drush create-table-resources
+  $items['create-table-resources'] = [
+    'callback' => 'dlts_viewer_drush_create_table_resources',
+    'description' => dt('Create table resources'),
+  ];
+
+  // drush create-table-epubs
+  $items['create-table-epubs'] = [
+    'callback' => 'dlts_viewer_drush_create_table_epubs',
+    'description' => dt('Create table ePubs'),
+  ];
+
+  // drush add-epub --identifier=9780814705384 --user=[username]
+  $items['add-epub'] = [
+    'callback' => 'dlts_viewer_drush_add_epub',
+    'description' => dt('Add ePub'),
+    'options' => [
+      'identifier' => dt('Identifier'),
+    ],    
+  ];
+  
   return $items;
 
+}
+
+function dlts_viewer_drush_create_table_resources() {
+  $tablename = 'dlts_viewer_resource';
+  if (!db_table_exists($tablename)) {
+    $table = [
+      'description' => 'Resource table',
+      'fields' => [
+        'nid' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
+        'noid' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
+        'identifier' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
+        'document' => [ 'type' => 'text' ],
+        'proceed' => [ 'type' => 'int', 'not null' => TRUE, 'default' => 0 ],
+      ]
+    ];
+    db_create_table($tablename, $table);
+  }
+}
+
+function dlts_viewer_drush_create_table_epubs() {
+  $tablename = 'dlts_viewer_epubs';
+  if (!db_table_exists($tablename)) {
+    $table = [
+      'description' => 'ePubs table',
+      'fields' => [
+        'label' => [ 'type' => 'text' ],
+        'identifier' => [ 'type' => 'varchar', 'length' => 13, 'not null' => TRUE ],
+        'publisher' => [ 'type' => 'text' ],
+        'status' => [ 'type' => 'int', 'not null' => TRUE, 'default' => 0 ],
+        'lastModified' => [ 'type' => 'text' ],
+        'data' => [ 'type' => 'text' ],
+      ]
+    ];
+    db_create_table($tablename, $table);
+  }
+}
+
+function dlts_viewer_drush_add_epub() {
+  $tablename = 'dlts_viewer_epubs';
+  if (db_table_exists($tablename)) {
+    $identifier = drush_get_option('identifier', FALSE);
+    if ($identifier && user_access('dlts create object')) {
+      $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE identifier = :identifier', [ ':identifier' => $identifier ]);
+      $record = $results->fetchObject();
+      if ($record) {
+        drush_log("ePub $record->label already published.", 'error');
+      }
+      else {
+        $record = dlts_viewer_supafolio_book($identifier, true);
+        if (isset($record->status) && $record->status === 'error') {          
+          drush_log("Supafolio API - Record with ISBN13 $identifier - " . $record->data['errors'][0]['message'], 'error');
+        } else {
+          if ($identifier === $record->isbn13) {
+            $metadata = dlts_viewer_epubs_metadata_v0($record);
+            db_insert('dlts_viewer_epubs')
+              ->fields([
+                'label' => $record->title,
+                'identifier' => $identifier,
+                'publisher' => str_replace(' ' ,'-', strtolower($metadata['publisher'])),
+                'status' => 1,
+                'lastModified' => date('Y-m-d'),
+                'data' => ''
+              ])
+              ->execute();
+              drush_log("Record created for ePub with ISBN13 $identifier.", 'ok');
+          }
+          else {
+            drush_log("Supafolio API - No match found for ISBN13 $identifier.", 'error');
+          }
+        }
+      }
+    }
+    else {
+      drush_log('Action not allowed. User aregument must be provided.', 'error');
+    }
+  } else {
+    dlts_viewer_drush_create_table_epubs();
+    dlts_viewer_drush_add_epub();
+  }
 }
 
 /**

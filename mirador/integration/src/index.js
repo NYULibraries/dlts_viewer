@@ -1,4 +1,4 @@
-import Mirador from 'mirador/dist/es/src/index'
+import Mirador from 'mirador/dist/es/src/index';
 
 import { miradorImageToolsPlugin } from 'mirador-image-tools'
 
@@ -38,8 +38,6 @@ const config = {
     ],
   }
 }
-
-console.log(config)
 
 Mirador.viewer(config, [
   ...miradorImageToolsPlugin,

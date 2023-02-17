@@ -384,7 +384,10 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
 
     $entity->manifest = "$base_url/api/image/$is_resource/$entity->identifier/$entity->sequence/info.json";
 
-    $entity->other_viewers = t('<a href="@url">Mirador</a>', [ '@url' => url("$base_url/api/viewer/$entity->identifier") ]);    
+    // on-hold
+    // $entity->other_viewers = t('<a href="@url">Mirador</a>', [ '@url' => url("$base_url/api/viewer/$entity->identifier") ]);
+
+    $entity->other_viewers = false;
 
     $entity->presentation = t('<a href="@url">IIIF Presentation</a>', [ '@url' => url("$base_url/api/presentation/$is_resource/$entity->identifier/manifest.json") ]);
 
