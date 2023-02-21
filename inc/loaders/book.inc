@@ -61,7 +61,7 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
   $bundle = dlts_viewer_get_bundle_alias($wrapper->getBundle());
 
   $dir_path = "$realpath/$bundle/$isPartOf";
-  
+
   if (!file_exists($dir_path)) {
     mkdir($dir_path, 0755, TRUE);
   }
@@ -106,10 +106,7 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
 function dlts_book_canvas_page_load($sequence) {
   preg_match('/^p{1}([\d]+)$/', $sequence, $matches);
   if (!empty($matches)) {
-    return dlts_book_page_load(
-      $matches[1],
-      arg(3)
-    );
+    return dlts_book_page_load($matches[1], arg(3));
   }
   return FALSE;
 }

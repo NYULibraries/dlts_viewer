@@ -12,13 +12,13 @@ function dlts_viewer_embed_dispatcher($node) {
 
   $language = 'en';
 
-  $bundle = $node->document;
+  $type = $node->document;
 
   $identifier = $node->identifier;
 
   $realpath = drupal_realpath('public://');
 
-  $cachepath = "$realpath/iiif/$bundle/$identifier/manifest.json";
+  $cachepath = "$realpath/iiif/$type/$identifier/manifest.json";
 
   if (file_exists($cachepath)) {
     $cache = file_get_contents($cachepath);
@@ -47,13 +47,12 @@ function dlts_viewer_embed_dispatcher($node) {
 
   $module = drupal_get_path('module', 'dlts_viewer');
 
-
   echo theme('viewer_embed_page', [
     'appid' => 'mirador-app',
     'title' => $title,
     'language' => $language,
     'endpoint' => $base_url,
-    'type' => $bundle,
+    'type' => $type,
     'identifier' => $identifier,
     'script' => "$base_url/$module/mirador/integration/dist/mirador.js",
   ]);

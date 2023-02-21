@@ -186,13 +186,13 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
   $arg = $seq;
 
   // Check if this collection has searchable PDFs.
-  $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
+  // $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
 
   // Check for mobile devices.
   $is_mobile = dlts_viewer_is_mobile();
 
   // Get query parameters.
-  $query_parameters = drupal_get_query_parameters();
+  // $query_parameters = drupal_get_query_parameters();
 
   // Test if resource, will return the maped type of resource (e.g., books).
   $is_resource = dlts_viewer_is_resource();
@@ -250,15 +250,16 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
     if (is_array($sequence)) {
       // Get the first page of the requested sequence.
       $entity->sequence = min($sequence);
-      $sequence_max = max($sequence);
-      $sequence_min = min($sequence);
+      // $sequence_max = max($sequence);
+      // $sequence_min = min($sequence);
       // Check if this is a double page view.
       if (count($sequence) > 1) {
         $is_single_page = FALSE;
       }
     } else {
       // Get the first page of the requested sequence.
-      $entity->sequence = $sequence_max = $sequence_min = $sequence;
+      // $entity->sequence = $sequence_max = $sequence_min = $sequence;
+      $entity->sequence = $sequence;
       $is_single_page = TRUE;
     }
 
@@ -384,7 +385,6 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
 
     $entity->manifest = "$base_url/api/image/$is_resource/$entity->identifier/$entity->sequence/info.json";
 
-    // on-hold
     // $entity->other_viewers = t('<a href="@url">Mirador</a>', [ '@url' => url("$base_url/api/viewer/$entity->identifier") ]);
 
     $entity->other_viewers = false;

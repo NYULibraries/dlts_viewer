@@ -24,6 +24,8 @@
  */
 function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence, $cache = TRUE) {
 
+  $type = dlts_viewer_resource_type($type);
+
   $wrapper = entity_metadata_wrapper('node', $resource);
 
   $identifier = $wrapper->field_identifier->value();
@@ -94,7 +96,7 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
 /**
  * Returns III Image tile.
  * @link https://iiif.io/api/image/3.0/#4-image-requests
- * @link http://localhost:9000/iiif/2/books/uaena_aco000016/1/full/max/0/default.jpg
+ * @link http://[HOST]/api/image/books/princeton_aco000102/1/full/max/0/default.jpg
  *
  * @param string $type
  *   Resource type.
@@ -119,7 +121,7 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
 
   $sequence_uri = $sequence['uri'];
 
-  $replace_string = file_create_url('fileserver://');
+  $apiVersion = '2';
 
   switch ($static_source) {
     case 'FilesystemSource':
@@ -133,7 +135,7 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
 
   $uri = urlencode($image_id);
 
-  $image = "$image_server/iiif/2/$uri/$region/$size/$rotation/$quality";
+  $image = "$image_server/iiif/$apiVersion/$uri/$region/$size/$rotation/$quality";
 
   $content = file_get_contents($image);
 
@@ -660,9 +662,9 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
     );
   }
 
-  $fields = array();
+  $fields = [];
 
-  $collections = array();
+  // $collections = [];
 
   $availableLanguages = language_list();
 
@@ -719,10 +721,10 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
   // and the language map from $availableLanguages.
   $viewingDirection = 'left-to-right';
 
-  $lang_map = array(
+  $lang_map = [
     0 => 'left-to-right',
     1 => 'right-to-left',
-  );
+  ];
 
   $field_language_code_raw = $wrapper->field_language_code->value();
   if ($field_language_code_raw) {
@@ -732,15 +734,15 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
     }
   }
 
-  $behavior = array('individuals');
+  $behavior = [ 'individuals' ];
 
   $sequence_count = $wrapper->field_sequence_count->value();
 
   $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
 
-  $translations = array(
+  $translations = [
     $entity->language => $wrapper,
-  );
+  ];
 
   $search_nid = array_search($entity->nid, $nids);
 
@@ -900,14 +902,7 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
     $res['requiredStatement'] = $required_statement;
   }
 
-  drupal_register_shutdown_function(
-    'dlts_viewer_cache_manifest',
-    array(
-      'type' => $type,
-      'resource' => $entity,
-      'data' => $res,
-    )
-  );
+  drupal_register_shutdown_function('dlts_viewer_cache_manifest', [ 'type' => $type, 'resource' => $entity, 'data' => $res ]);
 
   return $res;
 
@@ -916,8 +911,7 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
 /**
  * IIIF Presentation API v3 - Book manifest.
  *
- * @link https://manifests.sub.uni-goettingen.de/iiif/presentation/PPN857449303/manifest
- * @link http://localhost:9000/api/3/presentation/books/princeton_aco000102/manifest.json
+ * @link http://[HOST]/api/presentation/books/princeton_aco000102/manifest.json
  *
  * @param object $entity
  *   Book node.
@@ -958,21 +952,18 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   $fields = [];
 
-  $series = [];
-
   $volumes = [];
-
-  $collections = [];
 
   $items = [];
 
-  $summary = [];
-
   $values = [];
 
-  $rendering = [];
-
   $pdfs = [];
+
+  // $series = [];
+  // $collections = [];
+  // $summary = [];
+  // $rendering = [];  
 
   $availableLanguages = language_list();
 
@@ -1119,7 +1110,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   }
 
   if ($sequence_count > 1) {
-    $behavior = ['paged'];
+    $behavior = [ 'paged' ];
   }
 
   $collection_name = dlts_viewer_mongodb_collections_by_type($bundle);
@@ -1347,13 +1338,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   //   unset($series_books);
   // }
 
-  drupal_register_shutdown_function('dlts_viewer_cache_manifest',
-    [
-      'type' => $type,
-      'resource' => $entity,
-      'data' => $res,
-    ]
-  );
+  drupal_register_shutdown_function('dlts_viewer_cache_manifest', [ 'type' => $type, 'resource' => $entity, 'data' => $res ]);
 
   return $res;
 

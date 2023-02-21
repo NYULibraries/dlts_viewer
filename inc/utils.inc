@@ -57,7 +57,6 @@ function dlts_viewer_content_by_field($field_name) {
   $out = array();
   $field_name = filter_xss($field_name);
   $info = field_info_field($field_name);
-  $query_parameters = drupal_get_query_parameters();
   if ($info) {
     $m = array_keys($info['storage']['details']['sql']['FIELD_LOAD_CURRENT']);
     $table = $m[0];
@@ -100,11 +99,11 @@ function dlts_viewer_content_by_field($field_name) {
  *   Return Objects list that map the object type to it's route.
  */
 function dlts_viewer_object_types() {
-  return array(
+  return [
     'book' => 'books',
     'photo' => 'photos',
     'map' => 'maps',
-  );
+  ];
 }
 
 /**
@@ -538,22 +537,22 @@ function dlts_viewer_content_types_type($type) {
   if (!$content_type) {
     return;
   }
-  $out = $fields = array();
+  $fields = [];
   $field_info_instances = field_info_instances('node', $content_type->type);
   foreach ($field_info_instances as $field_name => $field_info_instance) {
     $info = field_info_field($field_name);
-    $fields[] = array(
+    $fields[] = [
       'label' => $field_info_instance['label'],
       'field_name' => $field_info_instance['field_name'],
       'type' => $field_info_instance['widget']['type'],
       'cardinality' => (string) $info['cardinality'],
-      'settings' => array(
+      'settings' => [
         'allowed_values' => isset($info['settings']['allowed_values']) ? $info['settings']['allowed_values'] : NULL,
-      ),
-    );
+      ],
+    ];
   }
-  return array(
+  return [
     'typeInfo' => $content_type,
     'fields' => $fields,
-  );
+  ];
 }

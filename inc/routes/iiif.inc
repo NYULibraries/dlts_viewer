@@ -18,7 +18,7 @@ function _dlts_viewer_menu_iiif() {
   /*
    * Canvas.
    *
-   * @link http://localhost:9000/api/presentation/books/princeton_aco000102/canvas/1
+   * @link https://[HOST]/api/presentation/books/princeton_aco000102/canvas/1
    */
   $items['api/presentation/%dlts_type/%dlts_resource/canvas/%dlts_canvas_page'] = [
     'title' => 'IIIF Presentation API 3 - Canvas',
@@ -32,7 +32,7 @@ function _dlts_viewer_menu_iiif() {
   ];
 
   // Annotation.
-  // @link http://localhost:9000/api/v3/presentation/books/princeton_aco000102/annotation/painting/1
+  // @link https://[HOST]/api/v3/presentation/books/princeton_aco000102/annotation/painting/1
   $items['api/presentation/%dlts_type/%dlts_resource/annotation/painting/%dlts_iiif_annotation_painting'] = [
     'title' => 'IIIF Presentation API 3 - Annotation painting',
     'access arguments' => [ 'access iiif content' ],
@@ -45,7 +45,7 @@ function _dlts_viewer_menu_iiif() {
   ];
 
   // AnnotationPage.
-  // @link http://localhost:9000/api/v3/presentation/books/princeton_aco000102/page/1
+  // @link https://[HOST]/api/v3/presentation/books/princeton_aco000102/page/1
   $items['api/presentation/%dlts_type/%dlts_resource/page/%dlts_iiif_annotation_page'] = [
     'title' => 'IIIF Presentation API 3 - AnnotationPage',
     'access arguments' => [ 'access iiif content' ],
@@ -65,7 +65,7 @@ function _dlts_viewer_menu_iiif() {
    */
 
   // Proxy Image service.
-  // @link http://localhost:9000/api/image/books/uaena_aco000016/1/info.json
+  // @link https://[HOST]/api/image/books/uaena_aco000016/1/info.json
   $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence'] =
   $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/info.json'] = [
     'title' => 'IIIF API - Request metadata',
@@ -80,8 +80,8 @@ function _dlts_viewer_menu_iiif() {
 
   // Request image.
   // @link https://iiif.io/api/image/2.0
-  // @link http://localhost:9000/api/image/books/princeton_aco000102/1/full/max/0/default.jpg
-  // http://localhost:9000/api/image/books/princeton_aco000102/1/{region}/{size}/{rotation}/{quality}.{format}
+  // @link https://[HOST]/api/image/books/princeton_aco000102/1/full/max/0/default.jpg
+  // @details https://[HOST]/api/image/books/princeton_aco000102/1/{region}/{size}/{rotation}/{quality}.{format}
   $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/%dlts_iiif_region/%dlts_iiif_size/%dlts_iiif_rotation/%dlts_iiif_quality'] = [
     'title' => 'IIIF API - Request image',
     'access arguments' => [ 'access iiif content' ],
@@ -96,8 +96,7 @@ function _dlts_viewer_menu_iiif() {
   /*
    * Register IIIF Presentation Manifest routes.
    * @link https://iiif.io/api/presentation/3.0/
-   * @link https://iiif.io/api/cookbook/recipe/0009-book-1/manifest.json
-   * @link http://localhost:9000/api/presentation/books/princeton_aco000102/manifest.json
+   * @link https://[HOST]/api/presentation/books/princeton_aco000102/manifest.json
    *
    * @return array
    *   IIIF Presentation Manifest.

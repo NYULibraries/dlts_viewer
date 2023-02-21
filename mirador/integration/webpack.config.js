@@ -16,4 +16,7 @@ module.exports = {
       resourceRegExp: /@blueprintjs\/(core|icons)/, // ignore optional UI framework dependencies
     }),
   ],  
+  resolve: {
+    fallback: { "url": require.resolve("url/") }
+  }
 }

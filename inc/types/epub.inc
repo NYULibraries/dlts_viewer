@@ -296,10 +296,7 @@ function dlts_viewer_epubs_metadata_v0($data) {
   
   // "date":"1997-05-01",
   // "date": "1997",
-  
-  // "format":"0 pages",
-  // "format": "216 pages",
-    
+
   // "subject": "African American Studies / Law / Sociology",
   // "subject_facet": "African American Studies / Law / Sociology",    
   
