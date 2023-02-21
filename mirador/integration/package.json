@@ -5,10 +5,8 @@
   "private": true,
   "main": "index.html",
   "scripts": {
-    "webpack": "webpack --config ./webpack.config.js",
-    "build": "webpack --config ./webpack.config.js",
-    "serve": "webpack serve --config ./webpack.development.js",
-    "watch": "webpack --watch --config ./webpack.development.js"
+    "build": "webpack --config ./webpack.production.js",
+    "serve": "webpack serve --config ./webpack.development.js"
   },
   "dependencies": {
     "mirador": "3.3.0",
