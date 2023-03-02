@@ -10,6 +10,40 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/viewer/sites/all/modules/dlts_viewer/mirador/integration/dist/',
   },
+  module: {
+    rules: [
+      {
+        test: /\.(js|jsx)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader"
+        }
+      },
+      {
+        test: /\.m?js$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        }
+      },
+      {
+        test: /\.(sa|sc|c)ss$/i,
+        use: [
+          'css-loader',
+          'postcss-loader',
+          {
+            loader: 'sass-loader',
+            options: {
+              sourceMap: true,
+            },
+          },
+        ],
+      },
+    ]
+  },  
   plugins: [
     new CleanWebpackPlugin(),
     new webpack.IgnorePlugin({

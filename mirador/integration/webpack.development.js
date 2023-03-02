@@ -22,7 +22,7 @@ module.exports = {
   entry: [
     'babel-polyfill',
     './src/style.css',
-    './src/index.js'
+    './src/index.js',
   ],
   output: {
     filename: '[name].bundle.js',
@@ -32,6 +32,13 @@ module.exports = {
   },
   module: {
     rules: [
+      {
+        test: /\.(js|jsx)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader"
+        }
+      },
       {
         test: /\.m?js$/,
         exclude: /(node_modules)/,
