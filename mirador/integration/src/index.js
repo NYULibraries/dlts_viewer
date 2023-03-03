@@ -18,7 +18,7 @@ const {
   type, 
   language, 
   languages, 
-  sequence 
+  sequence,
 } = elem.dataset
 
 const viewerLanguages =  languages.split(',')
@@ -38,9 +38,9 @@ const config = {
         imageToolsOpen: false,
         canvasIndex: Number(sequence),
         view: 'single',
-      }
+      },
     ],
-  }
+  },
 }
 
 Mirador.viewer(config, [
