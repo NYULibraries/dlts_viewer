@@ -140,11 +140,11 @@ function dlts_viewer_mongodb_load_by_item_identifier($isPartOf, $collection_name
  * @return array
  *   Sequence.
  */
-function dlts_viewer_mongodb_load_sequence(int $sequence, $isPartOf, $collection_name = 'dlts_books_page') {
+function dlts_viewer_mongodb_load_sequence($sequence = 1, $isPartOf, $collection_name = 'dlts_books_page') {
   // Prepare query.
   $query = [
     'isPartOf' => $isPartOf,
-    'sequence' => $sequence,
+    'sequence' => (int) $sequence,
   ];
   $cursor = mongodb_collection($collection_name);
   $result = $cursor->findOne($query);
@@ -184,8 +184,6 @@ function dlts_viewer_dispatch_mongodb_record($node) {
 
   global $base_url;
 
-  $language = 'en';
-
   $bundle = dlts_viewer_get_bundle_alias($node->document);
 
   $identifier = $node->identifier;
@@ -205,10 +203,6 @@ function dlts_viewer_dispatch_mongodb_record($node) {
   $collection_name = dlts_viewer_mongodb_collections_by_type($node->document);
 
   $page = 0;
-
-  $items = [];
-
-  $query = [];
 
   $rows = [];
 
@@ -233,8 +227,6 @@ function dlts_viewer_dispatch_mongodb_record($node) {
   $cursor = mongodb_collection($collection_name)->find([ 'isPartOf' => $identifier ]);
   
   $count = $cursor->count();
-  
-  $parsed_url = parse_url($handle['url']);
   
   $noid = $node->noid;
   

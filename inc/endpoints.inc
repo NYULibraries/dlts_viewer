@@ -735,7 +735,7 @@ function dlts_viewer_api_list_maps(int $start = 0, int $length = 15, $requestedL
  *   A keyed array to be converted into JSON.
  */
 function _dlts_viewer_book_loader($node, $reset = FALSE) {
-  
+
   $wrapper = entity_metadata_wrapper('node', $node);
 
   $bundle = dlts_viewer_get_bundle_alias($wrapper->getBundle());
@@ -783,7 +783,6 @@ function _dlts_viewer_book_loader($node, $reset = FALSE) {
  *   A keyed array to be converted into JSON.
  */
 function _dlts_viewer_map_loader($node, $reset = FALSE) {
-
   $wrapper = entity_metadata_wrapper('node', $node);
 
   $bundle = dlts_viewer_get_bundle_alias($wrapper->getBundle());
@@ -1446,9 +1445,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
 
   drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
 
-  $image_server = variable_get('dlts_viewer_image_server', 'http://127.0.0.1:8182');
-
-  $fields = $series = $volumes = $collections = $pages = [];
+  $fields = $series = $volumes = $collections = [];
 
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
@@ -1930,80 +1927,11 @@ function dlts_viewer_imageserver_book_page(array $sequence) {
 }
 
 /**
- * Stream book page.
- *
- * @link http://localhost:9000/api/v1/tile?region=0,2048,256,256&level=3&id=http://dlib.nyu.edu/files/books/princeton_aco000320/princeton_aco000320_n000298_d.jp2
- * @TODO: Remove
- */
-function dlts_viewer_djakota_stream_book_page() {
-  header('HTTP/1.1 410 Gone', TRUE, 410); 
-  echo "We're sorry you have reached a address that has been disconnected and no longer in service.";
-  exit(0);
-}
-
-/**
- * Create book v1.
- */
-function dlts_viewer_api_v1_dlts_book_objects($source) {
-  try {
-
-    global $user;
-    
-    $username = $user->name;
-
-    $apiVersion = 'v1';
-
-    if (!user_access('dlts create object')) {
-      throw new Exception("Action not allowed for user $username.");
-    }
-
-    if ($source['entity_type'] !== 'dlts_book') {
-      throw new Exception('Wrong entity type.');
-    }
-
-    module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book');    
-
-    // Check if request has all the keys we required.
-    if (
-      isset($source['entity_type']) &&
-      isset($source['identifier']) &&
-      isset($source['entity_language']) &&
-      isset($source['entity_status']) &&
-      isset($source['entity_type']) &&
-      isset($source['metadata'])
-    ) {
-
-      if (!isset($source['entity_title'])) {
-        throw new Exception('Field entity_title can not be empty.');
-      }
-
-      if (!isset($source['identifier'])) {
-        throw new Exception('Field identifier can not be empty.');
-      }
-
-      $entity = create_dlts_book_from_json($source);
-
-      if ($entity) {
-        return [
-          'data' => $entity,
-        ];
-      }
-    }
-  } catch (Exception $e) {
-    watchdog('dlts_viewer', $e->getMessage(), [], WATCHDOG_CRITICAL);
-    die($e->getMessage());
-  }
-
-}
-
-/**
  * Create photo sequence.
  */
 function dlts_viewer_api_v1_dlts_photo_set_sequences($source) {
 
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_photo_set');
-
-  $apiVersion = 'v1';
 
   try {
     if ($source['entity_type'] == 'dlts_photo_set' || $source['entity_type'] == 'image_set') {
@@ -2057,104 +1985,11 @@ function dlts_viewer_api_v1_dlts_photo_set_sequences($source) {
 }
 
 /**
- * Create book v1.0.1.
- */
-function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
-  if (user_access('dlts create object')) {
-    $apiVersion = 'v1.0.1';
-
-    $datasource = [];
-
-    $entity_types = [
-      'book',
-      'photo_set',
-      'postcard',
-    ];
-
-    $datasource = (array) json_decode(
-      file_get_contents('php://input')
-    );
-
-    switch ($datasource['type']) {
-      case 'postcard':
-        try {
-          // Check if request has all the keys we required.
-          if (!isset($datasource['identifier'])) {
-            throw new Exception('Field identifier can not be empty.');
-          }
-          if (!isset($datasource['metadata'])) {
-            throw new Exception('Field metadata can not be empty.');
-          }
-          if (!isset($datasource['status'])) {
-            throw new Exception('Field status can not be empty.');
-          }
-          module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_postcard');
-          $entity = create_dlts_dlts_postcard_from_json($datasource);
-          if ($entity) {
-            return [
-              'data' => $entity,
-            ];
-          } else {
-            throw new Exception('Unexpected error.');
-          }
-        }
-        catch (Exception $e) {
-          watchdog('dlts_viewer', $e->getMessage(), [], WATCHDOG_CRITICAL);
-          return [
-            'error' => $e->getMessage(),
-          ];
-        }
-        break;
-
-      case 'book':
-        try {
-          // Check if request has all the keys we required.
-          if (!isset($datasource['identifier'])) {
-            throw new Exception('Field identifier can not be empty.');
-          }
-          if (!isset($datasource['metadata'])) {
-            throw new Exception('Field metadata can not be empty.');
-          }
-          if (!isset($datasource['status'])) {
-            throw new Exception('Field status can not be empty.');
-          }
-          module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book.1.0.1');
-          $entity = create_dlts_book_from_json_v1_0_1($datasource);
-          if ($entity) {
-            return [
-              'data' => $entity,
-            ];
-          } else {
-            throw new Exception('Unexpected error.');
-          }
-        }
-        catch (Exception $e) {
-          watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
-          return array(
-            'error' => $e->getMessage(),
-          );
-        }
-        break;
-
-      default:
-        return array(
-          'error' => 'Type not ' . $datasource['type'] . ' supported.',
-        );
-    }
-  }
-  return array(
-    'error' => 'Not allowed.',
-  );
-}
-
-/**
  * Create photo set v1.
  */
 function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
 
   module_load_include('inc', 'dlts_viewer', 'inc/save/dlts_photo_set');
-
-  $apiVersion = 'v1';
 
   // Define metadata fields.
   $partners = [];
@@ -2295,7 +2130,6 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
   }
 }
 
-
 /**
  * API callback.
  */
@@ -2383,18 +2217,6 @@ function dlts_viewer_api_v1_objects($version = NULL) {
   return [
     'error' => 'User not allowed.',
   ];
-}
-
-/**
- * Djakota Resolver.
- *
- * @link https://stage-sites.dlib.nyu.edu/viewer/api/v1/image/resolver?rft_id=http://dlib.nyu.edu/washingtonsquare/2333.1/0000008x/wsp_ln_7_8_02d.tif&svc_level=3
- * @TODO: Remove
- */
-function dlts_viewer_djakota_resolver_stream() {
-  header('HTTP/1.1 410 Gone', TRUE, 410); 
-  echo "We're sorry you have reached a address that has been disconnected and no longer in service.";
-  exit(0);
 }
 
 /**

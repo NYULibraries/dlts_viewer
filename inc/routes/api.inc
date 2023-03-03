@@ -290,6 +290,38 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
+  $items['api/v1/epubs'] = [
+    'title' => 'Create object',
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_api_v1_objects',
+    'delivery callback' => 'drupal_json_output',
+    'page arguments' => [ 1 ],
+    'file' => 'inc/endpoints.inc',
+  ];  
+
+  // Render viewer.
+  // https://[HOST]/api/embed/xsj3v3x1
+  // https://[HOST]/api/embed/columbia_aco002609
+  $items['api/embed/%dlts_noid'] = [
+    'title' => 'Viewer',
+    'access arguments' => [ 'access content' ],
+    'page callback' => 'dlts_viewer_embed_dispatcher',
+    'page arguments' => [ 2 ],
+    'delivery callback' => 'drupal_deliver_html_page',
+    'type' => MENU_CALLBACK,
+  ];
+
+  $items['api/embed/%dlts_noid/%'] = [
+    'title' => 'Viewer',
+    'access arguments' => [ 'access content' ],
+    'page callback' => 'dlts_viewer_embed_dispatcher',
+    'page arguments' => [ 2, 3 ],
+    'delivery callback' => 'drupal_deliver_html_page',
+    'type' => MENU_CALLBACK,
+  ];  
+
   return $items;
 
 }

@@ -454,20 +454,3 @@ function dlts_viewer_css_alter(&$css) {
 function dlts_viewer_node_delete($node) {
   db_delete('dlts_viewer_resource')->condition('nid', $node->nid)->execute();
 }
-
-/**
- * Create the table which was missing during early stage of module development.
- */
-function dlts_viewer_update_7102() {
-  $table = [
-    'description' => 'Resource table',
-    'fields' => [
-      'nid' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
-      'noid' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
-      'identifier' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
-      'document' => [ 'type' => 'text' ],
-      'proceed' => [ 'type' => 'int', 'not null' => TRUE, 'default' => 0 ],
-    ]
-  ];
-  db_create_table('dlts_viewer_resource', $table);
-}

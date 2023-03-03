@@ -6,7 +6,7 @@
  */
 
  // Photo set
- // http://192.168.0.18:9000/photos/AD_MC_036_ref349
+ // https://[HOST]/photos/AD_MC_036_ref349
 
 /**
  * Photo set dispatcher.
@@ -295,26 +295,35 @@ function dlts_viewer_photo_embed_redirect($entity) {
 /**
  * Redirect request and delivers photo thumbail.
  * E.g.,
- * - http://{host}/photos/AD_MC_036_ref349/1/mode/thumb
- * - http://192.168.0.18:9000/photos/AD_MC_036_ref349/1/mode/thumb
+ * - https://[HOST]/photos/AD_MC_036_ref349/1/mode/thumb
  */
 function dlts_viewer_photo_thumb($entity, $page) {
   if (is_object($entity)) {
     global $base_url;
+    
     $wrapper = entity_metadata_wrapper('node', $entity);
+    
     $query_parameters = drupal_get_query_parameters();
+    
     // Identifier.
     $identifier = $wrapper->field_identifier->value();
+    
     $width = '150';
+    
     $height = '';
-    if ($query_parameters['w']) {
-      $width = filter_var($query_parameters['w'], FILTER_SANITIZE_STRING);
+    
+    if (isset($query_parameters['w']) && $query_parameters['w']) {
+      $width = filter_var($query_parameters['w'], FILTER_UNSAFE_RAW);
     }
-    if ($query_parameters['h']) {
-      $width = filter_var($query_parameters['h'], FILTER_SANITIZE_STRING);
+
+    if (isset($query_parameters['h']) &&$query_parameters['h']) {
+      $width = filter_var($query_parameters['h'], FILTER_UNSAFE_RAW);
     }
+
     $sequence = array_pop($page['sequence']);
+
     drupal_goto("$base_url/api/image/photos/$identifier/$sequence/full/$width,$height/0/default.jpg");
+  
   }
   return drupal_exit();
 }

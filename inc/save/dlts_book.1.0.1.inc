@@ -20,7 +20,7 @@ function save_dlts_book_v1_0_1($node, $language = 'en') {
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_series');
   module_load_include('inc', 'dlts_viewer', 'inc/create/taxonomy');
   // Get the current user.
-  global $base_url;
+  // global $base_url;
   global $user;
   $username = $user->name;
   $is_new = TRUE;

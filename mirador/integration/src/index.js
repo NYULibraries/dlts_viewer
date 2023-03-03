@@ -1,46 +1,54 @@
-import Mirador from 'mirador/dist/es/src/index'
+import Mirador from 'mirador/dist/es/src/index';
 
 import { miradorImageToolsPlugin } from 'mirador-image-tools'
 
 import { defaultConfig } from './viewerConfig.js'
 
+import LanguageSelector from './plugins/language-selector'
+
+import './style.css'
+
 const uuid = 'mirador-app'
 
 const elem = document.getElementById(uuid)
 
-const endpoint = elem.dataset.endpoint
+const { 
+  endpoint, 
+  identifier, 
+  type, 
+  language, 
+  languages, 
+  sequence,
+} = elem.dataset
 
-const identifier = elem.dataset.identifier
+const viewerLanguages =  languages.split(',')
 
-const resourceType = elem.dataset.type
-
-const canvasIndexValue = 0 
-
-const manifestId = `${endpoint}/api/presentation/${resourceType}/${identifier}/manifest.json`
+const manifestId = `${endpoint}/api/presentation/${type}/${identifier}/manifest.json`
 
 const config = { 
   ...defaultConfig, 
   ...{
     id: uuid,
-    language: 'en',
-    availableLanguages: {
-      ar: 'Arabic',
-      en: 'English',
-    },
+    language,
+    viewerLanguages,
     windows: [
       {
         manifestId: manifestId,
         imageToolsEnabled: true,
         imageToolsOpen: false,
-        canvasIndex: canvasIndexValue,
+        canvasIndex: Number(sequence),
         view: 'single',
-      }
+      },
     ],
-  }
+  },
 }
 
-console.log(config)
+const plugins = [
+  miradorImageToolsPlugin,
+]
 
-Mirador.viewer(config, [
-  ...miradorImageToolsPlugin,
-])
+if (viewerLanguages.length > 1) {
+  plugins.push(LanguageSelector)
+}
+
+Mirador.viewer(config, plugins)
