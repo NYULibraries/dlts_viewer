@@ -313,6 +313,15 @@ function _dlts_viewer_menu_api() {
     'type' => MENU_CALLBACK,
   ];
 
+  $items['api/embed/%dlts_noid/%'] = [
+    'title' => 'Viewer',
+    'access arguments' => [ 'access content' ],
+    'page callback' => 'dlts_viewer_embed_dispatcher',
+    'page arguments' => [ 2, 3 ],
+    'delivery callback' => 'drupal_deliver_html_page',
+    'type' => MENU_CALLBACK,
+  ];  
+
   return $items;
 
 }

@@ -43,7 +43,12 @@ const config = {
   },
 }
 
-Mirador.viewer(config, [
-  miradorImageToolsPlugin, 
-  LanguageSelector,
-])
+const plugins = [
+  miradorImageToolsPlugin,
+]
+
+if (viewerLanguages.length > 1) {
+  plugins.push(LanguageSelector)
+}
+
+Mirador.viewer(config, plugins)

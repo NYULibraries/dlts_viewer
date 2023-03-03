@@ -31,9 +31,9 @@ function nid_by_identifier($identifier, $language = [ LANGUAGE_NONE, 'en' ]) {
  * @param string $identifier
  *   Identifier.
  */
-function dlts_viewer_list_translation($identifier) {
-  $langs = array();
-  $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
+function dlts_viewer_list_translation($identifier, $bundle = 'dlts_book') {
+  $langs = [];
+  $nids = dlts_viewer_get_translations_nid_by_identifier($identifier, $bundle);
   $nodes = node_load_multiple($nids);
   foreach ($nodes as $node) {
     $langs[$node->language] = "node/$node->nid";
@@ -47,11 +47,11 @@ function dlts_viewer_list_translation($identifier) {
  * @param string $identifier
  *   Identifier.
  */
-function dlts_viewer_get_translations_nid_by_identifier($identifier) {
+function dlts_viewer_get_translations_nid_by_identifier($identifier, $bundle = 'dlts_book') {
   $keys = [];
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'dlts_book')
+    ->entityCondition('bundle', $bundle)
     ->propertyCondition('status', 1)
     ->fieldCondition('field_identifier', 'value', $identifier, '=')
     ->execute();
