@@ -6,6 +6,8 @@ import { defaultConfig } from './viewerConfig.js'
 
 import LanguageSelector from './plugins/language-selector'
 
+import './style.css'
+
 const uuid = 'mirador-app'
 
 const elem = document.getElementById(uuid)

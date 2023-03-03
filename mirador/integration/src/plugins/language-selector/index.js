@@ -1,13 +1,13 @@
-import React, { Fragment } from 'react'
+import React from 'react'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
-import CollapsibleSection from 'mirador/dist/es/src/containers/CollapsibleSection'
 import { FormControl } from '@material-ui/core'
 import CheckIcon from '@material-ui/icons/CheckSharp'
 import MenuItem from '@material-ui/core/MenuItem'
+import CollapsibleSection from 'mirador/dist/es/src/containers/CollapsibleSection'
+import { updateConfig } from 'mirador/dist/es/src/state/actions/config'
+import { getLanguagesFromConfigWithCurrent } from 'mirador/dist/es/src/state/selectors/config'
 import PropTypes from 'prop-types'
-import * as actions from 'mirador/dist/es/src/state/actions'
-import { getLanguagesFromConfigWithCurrent } from 'mirador/dist/es/src/state/selectors'
 
 const langstyles = {
   container: {
@@ -38,13 +38,17 @@ const langstyles = {
 
 const LanguageSelector = (props) => {
 
-  const { t, handleClick, languages, viewerLanguages } = props
+  const { 
+    handleClick, 
+    languages, 
+    t, 
+    viewerLanguages,
+  } = props
 
   return (
-    <Fragment>
-      <div style={langstyles.container}>
-        <CollapsibleSection label={t('Available languages')}>
-          <FormControl style={langstyles.formControl}>
+    <div style={langstyles.container}>
+      <CollapsibleSection label={t('Available languages')}>
+        <FormControl style={langstyles.formControl}>
           {
             languages.map(language => {
               if (viewerLanguages.includes(language.locale)) {
@@ -65,37 +69,44 @@ const LanguageSelector = (props) => {
               }
             })
           }
-          </FormControl>
-        </CollapsibleSection>
-      </div>
-    </Fragment>
+        </FormControl>
+      </CollapsibleSection>
+    </div>
   )
 
 }
 
 const mapDispatchToProps = (dispatch, { afterSelect }) => ({
   handleClick: (language) => {
-    dispatch(actions.updateConfig({ language }))
+    dispatch(updateConfig({ language }))
 
     afterSelect && afterSelect()
   },
 })
-
-LanguageSelector.propTypes = {
-  handleClick: PropTypes.func.isRequired, 
-  languages: PropTypes.object.isRequired,
-  viewerLanguages: PropTypes.array.isRequired,
-}
 
 const mapStateToProps = (state) => ({
   languages: getLanguagesFromConfigWithCurrent(state),
   viewerLanguages: state.config.viewerLanguages,
 })
 
+LanguageSelector.propTypes = {
+  handleClick: PropTypes.func.isRequired, 
+  t: PropTypes.func.isRequired, 
+  languages: PropTypes.array.isRequired,
+  viewerLanguages: PropTypes.array.isRequired,
+}
+
+LanguageSelector.defaultProps = {
+  handleClick: () =>  {},
+  t: () =>  {},
+  languages: [],
+  viewerLanguages: [],
+}
+
 export default {
   target: 'CanvasInfo',
   mode: 'add',
   component: LanguageSelector,
-  mapDispatchToProps: mapDispatchToProps,
-  mapStateToProps: mapStateToProps,
+  mapDispatchToProps,
+  mapStateToProps,
 }

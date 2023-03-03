@@ -30,16 +30,11 @@ module.exports = {
         }
       },
       {
-        test: /\.(sa|sc|c)ss$/i,
+        test: /\.css$/i,
         use: [
-          'css-loader',
-          'postcss-loader',
-          {
-            loader: 'sass-loader',
-            options: {
-              sourceMap: true,
-            },
-          },
+          // The `injectType`  option can be avoided because it is default behaviour
+          { loader: "style-loader", options: { injectType: "styleTag" } },
+          "css-loader",
         ],
       },
     ]
