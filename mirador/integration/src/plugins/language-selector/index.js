@@ -7,7 +7,9 @@ import MenuItem from '@material-ui/core/MenuItem'
 import CollapsibleSection from 'mirador/dist/es/src/containers/CollapsibleSection'
 import { updateConfig } from 'mirador/dist/es/src/state/actions/config'
 import { getLanguagesFromConfigWithCurrent } from 'mirador/dist/es/src/state/selectors/config'
+import { getManifestoInstance } from 'mirador/dist/es/src/state/selectors/manifests'
 import PropTypes from 'prop-types'
+import translations from './translations'
 
 const langstyles = {
   container: {
@@ -42,16 +44,25 @@ const LanguageSelector = (props) => {
     handleClick, 
     languages, 
     t, 
-    viewerLanguages,
+    resourceLanguages,
   } = props
+
+  // If there is only one language, don't show the language selector.
+  if (resourceLanguages.length < 2) return
+
+  const availableLanguages = []
+
+  resourceLanguages.forEach(lang => {
+    availableLanguages.push(lang._locale)
+  })
 
   return (
     <div style={langstyles.container}>
-      <CollapsibleSection label={t('Available languages')}>
+      <CollapsibleSection label={t('availableLanguages')}>
         <FormControl style={langstyles.formControl}>
           {
             languages.map(language => {
-              if (viewerLanguages.includes(language.locale)) {
+              if (availableLanguages.includes(language.locale)) {
                 return (
                   <MenuItem
                     button={!language.current}
@@ -84,23 +95,26 @@ const mapDispatchToProps = (dispatch, { afterSelect }) => ({
   },
 })
 
-const mapStateToProps = (state) => ({
-  languages: getLanguagesFromConfigWithCurrent(state),
-  viewerLanguages: state.config.viewerLanguages,
-})
+const mapStateToProps = (state, { windowId }) => {
+  return {
+    languages: getLanguagesFromConfigWithCurrent(state),
+    viewerLanguages: state.config.viewerLanguages,
+    resourceLanguages: (getManifestoInstance(state, { windowId }).getLabel()),
+  }
+}
 
 LanguageSelector.propTypes = {
   handleClick: PropTypes.func.isRequired, 
   t: PropTypes.func.isRequired, 
   languages: PropTypes.array.isRequired,
-  viewerLanguages: PropTypes.array.isRequired,
+  resourceLanguages: PropTypes.array.isRequired,
 }
 
 LanguageSelector.defaultProps = {
   handleClick: () =>  {},
   t: () =>  {},
   languages: [],
-  viewerLanguages: [],
+  resourceLanguages: [],
 }
 
 export default {
@@ -109,4 +123,7 @@ export default {
   component: LanguageSelector,
   mapDispatchToProps,
   mapStateToProps,
+  config: {
+    translations,
+  },  
 }

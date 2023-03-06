@@ -1,4 +1,4 @@
-import Mirador from 'mirador/dist/es/src/index';
+import Mirador from 'mirador/dist/es/src/index'
 
 import { miradorImageToolsPlugin } from 'mirador-image-tools'
 
@@ -17,11 +17,8 @@ const {
   identifier, 
   type, 
   language, 
-  languages, 
   sequence,
 } = elem.dataset
-
-const viewerLanguages =  languages.split(',')
 
 const manifestId = `${endpoint}/api/presentation/${type}/${identifier}/manifest.json`
 
@@ -30,7 +27,6 @@ const config = {
   ...{
     id: uuid,
     language,
-    viewerLanguages,
     windows: [
       {
         manifestId: manifestId,
@@ -38,6 +34,7 @@ const config = {
         imageToolsOpen: false,
         canvasIndex: Number(sequence),
         view: 'single',
+        hideWindowTitle: false, // true if Photos
       },
     ],
   },
@@ -45,10 +42,7 @@ const config = {
 
 const plugins = [
   miradorImageToolsPlugin,
+  LanguageSelector,
 ]
-
-if (viewerLanguages.length > 1) {
-  plugins.push(LanguageSelector)
-}
 
 Mirador.viewer(config, plugins)
