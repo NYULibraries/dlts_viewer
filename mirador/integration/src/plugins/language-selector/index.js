@@ -16,9 +16,10 @@ const langstyles = {
     marginTop: '16px',
     paddingTop: '16px',
     paddingLeft: '0',
-    borderBottom: '0.5px solid rgba(0, 0, 0, 0.25)',
     paddingRight: '8px',
     paddingBottom: '8px',
+    borderBottom: 'none',
+    borderTop: '0.5px solid rgba(0, 0, 0, 0.25)',
   },
   content: {
     display: 'flex',
@@ -50,19 +51,13 @@ const LanguageSelector = (props) => {
   // If there is only one language, don't show the language selector.
   if (resourceLanguages.length < 2) return
 
-  const availableLanguages = []
-
-  resourceLanguages.forEach(lang => {
-    availableLanguages.push(lang._locale)
-  })
-
   return (
     <div style={langstyles.container}>
       <CollapsibleSection label={t('availableLanguages')}>
         <FormControl style={langstyles.formControl}>
           {
             languages.map(language => {
-              if (availableLanguages.includes(language.locale)) {
+              if (resourceLanguages.includes(language.locale)) {
                 return (
                   <MenuItem
                     button={!language.current}
@@ -98,8 +93,10 @@ const mapDispatchToProps = (dispatch, { afterSelect }) => ({
 const mapStateToProps = (state, { windowId }) => {
   return {
     languages: getLanguagesFromConfigWithCurrent(state),
-    viewerLanguages: state.config.viewerLanguages,
-    resourceLanguages: (getManifestoInstance(state, { windowId }).getLabel()),
+    resourceLanguages: getManifestoInstance(state, { windowId }).getLabel().reduce((langs, lang) => {
+      langs.push(lang._locale)
+      return langs
+    }, []),
   }
 }
 
