@@ -50,7 +50,7 @@ const LanguageSelector = (props) => {
   } = props
 
   // If there is only one language, don't show the language selector.
-  if (resourceLanguages.length < 2) return
+  if (resourceLanguages.length < 2) return (<></>)
 
   return (
     <div style={langstyles.container}>
