@@ -61,11 +61,19 @@ function dlts_viewer_embed_dispatcher($node, $sequence = 1) {
 
   $module = drupal_get_path('module', 'dlts_viewer');
 
+  $language_list = language_list('enabled');
+
+  $direction = 'ltr';
+
+  if (isset($language_list[1][$language])) {
+    $direction = ($language_list[1][$language]->direction == '1') ? 'rtl' : 'ltr';
+  }
+
   echo theme('viewer_embed_page', [
     'appid' => 'mirador-app',
     'title' => $title,
     'language' => $language,
-    'languages' => implode(',', $languages),
+    'direction' => $direction,
     'sequence' => $sequence,
     'endpoint' => $base_url,
     'type' => $type,
