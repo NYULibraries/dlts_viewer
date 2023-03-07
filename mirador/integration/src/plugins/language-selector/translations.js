@@ -8,6 +8,7 @@ const translations = {
   fa: {
     availableLanguages: 'Available languages',
   },  
-};
+}
 
-export default translations;
+export default translations
+
