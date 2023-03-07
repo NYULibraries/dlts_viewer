@@ -32,7 +32,7 @@ const config = {
         manifestId: manifestId,
         imageToolsEnabled: true,
         imageToolsOpen: false,
-        canvasIndex: Number(sequence),
+        canvasIndex: Number(sequence) - 1,
         view: 'single',
         hideWindowTitle: false, // true if Photos
       },
