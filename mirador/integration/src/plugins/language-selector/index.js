@@ -41,7 +41,8 @@ const langstyles = {
 
 const LanguageSelector = (props) => {
 
-  const { 
+  const {
+    rootElem,
     handleClick, 
     languages, 
     t, 
@@ -63,7 +64,7 @@ const LanguageSelector = (props) => {
                     button={!language.current}
                     key={language.locale}
                     onClick={() => {
-                      handleClick(language.locale)
+                      handleClick({ rootElem, language})
                     }}
                   >
                     <ListItemIcon>{language.current && <CheckIcon />}</ListItemIcon>
@@ -83,8 +84,18 @@ const LanguageSelector = (props) => {
 }
 
 const mapDispatchToProps = (dispatch, { afterSelect }) => ({
-  handleClick: (language) => {
-    dispatch(updateConfig({ language }))
+  handleClick: ({rootElem, language} ) => {
+    const { locale } = language
+    
+    let dir = 'ltr'
+    
+    if (locale === 'ar' || locale === 'fa') {
+      dir = 'rtl'
+    }
+
+    rootElem.dir = dir
+
+    dispatch(updateConfig({ language: locale }))
 
     afterSelect && afterSelect()
   },
@@ -97,6 +108,7 @@ const mapStateToProps = (state, { windowId }) => {
       langs.push(lang._locale)
       return langs
     }, []),
+    rootElem: document.querySelector(`#${state.config.id}`),
   }
 }
 
@@ -105,6 +117,7 @@ LanguageSelector.propTypes = {
   t: PropTypes.func.isRequired, 
   languages: PropTypes.array.isRequired,
   resourceLanguages: PropTypes.array.isRequired,
+  rootElem: PropTypes.object,
 }
 
 LanguageSelector.defaultProps = {
@@ -112,6 +125,7 @@ LanguageSelector.defaultProps = {
   t: () =>  {},
   languages: [],
   resourceLanguages: [],
+  rootElem: {},
 }
 
 export default {

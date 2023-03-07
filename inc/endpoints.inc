@@ -596,21 +596,24 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
     ->execute();
 
   // Try to mimic Apache Solr response.
-  $response = array(
-    'response' => array(
+  $response = [
+    'response' => [
       'numFound' => $count,
       'start' => $start,
-      'docs' => array(),
-    ),
-  );
+      'docs' => [],
+    ],
+  ];
 
   foreach ($entities['node'] as $node) {
     $entity = node_load('node', $node->nid);
     $book = entity_metadata_wrapper('node', $entity);
-    $response['response']['docs'][] = array(
+    $handle = $book->field_handle->value();
+    $handle = explode('/', $handle['url']);
+    $response['response']['docs'][] = [
       'title' => trim($book->field_title->value()),
       'identifier' => $book->field_identifier->value(),
-    );
+      'noid' => $handle[count($handle) - 1],
+    ];
   }
 
   return $response;
@@ -1440,7 +1443,7 @@ function dlts_viewer_api_photo_json($entity, $requestedLang = 'en') {
  *   Language code.
  */
 function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
-
+  
   global $base_url;
 
   drupal_add_http_header('Access-Control-Allow-Methods', 'GET');

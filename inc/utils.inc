@@ -10,10 +10,11 @@
  * @link https://iiif.io/api/presentation/3.0/#63-responses
  */
 function dlts_viewer_ldjson_iiif_presentation_3_output($var = NULL) {
-  // We are returning JSON, so tell the browser.
   drupal_add_http_header('Content-Type', 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"');
-  if (isset($var)) {
+  if (isset($var) && is_array($var)) {
     echo drupal_json_encode($var);
+  } elseif (isset($var) && is_string($var)) {
+    echo $var;
   }
 }
 
