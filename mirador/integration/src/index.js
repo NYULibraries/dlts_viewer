@@ -12,11 +12,11 @@ const uuid = 'mirador-app'
 
 const elem = document.getElementById(uuid)
 
-const { 
-  endpoint, 
-  identifier, 
-  type, 
-  language, 
+const {
+  endpoint,
+  identifier,
+  type,
+  language,
   sequence,
 } = elem.dataset
 
