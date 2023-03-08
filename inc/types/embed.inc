@@ -57,7 +57,7 @@ function dlts_viewer_embed_dispatcher($node, $sequence = 1) {
   // Set entity title.
   drupal_set_title($title);
 
-  $sequence = (int) filter_xss($sequence) - 1;
+  $sequence = (int) filter_xss($sequence);
 
   $module = drupal_get_path('module', 'dlts_viewer');
 

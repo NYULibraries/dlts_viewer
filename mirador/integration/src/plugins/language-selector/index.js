@@ -87,6 +87,8 @@ const mapDispatchToProps = (dispatch, { afterSelect }) => ({
   handleClick: ({rootElem, language} ) => {
     const { locale } = language
     
+    // @TODO: Hack until I can figure out the best way to pass the translation object to the props.
+    // availableLanguages does not include language direction, so we need to add it.
     let dir = 'ltr'
     
     if (locale === 'ar' || locale === 'fa') {

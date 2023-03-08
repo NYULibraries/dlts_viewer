@@ -12,11 +12,11 @@ const uuid = 'mirador-app'
 
 const elem = document.getElementById(uuid)
 
-const { 
-  endpoint, 
-  identifier, 
-  type, 
-  language, 
+const {
+  endpoint,
+  identifier,
+  type,
+  language,
   sequence,
 } = elem.dataset
 
@@ -34,7 +34,7 @@ const config = {
         imageToolsOpen: false,
         canvasIndex: Number(sequence) - 1,
         view: 'single',
-        hideWindowTitle: false, // true if Photos
+        hideWindowTitle: (type === 'photos') ? true: false , // We don't want to show the window title for photos (not metadata to display).
       },
     ],
   },
