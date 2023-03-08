@@ -108,7 +108,7 @@ const mapStateToProps = (state, { windowId }) => {
       langs.push(lang._locale)
       return langs
     }, []),
-    rootElem: document.querySelector(`#${state.config.id}`),
+    rootElem: document.getElementById(state.config.id),
   }
 }
 
