@@ -31,6 +31,12 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
+  $embed = FALSE;
+
+  if (isset($query_parameters['embed']) && $query_parameters['embed'] == 'true') {
+    $embed = TRUE;
+  }
+
   // Wrapp book entity with Entity API wrapper.
   $wrapper = entity_metadata_wrapper('node', $entity);
 
@@ -91,7 +97,7 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   drupal_set_title($page_title);
 
   return theme('dlts_viewer_set', [
-    'title' => $page_title,
+    'title' => ($embed) ? null : $page_title,
     'identifier' => $identifier,
     'resources' => $resources,
     'collections' => $collections,
