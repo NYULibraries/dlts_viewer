@@ -2,6 +2,10 @@
   padding-left: 0;
 }
 
+.mirador48 .mirador40:nth-child(3) .MuiTypography-h4 {
+  display: none;
+}
+
 .MuiToolbar-root.mirador-companion-window-header {
   opacity: 0.5;
   display: none;

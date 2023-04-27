@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.html",
   "scripts": {
-    "webpack": "webpack --config ./webpack.config.js"
+    "webpack": "webpack --config ./webpack.config.js",
+    "server": "http-server ."
   },
   "dependencies": {
     "clean-webpack-plugin": "^4.0.0",
