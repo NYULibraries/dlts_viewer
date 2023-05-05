@@ -320,7 +320,17 @@ function _dlts_viewer_menu_api() {
     'page arguments' => [ 2, 3 ],
     'delivery callback' => 'drupal_deliver_html_page',
     'type' => MENU_CALLBACK,
-  ];  
+  ];
+
+  $items['api/v1/eads/%'] = [
+    'title' => 'Viewer',
+    'access arguments' => [ 'access content' ],
+    'page callback' => 'dlts_viewer_eads_dispatcher',
+    'page arguments' => [ 3 ],
+    'delivery callback' => 'drupal_json_output',
+    'type' => MENU_CALLBACK,
+    'file' => 'inc/endpoints/eads.inc',
+  ];
 
   return $items;
 

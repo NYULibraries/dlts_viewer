@@ -15,25 +15,37 @@
  *   A node object with the given value for field_identifier.
  */
 function dlts_photo_set_load($identifier) {
-  $language = array('en', LANGUAGE_NONE);
+  
+  $language = [ 'en', LANGUAGE_NONE ];
+  
   $query_parameters = drupal_get_query_parameters();
+  
   if (isset($query_parameters['lang'])) {
-    $language = array(filter_xss($query_parameters['lang']));
+    $language = [ filter_xss($query_parameters['lang']) ];
   }
-  $query = new EntityFieldQuery();
+
   $identifier = filter_xss($identifier);
-  $result = $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'dlts_photo_set')
-    ->propertyCondition('status', 1)
-    ->propertyCondition('language', $language)
-    ->fieldCondition('field_identifier', 'value', $identifier, '=')
-    ->execute();
-  if (!empty($result['node'])) {
-    $keys = array_keys($result['node']);
-    $nid = array_pop($keys);
-    return node_load($nid);
+
+  $noid = dlts_noid_load($identifier);
+
+  if ($noid && isset($noid->nid) && $noid->document == 'photos') {
+    return node_load($noid->nid);
+  } else {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'dlts_photo_set')
+      ->propertyCondition('status', 1)
+      ->propertyCondition('language', $language)
+      ->fieldCondition('field_identifier', 'value', $identifier, '=')
+      ->execute();
+    if (!empty($result['node'])) {
+      $keys = array_keys($result['node']);
+      $nid = array_pop($keys);
+      return node_load($nid);
+    }
   }
   return FALSE;
+
 }
 
 /**

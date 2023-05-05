@@ -18,7 +18,9 @@ html.page-maps {
   body, input {
     font-family: inherit;
   }
-  body, #main, #page {
+  body, 
+  #main,
+  #page {
     overflow: inherit;
     height: inherit;
     width: inherit;
@@ -30,8 +32,6 @@ html.page-maps {
   }
 }
 
-
-
 // Always hide an element when it has the `hidden` HTML attribute.
 .element-invisible, 
 .hidden,
@@ -39,4 +39,3 @@ html.page-maps {
   display: none;
   visibility: hidden;
 }
-

@@ -197,6 +197,7 @@ function dlts_viewer_mobile_detect() {
  */
 function dlts_viewer_is_embed() {
   $is_embed = TRUE;
+  return $is_embed;
 }
 
 /**
