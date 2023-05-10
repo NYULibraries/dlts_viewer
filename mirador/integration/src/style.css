@@ -2,6 +2,11 @@
   padding-left: 0;
 }
 
+h5[id$="-related-heading"] {
+  display: none;
+  visibility: hidden;
+}
+
 .MuiToolbar-root.mirador-companion-window-header {
   opacity: 0.5;
   display: none;
