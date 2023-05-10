@@ -28,15 +28,6 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   // Test if resource, will return the maped type of resource (e.g., books, photos).
   $is_resource = dlts_viewer_is_resource();
 
-  // Get query parameters.
-  $query_parameters = drupal_get_query_parameters();
-
-  $embed = FALSE;
-
-  if (isset($query_parameters['embed']) && $query_parameters['embed'] == 'true') {
-    $embed = TRUE;
-  }
-
   // Wrapp book entity with Entity API wrapper.
   $wrapper = entity_metadata_wrapper('node', $entity);
 
@@ -50,7 +41,7 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   $field_collection = $wrapper->field_collection->value();
 
   // Partner.
-  $field_partner = $wrapper->field_partner->value();
+  // $field_partner = $wrapper->field_partner->value();
 
   // Title.
   $title = $wrapper->field_title->value();
@@ -97,7 +88,7 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   drupal_set_title($page_title);
 
   return theme('dlts_viewer_set', [
-    'title' => ($embed) ? null : $page_title,
+    'title' => null,
     'identifier' => $identifier,
     'resources' => $resources,
     'collections' => $collections,
