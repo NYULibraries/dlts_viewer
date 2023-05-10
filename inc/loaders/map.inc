@@ -14,26 +14,34 @@
  */ 
 function dlts_map_load($identifier) {
   $language = [ 'en', LANGUAGE_NONE ];
+  $identifier = filter_xss($identifier);
   $query_parameters = drupal_get_query_parameters();
   if (isset($query_parameters['lang'])) {
     $language = [
       filter_xss($query_parameters['lang'])
     ];
   }
-  $query = new EntityFieldQuery;
-  $identifier = filter_xss($identifier);
-  $result = $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'dlts_map')
-    ->propertyCondition('status', 1)
-    ->propertyCondition('language', $language)
-    ->fieldCondition('field_identifier', 'value', $identifier, '=')
-    ->addMetaData('account', user_load(0))
-    ->execute();
-  if (!empty($result['node'])) {
-    $keys = array_keys($result['node']);
-    $nid = array_pop($keys);
-    return node_load($nid);
+
+  $noid = dlts_noid_load($identifier);
+
+  if ($noid && isset($noid->nid) && $noid->document == 'maps') {
+    return node_load($noid->nid);
+  } else {  
+    $query = new EntityFieldQuery;
+    $result = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'dlts_map')
+      ->propertyCondition('status', 1)
+      ->propertyCondition('language', $language)
+      ->fieldCondition('field_identifier', 'value', $identifier, '=')
+      ->addMetaData('account', user_load(0))
+      ->execute();
+    if (!empty($result['node'])) {
+      $keys = array_keys($result['node']);
+      $nid = array_pop($keys);
+      return node_load($nid);
+    }
   }
+
   return FALSE;
 }
 

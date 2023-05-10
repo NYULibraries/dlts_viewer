@@ -16,6 +16,15 @@ function _dlts_viewer_menu_book() {
   $items = [];
 
   /*
+   */
+  $items['books'] = [
+    'title' => 'Books',
+    'access arguments' => [ 'access content' ],
+    'page callback' => 'dlts_viewer_dispatch_books_index',
+    'delivery callback' => 'drupal_deliver_html_page',
+  ];  
+
+  /*
    * Render thumbnails for book pages
    * No need to load the Book object % instead of %dlts_book
    * request accept ?page=INT(mimic Drupal's pager) and ?limit=INT

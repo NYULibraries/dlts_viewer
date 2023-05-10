@@ -519,6 +519,8 @@ function dlts_viewer_api_list_topics(int $start = 0, int $length = 50, $requeste
  */
 function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requestedLang = 'en') {
 
+  global $base_url;
+
   $availableLanguages = array_keys(language_list());
 
   // Get query parameters.
@@ -609,10 +611,25 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
     $book = entity_metadata_wrapper('node', $entity);
     $handle = $book->field_handle->value();
     $handle = explode('/', $handle['url']);
+    $identifier = $book->field_identifier->value();
+
+    $translation = dlts_viewer_list_translation($identifier, 'dlts_book');
+
+    $multivolume = dlts_viewer_multivolume_book($translation['en']);
+
+    $isSeries = dlts_viewer_is_series_book($node);
+
     $response['response']['docs'][] = [
       'title' => trim($book->field_title->value()),
-      'identifier' => $book->field_identifier->value(),
+      'identifier' => $identifier,
       'noid' => $handle[count($handle) - 1],
+      'metadata' => "$base_url/api/v1/books/$identifier",
+      'availableLanguages' => array_keys($translation),
+      'isMultivolume' => $multivolume,
+      'isSeries' => $isSeries,
+      'iiif' => [
+        'manifest' => "$base_url/api/presentation/books/$identifier/manifest.json",
+      ],
     ];
   }
 

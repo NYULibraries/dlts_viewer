@@ -169,8 +169,14 @@ function dlts_canvas_page_load($sequence, $map, $index = NULL) {
  *   MongoDB object
  */
 function dlts_resource_sequence_load($sequence, array $map, $resource_index) {
+  
+  $object = $map[$resource_index - 1];
 
-  $wrapper = entity_metadata_wrapper('node', $map[$resource_index - 1]);
+  if (is_object($object) && isset($object->document)) {
+    $object = node_load($object->nid);
+  }
+
+  $wrapper = entity_metadata_wrapper('node', $object);
 
   $type = $wrapper->getBundle();
 
@@ -194,14 +200,6 @@ function dlts_resource_sequence_load($sequence, array $map, $resource_index) {
       'height' => isset($result['cm']['height']) ? $result['cm']['height'] : NULL,
     ];
   }
-
-  drupal_set_message(
-    t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from @resource identify by identifier <strong>@identifier</strong> not found.',
-    [
-      '@identifier' => $identifier,
-      '@sequence' => $sequence,
-      '@resource' => $type,
-    ]), 'error');
 
   watchdog(
     'MongoDB sequence not found',

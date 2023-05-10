@@ -458,3 +458,18 @@ function _dlts_viewer_book_edit_redirect($node) {
   }
   drupal_not_found();
 }
+
+function dlts_viewer_dispatch_books_index() {
+  
+  $view = views_get_view('books_by_collection');
+  
+  $view->set_current_page(1);
+  
+  $view->set_items_per_page(50);
+  
+  $view->execute();
+
+  return $view->render();
+
+  
+}

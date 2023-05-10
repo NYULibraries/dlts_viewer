@@ -180,7 +180,7 @@ function dlts_viewer_iiif_resource_manifest($type, $entity, $cache = TRUE) {
   if (isset($query_parameters['reset'])) {
     $cache = FALSE;
   }
-  switch ($type) {
+  switch ($entity->type) {
     case 'dlts_book':
       return dlts_viewer_iiif_book_manifest($entity, $cache);
 

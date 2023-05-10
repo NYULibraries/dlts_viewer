@@ -6,7 +6,7 @@
  */
 
 /**
- * A wildcard loader for dlts_photo\, using the book identifier.
+ * A wildcard loader for dlts_photo, using the book identifier.
  *
  * @parameter $identifier
  *  The value of field_identifier for a dtls_book node.
@@ -15,25 +15,37 @@
  *   A node object with the given value for field_identifier.
  */
 function dlts_photo_set_load($identifier) {
-  $language = array('en', LANGUAGE_NONE);
+  
+  $language = [ 'en', LANGUAGE_NONE ];
+  
   $query_parameters = drupal_get_query_parameters();
+  
   if (isset($query_parameters['lang'])) {
-    $language = array(filter_xss($query_parameters['lang']));
+    $language = [ filter_xss($query_parameters['lang']) ];
   }
-  $query = new EntityFieldQuery();
+
   $identifier = filter_xss($identifier);
-  $result = $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'dlts_photo_set')
-    ->propertyCondition('status', 1)
-    ->propertyCondition('language', $language)
-    ->fieldCondition('field_identifier', 'value', $identifier, '=')
-    ->execute();
-  if (!empty($result['node'])) {
-    $keys = array_keys($result['node']);
-    $nid = array_pop($keys);
-    return node_load($nid);
+
+  $noid = dlts_noid_load($identifier);
+
+  if ($noid && isset($noid->nid) && $noid->document == 'photos') {
+    return node_load($noid->nid);
+  } else {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'dlts_photo_set')
+      ->propertyCondition('status', 1)
+      ->propertyCondition('language', $language)
+      ->fieldCondition('field_identifier', 'value', $identifier, '=')
+      ->execute();
+    if (!empty($result['node'])) {
+      $keys = array_keys($result['node']);
+      $nid = array_pop($keys);
+      return node_load($nid);
+    }
   }
   return FALSE;
+
 }
 
 /**
@@ -50,7 +62,7 @@ function dlts_photo_set_load($identifier) {
  * @return object
  *   MongoDB object.
  */
-function dlts_photo_load($sequence, array $map, $resource_index) {
+function dlts_photo_load($sequence, $map, $resource_index) {
 
   // Load MongoDB helper.
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
@@ -130,7 +142,7 @@ function dlts_photo_load($sequence, array $map, $resource_index) {
  * @return object
  *   object MongoDB book page object
  */
-function dlts_photo_sequence_load($sequence, array $map, $resource_index) {
+function dlts_photo_sequence_load($sequence, $map, $resource_index) {
   // Load MongoDB helper.
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
   $wrapper = entity_metadata_wrapper('node', $map[$resource_index - 1]);

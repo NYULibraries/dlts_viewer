@@ -68,6 +68,7 @@ function dlts_viewer_init() {
  * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_theme/7
  */
 function dlts_viewer_custom_theme() {
+
   if (dlts_viewer_is_resource()) {
     return 'tao';
   }

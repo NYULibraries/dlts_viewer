@@ -105,10 +105,10 @@ field_revision_field_topic
 field_revision_field_volume
 field_revision_field_volume_number
 field_revision_field_volume_number_str
-field_data_field_ticket
-field_data_field_noid
-field_revision_field_ticket
-field_revision_field_noid
+# field_data_field_ticket
+# field_data_field_noid
+# field_revision_field_ticket
+# field_revision_field_noid
 )
 
 cache=(
@@ -137,14 +137,21 @@ ctools_css_cache
 ./vendor/bin/drush sql-query "DELETE FROM node WHERE type <> 'deleteme'"
 ./vendor/bin/drush sql-query "DELETE FROM node_revision WHERE uid <> 'deleteme'"
 ./vendor/bin/drush sql-query "DELETE FROM dlts_viewer_resource WHERE identifier <> 'deleteme'"
+./vendor/bin/drush sql-query "DELETE FROM dlts_viewer_epubs WHERE identifier <> 'deleteme'"
 
 for table in "${nodes[@]}"; do
+  echo "Deleting from ${table}"
   ./vendor/bin/drush sql-query "DELETE FROM ${table} WHERE bundle <> 'deleteme'"
 done
 
 for entry in "${cache[@]}"; do
+  echo "Deleting from ${table}"
   ./vendor/bin/drush sql-query "DELETE FROM ${entry} WHERE cid <> 'deleteme'"
 done
+
+# drop if exists
+./vendor/bin/drush sql-query "DROP TABLE IF EXISTS dlts_viewer_drush_git_commits"
+./vendor/bin/drush sql-query "DROP TABLE IF EXISTS dlts_viewer_books_json"
 
 # isbn, dimensions, creator, editor, contributor, geographic_coordinates, geographic_subject
 # volume, other_version, scan_date, scanning_notes, ocr_text
