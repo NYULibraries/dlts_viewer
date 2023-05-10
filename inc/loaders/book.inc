@@ -15,24 +15,44 @@
  *   A node object with the given value for field_identifier.
  */
 function dlts_book_load($identifier) {
+
+  $bundle = 'dlts_book';
+
+  $type = 'books';
+
   $language = [ 'en', LANGUAGE_NONE ];
+
+  $identifier = filter_xss($identifier);
+
   $query_parameters = drupal_get_query_parameters();
+
   if (isset($query_parameters['lang'])) {
     $language = [ filter_xss($query_parameters['lang']) ];
   }
-  $query = new EntityFieldQuery();
-  $identifier = filter_xss($identifier);
-  $result = $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'dlts_book')
-    ->propertyCondition('status', 1)
-    ->propertyCondition('language', $language)
-    ->fieldCondition('field_identifier', 'value', $identifier, '=')
-    ->execute();
-  if (!empty($result['node'])) {  
-    $keys = array_keys($result['node']);
-    $nid = array_pop($keys);
-    return node_load($nid);
+
+  $resource = dlts_noid_load($identifier);
+
+  if ($resource && isset($resource->nid) && $resource->document == $type) {
+    return node_load($resource->nid);
+  } else {
+
+    $query = new EntityFieldQuery();
+
+    $result = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', $bundle)
+      ->propertyCondition('status', 1)
+      ->propertyCondition('language', $language)
+      ->fieldCondition('field_identifier', 'value', $identifier, '=')
+      ->execute();
+
+    if (!empty($result['node'])) {  
+      $keys = array_keys($result['node']);
+      $nid = array_pop($keys);
+      return node_load($nid);
+    }
+
   }
+
   return FALSE;
 }
 
@@ -94,44 +114,3 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
   return FALSE;
 }
 
-/**
- * Load sequence.
- *
- * @param string $sequence
- *   Sequence.
- *
- * @return array
- *   Sequence.
- */
-function dlts_book_canvas_page_load($sequence) {
-  preg_match('/^p{1}([\d]+)$/', $sequence, $matches);
-  if (!empty($matches)) {
-    return dlts_book_page_load($matches[1], arg(3));
-  }
-  return FALSE;
-}
-
-/**
- * Load sequence.
- *
- * @param object $item
- *   Item.
- *
- * @return array
- *   Item.
- */
-function page_item_load($item) {
-  preg_match('/^([\d]+)/', $item, $matches);
-  // http://localhost:9000/iiif/2/books/princeton_aco000102/1/info.json
-  if ($matches) {
-    $sequence = (int) $matches[1];
-    return dlts_book_page_load($sequence, arg(3));
-  } else {
-    preg_match('/^p{1}([\d]+)-image/', $item, $matches);
-    if (!empty($matches)) {
-      $sequence = (int) $matches[1];
-      return dlts_book_page_load($sequence, arg(3));
-    }
-  }
-  return FALSE;
-}

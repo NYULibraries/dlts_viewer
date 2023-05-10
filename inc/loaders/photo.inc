@@ -6,7 +6,7 @@
  */
 
 /**
- * A wildcard loader for dlts_photo\, using the book identifier.
+ * A wildcard loader for dlts_photo, using the book identifier.
  *
  * @parameter $identifier
  *  The value of field_identifier for a dtls_book node.
@@ -62,7 +62,7 @@ function dlts_photo_set_load($identifier) {
  * @return object
  *   MongoDB object.
  */
-function dlts_photo_load($sequence, array $map, $resource_index) {
+function dlts_photo_load($sequence, $map, $resource_index) {
 
   // Load MongoDB helper.
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
@@ -142,7 +142,7 @@ function dlts_photo_load($sequence, array $map, $resource_index) {
  * @return object
  *   object MongoDB book page object
  */
-function dlts_photo_sequence_load($sequence, array $map, $resource_index) {
+function dlts_photo_sequence_load($sequence, $map, $resource_index) {
   // Load MongoDB helper.
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
   $wrapper = entity_metadata_wrapper('node', $map[$resource_index - 1]);
