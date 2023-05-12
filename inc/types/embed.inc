@@ -3,10 +3,10 @@
 /**
  * Mirador dispatcher.
  *
- * @param object $entity
- *   Entity.
+ * @param object $record
+ *   Record from dlts_resource table.
  */
-function dlts_viewer_embed_dispatcher($node, $sequence = 1) {
+function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
   global $base_url;
 
@@ -15,9 +15,9 @@ function dlts_viewer_embed_dispatcher($node, $sequence = 1) {
 
   $language = isset($query_parameters['language']) ? filter_xss($query_parameters['language']) : 'en';
 
-  $type = $node->document;
+  $type = $record->document;
 
-  $identifier = $node->identifier;
+  $identifier = $record->identifier;
 
   $realpath = drupal_realpath('public://');
 
@@ -35,7 +35,7 @@ function dlts_viewer_embed_dispatcher($node, $sequence = 1) {
 
   } else {
 
-    $entity = node_load($node->nid);
+    $entity = node_load($record->nid);
 
     // Wrapp book entity with Entity API wrapper.
     $wrapper = entity_metadata_wrapper('node', $entity);

@@ -1460,7 +1460,7 @@ function dlts_viewer_api_photo_json($entity, $requestedLang = 'en') {
  *   Language code.
  */
 function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
-  
+
   global $base_url;
 
   drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
@@ -1916,16 +1916,16 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     'isMultivolume' => $isMultivolume,
     'isSeries' => $isSeries,
     'representativeImage' => $representative_image,
-    'thumbnail' => "$base_url/iiif/2/books/$identifier/1/full/150,/0/default.jpg",
+    'thumbnail' => "$base_url/api/image/$bundle/$identifier/1/full/150,/0/default.jpg",
     'metadata' => $fields,
   ];
 
   $realpath = drupal_realpath('public://') . '/datasource';
 
   $cachepath = "$realpath/$bundle/$identifier/info.$requestedLang.json";
-
-  if (!file_exists($realpath/$bundle/$identifier)) {
-    mkdir($realpath/$bundle/$identifier, 0755, TRUE);
+  
+  if (!file_exists("$realpath/$bundle/$identifier")) {
+    mkdir("$realpath/$bundle/$identifier", 0755, TRUE);
   }
 
   file_put_contents($cachepath, json_encode($response), LOCK_EX);
@@ -2224,6 +2224,10 @@ function dlts_viewer_api_v1_objects($version = NULL) {
             case 'image_set':
               return dlts_viewer_api_v1_dlts_photo_set_objects($datasource);
 
+            case 'dlts_map':
+              module_load_include('inc', 'dlts_viewer', 'inc/endpoints/map');
+              return dlts_viewer_api_v1_dlts_map_objects($datasource);
+
             case 'dlts_postcard':
               module_load_include('inc', 'dlts_viewer', 'inc/endpoints/postcard');
               return dlts_viewer_api_v1_dlts_postcard_objects($datasource);
@@ -2242,35 +2246,33 @@ function dlts_viewer_api_v1_objects($version = NULL) {
 /**
  * Generate metadata about a DTLS resource.
  *
- * @param object $node
- *   A dlts_book node object.
+ * @param object $resource
+ *   A resource record from dlts_resource table.
  * @param bool $reset
  *   True if request does not want cache version of the resource.
  *
  * @return json|array
  *   A keyed array to be converted into JSON.
  */
-function _dlts_viewer_noid_loader($node, $reset = FALSE) {
-
-  $object = entity_metadata_wrapper('node', $node);
-
-  $type = $object->getBundle();
-
-  switch ($type) {
-    case 'dlts_book':
-      // http://HOST/api/v1/noid/hqbzkt5z
-      return _dlts_viewer_book_loader($node);
-    case 'dlts_photo_set':
-      // http://HOST/api/v1/noid/fttdz79p
-      return _dlts_viewer_photo_loader($node);
-    case 'dlts_map':
-      // http://HOST/api/v1/noid/6hdr7z37
-      return _dlts_viewer_map_loader($node);
-      return [];
-    case 'dlts_postcard':
-      // http://HOST/api/v1/noid/0zpc8fgz
-      // return _dlts_viewer_postcard_loader($node);
-      return [];
+function _dlts_viewer_noid_loader($resource, $reset = FALSE) {
+  if (isset($resource->nid)) {
+    $entity = node_load('node', $resource->nid);
+    switch ($resource->document) {
+      case 'books':
+        // http://HOST/api/v1/noid/hqbzkt5z
+        return _dlts_viewer_book_loader($entity);
+      case 'photos':
+        // http://HOST/api/v1/noid/fttdz79p
+        return _dlts_viewer_photo_loader($entity);
+      case 'maps':
+        // http://HOST/api/v1/noid/6hdr7z37
+        return _dlts_viewer_map_loader($entity);
+      case 'postcards';
+        // http://HOST/api/v1/noid/0zpc8fgz
+        // return _dlts_viewer_postcard_loader($node);
+        return [];
+    }
+    return false;
   }
-  return $type;
+  return false;
 }

@@ -148,9 +148,9 @@ function save_dlts_photo_set($node, $node_language = 'en') {
 
       $noid = $node['noid'];
 
-      $edit_query = "INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', 'dlts_photo_set', '0');";
+      $edit_query = "INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', 'photos', '0');";
 
-      $results = db_query($edit_query);
+      db_query($edit_query);
 
     }
   }
