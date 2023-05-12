@@ -180,15 +180,13 @@ function dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collectio
  * @param string $identifier OR $noid
  *   Identifier or NoId.
  */
-function dlts_viewer_dispatch_mongodb_record($node) {
+function dlts_viewer_dispatch_mongodb_record($record) {
 
   global $base_url;
 
-  $bundle = dlts_viewer_get_bundle_alias($node->document);
+  $identifier = $record->identifier;
 
-  $identifier = $node->identifier;
-
-  $entity = node_load($node->nid);
+  $entity = node_load($record->nid);
 
   // Wrapp book entity with Entity API wrapper.
   $wrapper = entity_metadata_wrapper('node', $entity);
@@ -200,7 +198,11 @@ function dlts_viewer_dispatch_mongodb_record($node) {
   // Set entity title.
   drupal_set_title($title);
 
-  $collection_name = dlts_viewer_mongodb_collections_by_type($node->document);
+  $bundle = $wrapper->getBundle();
+
+  $type = dlts_viewer_resource_type($bundle);
+
+  $collection_name = dlts_viewer_mongodb_collections_by_type($bundle);
 
   $page = 0;
 
@@ -228,7 +230,7 @@ function dlts_viewer_dispatch_mongodb_record($node) {
   
   $count = $cursor->count();
   
-  $noid = $node->noid;
+  $noid = $record->noid;
   
   if ($count > 0) {
     $cursor->sort([ 'sequence' => 1 ]);
@@ -236,13 +238,13 @@ function dlts_viewer_dispatch_mongodb_record($node) {
     $docs = $cursor->skip($per_page * $page);
     foreach ($docs as $doc) {
       $sequence = $doc['realPageNumber'];
-      $thumbnail = "<a href='$base_url/$bundle/$identifier/$sequence'>$sequence</a>";
+      $thumbnail = "<a href='$base_url/$type/$identifier/$sequence'><img loading='lazy' src='$base_url/api/image/$type/$identifier/$sequence/full/150,/0/default.jpg'></a>";
       $height = isset($doc['cm']['height']) ? $doc['cm']['height'] : '';
       $width = isset($doc['cm']['width']) ? $doc['cm']['width'] : '';
       $uri = $doc['cm']['uri'];
       $rows[] = [
         [ 'field' => 'sequence', 'data' => $thumbnail ],
-        [ 'field' => 'uri', 'data' => "<a href='$base_url/api/image/$bundle/$identifier/$sequence/full/full/0/default.jpg'>$uri</a>" ],
+        [ 'field' => 'uri', 'data' => "<a href='$base_url/api/image/$type/$identifier/$sequence/full/full/0/default.jpg'>$uri</a>" ],
         [ 'field' => 'height', 'data' => $height ],
         [ 'field' => 'width', 'data' => $width ],        
       ];
@@ -263,7 +265,7 @@ function dlts_viewer_dispatch_mongodb_record($node) {
     ],
     [
       [ 'field' => 'label', 'data' => 'Type' ],
-      [ 'field' => 'value', 'data' => ucwords(str_replace('s', '', $bundle)) ],
+      [ 'field' => 'value', 'data' => $type ],
     ],      
     [
       [ 'field' => 'label', 'data' => 'Sequence count' ],
