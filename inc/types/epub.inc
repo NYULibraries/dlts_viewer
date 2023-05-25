@@ -235,6 +235,8 @@ function dlts_viewer_epub_license($link) {
     ],
   ];
 
+  $index = strip_tags(filter_xss($link));                                                                         
+                                                                                                                  
   return (object) $licenses[$link];
 
 }
