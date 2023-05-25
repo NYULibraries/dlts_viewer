@@ -13,9 +13,13 @@
  * @return object node.
  */ 
 function dlts_map_load($identifier) {
+
   $language = [ 'en', LANGUAGE_NONE ];
+
   $identifier = filter_xss($identifier);
+
   $query_parameters = drupal_get_query_parameters();
+
   if (isset($query_parameters['lang'])) {
     $language = [
       filter_xss($query_parameters['lang'])

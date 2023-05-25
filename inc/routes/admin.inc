@@ -29,16 +29,17 @@ function _dlts_viewer_menu_admin() {
   ];
 
   /*
-   * Convinient way to edit object
+   * Convenient way to edit object
+   * e.g., /admin/content/princeton_aco004434/edit
    */
-  $items['books/%dlts_resource/edit'] = $items['photos/%dlts_resource/edit'] = $items['maps/%dlts_resource/edit'] = [
-    'title' => 'Edit object',
-    'access arguments' => [ 'edit any dlts_book content' ],
+  $items['admin/content/%dlts_resource/edit'] = [
+    'title' => 'Edit resource',
+    'access arguments' => [ 'edit any resource' ],
     'page callback' => '_dlts_viewer_edit_redirect',
-    'page arguments' => [ 0, 1 ],
-    'load arguments' => [ '%map', '%index' ],
+    'page arguments' => [ 2 ],
     'type' => MENU_CALLBACK,
   ];
 
   return $items;
+
 }

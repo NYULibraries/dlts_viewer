@@ -169,7 +169,7 @@ function dlts_canvas_page_load($sequence, $map, $index = NULL) {
  *   MongoDB object
  */
 function dlts_resource_sequence_load($sequence, array $map, $resource_index) {
-  
+
   $object = $map[$resource_index - 1];
 
   if (is_object($object) && isset($object->document)) {
@@ -201,9 +201,7 @@ function dlts_resource_sequence_load($sequence, array $map, $resource_index) {
     ];
   }
 
-  watchdog(
-    'MongoDB sequence not found',
-    'Unable to find book sequence page <strong>%sequence</strong> from %resource <strong>%identifier</strong>.',
+  watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from %resource <strong>%identifier</strong>.',
     [
       '%identifier' => $identifier,
       '%sequence' => $sequence,

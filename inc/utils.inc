@@ -104,6 +104,7 @@ function dlts_viewer_object_types() {
     'book' => 'books',
     'photo' => 'photos',
     'map' => 'maps',
+    'postcard' => 'postcards',
   ];
 }
 
@@ -119,6 +120,7 @@ function dlts_viewer_resource_type($type = NULL) {
     'dlts_photo_set' => 'photos',
     'dlts_photo' => 'photos',
     'dlts_map' => 'maps',
+    'dlts_postcard' => 'postcards',
   ];
   if (isset($resources[$type])) {
     return $resources[$type];
@@ -196,8 +198,7 @@ function dlts_viewer_mobile_detect() {
  *   Return a boolean indicating whether this is a embeded view request.
  */
 function dlts_viewer_is_embed() {
-  $is_embed = TRUE;
-  return $is_embed;
+  return TRUE;
 }
 
 /**

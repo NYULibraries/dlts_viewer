@@ -15,14 +15,19 @@
  *   A node object with the given value for field_handle url.
  */
 function dlts_photo_handle_load($handle, array $map, $resource_index) {
-  $language = ['en', LANGUAGE_NONE];
+
+  $language = [ 'en', LANGUAGE_NONE ];
+
   $query_parameters = drupal_get_query_parameters();
+
   if (isset($query_parameters['lang'])) {
     $language = [
-      filter_xss($query_parameters['lang']) 
+      filter_xss($query_parameters['lang'])
     ];
   }
+
   $query = new EntityFieldQuery();
+
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_photo_set')
@@ -31,10 +36,15 @@ function dlts_photo_handle_load($handle, array $map, $resource_index) {
     ->fieldCondition('field_handle', 'url', '%' . db_like($handle) . '%', 'LIKE')
     ->addTag('node_access')
     ->execute();
+
   if (empty($result['node'])) {
     return FALSE;
   }
+
   $keys = array_keys($result['node']);
+
   $nid = array_pop($keys);
+
   return node_load($nid);
+
 }

@@ -22,8 +22,7 @@ function save_dlts_book($node, $language = 'en') {
   // Get the current user.
   // global $base_url;
   global $user;
-  $username = $user->name;  
-  $is_new = TRUE;
+  $username = $user->name;
   try {
     if (!user_access('dlts create object')) {
       throw new Exception(__FUNCTION__ . " user not allowed to run task $username.");
@@ -54,7 +53,6 @@ function save_dlts_book($node, $language = 'en') {
     }
     $book_exist = book_nid($identifier, $node_language);
     if ($book_exist) {
-      $is_new = FALSE;
       // Load the node by NID.
       $entity = node_load($book_exist);
       // Wrap it with Entity API.
@@ -117,14 +115,17 @@ function save_dlts_book($node, $language = 'en') {
 
     $ewrapper->field_identifier->set($identifier);
 
-    // We do not translalete all the values.
+    // We do not translate all the values.
     if ($node_language == 'en') {
+      
       if (!empty($node['ticket'])) {
         $ewrapper->field_ticket->set($node['ticket']);
-      }      
+      }
+      
       if (!empty($node['noid'])) {
         $ewrapper->field_noid->set(trim($node['noid']));
       }
+
       if (!empty($node['partners']) && is_array($node['partners']) && count($node['partners']) > 0) {
         foreach ($node['partners'] as $partner) {
           $partner_entity = NULL;
@@ -402,9 +403,9 @@ function save_dlts_book($node, $language = 'en') {
         $exists = db_query("SELECT nid FROM dlts_viewer_resource WHERE nid = '$nid'")->fetchAll();
         if (count($exists) <= 0) {
           $noid = $node['noid'];
-          $edit_query = "INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', 'dlts_book', '0');";
-          $results = db_query($edit_query);
-        }        
+          $edit_query = "INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', 'books', '0');";
+          db_query($edit_query);
+        }
         // Multi volume book.
         if (!empty($node['multivolume']) && !empty($node['multivolume']->volume)) {
           foreach ($node['multivolume']->volume as $multivolume) {

@@ -62,6 +62,7 @@ function dlts_viewer_is_bundle($bundle) {
  *   Machine name of the content type.
  */
 function dlts_type_load($type) {
+
   $types = [
     'books' => 'dlts_book',
     'maps' => 'dlts_map',
@@ -71,9 +72,11 @@ function dlts_type_load($type) {
     'partners' => 'dlts_partner',
     'creativework' => 'creativework',
   ];
+
   if (isset($types[$type])) {
     return $types[$type];
   }
+
   return FALSE;
 }
 
@@ -81,75 +84,45 @@ function dlts_type_load($type) {
  * A wildcard loader for dlts_resource, using identifier or noid.
  *
  * @parameter string $identifier
- *  The value of identifier or noid.
+ *   The value of identifier or noid.
  *
  * @return object
  *   A node object with the given value for field_identifier.
  */
-function dlts_resource_load($identifier, array $map, int $resource_index) {
-  
-  $type = $map[$resource_index - 1];
-  
-  if (dlts_viewer_is_bundle($type)) {
-    $bundle = $type;
-  }
-  else {
-    $bundle = dlts_type_load($type);
-    if (!dlts_viewer_is_bundle($bundle)) {
-      return FALSE;
-    }
-  }
+function dlts_resource_load($identifier) {
 
   $language = [ 'en', LANGUAGE_NONE ];
 
   $query_parameters = drupal_get_query_parameters();
 
   if (isset($query_parameters['lang'])) {
-    $language = array(filter_xss($query_parameters['lang']));
+    $language = [ filter_xss($query_parameters['lang']) ];
   }
 
   $identifier = filter_xss($identifier);
 
-  if ($bundle == 'creativework') {
-    $results = db_query(
-      'SELECT * FROM dlts_viewer_resource 
-       WHERE noid = :id 
-       OR identifier = :id 
-       LIMIT 1', 
-      [ ':id' => $identifier ]
+  // id can be noid or identifier.
+  $results = db_query(
+    'SELECT * FROM dlts_viewer_resource 
+     WHERE noid = :id 
+     OR identifier = :id 
+     LIMIT 1', 
+    [ ':id' => $identifier ]
     )->fetchAll();
 
-    $entity = array_pop($results);
-
-    return node_load($entity->nid);
-
-  } else {
-
-    $query = new EntityFieldQuery();
-    
-    $result = $query->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', $bundle)
-      ->propertyCondition('status', 1)
-      ->propertyCondition('language', $language)
-      ->fieldCondition('field_identifier', 'value', $identifier, '=')
-      ->execute();
-
-    if (!empty($result['node'])) {
-      $keys = array_keys($result['node']);
-      $nid = array_pop($keys);
-      return node_load($nid);
-    }
-
+  if (!empty($results)) {
+    $result = array_pop($results);
+    return node_load($result->nid);
   }
-
+ 
   return FALSE;
 
 }
 
 /**
  * Route callback for edit page.
- * @link http://localhost:9000/[books|maps|photos]/{identifier}/edit
+ * @link http://localhost:9000/admin/content/{identifier|noid}/edit
  */
-function _dlts_viewer_edit_redirect($type, $entity) {
+function _dlts_viewer_edit_redirect($entity) {
   drupal_goto('node/' . $entity->nid . '/edit');
 }

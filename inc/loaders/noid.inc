@@ -6,21 +6,22 @@
  */
 
 /**
- * A wildcard loader for dlts_resource, using noid.
+ * A wildcard loader for dlts_noid.
  *
  * @parameter string $identifier
  *  The value of noid.
  *
  * @return object
- *   A node object.
+ *   A resource object.
  */
 function dlts_noid_load($id) {
+  $id = filter_xss($id);
   // id can be noid or identifier.
   $results = db_query(
     'SELECT * FROM dlts_viewer_resource 
      WHERE noid = :id 
      OR identifier = :id 
-     LIMIT 1', 
+     LIMIT 1',
     [ ':id' => $id ]
     )->fetchAll();
 

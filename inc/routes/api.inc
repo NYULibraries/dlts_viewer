@@ -132,6 +132,7 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
+  // Create sequences.
   $items['api/v1/sequences'] = [
     'title' => 'Create sequences',
     'access arguments' => [
@@ -143,6 +144,7 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
   
+  // Update book.
   $items['api/v1/objects/books/%dlts_book'] = [
     'title' => 'Update book',
     'access arguments' => [
@@ -289,6 +291,31 @@ function _dlts_viewer_menu_api() {
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
   ];
+
+  // List resources to update.
+  // https://[HOST]/api/v1/resources-to-update
+  $items['api/v1/resources-to-update'] = [
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_resources_to_update',
+    'delivery callback' => 'drupal_json_output',
+  ];
+
+  // Update resources sequence by type.
+  // e.g., https://[HOST]/api/v1/resources-to-update/books
+  // e.g., https://[HOST]/api/v1/resources-to-update/maps
+  // e.g., https://[HOST]/api/v1/resources-to-update/photos
+  $items['api/v1/resources-update/%dlts_type'] = [
+    'access arguments' => [
+      'access content',
+    ],
+    'page arguments' => [ 3 ],
+    'page callback' => 'dlts_viewer_update_sequence',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/sequence.inc',
+  ];
+  
 
   $items['api/v1/epubs'] = [
     'title' => 'Create object',

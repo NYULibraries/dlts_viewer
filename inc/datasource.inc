@@ -820,3 +820,39 @@ function partner_by_code($code) {
   $keys = array_keys($result['node']);
   return node_load($keys[0]);
 }
+
+/**
+ * Find resource to update.
+ */
+function dlts_viewer_resources_to_update() {
+
+  $collections = [
+    'dlts_book' => 'dlts_books_page',
+    'dlts_map' => 'dlts_map_page',
+    'dlts_photo_set' => 'dlts_photo',
+    'dlts_postcard' => 'dlts_postcard',
+  ];
+
+  foreach ($collections as $collection) {
+    $docs = mongodb_collection($collection)->distinct('isPartOf', [ 'cm.width' => '' ]);
+    foreach ($docs as $identifier) {
+      $rows[] = [
+        'collection' => $collection,
+        'isPartOf' => $identifier,
+      ];
+    }
+  }
+
+  if (!empty($rows)) {
+    return [
+      'numFound' => count($rows),
+      'docs' => $rows,
+    ];
+  } else {
+    return [
+      'numFound' => 0,
+      'docs' => [],
+    ];
+  }
+
+}
