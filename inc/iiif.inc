@@ -972,14 +972,22 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   if ($field_pdf_file_raw) {
     foreach ($field_pdf_file_raw as $value) {
+      
       $data = [
         'uri' => $value['uri'],
         'label' => $value['label'],
       ];
-      $data['size'] = field_fileserver_get_pdf_filesize($data);
+
+      $udata = unserialize($value['data']);
+
+      $data['size'] = field_fileserver_human_filesize($udata['filesize']);
+
       $data['uri'] = file_create_url($data['uri']);
+
       $filename = pathinfo($data['uri'], PATHINFO_FILENAME);
+
       preg_match('/_(hi|lo)/', $filename, $matches);
+
       if (isset($matches) && isset($matches[1])) {
         switch ($matches[1]) {
           case 'hi':
