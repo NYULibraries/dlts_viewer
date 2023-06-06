@@ -428,7 +428,7 @@ function field_fileserver_field_presave($entity_type, $entity, $field, $instance
 function field_fileserver_human_filesize($bytes, $si = true) {
 
   $thresh = $si ? 1000 : 1024;
-
+  
   if (abs($bytes) < $thresh) {
     return $bytes . ' B';
   }
