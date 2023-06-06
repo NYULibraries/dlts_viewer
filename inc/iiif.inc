@@ -980,7 +980,11 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
       $udata = unserialize($value['data']);
 
-      $data['size'] = field_fileserver_human_filesize($udata['filesize']);
+      $data['size'] = 'Not available';
+
+      if (isset($udata['filesize'])) {
+        $data['size'] = field_fileserver_human_filesize( (int) $udata['filesize']);
+      }
 
       $data['uri'] = file_create_url($data['uri']);
 
@@ -991,13 +995,14 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
       if (isset($matches) && isset($matches[1])) {
         switch ($matches[1]) {
           case 'hi':
+
             $pdfs[] = [
               'id' => $data['uri'],
               'type' => 'Text',
               'format' => 'application/pdf',
               'label' => [
                 'en' => [
-                  locale('High-resolution PDF rendering', NULL, 'en') . ' (' . field_fileserver_human_filesize($data['size']) . ')',
+                  locale('High-resolution PDF rendering', NULL, 'en') . ' (' . $data['size'] . ')',
                 ],
               ],
             ];
@@ -1010,7 +1015,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
               'format' => 'application/pdf',
               'label' => [
                 'en' => [
-                  locale('Low-resolution PDF rendering', NULL, 'en') . ' (' . field_fileserver_human_filesize($data['size']) . ')',
+                  locale('Low-resolution PDF rendering', NULL, 'en') . ' (' . $data['size'] . ')',
                 ],
               ],
             ];
