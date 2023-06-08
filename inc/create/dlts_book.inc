@@ -114,27 +114,27 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
   // Partners the book belong.
   if (isset($metadata->partner)) {
     foreach ($metadata->partner->value as $value) {
-      $partners[] = array(
-        'title' => $value->title,
+      $partners[] = [
+        'title' => $value->label,
         'language' => $value->language,
-        'identifier' => $value->identifier,
+        'identifier' => $value->uuid,
         'code' => $value->code,
         'name' => $value->name,
-      );
+      ];
     }
   }
 
   // Collections the book belong.
   if (isset($metadata->collection)) {
     foreach ($metadata->collection->value as $value) {
-      $collections[] = array(
-        'title' => $value->title,
+      $collections[] = [
+        'title' => $value->label,
         'language' => $value->language,
-        'identifier' => $value->identifier,
+        'identifier' => $value->uuid,
         'code' => $value->code,
         'name' => $value->name,
         'partner' => $value->partner,
-      );
+      ];
     }
   }
 
@@ -559,7 +559,7 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
  *  @example curl -b ./cookie -X POST  --data "$(curl http://stage-sites.dlib.nyu.edu/viewer/api/v1/books/ifa_egypt000132)" http://localhost:9000/api/v1.0.1/objects
  */
 function create_dlts_book_from_json_v1_0_1($data) {
-
+  
   module_load_include('inc', 'dlts_viewer', 'inc/save/dlts_book.1.0.1');
 
   $dimensions = NULL;

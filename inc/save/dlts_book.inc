@@ -122,9 +122,9 @@ function save_dlts_book($node, $language = 'en') {
         $ewrapper->field_ticket->set($node['ticket']);
       }
       
-      if (!empty($node['noid'])) {
-        $ewrapper->field_noid->set(trim($node['noid']));
-      }
+      // if (!empty($node['noid'])) {
+      //  $ewrapper->field_noid->set(trim($node['noid']));
+      // }
 
       if (!empty($node['partners']) && is_array($node['partners']) && count($node['partners']) > 0) {
         foreach ($node['partners'] as $partner) {
