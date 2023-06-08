@@ -2218,6 +2218,7 @@ function dlts_viewer_api_v1_objects($version = NULL) {
         if (in_array($datasource['entity_type'], $entity_types)) {
           switch ($datasource['entity_type']) {
             case 'dlts_book':
+              module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book');
               return dlts_viewer_api_v1_dlts_book_objects($datasource);
 
             case 'dlts_photo_set':
