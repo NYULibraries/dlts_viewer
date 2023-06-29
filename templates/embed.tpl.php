@@ -3,6 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <title><?php echo $title ?></title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V9T13P98V7"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+      gtag('config', 'G-V9T13P98V7');
+    </script>
   </head>
   <body>
     <div 
