@@ -13,50 +13,33 @@
  */
 function _dlts_viewer_menu_admin() {
 
-  $items = array();
+  $items = [];
 
   /*
    * Admin page to administer the fileServer and the
    * fileServer stream wrapper
    */
-  $items['admin/config/media/viewer'] = array(
-    'title' => 'Administer and configure viewer',
+  $items['admin/viewer/config'] = [
+    'title' => 'Viewer: Administer and configure',
     'description' => 'Administer and configure viewer.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('dlts_viewer_admin'),
-    'access arguments' => array('administer fileserver'),
+    'page arguments' => [ 'dlts_viewer_admin' ],
+    'access arguments' => [ 'administer fileserver' ],
     'file' => 'inc/admin.inc',
-  );
-
-  $items['admin/list/topics/%dlts_collection'] = array(
-    'title' => 'List topics',
-    'access arguments' => array('dlts topic api'),
-    'page callback' => 'dlts_viewer_admin_list_topics',
-    'page arguments' => array(3),
-    'file' => 'inc/admin.inc',
-  );
-
-  $items['admin/list/topics/%dlts_collection/%'] = array(
-    'title' => 'List topics',
-    'access arguments' => array('dlts topic api'),
-    'page callback' => 'dlts_viewer_admin_list_topics_',
-    'page arguments' => array(3, 4),
-    'file' => 'inc/admin.inc',
-  );
+  ];
 
   /*
-   * Convinient way to edit object
+   * Convenient way to edit object
+   * e.g., /admin/content/princeton_aco004434/edit
    */
-  $items['books/%dlts_resource/edit'] =
-  $items['photos/%dlts_resource/edit'] =
-  $items['maps/%dlts_resource/edit'] = array(
-    'title' => 'Edit object',
-    'access arguments' => array('edit any dlts_book content'),
+  $items['admin/content/%dlts_resource/edit'] = [
+    'title' => 'Edit resource',
+    'access arguments' => [ 'edit any resource' ],
     'page callback' => '_dlts_viewer_edit_redirect',
-    'page arguments' => array(0, 1),
-    'load arguments' => array('%map', '%index'),
+    'page arguments' => [ 2 ],
     'type' => MENU_CALLBACK,
-  );
+  ];
 
   return $items;
+
 }

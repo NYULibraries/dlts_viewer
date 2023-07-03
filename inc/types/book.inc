@@ -107,7 +107,7 @@ function dlts_viewer_full_book_view($entity) {
   drupal_add_css($inline, [ 'type' => 'inline', 'group' => CSS_THEME, 'every_page' => FALSE, ]);
 
   drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.2/axios.min.js',
     'external',
     [
       'group' => JS_LIBRARY,
@@ -116,9 +116,9 @@ function dlts_viewer_full_book_view($entity) {
   );
 
   drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.0.0/openseadragon.min.js',
     'external',
-    [
+    [ 
       'group' => JS_LIBRARY,
       'weight' => -101,
     ]
@@ -145,7 +145,7 @@ function dlts_viewer_full_book_view($entity) {
  *   Entity to render.
  */
 function dlts_viewer_book_metadata_view($entity) {
-  $element = node_view($entity, 'metadata', $entity->language);
+  $element = dlts_viewer_book_metadata_display($entity);
   return drupal_render($element);
 }
 
@@ -186,16 +186,13 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
   $arg = $seq;
 
   // Check if this collection has searchable PDFs.
-  $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
-
-  // Check request type.
-  $is_pjax = dlts_viewer_is_pjax();
+  // $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
 
   // Check for mobile devices.
   $is_mobile = dlts_viewer_is_mobile();
 
   // Get query parameters.
-  $query_parameters = drupal_get_query_parameters();
+  // $query_parameters = drupal_get_query_parameters();
 
   // Test if resource, will return the maped type of resource (e.g., books).
   $is_resource = dlts_viewer_is_resource();
@@ -242,17 +239,9 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
   if (!is_array($arg) && $arg == 'display') {
     // Type of request.
     $display_type = 'book_metadata';
-    if ($is_pjax) {
-      $display_type = 'book_metadata_pjax';
-    }
-  }
-  else {
+  } else {
     // Type of request.
     $display_type = 'book_page';
-    if ($is_pjax) {
-      $display_type = 'book_page_pjax';
-    }
-
     // Default single page view.
     $is_single_page = TRUE;
 
@@ -261,16 +250,16 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
     if (is_array($sequence)) {
       // Get the first page of the requested sequence.
       $entity->sequence = min($sequence);
-      $sequence_max = max($sequence);
-      $sequence_min = min($sequence);
+      // $sequence_max = max($sequence);
+      // $sequence_min = min($sequence);
       // Check if this is a double page view.
       if (count($sequence) > 1) {
         $is_single_page = FALSE;
       }
-    }
-    else {
+    } else {
       // Get the first page of the requested sequence.
-      $entity->sequence = $sequence_max = $sequence_min = $sequence;
+      // $entity->sequence = $sequence_max = $sequence_min = $sequence;
+      $entity->sequence = $sequence;
       $is_single_page = TRUE;
     }
 
@@ -396,6 +385,8 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
 
     $entity->manifest = "$base_url/api/image/$is_resource/$entity->identifier/$entity->sequence/info.json";
 
+    $entity->other_viewers = t('<a href="@url">View in Mirador</a>', [ '@url' => url("$base_url/api/embed/$entity->identifier") ]);
+
     $entity->presentation = t('<a href="@url">IIIF Presentation</a>', [ '@url' => url("$base_url/api/presentation/$is_resource/$entity->identifier/manifest.json") ]);
 
     $entity->slider = theme(
@@ -410,8 +401,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
       ]
     );
 
-    // Change to $base_url.
-    $servie_url = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
+    $servie_url = "$base_url/api/image";
 
     $entity->book_page = theme(
       'dlts_viewer_openseadragon_image',
@@ -432,9 +422,10 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         ],
       ]
     );
-  }
+    
+    $entity->count = $sequence_count;
 
-  $entity->count = $sequence_count;
+  }
 
   // Types of returns.
   switch ($display_type) {
@@ -464,4 +455,19 @@ function _dlts_viewer_book_edit_redirect($node) {
     }
   }
   drupal_not_found();
+}
+
+function dlts_viewer_dispatch_books_index() {
+  
+  $view = views_get_view('books_by_collection');
+  
+  $view->set_current_page(1);
+  
+  $view->set_items_per_page(50);
+  
+  $view->execute();
+
+  return $view->render();
+
+  
 }

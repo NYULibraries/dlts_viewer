@@ -32,7 +32,7 @@ function dlts_viewer_schema() {
     	'proceed' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
     ),
     'primary key' => array('hash'),
-	);
+  );
   $schema['dlts_viewer_books_json'] = array(
     'description' => 'JSON Documents',
   	'fields' => array(
@@ -47,15 +47,14 @@ function dlts_viewer_schema() {
   		'legacy' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
   	)
   );
-
   $schema['dlts_viewer_resource'] = array(
     'description' => 'Resource table',
   	'fields' => array(
   	  'nid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
-  		'noid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
+  	  'noid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
       'identifier' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
-  		'document' => array('type' => 'text'),
-  		'proceed' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+  	  'document' => array('type' => 'text'),
+  	  'proceed' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
   	)
   );
   return $schema;
@@ -65,18 +64,14 @@ function dlts_viewer_schema() {
  * Implementation of hook_enable().
  */
 function dlts_viewer_enable() {
-  variable_set('dlts_viewer_openlayers_source', 'sites/all/libraries/openlayers/build/OpenLayers.js');
-  variable_set('dlts_viewer_fileserver_host', 'http://dlib.nyu.edu/files');
-  variable_set('dlts_viewer_djatoka_service', 'http://dl-img.home.nyu.edu/adore-djatoka');
+  variable_set('dlts_viewer_fileserver_host', 'https://dlib.nyu.edu/files');
 }
 
 /**
  * Implementation of hook_uninstall().
  */
 function dlts_viewer_uninstall() {
-  variable_del('dlts_viewer_djatoka_service');
-  variable_del('dlts_viewer_openlayers_source');
   variable_del('dlts_viewer_fileserver_host');
-  db_query("DELETE * FROM {dlts_viewer_books_json}", array());
-  db_query("DELETE * FROM {dlts_viewer_drush_git_commits}", array());
+  db_query("DELETE * FROM {dlts_viewer_books_json}", []);
+  db_query("DELETE * FROM {dlts_viewer_drush_git_commits}", []);
 }

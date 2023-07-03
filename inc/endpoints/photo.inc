@@ -9,7 +9,6 @@
 // api/iiif/photos/%dlts_photo_handle/%dlts_photo_sequence/%dlts_iiif_region/%dlts_iiif_size/%dlts_iiif_rotation/%dlts_iiif_quality
 function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
   $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');
-  // $image_server = 'http://192.168.0.102:8182';
   if (!empty($sequence['cm']['uri'])) {
     $static_source = variable_get('dlts_image_static_source', 'FilesystemSource');
     switch ($static_source) {
@@ -23,12 +22,12 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
     }
     $uri = urlencode($image_id);
     $image = "$image_server/iiif/2/$uri/$region/$size/$rotation/$quality";
-    $arrContextOptions = array(
-      'ssl' => array(
+    $arrContextOptions = [
+      'ssl' => [
         'verify_peer' => FALSE,
         'verify_peer_name' => FALSE,
-      ),
-    );
+      ],
+    ];
     $content = file_get_contents(
       $image,
       FALSE,
@@ -47,13 +46,11 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
       header("Etag: $etag");
       echo $content;
       exit(0);
-    }
-    else {
+    } else {
       if (isset($http_response_header)) {
         header('HTTP/1.1 400 Bad Request', TRUE, 400);
         die('HTTP/1.1 400 Bad Request');
-      }
-      else {
+      } else {
         header('HTTP/1.1 400 Bad Request', TRUE, 400);
         die('HTTP/1.1 400 Bad Request');
       }

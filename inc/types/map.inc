@@ -23,9 +23,6 @@ function dlts_viewer_preprocess_node_dlts_map(&$vars) {
     if ($count === 3 && $args[2] == 'display') {
       $vars['theme_hook_suggestions'][] = 'node__display';
     }
-    if (dlts_viewer_is_pjax()) {
-      $vars['theme_hook_suggestions'][] = 'page__viewer_pjax';
-    }
   }
 }
 
@@ -55,7 +52,7 @@ function dlts_viewer_map_dispatcher($entity, array $arg) {
   drupal_add_css("$module_path/dist/viewer.css", [ 'group' => CSS_DEFAULT,  'every_page' => TRUE ]);
 
   drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.2/axios.min.js',
     'external',
     [
       'group' => JS_LIBRARY,
@@ -64,7 +61,7 @@ function dlts_viewer_map_dispatcher($entity, array $arg) {
   );
 
   drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.0.0/openseadragon.min.js',
     'external',
     [
       'group' => JS_LIBRARY,
@@ -81,8 +78,6 @@ function dlts_viewer_map_dispatcher($entity, array $arg) {
 
   // Check for mobile devices.
   $is_mobile = dlts_viewer_is_mobile();
-  // Check request type.
-  $is_pjax = dlts_viewer_is_pjax();
 
   drupal_set_title($entity->title);
 
@@ -168,7 +163,7 @@ function dlts_viewer_map_dispatcher($entity, array $arg) {
 
   $arg['pageView'] = $entity->pageView;
 
-  $servie_url = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
+  $servie_url = "$base_url/api/image";
 
   $entity->sequence_count = 1;
 
@@ -246,10 +241,6 @@ function _dlts_viewer_map_json($entity, $add_pages = TRUE) {
 
   header('Content-Type: application/json;charset=utf-8');
 
-  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.book');
-
-  module_load_include('inc', 'dlts_utilities', 'inc/dlts_utilities.collection');
-
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
 
   // Wrapp book entity with Entity API wrapper.
@@ -260,11 +251,11 @@ function _dlts_viewer_map_json($entity, $add_pages = TRUE) {
 
   $title = $entity->title;
 
-  $type = dlts_utilities_content_types_type($entity->type);
+  $type = dlts_viewer_content_types_type($entity->type);
 
-  $fields = array();
+  $fields = [];
 
-  $pages = array();
+  $pages = [];
 
   foreach ($type['fields'] as $field) {
     $name = str_replace('field_', '', $field['field_name']);
@@ -349,17 +340,17 @@ function _dlts_viewer_map_json($entity, $add_pages = TRUE) {
     }
   }
 
-  $page_count = $entity->field_page_count['en'][0]['value'];
+  // $page_count = $entity->field_page_count['en'][0]['value'];
 
   if ($add_pages) {
     $pages_raw = dlts_viewer_mongodb_load_by_item_identifier($identifier, 'dlts_map_page');
     foreach ($pages_raw as $page_raw) {
-      $page = array(
-        'page' => array(
+      $page = [
+        'page' => [
           'isPartOf' => $identifier,
           'realPageNumber' => $page_raw['realPageNumber'],
           'sequence' => $page_raw['sequence'],
-          'cm' => array(
+          'cm' => [
             'uri' => $page_raw['cm']['uri'],
             'width' => $page_raw['cm']['width'],
             'height' => $page_raw['cm']['height'],
@@ -367,9 +358,9 @@ function _dlts_viewer_map_json($entity, $add_pages = TRUE) {
             'dwtLevels' => $page_raw['cm']['dwtLevels'],
             'compositingLayerCount' => $page_raw['cm']['compositingLayerCount'],
             'timestamp' => $page_raw['cm']['timestamp'],
-          ),
-        ),
-      );
+          ],
+        ],
+      ];
       $pages[] = $page;
     }
   }

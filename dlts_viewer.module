@@ -11,6 +11,11 @@
 include_once 'inc/common.inc';
 
 /**
+ * Include helpers and others.
+ */
+include_once 'inc/utils.inc';
+
+/**
  * Load MongoDB helper.
  */
 include_once 'inc/mongodb.inc';
@@ -41,14 +46,14 @@ include_once 'inc/views.inc';
 include_once 'inc/datasource.inc';
 
 /**
- * Include helpers and others.
- */
-include_once 'inc/utils.inc';
-
-/**
  * Include theme functions and hook_theme.
  */
 include_once 'inc/themes.inc';
+
+/**
+ * Include shutdown functions.
+ */
+include_once 'inc/shutdown.inc';
 
 /**
  * Implementation of hook_init().
@@ -63,12 +68,14 @@ function dlts_viewer_init() {
  * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_theme/7
  */
 function dlts_viewer_custom_theme() {
+
   if (dlts_viewer_is_resource()) {
     return 'tao';
   }
   if (current_path() == 'api/v1') {
     return 'tao';
   }
+  return 'rubik';
 }
 
 /**
@@ -96,6 +103,14 @@ function dlts_viewer_permission() {
       'title' => t('Allow user to IIIF content'),
       'description' => t('Allow user to IIIF content'),
     ],
+    'administer viewer' => [
+      'title' => t('Allow user to administer Viewer'),
+      'description' => t('Allow user to administer Viewer'),
+    ],
+    'access supafolio api' => [
+      'title' => t('Access Supafolio API'),
+      'description' => t('Access and search Supafolio API'),
+    ],
   ];
 }
 
@@ -104,10 +119,10 @@ function dlts_viewer_permission() {
  * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_entity_info_alter/7
  */
 function dlts_viewer_entity_info_alter(&$entity_info) {
-  $entity_info['node']['view modes']['metadata'] = array(
+  $entity_info['node']['view modes']['metadata'] = [
     'label' => t('Metadata List'),
     'custom settings' => TRUE,
-  );
+  ];
 }
 
 /**
@@ -145,11 +160,6 @@ function dlts_viewer_preprocess_html(&$vars) {
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     /** we are not in admin page, default Viewer HTML template */
     $vars['theme_hook_suggestions'][] = 'html__viewer';
-    /** Check if this is a PJAX request */
-    if (dlts_viewer_is_pjax()) {
-      /** default Viewer PJAX HTML template */
-      $vars['theme_hook_suggestions'][] = 'html__viewer_pjax';
-    }
     /** Check for  mobile */
     if (dlts_viewer_is_mobile()) {
       $vars['classes_array'][] = 'is_mobile';
@@ -218,9 +228,6 @@ function dlts_viewer_preprocess_node(&$vars) {
 function dlts_viewer_preprocess_page(&$vars) {
   if (dlts_viewer_is_resource()) {
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
-    if (dlts_viewer_is_pjax()) {
-      $vars['theme_hook_suggestions'][] = 'page__books_pjax';
-    }
   }
 }
 
@@ -231,7 +238,6 @@ function dlts_viewer_preprocess_page(&$vars) {
 function dlts_viewer_process_page(&$vars) {
   if (dlts_viewer_is_resource()) {
     $is_embed = dlts_viewer_is_embed();
-    $is_pjax = dlts_viewer_is_pjax();
     $vars['theme_hook_suggestions'][] = 'page__viewer';
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
     $vars['is_embed'] = $is_embed;
@@ -418,8 +424,8 @@ function dlts_viewer_flush_caches() {
 function dlts_viewer_js_alter(&$javascript) {
   if (dlts_viewer_is_resource()) {
     $allow = [
-      'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.0.0/openseadragon.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.2/axios.min.js',
       'https://cdnjs.cloudflare.com/ajax/libs/keyboardjs/2.6.2/keyboard.min.js',
       'sites/all/modules/dlts_viewer/dist/polyfill.bundle.js',
       'sites/all/modules/dlts_viewer/dist/books.bundle.js',
@@ -445,30 +451,7 @@ function dlts_viewer_css_alter(&$css) {
   }
 }
 
-// here we need to make sure we delete the record from Apache Solr
+// Here we need to make sure we delete the record from Apache Solr
 function dlts_viewer_node_delete($node) {
-  $records = db_query("SELECT document from {dlts_viewer_books_json} WHERE nid = :nid", array(":nid" => $node->nid));
-  foreach ($records as $record) {
-    if (file_exists($record->document)) {
-      file_unmanaged_delete($record->document);
-    }
-  }
-  db_delete('dlts_viewer_books_json')->condition('nid', $node->nid)->execute();
-}
-
-/**
- * Create the table which was missing during early stage of module development.
- */
-function dlts_viewer_update_7102() {
-  $table = array(
-    'description' => 'Resource table',
-    'fields' => array(
-      'nid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
-      'noid' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
-      'identifier' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE),
-      'document' => array('type' => 'text'),
-      'proceed' => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
-    )
-  );
-  db_create_table('dlts_viewer_resource', $table);
+  db_delete('dlts_viewer_resource')->condition('nid', $node->nid)->execute();
 }

@@ -12,7 +12,7 @@
  */
 function save_dlts_book_v1_0_1($node, $language = 'en') {
   module_load_include('inc', 'node', 'node.pages');
-  module_load_include('inc', 'dlts_viewer', 'drush/inc/common');
+  module_load_include('inc', 'dlts_viewer', 'inc/common');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_multivol_book');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_partner');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_collection');
@@ -20,11 +20,13 @@ function save_dlts_book_v1_0_1($node, $language = 'en') {
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_series');
   module_load_include('inc', 'dlts_viewer', 'inc/create/taxonomy');
   // Get the current user.
-  global $base_url;
+  // global $base_url;
+  global $user;
+  $username = $user->name;
   $is_new = TRUE;
   try {
     if (!user_access('dlts create object')) {
-      throw new Exception(__FUNCTION__ . ' user not allowed to run task');
+      throw new Exception(__FUNCTION__ . " user not allowed to run task $username");
     }
     if (empty($node['identifier'])) {
       throw new Exception('Document without identifier');
@@ -35,11 +37,12 @@ function save_dlts_book_v1_0_1($node, $language = 'en') {
       if (strlen($entity_title) > 255) {
         $entity_title = $identifier;
       }
-    }
-    else {
+    } else {
       throw new Exception("Title for book $identifier can not be empty.");
     }
-    $collections_nids = array();
+
+    $collections_nids = [];
+
     $node_language = (isset($node['entity_language']) ? $node['entity_language'] : $language);
     // Make sure the language exists.
     $enabled_language = dlts_viewer_add_language($node_language);
@@ -411,6 +414,12 @@ function save_dlts_book_v1_0_1($node, $language = 'en') {
       $nid = $ewrapper->getIdentifier();
       // If book language is EN check for  Multi volume and Series.
       if ($node_language == 'en') {
+        $exists = db_query("SELECT nid FROM dlts_viewer_resource WHERE nid = '$nid'")->fetchAll();
+        if (count($exists) <= 0) {
+          $noid = $node['noid'];
+          $edit_query = "INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', 'books', '0');";
+          db_query($edit_query);
+        }
         // Multi volume book.
         if (!empty($node['multivolume'])) {
           foreach ($node['multivolume'] as $multivolume) {

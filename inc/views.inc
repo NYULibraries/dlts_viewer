@@ -32,8 +32,7 @@ function dlts_viewer_views_pre_render(&$view) {
           $lang_book = dlts_book_load($field_identifier);
           $lang_book_wrapper = entity_metadata_wrapper('node', $lang_book);
           $field_title = $lang_book_wrapper->field_title->value();
-        }
-        else {
+        } else {
           $field_title = $book_wrapper->field_title->value();
         }
         if (!strpos($field_title, $number) !== FALSE) {

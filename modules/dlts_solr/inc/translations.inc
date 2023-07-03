@@ -18,7 +18,7 @@ function dlts_solr_index_book_translations(&$document, &$entity, $entity_type, $
       unset($translations[$key]);
     }
     foreach ($translations as $nid) {
-      $subjects = array();
+      $subjects = [];
       // Load node.
       $node = node_load($nid);
       $language = $node->language;

@@ -12,7 +12,7 @@
     <?php foreach ($resources as $resource) : ?>
       <div class="thumbHolder" data-manifest="<?php print $resource['manifest'] ?>" data-sequence="<?php print $resource['sequence'] ?>">
         <a target="_self" href="<?php print $resource['path'] ?>">
-          <img class="thumbItem" src="<?php print $resource['url'] ?>" />
+          <img class="thumbItem" src="<?php print $resource['url'] ?>" alt="Sequence <?php print $resource['sequence'] ?>" loading="lazy" />
         </a>              
       </div>
     <?php endforeach ?>

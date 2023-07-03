@@ -47,14 +47,5 @@ function dlts_postcard_load($identifier) {
  *   sequence.
  */
 function dlts_postcard_page_load(int $sequence, array $map) {
-  if (isset($sequence['uri'])) {
-    // Load djatoka helper.
-    module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
-    return dlts_viewer_djatoka_request(
-      array(
-        'uri' => $sequence['uri'],
-      )
-    );
-  }
-  exit(1);
+  exit(__FUNCTION__);
 }

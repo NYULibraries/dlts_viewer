@@ -1,50 +1,48 @@
-import Mirador from 'mirador/dist/es/src/index';
-import { miradorImageToolsPlugin } from 'mirador-image-tools';
+import Mirador from 'mirador/dist/es/src/index'
 
-const uuid = 'mirador-app';
+import { miradorImageToolsPlugin } from 'mirador-image-tools'
 
-const elem = document.getElementById(uuid);
+import { defaultConfig } from './viewerConfig.js'
 
-console.log(elem)
+import LanguageSelector from './plugins/language-selector'
 
-const endpoint = elem.dataset.endpoint;
+import './style.css'
 
-const identifier = elem.dataset.identifier;
+const uuid = 'mirador-app'
 
-const resourceType = elem.dataset.type;
+const elem = document.getElementById(uuid)
 
-const canvasIndexValue = 0;
+const {
+  endpoint,
+  identifier,
+  type,
+  language,
+  sequence,
+} = elem.dataset
 
-const manifestId = `${endpoint}/api/presentation/${resourceType}/${identifier}/manifest.json`;
+const manifestId = `${endpoint}/api/presentation/${type}/${identifier}/manifest.json`
 
-const config = {
-  id: uuid, 
-  workspaceControlPanel: {
-    enabled: false,
+const config = { 
+  ...defaultConfig, 
+  ...{
+    id: uuid,
+    language,
+    windows: [
+      {
+        manifestId: manifestId,
+        imageToolsEnabled: true,
+        imageToolsOpen: false,
+        canvasIndex: Number(sequence) - 1,
+        view: 'single',
+        hideWindowTitle: (type === 'photos') ? true: false , // We don't want to show the window title for photos (not metadata to display).
+      },
+    ],
   },
-  workspace: { 
-    isWorkspaceAddVisible: false,
-    allowNewWindows: false,
-  },
-  language: 'en',
-  windows: [
-    {
-      manifestId: manifestId,
-      imageToolsEnabled: true,
-      imageToolsOpen: false,
-      canvasIndex: canvasIndexValue,
-      view: 'single',
-    }
-  ],
-  window: {
-    allowClose: false,
-    defaultSideBarPanel: 'info',
-    sideBarOpenByDefault: true, 
-    showLocalePicker: true,
-    hideWindowTitle: true,
-  }, 
 }
 
-Mirador.viewer(config, [
-  ...miradorImageToolsPlugin,
-]);
+const plugins = [
+  miradorImageToolsPlugin,
+  LanguageSelector,
+]
+
+Mirador.viewer(config, plugins)

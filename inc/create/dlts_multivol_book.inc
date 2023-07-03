@@ -21,8 +21,7 @@ function create_dlts_multivol_book($node) {
         create_dlts_multivol($isPartOf);
       }
     }
-  }
-  else {
+  } else {
     $multivolume_nid = multivol_nid($node->isPartOf->identifier);
     if (!$multivolume_nid) {
       create_dlts_multivol($node->isPartOf);
@@ -34,16 +33,15 @@ function create_dlts_multivol_book($node) {
     $entity = node_load($multivol_book_exist);
     // Wrap it with Entity API.
     $ewrapper = entity_metadata_wrapper('node', $entity);
-  }
-  else {
-    $values = array(
+  } else {
+    $values = [
       'type' => 'dlts_multivol_book',
       'uid' => $user->uid,
       'status' => 1,
       'comment' => 0,
       'promote' => 0,
       'language' => LANGUAGE_NONE,
-    );
+    ];
     $entity = entity_create('node', $values);
     // The entity is now created, but we have not yet simplified use of it.
     // Now create an entity_metadata_wrapper around the new node entity
@@ -57,18 +55,16 @@ function create_dlts_multivol_book($node) {
     else {
       $ewrapper->title->set($node->title);
     }
-  }
-  else {
+  } else {
     $ewrapper->title->set($node->identifier);
   }
   if (!empty($node->collection)) {
-    $nids = array();
-    $collections = array();
+    $nids = [];
+    $collections = [];
     // There is 2 dimensional array for old books so need that check.
     if (is_array($node->collection[0])) {
       $collections = $node->collection[0];
-    }
-    else {
+    } else {
       $collections = $node->collection;
     }
     foreach ($collections as $collection) {
@@ -77,12 +73,11 @@ function create_dlts_multivol_book($node) {
         $nids[] = $nid;
       }
     }
-    $ewrapper->field_collection->set(array($nid));
+    $ewrapper->field_collection->set([ $nid ]);
   }
   if ($node->identifier) {
     $ewrapper->field_identifier->set($node->identifier);
-  }
-  else {
+  } else {
     $ewrapper->field_identifier->set(uniqid());
   }
   if ($node->volume_number) {
@@ -99,8 +94,7 @@ function create_dlts_multivol_book($node) {
   }
   if (is_array($node->isPartOf)) {
     $multivol_exist = multivol_nid($node->isPartOf[0]->identifier);
-  }
-  else {
+  } else {
     $multivol_exist = multivol_nid($node->isPartOf->identifier);
   }
   if ($multivol_exist) {

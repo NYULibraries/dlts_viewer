@@ -6,7 +6,7 @@
  */
 
  // Photo set
- // http://192.168.0.18:9000/photos/AD_MC_036_ref349
+ // https://[HOST]/photos/AD_MC_036_ref349
 
 /**
  * Photo set dispatcher.
@@ -28,9 +28,6 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   // Test if resource, will return the maped type of resource (e.g., books, photos).
   $is_resource = dlts_viewer_is_resource();
 
-  // Get query parameters.
-  $query_parameters = drupal_get_query_parameters();
-
   // Wrapp book entity with Entity API wrapper.
   $wrapper = entity_metadata_wrapper('node', $entity);
 
@@ -44,7 +41,7 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   $field_collection = $wrapper->field_collection->value();
 
   // Partner.
-  $field_partner = $wrapper->field_partner->value();
+  // $field_partner = $wrapper->field_partner->value();
 
   // Title.
   $title = $wrapper->field_title->value();
@@ -91,7 +88,7 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   drupal_set_title($page_title);
 
   return theme('dlts_viewer_set', [
-    'title' => $page_title,
+    'title' => null,
     'identifier' => $identifier,
     'resources' => $resources,
     'collections' => $collections,
@@ -114,7 +111,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
   drupal_add_css($module_path . '/dist/viewer.css', [ 'group' => CSS_DEFAULT, 'every_page' => TRUE ]);
 
   drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.2/axios.min.js',
     'external',
     [
       'group' => JS_LIBRARY,
@@ -123,7 +120,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
   );
 
   drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.0.0/openseadragon.min.js',
     'external',
     [
       'group' => JS_LIBRARY,
@@ -225,8 +222,7 @@ function dlts_viewer_photo_dispatcher($entity, $sequence) {
     ];
   }
 
-  // Change to $base_url.
-  $servie_url = 'https://stage-sites.dlib.nyu.edu/viewer/api/image';
+  $servie_url = "$base_url/api/image";
 
   $entity->manifest = "$base_url/api/image/$is_resource/$entity->identifier/$entity->sequence/info.json";
 
@@ -296,26 +292,35 @@ function dlts_viewer_photo_embed_redirect($entity) {
 /**
  * Redirect request and delivers photo thumbail.
  * E.g.,
- * - http://{host}/photos/AD_MC_036_ref349/1/mode/thumb
- * - http://192.168.0.18:9000/photos/AD_MC_036_ref349/1/mode/thumb
+ * - https://[HOST]/photos/AD_MC_036_ref349/1/mode/thumb
  */
 function dlts_viewer_photo_thumb($entity, $page) {
   if (is_object($entity)) {
     global $base_url;
+    
     $wrapper = entity_metadata_wrapper('node', $entity);
+    
     $query_parameters = drupal_get_query_parameters();
+    
     // Identifier.
     $identifier = $wrapper->field_identifier->value();
+    
     $width = '150';
+    
     $height = '';
-    if ($query_parameters['w']) {
-      $width = filter_var($query_parameters['w'], FILTER_SANITIZE_STRING);
+    
+    if (isset($query_parameters['w']) && $query_parameters['w']) {
+      $width = filter_var($query_parameters['w'], FILTER_UNSAFE_RAW);
     }
-    if ($query_parameters['h']) {
-      $width = filter_var($query_parameters['h'], FILTER_SANITIZE_STRING);
+
+    if (isset($query_parameters['h']) &&$query_parameters['h']) {
+      $width = filter_var($query_parameters['h'], FILTER_UNSAFE_RAW);
     }
+
     $sequence = array_pop($page['sequence']);
+
     drupal_goto("$base_url/api/image/photos/$identifier/$sequence/full/$width,$height/0/default.jpg");
+  
   }
   return drupal_exit();
 }

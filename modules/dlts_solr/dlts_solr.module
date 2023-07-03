@@ -12,7 +12,7 @@ function dlts_solr_node_update($node) {
     $wrapper = entity_metadata_wrapper('node', $node);
     $identifier = $wrapper->field_identifier->value();
     $query = new EntityFieldQuery;
-    $keys = array();
+    $keys = [];
     $result = $query->entityCondition('entity_type', $type)
       ->entityCondition('bundle', $bundle)
       ->fieldCondition('field_identifier', 'value',  $identifier)
@@ -23,11 +23,26 @@ function dlts_solr_node_update($node) {
       $keys = array_keys($result['node']);
       foreach ($keys as $id) {
         $indexer_table = apachesolr_get_indexer_table($type);
-        db_merge($indexer_table)->key(array('entity_type' => $type, 'entity_id' => $id))
+        db_merge($indexer_table)->key(
+          [
+            'entity_type' => $type, 
+            'entity_id' => $id
+          ]
+        )
         // insertFields acts only on insert.
-        ->insertFields(array('entity_type' => $type,'entity_id' => $id,'bundle' => $bundle,'status' => 1))
+        ->insertFields(
+          [
+            'entity_type' => $type,
+            'entity_id' => $id,
+            'bundle' => $bundle,
+            'status' => 1
+          ]
+        )
         /// fields acts on insert or update.
-        ->fields(array('changed' => REQUEST_TIME))
+        ->fields([
+          'changed' => REQUEST_TIME
+          ]
+        )
         ->execute();
       }
     }
@@ -86,15 +101,6 @@ function dlts_solr_apachesolr_index_document_build(ApacheSolrDocument $document,
         dlts_solr_index_photos($document, $entity, $entity_type, $env_id);
         break;
 
-  }
-}
-
-/**
- * Encode and return the base64 value of a image file
- */
-function dlts_solr_imagedataURI($image) {
-  if (is_file($image)) {
-    return base64_encode(file_get_contents($image));
   }
 }
 

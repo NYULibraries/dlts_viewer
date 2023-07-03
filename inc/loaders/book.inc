@@ -15,24 +15,44 @@
  *   A node object with the given value for field_identifier.
  */
 function dlts_book_load($identifier) {
+
+  $bundle = 'dlts_book';
+
+  $type = 'books';
+
   $language = [ 'en', LANGUAGE_NONE ];
+
+  $identifier = filter_xss($identifier);
+
   $query_parameters = drupal_get_query_parameters();
+
   if (isset($query_parameters['lang'])) {
     $language = [ filter_xss($query_parameters['lang']) ];
   }
-  $query = new EntityFieldQuery();
-  $identifier = filter_xss($identifier);
-  $result = $query->entityCondition('entity_type', 'node')->entityCondition('bundle', 'dlts_book')
-    // Only load books that are published.
-    ->propertyCondition('status', 1)
-    ->propertyCondition('language', $language)
-    ->fieldCondition('field_identifier', 'value', $identifier, '=')
-    ->execute();
-  if (!empty($result['node'])) {  
-    $keys = array_keys($result['node']);
-    $nid = array_pop($keys);
-    return node_load($nid);
+
+  $resource = dlts_noid_load($identifier);
+
+  if ($resource && isset($resource->nid) && $resource->document == $type) {
+    return node_load($resource->nid);
+  } else {
+
+    $query = new EntityFieldQuery();
+
+    $result = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', $bundle)
+      ->propertyCondition('status', 1)
+      ->propertyCondition('language', $language)
+      ->fieldCondition('field_identifier', 'value', $identifier, '=')
+      ->execute();
+
+    if (!empty($result['node'])) {  
+      $keys = array_keys($result['node']);
+      $nid = array_pop($keys);
+      return node_load($nid);
+    }
+
   }
+
   return FALSE;
 }
 
@@ -61,10 +81,11 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
   $bundle = dlts_viewer_get_bundle_alias($wrapper->getBundle());
 
   $dir_path = "$realpath/$bundle/$isPartOf";
-  
+
   if (!file_exists($dir_path)) {
     mkdir($dir_path, 0755, TRUE);
   }
+
   if (file_exists("$dir_path/sequence.$sequence.json")) {
     $data = json_decode(
       file_get_contents("$dir_path/sequence.$sequence.json")
@@ -79,99 +100,17 @@ function dlts_book_page_load($sequence, array $map, $resource_index) {
         'uri' => file_create_url($result['cm']['uri']),
         'width' => $result['cm']['width'],
         'height' => $result['cm']['height'],
-        'timestamp' => $result['cm']['timestamp'],
-      ]; 
+      ];
       file_put_contents("$dir_path/sequence.$sequence.json", json_encode($resp), LOCK_EX);
       return $resp;
     }
   }
 
-  drupal_set_message(
-    t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.',
-    [
-      '@sequence' => $sequence,
-      '@identifier' => $isPartOf,
-    ]
-  ), 'error');
+  drupal_set_message(t('<em>DLTS Viewer</em>: Sequence page <strong>@sequence</strong> from book identify by identifier <strong>@identifier</strong> not found.', [ '@sequence' => $sequence, '@identifier' => $isPartOf, ]), 'error');
 
-  watchdog(
-    'MongoDB sequence not found',
-    'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.',
-    [
-      '%identifier' => $isPartOf,
-      '%sequence' => $sequence,
-    ],
-    WATCHDOG_NOTICE
-  );
+  watchdog('MongoDB sequence not found', 'Unable to find book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.', [ '%identifier' => $isPartOf, '%sequence' => $sequence, ], WATCHDOG_NOTICE);
 
   // If $result is empty, retrun FALSE so that hook_menu can 404 redirect.
   return FALSE;
 }
 
-/**
- * Load sequence.
- *
- * @param string $sequence
- *   Sequence.
- *
- * @return array
- *   Sequence.
- */
-function dlts_book_canvas_page_load($sequence) {
-  preg_match('/^p{1}([\d]+)$/', $sequence, $matches);
-  if (!empty($matches)) {
-    return dlts_book_page_load(
-      $matches[1],
-      arg(3)
-    );
-  }
-  return FALSE;
-}
-
-/**
- * Load sequence.
- *
- * @param object $item
- *   Item.
- *
- * @return array
- *   Item.
- */
-function page_item_load($item) {
-  preg_match('/^([\d]+)/', $item, $matches);
-  // http://localhost:9000/iiif/2/books/princeton_aco000102/1/info.json
-  if ($matches) {
-    $sequence = (int) $matches[1];
-    return dlts_book_page_load($sequence, arg(3));
-  }
-  else {
-    preg_match('/^p{1}([\d]+)-image/', $item, $matches);
-    if (!empty($matches)) {
-      $sequence = (int) $matches[1];
-      return dlts_book_page_load($sequence, arg(3));
-    }
-  }
-  return FALSE;
-}
-
-/**
- * Load sequence using Djakota as image server.
- *
- * @param object $sequence
- *   Sequence page.
- *
- * @return array
- *   Book sequence.
- */
-function djakota_book_page_load($sequence, array $map) {
-  if (isset($sequence['uri'])) {
-    // Load djatoka helper.
-    module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
-    return dlts_viewer_djatoka_request(
-      array(
-        'uri' => $sequence['uri'],
-      )
-    );
-  }
-  exit(1);
-}

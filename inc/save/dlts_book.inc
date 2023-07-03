@@ -12,7 +12,7 @@
  */
 function save_dlts_book($node, $language = 'en') {
   module_load_include('inc', 'node', 'node.pages');
-  module_load_include('inc', 'dlts_viewer', 'drush/inc/common');
+  module_load_include('inc', 'dlts_viewer', 'inc/common');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_multivol_book');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_partner');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_collection');
@@ -20,14 +20,15 @@ function save_dlts_book($node, $language = 'en') {
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_series');
   module_load_include('inc', 'dlts_viewer', 'inc/create/taxonomy');
   // Get the current user.
-  global $base_url;
-  $is_new = TRUE;
+  // global $base_url;
+  global $user;
+  $username = $user->name;
   try {
     if (!user_access('dlts create object')) {
-      throw new Exception(__FUNCTION__ . ' user not allowed to run task');
+      throw new Exception(__FUNCTION__ . " user not allowed to run task $username.");
     }
     if (empty($node['identifier'])) {
-      throw new Exception('Document without identifier');
+      throw new Exception('Document without identifier.');
     }
     $identifier = trim($node['identifier']);
     if (!empty($node['title'])) {
@@ -35,11 +36,10 @@ function save_dlts_book($node, $language = 'en') {
       if (strlen($entity_title) > 255) {
         $entity_title = $identifier;
       }
+    } else {
+      throw new Exception("Title for resource $identifier can not be empty.");
     }
-    else {
-      throw new Exception("Title for book $identifier can not be empty.");
-    }
-    $collections_nids = array();
+    $collections_nids = [];
     $node_language = (isset($node['entity_language']) ? $node['entity_language'] : $language);
     // Make sure the language exists.
     $enabled_language = dlts_viewer_add_language($node_language);
@@ -53,7 +53,6 @@ function save_dlts_book($node, $language = 'en') {
     }
     $book_exist = book_nid($identifier, $node_language);
     if ($book_exist) {
-      $is_new = FALSE;
       // Load the node by NID.
       $entity = node_load($book_exist);
       // Wrap it with Entity API.
@@ -67,9 +66,8 @@ function save_dlts_book($node, $language = 'en') {
           $source_node = node_load($tnid);
           // Wrap it with Entity API.
           $source_node_ewrapper = entity_metadata_wrapper('node', $source_node);
-        }
-        else {
-          throw new Exception("English version $identifier does not exist.");
+        } else {
+          throw new Exception("English version of resource $identifier does not exist.");
         }
       }
     }
@@ -116,8 +114,18 @@ function save_dlts_book($node, $language = 'en') {
     $ewrapper->title->set($entity_title);
 
     $ewrapper->field_identifier->set($identifier);
-    // We do not translalete all the values.
+
+    // We do not translate all the values.
     if ($node_language == 'en') {
+      
+      if (!empty($node['ticket'])) {
+        $ewrapper->field_ticket->set($node['ticket']);
+      }
+      
+      // if (!empty($node['noid'])) {
+      //  $ewrapper->field_noid->set(trim($node['noid']));
+      // }
+
       if (!empty($node['partners']) && is_array($node['partners']) && count($node['partners']) > 0) {
         foreach ($node['partners'] as $partner) {
           $partner_entity = NULL;
@@ -199,7 +207,7 @@ function save_dlts_book($node, $language = 'en') {
         );
         $ewrapper->field_representative_image->set($representative_image);
       }
-      $field_pdf_file = array();
+      $field_pdf_file = [];
       if (!empty($node['pdf_files'])) {
         foreach ($node['pdf_files'] as $pdf) {
           $label = (isset($pdf['label'])) ? $pdf['label'] : '';
@@ -222,7 +230,7 @@ function save_dlts_book($node, $language = 'en') {
       unset($field_pdf_file);
       if (!empty($node['subject'])) {
         $vid = dlts_viewer_subject_vocabulary_vid();
-        $node_subjects = array();
+        $node_subjects = [];
         foreach ($node['subject'] as $subject) {
           if (!empty($subject)) {
             $subject_list = dlts_viewer_subject_tid($subject, $vid);
@@ -295,9 +303,11 @@ function save_dlts_book($node, $language = 'en') {
         }
       }
     }
+
     if (!empty($node['isbn'])) {
       $ewrapper->field_isbn->set($node['isbn']);
     }
+
     if (!empty($node['title'])) {
       $ewrapper->field_title->set($node['title']);
     }
@@ -389,8 +399,13 @@ function save_dlts_book($node, $language = 'en') {
     $saved = $ewrapper->save();
     if ($saved) {
       $nid = $ewrapper->getIdentifier();
-      // If book language is EN check for  Multi volume and Series.
       if ($node_language == 'en') {
+        $exists = db_query("SELECT nid FROM dlts_viewer_resource WHERE nid = '$nid'")->fetchAll();
+        if (count($exists) <= 0) {
+          $noid = $node['noid'];
+          $edit_query = "INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', 'books', '0');";
+          db_query($edit_query);
+        }
         // Multi volume book.
         if (!empty($node['multivolume']) && !empty($node['multivolume']->volume)) {
           foreach ($node['multivolume']->volume as $multivolume) {
@@ -407,16 +422,14 @@ function save_dlts_book($node, $language = 'en') {
           }
         }
       }
-    }
-    else {
+    } else {
       throw new Exception("Fail to import $identifier.");
     }
-  }
-  catch (Exception $e) {
-    watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
-    return array(
+  } catch (Exception $e) {
+    watchdog('dlts_viewer', $e->getMessage(), [], WATCHDOG_CRITICAL);
+    return [
       'error' => $e->getMessage(),
-    );
+    ];
   }
   return $entity;
 }

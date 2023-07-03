@@ -11,7 +11,7 @@
  * @param string $identifier
  *   Identifier.
  */
-function nid_by_identifier($identifier, $language = LANGUAGE_NONE) {
+function nid_by_identifier($identifier, $language = [ LANGUAGE_NONE, 'en' ]) {
   $query = new EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'node')
@@ -31,9 +31,9 @@ function nid_by_identifier($identifier, $language = LANGUAGE_NONE) {
  * @param string $identifier
  *   Identifier.
  */
-function dlts_viewer_list_translation($identifier) {
-  $langs = array();
-  $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
+function dlts_viewer_list_translation($identifier, $bundle = 'dlts_book') {
+  $langs = [];
+  $nids = dlts_viewer_get_translations_nid_by_identifier($identifier, $bundle);
   $nodes = node_load_multiple($nids);
   foreach ($nodes as $node) {
     $langs[$node->language] = "node/$node->nid";
@@ -47,11 +47,11 @@ function dlts_viewer_list_translation($identifier) {
  * @param string $identifier
  *   Identifier.
  */
-function dlts_viewer_get_translations_nid_by_identifier($identifier) {
-  $keys = array();
+function dlts_viewer_get_translations_nid_by_identifier($identifier, $bundle = 'dlts_book') {
+  $keys = [];
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'dlts_book')
+    ->entityCondition('bundle', $bundle)
     ->propertyCondition('status', 1)
     ->fieldCondition('field_identifier', 'value', $identifier, '=')
     ->execute();
@@ -106,7 +106,7 @@ function dlts_viewer_list_books() {
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_book')
-    ->propertyCondition('language', 'en')
+    ->propertyCondition('language', ['en', 'und'])
     ->propertyCondition('status', 1)
     ->addMetaData('account', user_load(0))
     ->execute();
@@ -164,7 +164,7 @@ function dlts_viewer_is_multivolume_book($entity) {
  *   Node.
  */
 function dlts_viewer_is_series_book(&$entity) {
-  $is_part_of = array();
+  $is_part_of = [];
   $entity->isSeriesBook = FALSE;
   $entity_type = 'node';
   $bundle = 'dlts_series_book';
@@ -181,7 +181,7 @@ function dlts_viewer_is_series_book(&$entity) {
       ->entityCondition('entity_type', $entity_type)
       ->entityCondition('bundle', $bundle)
       ->fieldCondition('field_book', 'nid', $book_nid, '=')
-      ->fieldCondition('field_collection', 'nid', array($collection->nid))
+      ->fieldCondition('field_collection', 'nid', [$collection->nid])
       ->execute();
     if (!empty($result['node'])) {
       $entity->isSeriesBook = TRUE;
@@ -208,7 +208,7 @@ function dlts_viewer_is_series_book(&$entity) {
             }
             $series_wrapper = entity_metadata_wrapper($entity_type, $field_series);
             $series_identifier = $series_wrapper->field_identifier->value();
-            $is_part_of[] = array(
+            $is_part_of[] = [
               'series_identifier' => $series_identifier,
               'series' => $series_book_node->title,
               'volume_label' => $volume_title,
@@ -216,7 +216,7 @@ function dlts_viewer_is_series_book(&$entity) {
               'volume_number_str' => $volume_number_str,
               'collection_label' => $collection_label,
               'collection_code' => $collection_code,
-            );
+            ];
           }
         }
       }
@@ -342,33 +342,6 @@ function find_nodes($type) {
   $query = db_query("SELECT DISTINCT nid FROM {node} WHERE type = :type", array('type' => $type));
   // Return nids.
   return $query->fetchAll();
-}
-
-/**
- * Get stitched page by identifier.
- *
- * @param string $identifier
- *   Identifier.
- * @param string $left
- *   Left value.
- * @param string $right
- *   Right value.
- */
-function stitched_page_nid($identifier, $left, $right) {
-  $book_nid = book_nid($identifier);
-  $query = new EntityFieldQuery();
-  $result = $query
-    ->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'dlts_book_stitched_page')
-    ->fieldCondition('field_sequence_number_left', 'value', $left, '=')
-    ->fieldCondition('field_sequence_number_right', 'value', $right, '=')
-    ->fieldCondition('field_book', 'nid', $book_nid, '=')
-    ->execute();
-  if (empty($result['node'])) {
-    return FALSE;
-  }
-  $keys = array_keys($result['node']);
-  return (int) $keys[0];
 }
 
 /**
@@ -573,7 +546,7 @@ function dlts_viewer_books_is_partof_series($nid) {
 function dlts_viewer_subject_tid($subject, $vid) {
   $global_subjects = &drupal_static('global_subjects');
   if (empty($global_subjects)) {
-    $global_subjects = array();
+    $global_subjects = [];
   }
   if (!empty($subject)) {
     $this_subject = trim(preg_replace('/\s\s+/', ' ', str_replace("\n", " ", $subject)));
@@ -609,7 +582,7 @@ function dlts_viewer_subject_vocabulary_vid() {
  * List of created %d-%m-%Y, usuful to select batch of nodes that were publish in a specific day.
  */
 function dlts_viewer_batch_days($collectionCode = NULL, $status = 1, $requestedLang = 'en') {
-  $dates = array();
+  $dates = [];
   $query = "SELECT DISTINCT DATE_FORMAT(FROM_UNIXTIME(node.created), '%d-%m-%Y') created FROM node ";
   if ($collectionCode) {
     $query .= "
@@ -620,10 +593,10 @@ function dlts_viewer_batch_days($collectionCode = NULL, $status = 1, $requestedL
         AND code.field_code_value = :collection_code ";
   }
   $query .= "WHERE node.language = :language AND node.status = :status ORDER BY node.created DESC";
-  $args = array(
+  $args = [
     ':language' => $requestedLang,
     ':status' => $status,
-  );
+  ];
   if ($collectionCode) {
     $args[':collection_code'] = $collectionCode;
   }
@@ -640,27 +613,27 @@ function dlts_viewer_batch_days($collectionCode = NULL, $status = 1, $requestedL
  * @todo document function
  */
 function dlts_viewer_collections($collections) {
-  $value = array();
+  $value = [];
   foreach ($collections as $collection) {
     $collection_wrapper = entity_metadata_wrapper('node', $collection);
     $col_partner = $collection_wrapper->field_partner->value();
     $partner_wrapper = entity_metadata_wrapper('node', $col_partner[0]);
-    $value[] = array(
+    $value[] = [
       'title' => $collection_wrapper->title->value(),
       'identifier' => $collection_wrapper->field_identifier->value(),
       'code' => $collection_wrapper->field_code->value(),
       'name' => $collection_wrapper->field_name->value(),
       'type' => 'dlts_collection',
       'language' => 'und',
-      'partner' => array(
+      'partner' => [
         'title' => $partner_wrapper->title->value(),
         'type' => 'dlts_partner',
         'language' => 'und',
         'identifier' => $partner_wrapper->field_identifier->value(),
         'code' => $partner_wrapper->field_code->value(),
         'name' => $partner_wrapper->field_name->value(),
-      ),
-    );
+      ],
+    ];
   }
   return $value;
 }
@@ -671,14 +644,13 @@ function dlts_viewer_collections($collections) {
  * @todo document function
  */
 function dlts_viewer_multivolume_book_by_book_nid($entity) {
-  $volumes = array();
-  // Only with books.
+  $volumes = [];
   if ($entity->type == 'dlts_book') {
     $query = new EntityFieldQuery();
-    $keys = array();
+    $keys = [];
     $result = $query->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'dlts_multivol_book')
-      ->fieldCondition('field_book', 'nid', array($entity->nid))
+      ->fieldCondition('field_book', 'nid', [$entity->nid])
       ->execute();
     if (!empty($result['node'])) {
       $keys = array_keys($result['node']);
@@ -689,14 +661,198 @@ function dlts_viewer_multivolume_book_by_book_nid($entity) {
           $multivol = $wrapper->field_multivol->value();
           $volume_number = $wrapper->field_volume_number->value();
           $volume_number_str = $wrapper->field_volume_number_str->value();
-          $volumes[] = array(
+          $volumes[] = [
             'multivol' => $multivol->nid,
             'volume_number' => $volume_number,
             'volume_number_str' => $volume_number_str,
-          );
+          ];
         }
       }
     }
   }
   return $volumes;
+}
+
+/**
+ * Undocumented function.
+ */
+function dlts_viewer_admin_list_topics($entity, $status = 1, $requestedLang = 'en') {
+
+  $wrapper = entity_metadata_wrapper('node', $entity);
+
+  $sql = "
+    SELECT
+      DISTINCT field_identifier.field_identifier_value identifier,
+      GROUP_CONCAT(
+        DISTINCT topic.field_topic_value
+        SEPARATOR ' |*| '
+      ) topic
+    FROM node
+    LEFT JOIN field_data_field_identifier field_identifier
+      ON node.nid = field_identifier.entity_id
+    LEFT JOIN field_data_field_topic topic
+      ON node.nid = topic.entity_id
+    LEFT JOIN field_data_field_collection collection
+      ON node.nid = collection.entity_id
+    INNER JOIN field_data_field_code code
+      ON collection.field_collection_nid = code.entity_id
+      AND code.field_code_value = :collection_code
+    WHERE node.language = :language
+    AND node.status = :status
+    GROUP BY field_identifier.field_identifier_value
+    ORDER BY topic ASC
+    ";
+
+  $code = $wrapper->field_code->value();
+
+  $sql_args = [
+    ':language' => $requestedLang,
+    ':collection_code' => $code,
+    ':status' => $status,
+  ];
+
+  $results = db_query($sql, $sql_args)->fetchAll();
+
+  $header = [
+    'Identifier',
+    'Topic',
+  ];
+
+  header('Content-Type: text/csv');
+
+  header('Content-Disposition: attachment;filename=topics-' . $code . '.csv');
+
+  $fp = fopen('php://output', 'w');
+
+  fwrite($fp, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
+
+  fputcsv($fp, $header);
+
+  foreach ($results as $result) {
+    fputcsv($fp, array_values((array) $result), ',');
+  }
+
+  fclose($fp);
+
+  exit;
+
+}
+
+// $entity (collection entity) $date to filter by
+function dlts_viewer_admin_list_topics_($entity, $date, $requestedLang = 'en') {
+  $wrapper = entity_metadata_wrapper('node', $entity);
+  $status = 1;
+  $sql = "
+    SELECT
+      DISTINCT field_identifier.field_identifier_value identifier,
+      DATE_FORMAT(
+        FROM_UNIXTIME(node.created),
+        '%d-%m-%Y'
+      ) date,
+      GROUP_CONCAT(
+        DISTINCT topic.field_topic_value
+        SEPARATOR ' |*| '
+      ) topic,
+      field_data_field_call_number.field_call_number_value call_number
+    FROM node
+    LEFT JOIN field_data_field_identifier field_identifier
+      ON node.nid = field_identifier.entity_id
+    LEFT JOIN field_data_field_topic topic
+      ON node.nid = topic.entity_id
+    LEFT JOIN field_data_field_call_number
+      ON node.nid = field_data_field_call_number.entity_id
+    LEFT JOIN field_data_field_collection collection
+      ON node.nid = collection.entity_id
+    INNER JOIN field_data_field_code code
+      ON collection.field_collection_nid = code.entity_id
+      AND code.field_code_value = :collection_code
+    WHERE node.language = :language
+    AND DATE_FORMAT(FROM_UNIXTIME(node.created), '%d-%m-%Y') = :date
+    AND node.status = :status
+    GROUP BY field_identifier.field_identifier_value
+    ORDER BY node.created DESC";
+
+  $sql_args = [
+    ':language' => $requestedLang,
+    ':collection_code' => $wrapper->field_code->value(),
+    ':status' => $status,
+    ':date' => $date,
+  ];
+
+  $results = db_query($sql, $sql_args)->fetchAll();
+
+  // Send response headers to the browser.
+  header('Content-Type: text/csv');
+  header('Content-Disposition: attachment;filename=' . $date . '.csv');
+
+  $fp = fopen('php://output', 'w');
+
+  fputs($fp, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+
+  fputcsv($fp, array('Identifier', 'Date', 'Topic', 'Call_number'));
+
+  foreach ($results as $result) {
+    fputcsv($fp, array_values((array) $result), ',');
+  }
+
+  fclose($fp);
+
+  exit;
+
+}
+
+/**
+ * Get partner nid by code.
+ *
+ * @param string $code
+ *   Code.
+ */
+function partner_by_code($code) {
+  $query = new EntityFieldQuery();
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_partner')
+    ->fieldCondition('field_code', 'value', $code, '=')
+    ->execute();
+  if (empty($result['node'])) {
+    return FALSE;
+  }
+  $keys = array_keys($result['node']);
+  return node_load($keys[0]);
+}
+
+/**
+ * Find resource to update.
+ */
+function dlts_viewer_resources_to_update() {
+
+  $collections = [
+    'dlts_book' => 'dlts_books_page',
+    'dlts_map' => 'dlts_map_page',
+    'dlts_photo_set' => 'dlts_photo',
+    'dlts_postcard' => 'dlts_postcard',
+  ];
+
+  foreach ($collections as $collection) {
+    $docs = mongodb_collection($collection)->distinct('isPartOf', [ 'cm.width' => '' ]);
+    foreach ($docs as $identifier) {
+      $rows[] = [
+        'collection' => $collection,
+        'isPartOf' => $identifier,
+      ];
+    }
+  }
+
+  if (!empty($rows)) {
+    return [
+      'numFound' => count($rows),
+      'docs' => $rows,
+    ];
+  } else {
+    return [
+      'numFound' => 0,
+      'docs' => [],
+    ];
+  }
+
 }

@@ -24,7 +24,7 @@
   $document->addField('ss_identifier', $identifier);
 
   // Searchable content; dump all you want to be searchable in this array.
-  $searchableFields = array($document->content);
+  $searchableFields = [ $document->content ];
 
   // Multi-value field.
   dlts_solr_index_collection($wrapper->field_collection->value(), $document, $entity, $searchableFields);
@@ -50,10 +50,6 @@
   $document->addField('ss_noid', $noid[count($noid) - 1]);
 
   $field_title = $node->title;
-
-  // https://dev-sites.dlib.nyu.edu/viewer/api/presentation/books/tamwag_palante000011/manifest.json
-  // https://dev-sites.dlib.nyu.edu/viewer/api/presentation/photos/AD-MC-016_ref52/manifest.json
-  // https://dev-sites.dlib.nyu.edu/viewer/api/presentation/maps/fales_io_map000031/manifest.json
 
   $document->addField('ss_manifest', "$base_url/api/presentation/photos/$identifier/manifest.json");
 

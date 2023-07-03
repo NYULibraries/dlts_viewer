@@ -6,32 +6,29 @@
  */
 
 /**
- * A wildcard loader for dlts_resource, using noid.
+ * A wildcard loader for dlts_noid.
  *
  * @parameter string $identifier
  *  The value of noid.
  *
  * @return object
- *   A node object.
+ *   A resource object.
  */
-function dlts_noid_load($noid) {
-  $language = ['en', LANGUAGE_NONE];
-  $query_parameters = drupal_get_query_parameters();
-  if (isset($query_parameters['lang'])) {
-    $language = array(filter_xss($query_parameters['lang']));
-  }
-  $query = new EntityFieldQuery();
-  $result = $query
-    ->entityCondition('entity_type', 'node')
-    ->propertyCondition('language', $language)
-    ->propertyCondition('status', 1)
-    ->fieldCondition('field_handle', 'url', '%' . db_like($noid) . '%', 'LIKE')
-    ->addTag('node_access')
-    ->execute();
-  if (empty($result['node'])) {
+function dlts_noid_load($id) {
+  $id = filter_xss($id);
+  // id can be noid or identifier.
+  $results = db_query(
+    'SELECT * FROM dlts_viewer_resource 
+     WHERE noid = :id 
+     OR identifier = :id 
+     LIMIT 1',
+    [ ':id' => $id ]
+    )->fetchAll();
+
+  if (empty($results)) {
     return FALSE;
+  } else {
+    $result = array_pop($results);
+    return $result;
   }
-  $keys = array_keys($result['node']);
-  $nid = array_pop($keys);
-  return node_load($nid);  
 }

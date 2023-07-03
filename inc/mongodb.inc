@@ -16,21 +16,19 @@
  * @return string
  *   Collection name.
  */
-function dlts_viewer_mongodb_collections_by_type($type, $view = '') {
-  // View modes, we map the views with their machine names in MongoDB.
-  $collections = array(
+function dlts_viewer_mongodb_collections_by_type($type) {
+  $collections = [
     'dlts_book' => 'dlts_books_page',
     'dlts_collection' => 'dlts_collection',
     'dlts_map' => 'dlts_map_page',
     'dlts_partner' => 'dlts_partner',
     'dlts_photo_set' => 'dlts_photo',
     'dlts_postcard' => 'dlts_postcard',
-  );
+  ];
   if (isset($collections[$type])) {
     return $collections[$type];
-  }
-  else {
-    // Error.
+  } else {
+    return FALSE;
   }
 }
 
@@ -52,37 +50,33 @@ function dlts_viewer_mongodb_update_sequence(array $arguments, $collection_name 
   if (isset($data['_id'])) {
     unset($data['_id']);
   }
-  $query = array(
+  $query = [
     'sequence' => $data['sequence'],
     'isPartOf' => $data['isPartOf'],
-  );
-  // Find document and modify
+  ];
+  // Find document and modify.
   // See: https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/
   // See: http://php.net/manual/en/mongocollection.findandmodify.php
   $op = $cursor->findAndModify(
-    $query,
-    array(
-      '$set' => $data,
-    ),
+    $query, 
+    [ '$set' => $data ], 
     NULL,
-    array(
-      'sort' => array(
-        'rating' => 1,
-      ),
+    [
+      'sort' => [ 'rating' => 1 ],
       'upsert' => TRUE,
       'new' => TRUE,
-    )
+    ]
   );
   // We should have the current result document as an associative array.
   // if NULL, we have a problem, log error.
   if (!$op) {
     watchdog(
       'MongoDB update document',
-      'Unable to update book sequence page <strong>%sequence</strong> from book <strong>%identifier</strong>.',
-      array(
+      'Unable to update sequence page <strong>%sequence</strong> from resource <strong>%identifier</strong>.',
+      [
         '%identifier' => $arguments['isPartOf'],
         '%sequence' => $arguments['sequence'],
-      ),
+      ],
       WATCHDOG_ERROR
     );
     return FALSE;
@@ -109,7 +103,7 @@ function dlts_viewer_mongodb_new_sequence($arguments, $collection_name = 'dlts_b
  *   Item.
  */
 function dlts_viewer_mongodb_load_by_identifier($identifier, $collection_name) {
-  $query = array('identifier' => $identifier);
+  $query = [ 'identifier' => $identifier ];
   $cursor = mongodb_collection($collection_name);
   $result = $cursor->findOne($query);
   return $result;
@@ -127,7 +121,7 @@ function dlts_viewer_mongodb_load_by_identifier($identifier, $collection_name) {
  *   Item.
  */
 function dlts_viewer_mongodb_load_by_item_identifier($isPartOf, $collection_name) {
-  $query = array('isPartOf' => $isPartOf);
+  $query = [ 'isPartOf' => $isPartOf ];
   $cursor = mongodb_collection($collection_name);
   $result = $cursor->find($query);
   return $result;
@@ -146,70 +140,15 @@ function dlts_viewer_mongodb_load_by_item_identifier($isPartOf, $collection_name
  * @return array
  *   Sequence.
  */
-function dlts_viewer_mongodb_load_sequence(int $sequence, $isPartOf, $collection_name = 'dlts_books_page') {
+function dlts_viewer_mongodb_load_sequence($sequence = 1, $isPartOf, $collection_name = 'dlts_books_page') {
   // Prepare query.
-  $query = array(
+  $query = [
     'isPartOf' => $isPartOf,
-    'sequence' => $sequence,
-  );
+    'sequence' => (int) $sequence,
+  ];
   $cursor = mongodb_collection($collection_name);
   $result = $cursor->findOne($query);
   return $result;
-}
-
-/**
- * Load thumbnails.
- *
- * @param string $isPartOf
- *   Identifier.
- * @param int $page
- *   Pagination page.
- * @param int $per_page
- *   Items per page.
- * @param string $collection_name
- *   Name of collection to table to query.
- * @param string $content_type
- *   Type of resource.
- * @param bool $embeded_thumb
- *   True if embeded.
- *
- * @return array
- *   List of items and count.
- */
-function dlts_viewer_mongodb_load_thumbnails($isPartOf, $page = 0, $per_page = 10, $collection_name = NULL, $content_type = NULL, $embeded_thumb = FALSE) {
-  // Load helpers.
-  module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
-  $items = array();
-  $query = array('isPartOf' => $isPartOf);
-  $cursor = mongodb_collection($collection_name)->find($query);
-  $per_page = (int) $per_page;
-  $page = (int) $page;
-  // No need to continue if request does not have items.
-  $count = $cursor->count();
-  if ($cursor->count() > 0) {
-    // DLTSVIEWER-27.
-    // @link https://docs.mongodb.org/manual/reference/method/cursor.sort/
-    $cursor->sort(array('sequence' => 1));
-    $cursor->limit($per_page);
-    $cursor->skip($per_page * $page);
-    // DLTSVIEWER-27.
-    $cursor->sort(array('sequence' => 1));
-    $cursor->limit($per_page);
-    $thumbnails = $cursor->skip($per_page * $page);
-    foreach ($thumbnails as $thumbnail) {
-      if (is_array($thumbnail['sequence'])) {
-        $thumbnail['sequence'] = min($thumbnail['sequence']);
-      }
-      $thumbnail['url'] = url($content_type . '/' . $isPartOf . '/' . $thumbnail['sequence'], array('absolute' => TRUE));
-      if (dlts_viewer_is_embed() && $collection_name == 'dlts_photo') {
-        $thumbnail['url'] = url($thumbnail['url'], array('query' => array('embed' => 'true')));
-      }
-      $thumbnail['imageServeURI'] = dlts_viewer_djatoka_url($thumbnail['cm'], $embeded_thumb);
-      $items[] = $thumbnail;
-    }
-    return array('count' => $count, 'items' => $items);
-  }
-  return FALSE;
 }
 
 /**
@@ -224,13 +163,169 @@ function dlts_viewer_mongodb_load_thumbnails($isPartOf, $page = 0, $per_page = 1
  *   Resource.
  */
 function dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name) {
-  $items = array();
-  $query = array('isPartOf' => $identifier);
+  $items = [];
+  $query = [ 'isPartOf' => $identifier ];
   $cursor = mongodb_collection($collection_name)->find($query);
   $count = $cursor->count();
   if ($count > 0) {
-    $cursor->sort(array('sequence' => 1));
+    $cursor->sort([ 'sequence' => 1 ]);
     return $cursor->skip(0);
   }
   return $items;
+}
+
+/**
+ * Admin page: Review record.
+ *
+ * @param string $identifier OR $noid
+ *   Identifier or NoId.
+ */
+function dlts_viewer_dispatch_mongodb_record($record) {
+
+  global $base_url;
+
+  $identifier = $record->identifier;
+
+  $entity = node_load($record->nid);
+
+  // Wrapp book entity with Entity API wrapper.
+  $wrapper = entity_metadata_wrapper('node', $entity);
+
+  $title = $wrapper->field_title->value();  
+
+  $title = html_entity_decode($title, ENT_QUOTES);
+
+  // Set entity title.
+  drupal_set_title($title);
+
+  $bundle = $wrapper->getBundle();
+
+  $type = dlts_viewer_resource_type($bundle);
+
+  $collection_name = dlts_viewer_mongodb_collections_by_type($bundle);
+
+  $page = 0;
+
+  $rows = [];
+
+  $node_rows = [];
+
+  $handle = $wrapper->field_handle->value();
+  
+  $c = $wrapper->field_collection->value();
+  
+  $cwrapper = entity_metadata_wrapper('node', $c[0]);
+  
+  $collection = $cwrapper->field_name->value();
+  
+  $p = $wrapper->field_partner->value();
+  
+  $pwrapper = entity_metadata_wrapper('node', $p[0]);
+  
+  $partner = $pwrapper->field_name->value();
+
+  $per_page = (int) $wrapper->field_sequence_count->value();
+  
+  $cursor = mongodb_collection($collection_name)->find([ 'isPartOf' => $identifier ]);
+  
+  $count = $cursor->count();
+  
+  $noid = $record->noid;
+  
+  if ($count > 0) {
+    $cursor->sort([ 'sequence' => 1 ]);
+    $cursor->limit($per_page);
+    $docs = $cursor->skip($per_page * $page);
+    foreach ($docs as $doc) {
+      $sequence = $doc['realPageNumber'];
+      $thumbnail = "<a href='$base_url/$type/$identifier/$sequence'><img loading='lazy' src='$base_url/api/image/$type/$identifier/$sequence/full/150,/0/default.jpg'></a>";
+      $height = isset($doc['cm']['height']) ? $doc['cm']['height'] : '';
+      $width = isset($doc['cm']['width']) ? $doc['cm']['width'] : '';
+      $uri = $doc['cm']['uri'];
+      $rows[] = [
+        [ 'field' => 'sequence', 'data' => $thumbnail ],
+        [ 'field' => 'uri', 'data' => "<a href='$base_url/api/image/$type/$identifier/$sequence/full/full/0/default.jpg'>$uri</a>" ],
+        [ 'field' => 'height', 'data' => $height ],
+        [ 'field' => 'width', 'data' => $width ],        
+      ];
+    }
+  }
+  $node_rows = [
+    [
+      [ 'field' => 'label', 'data' => 'Title' ],
+      [ 'field' => 'value', 'data' => $title ],
+    ],      
+    [
+      [ 'field' => 'label', 'data' => 'Handle' ],
+      [ 'field' => 'value', 'data' => $handle['url'] ],
+    ],
+    [
+      [ 'field' => 'label', 'data' => 'NoId' ],
+      [ 'field' => 'value', 'data' => $noid ],
+    ],
+    [
+      [ 'field' => 'label', 'data' => 'Type' ],
+      [ 'field' => 'value', 'data' => $type ],
+    ],      
+    [
+      [ 'field' => 'label', 'data' => 'Sequence count' ],
+      [ 'field' => 'value', 'data' => $per_page ],
+    ],
+    [
+      [ 'field' => 'label', 'data' => 'Collection' ],
+      [ 'field' => 'value', 'data' => $collection ],
+    ],
+    [
+      [ 'field' => 'label', 'data' => 'Partner' ],
+      [ 'field' => 'value', 'data' => $partner ],
+    ],                  
+  ];    
+
+  $node_table = [
+    'header' => [
+      [ 'data' => 'Label', 'field' => 'label' ],
+      [ 'data' => 'Value', 'field' => 'value' ],
+    ],
+    'rows' => $node_rows,
+    'attributes' => [],
+    'empty' => 'No records found.',
+    'sticky' => FALSE,
+    'caption' => 'Metadata',
+    'colgroups' => [],
+  ];
+
+  $records_table = [
+    'header' => [
+      [ 'data' => 'Sequence', 'field' => 'sequence' ],
+      [ 'data' => 'Master file', 'field' => 'uri' ],
+      [ 'data' => 'Height', 'field' => 'height' ],
+      [ 'data' => 'Width', 'field' => 'width' ],
+    ],
+    'empty' => 'No records found.',
+    'rows' => $rows,
+    'sticky' => TRUE,
+    'attributes' => [],
+    'caption' => 'Sequences',
+    'colgroups' => [],
+  ];
+
+  $output = '
+    <script src="https://polyfill.io/v3/polyfill.min.js?flags=gated&features=IntersectionObserver" crossorigin="anonymous"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/loading-attribute-polyfill@0.2.0/loading-attribute-polyfill.min.js" integrity="sha256-kX73NqVUoUbV0K44kgoqP8P8IZfU0OEjr/afCnK2Mrg=" crossorigin="anonymous"></script>
+    <style>
+      caption {
+        text-align: left;
+        margin-bottom: 1em;
+        font-weight: bold;
+      }
+      td img {
+        width: 100px;
+      }
+    </style>
+   ';
+
+  $output .= theme_table($node_table) . '<hr style="border-top: 1px gray red; display: block; margin-top: 1.5em; margin-bottom: 1em;">' . theme_table($records_table);
+  
+  return $output;
+
 }

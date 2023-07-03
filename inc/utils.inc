@@ -10,10 +10,11 @@
  * @link https://iiif.io/api/presentation/3.0/#63-responses
  */
 function dlts_viewer_ldjson_iiif_presentation_3_output($var = NULL) {
-  // We are returning JSON, so tell the browser.
   drupal_add_http_header('Content-Type', 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"');
-  if (isset($var)) {
+  if (isset($var) && is_array($var)) {
     echo drupal_json_encode($var);
+  } elseif (isset($var) && is_string($var)) {
+    echo $var;
   }
 }
 
@@ -57,7 +58,6 @@ function dlts_viewer_content_by_field($field_name) {
   $out = array();
   $field_name = filter_xss($field_name);
   $info = field_info_field($field_name);
-  $query_parameters = drupal_get_query_parameters();
   if ($info) {
     $m = array_keys($info['storage']['details']['sql']['FIELD_LOAD_CURRENT']);
     $table = $m[0];
@@ -100,11 +100,12 @@ function dlts_viewer_content_by_field($field_name) {
  *   Return Objects list that map the object type to it's route.
  */
 function dlts_viewer_object_types() {
-  return array(
+  return [
     'book' => 'books',
     'photo' => 'photos',
     'map' => 'maps',
-  );
+    'postcard' => 'postcards',
+  ];
 }
 
 /**
@@ -119,6 +120,7 @@ function dlts_viewer_resource_type($type = NULL) {
     'dlts_photo_set' => 'photos',
     'dlts_photo' => 'photos',
     'dlts_map' => 'maps',
+    'dlts_postcard' => 'postcards',
   ];
   if (isset($resources[$type])) {
     return $resources[$type];
@@ -190,41 +192,13 @@ function dlts_viewer_mobile_detect() {
 }
 
 /**
- * Check if this is a PJAX request.
- *
- * @return bool
- *   Return a boolean indicating whether this is a PJAX request.
- */
-function dlts_viewer_is_pjax() {
-  $is_pjax = &drupal_static('is_pjax');
-  if (!isset($is_pjax) && function_exists('getallheaders')) {
-    $headers = getallheaders();
-    if (isset($headers['X-Pjax']) || isset($headers['X-PJAX'])) {
-      drupal_add_http_header('uri', request_uri());
-      $is_pjax = TRUE;
-    }
-    else {
-      $params = drupal_get_query_parameters();
-      if (isset($params['pjax'])) {
-        drupal_add_http_header('uri', base_path() . request_uri());
-        $is_pjax = TRUE;
-      }
-      else {
-        $is_pjax = FALSE;
-      }
-    }
-  }
-  return $is_pjax;
-}
-
-/**
  * Check if the client requested a embeded view.
  *
  * @return bool
  *   Return a boolean indicating whether this is a embeded view request.
  */
 function dlts_viewer_is_embed() {
-  $is_embed = TRUE;
+  return TRUE;
 }
 
 /**
@@ -286,33 +260,6 @@ function dlts_viewer_viewer_language($vars = NULL) {
     }
   }
   return $viewer_language;
-}
-
-/**
- * Retruns nodeid.
- *
- * @param string $dlts_id
- *   NOID.
- * @param string $lang_code
- *   Language code.
- *
- * @return array
- *   ISO 639-1.
- */
-function return_nodeid_json($dlts_id, $lang_code = NULL) {
-  $langs = $lang_code ? array($lang_code) : array('und', 'en');
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'node', '=')
-    ->propertyCondition('language', $langs, 'IN')
-    ->fieldCondition('field_identifier', 'value', $dlts_id, '=');
-  $result = $query->execute();
-  $nodeids = array();
-  if (isset($result['node'])) {
-    foreach ($result['node'] as $node) {
-      $nodeids[] = $node->nid;
-    }
-  }
-  return $nodeids;
 }
 
 /**
@@ -586,4 +533,29 @@ function dlts_viewer_is_serialized($data, $strict = TRUE) {
       return (bool) preg_match("/^{$token}:[0-9.E+-]+;$end/", $data);
   }
   return FALSE;
+}
+
+function dlts_viewer_content_types_type($type) {
+  $content_type = node_type_get_type($type);
+  if (!$content_type) {
+    return;
+  }
+  $fields = [];
+  $field_info_instances = field_info_instances('node', $content_type->type);
+  foreach ($field_info_instances as $field_name => $field_info_instance) {
+    $info = field_info_field($field_name);
+    $fields[] = [
+      'label' => $field_info_instance['label'],
+      'field_name' => $field_info_instance['field_name'],
+      'type' => $field_info_instance['widget']['type'],
+      'cardinality' => (string) $info['cardinality'],
+      'settings' => [
+        'allowed_values' => isset($info['settings']['allowed_values']) ? $info['settings']['allowed_values'] : NULL,
+      ],
+    ];
+  }
+  return [
+    'typeInfo' => $content_type,
+    'fields' => $fields,
+  ];
 }

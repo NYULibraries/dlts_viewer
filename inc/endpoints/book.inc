@@ -2,24 +2,18 @@
 
 /**
  * @file
- * Wildcard loaders.
+ * Book endpoints.
  */
 
 /**
- * A wildcard loader for dlts_book nodes, using the book identifier.
- *
- * @parameter $identifier
- *  The value of field_identifier for a dtls_book node.
- *
- * @return object
- *   A node object with the given value for field_identifier.
+ * Update book (PUT)
  */
 function dlts_viewer_api_v1_update_book($entity) {
   // @todo Also filter by hosts with access
   if (user_access('dlts create object') && $_SERVER['REQUEST_METHOD'] == 'PUT') {
     // curl -b ./cookie -X PUT -H 'Content-Type: application/json' -H 'Accept: application/json' --data "@adl0617.en.put.json" http://localhost:9000/api/v1/objects/books/princeton_aco004688
     try {
-      $type = dlts_utilities_content_types_type($entity->type);
+      $type = dlts_viewer_content_types_type($entity->type);
       $fields = [];
       $edit = [];
       $decoded_input = json_decode(file_get_contents('php://input'));
@@ -54,9 +48,12 @@ function dlts_viewer_api_v1_update_book($entity) {
       else {
         throw new Exception('Unable to read input.');
       }
+    } catch (Exception $e) {
+      return [ $e->getMessage() ];
     }
-    catch (Exception $e) {
-      return [$e->getMessage()];
-    }
+  } else {
+    // @TODO: I need to test this and return something that
+    // makes sense.
+    return [ 'Error: Action not allowed.' ];
   }
 }

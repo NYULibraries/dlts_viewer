@@ -58,7 +58,6 @@ function _dlts_viewer_menu_photo() {
       'delivery callback' => 'drupal_deliver_html_page',
       'type' => MENU_CALLBACK,
     ],
-
   ];
   return $items;
 }

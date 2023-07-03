@@ -18,7 +18,6 @@ function dlts_solr_index_book_series($document, $entity, $searchableFields) {
    * Pass entity as reference and check if this books is part of a series.
    * If book belong to a series, populat isSeriesBook.
    */
-
   dlts_viewer_is_series_book($entity);
   if ($entity->isSeriesBook) {
     /*
@@ -38,9 +37,8 @@ function dlts_solr_index_book_series($document, $entity, $searchableFields) {
       $document->addField('zm_' . $prefix . 'series_data', json_encode($series));
     }
   }
-  $m = array();
+  $m = [];
   $bundle = 'dlts_series_book';
-
   // Let's find out if this one have a Series books.
   // @link https://jira.nyu.edu/jira/browse/AWDL-211
   $nodes_dlts_series_book = dlts_viewer_series_book($entity->nid);
@@ -54,18 +52,18 @@ function dlts_solr_index_book_series($document, $entity, $searchableFields) {
     if ($_series) {
       $series_node = node_load($_series->nid);
       $series_wrapper = entity_metadata_wrapper('node', $series_node);
-      $series_book_collections = array();
+      $series_book_collections = [];
       $series_book_collection = $__wrapper_dlts_series_book->field_collection->value();
       foreach ($series_book_collection as $value) {
         $collection_wrapper = entity_metadata_wrapper('node', $value);
-        $series_book_collections[] = array(
+        $series_book_collections[] = [
           'label' => $value->title,
           'code' => $collection_wrapper->field_code->value(),
           'name' => $collection_wrapper->field_name->value(),
           'identifier' => $collection_wrapper->field_identifier->value(),
-        );
+        ];
       }
-      $m[] = array(
+      $m[] = [
         'series_book_nid' => $node_dlts_series_book->nid,
         'series_book_label' => $node_dlts_series_book->title,
         'series_book_identifier' => $__wrapper_dlts_series_book->field_identifier->value(),
@@ -75,7 +73,7 @@ function dlts_solr_index_book_series($document, $entity, $searchableFields) {
         'series_nid' => $_series->nid,
         'series_identifier' => $series_wrapper->field_identifier->value(),
         'series_label' => $series_node->title,
-      );
+      ];
     }
   }
 
@@ -91,8 +89,7 @@ function dlts_solr_index_book_series($document, $entity, $searchableFields) {
             }
           }
         }
-      }
-      else {
+      } else {
         if (!empty($b[$c])) {
           $document->addField('sm_' . $prefix . $c, $b[$c]);
         }
@@ -114,8 +111,6 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
   }
   // Add translations helper.
   module_load_include('inc', 'dlts_solr', 'inc/translations');
-  // Add image server helper.
-  module_load_include('inc', 'dlts_viewer', 'inc/djatoka');
   // Wrapp multi-volume entity with Entity API wrapper.
   $wrapper = entity_metadata_wrapper('node', $entity);
   // Single-value field.
@@ -126,9 +121,9 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
     return;
   }
   $document->addField('ss_book_identifier', $identifier);
-  $document->addField('ss_uri', url('books/' . $identifier . '/1', array('absolute' => TRUE)));
+  $document->addField('ss_uri', url("books/$identifier/1", [ 'absolute' => TRUE ]));
   // Searchable content; dump all you want to be searchable in this array.
-  $searchableFields = array($document->content);
+  $searchableFields = [ $document->content ];
 
   /*
    * content type fields
@@ -178,8 +173,7 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
   }
   unset($handle);
 
-  // https://dev-sites.dlib.nyu.edu/viewer/api/presentation/books/tamwag_palante000011/manifest.json
-  $document->addField('ss_manifest', "$base_url/api/presentation/books/$identifier/manifest.json");  
+  $document->addField('ss_manifest', "$base_url/api/presentation/books/$identifier/manifest.json");
 
   /*
    * Title (field_title)
@@ -275,32 +269,11 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
     $document->addField('ss_number', $number);
   }
   unset($number);
-  /** Representative image (field_representative_image) */
-  /** single-value field */
-  $representative_image = $wrapper->field_representative_image->value();
-  if (!empty($representative_image)) {
-    $pathinfo = pathinfo($representative_image['uri']);
-    /** load Image Server util */
-    $ri = '';
-    if ($pathinfo['extension'] == 'jpg') {
-      $ri = file_create_url($representative_image['uri']);
-    }
-    elseif ($pathinfo['extension'] == 'jp2') {
-      $ri = dlts_viewer_djatoka_url($representative_image,false,true);
-    }
-    $dirname = $pathinfo['dirname'];
-    $dir_path = pathinfo($dirname);
-    $basename = $dir_path['basename'];
-    $site_image = $basename.'/'.$pathinfo['filename'];
-    $document->addField('ss_representative_image', $ri);
-    $document->addField('ss_site_image', $site_image);
-  }
-  unset($ri);
-  unset($dirname);
-  unset($dir_path);
-  unset($base_name);
-  unset($site_image);
-  unset($representative_image);
+
+  $document->addField('ss_representative_image', "$base_url/api/image/books/$identifier/1/full/full/0/default.jpg");
+
+  $document->addField('ss_site_image', "$base_url/api/image/books/$identifier/1/full/full/0/default.jpg");
+
   /** Author (field_author) */
   /** multi-value field */
   $authors = $wrapper->field_author->value();
@@ -426,7 +399,7 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
     if ($index == 0) {
       $document->addField('iass_subject', $subject->name);
     }
-      $document->addField('zm_subject',json_encode(array('name'=>$subject->name,'tid' => $subject->tid, 'vid' => $subject->vid)));
+      $document->addField('zm_subject', json_encode(array('name'=>$subject->name,'tid' => $subject->tid, 'vid' => $subject->vid)));
     }
   }
   unset($subjects);
@@ -435,7 +408,7 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
 
   // PDF
   // See: DLTSACO-775
-  $pdfs = array();
+  $pdfs = [];
   $field_pdf = $wrapper->field_pdf_file->value();
   if ($field_pdf && !empty($field_pdf)) {
     foreach ($field_pdf as $key => $pdf) {
@@ -469,24 +442,12 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
         if ($pdf_data['filesize'] && $pdf_data['filesize'] > 0) {
           $pdfs[$pdf_kind]['filesize'] = $pdf_data['filesize'];
         } else {
-          $pdfs[$pdf_kind]['filesize'] = field_fileserver_get_pdf_filesize(
-            array(
-              'uri' => $pdfs[$pdf_kind]['uri'],
-            )
-          );
+          $pdfs[$pdf_kind]['filesize'] = field_fileserver_get_pdf_filesize([ 'uri' => $pdfs[$pdf_kind]['uri'] ]);
         }
+      } else {
+        $pdfs[$pdf_kind]['filesize'] = field_fileserver_get_pdf_filesize([ 'uri' => $pdfs[$pdf_kind]['uri'] ]);
       }
-      // no $data
-      else {
-        $pdfs[$pdf_kind]['filesize'] = field_fileserver_get_pdf_filesize(
-          array(
-            'uri' => $pdfs[$pdf_kind]['uri'],
-          )
-        );
-      }
-
       $_fieldname = 'zm_pdf_' . $pdf_kind;
-
       $document->addField($_fieldname, json_encode($pdfs[$pdf_kind]));
     }
   }
