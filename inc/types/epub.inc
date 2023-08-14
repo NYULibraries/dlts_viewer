@@ -190,6 +190,8 @@ function dlts_viewer_admin_partner_epubs($publisher) {
  */
 function dlts_viewer_epub_license($link) {
 
+  $link = strip_tags(filter_xss($link));
+
   $licenses = [
     'https://creativecommons.org/licenses/by/4.0/' => [
       'id' => '1',
@@ -234,8 +236,6 @@ function dlts_viewer_epub_license($link) {
       'label' => 'Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License',
     ],
   ];
-
-  $index = strip_tags(filter_xss($link));                                                                         
                                                                                                                   
   return (object) $licenses[$link];
 
