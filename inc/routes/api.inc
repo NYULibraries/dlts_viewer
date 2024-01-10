@@ -144,7 +144,7 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
   
-  // Update book.
+  // Update/Delete book.
   $items['api/v1/objects/books/%dlts_book'] = [
     'title' => 'Update book',
     'access arguments' => [
@@ -262,16 +262,6 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
-  // @TODO: Remove route.
-  $items['api/v1/image/resolver'] = [
-    'title' => 'Image resolver',
-    'access arguments' => [
-      'access content',
-    ],
-    'page callback' => 'dlts_viewer_djakota_resolver_stream',
-    'file' => 'inc/endpoints.inc',
-  ];
-
   // List collections.
   $items['api/v1/collections'] = [
     'access arguments' => [
@@ -316,7 +306,6 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints/sequence.inc',
   ];
   
-
   $items['api/v1/epubs'] = [
     'title' => 'Create object',
     'access arguments' => [
@@ -357,6 +346,16 @@ function _dlts_viewer_menu_api() {
     'delivery callback' => 'drupal_json_output',
     'type' => MENU_CALLBACK,
     'file' => 'inc/endpoints/eads.inc',
+  ];
+
+  $items['api/v1/ijson/%/%'] = [
+    'title' => 'iJSON',
+    'access arguments' => [ 'access content' ],
+    'page callback' => 'dlts_viewer_ijson_dispatcher',
+    'page arguments' => [ 3, 4 ],
+    'delivery callback' => 'drupal_json_output',
+    'type' => MENU_CALLBACK,
+    'file' => 'inc/endpoints/ijson.inc',
   ];
 
   return $items;

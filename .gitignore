@@ -25,3 +25,6 @@ curl-pass
 node_modules
 
 TODO.md
+delete.sh
+
+viewers/*

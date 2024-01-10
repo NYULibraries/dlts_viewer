@@ -134,8 +134,6 @@ function dlts_viewer_map_dispatcher($entity, array $arg) {
   // Metadata button.
   $button_metadata = theme('dlts_viewer_navbar_item', $button_metadata_options);
 
-  $controlpanel_button = theme('dlts_viewer_controlpanel');
-
   // Map page sequence number.
   $entity->book_page_sequence_number = 1;
 

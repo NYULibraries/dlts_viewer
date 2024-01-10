@@ -302,6 +302,10 @@ function dlts_viewer_epubs_metadata_v0($data) {
   // "subject": "African American Studies / Law / Sociology",
   // "subject_facet": "African American Studies / Law / Sociology",    
   
+  $author = '';
+
+  $author_sort = '';
+
   $identifier = $data->isbn13;
 
   $keywords = [];
@@ -316,8 +320,8 @@ function dlts_viewer_epubs_metadata_v0($data) {
 
   $title = $data->title;
   
-  $authors = $data->contributors;
-
+  $authors = (isset($data->contributors) && !empty($data->contributors)) ? $data->contributors : [];
+  
   usort($authors, function($a, $b) {
     return $a->order <=> $b->order;
   });
@@ -329,16 +333,20 @@ function dlts_viewer_epubs_metadata_v0($data) {
   if (count($authors_display) > 1) {
     $author = implode(', ', $authors_display);
   } else {
-    $author = $authors[0]->contributor->name;
+    if (!empty($authors)) {
+      $author = $authors[0]->contributor->name;
+    }    
   }
 
-  if (isset($authors[0]->contributor->first) && isset($authors[0]->contributor->last)) {
-    $author_sort = $authors[0]->contributor->last . ', ' . $authors[0]->contributor->first;
-  } else {
-    $author_sort = explode(' ', $authors[0]->contributor->name);
-    $lastname = end($author_sort);
-    array_pop($author_sort);
-    $author_sort = $lastname . ', ' . implode(' ', $author_sort);
+  if (!empty($authors)) {
+    if (isset($authors[0]->contributor->first) && isset($authors[0]->contributor->last)) {
+      $author_sort = $authors[0]->contributor->last . ', ' . $authors[0]->contributor->first;
+    } else {
+      $author_sort = explode(' ', $authors[0]->contributor->name);
+      $lastname = end($author_sort);
+      array_pop($author_sort);
+      $author_sort = $lastname . ', ' . implode(' ', $author_sort);
+    }
   }
 
   if (!empty($data->categories)) {

@@ -65,9 +65,8 @@ function _dlts_viewer_menu_iiif() {
    */
 
   // Proxy Image service.
-  // @link https://[HOST]/api/image/books/uaena_aco000016/1/info.json
-  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence'] =
-  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/info.json'] = [
+  // @link https://[HOST]/api/image/books/uaena_aco000016/1
+  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence'] = [
     'title' => 'IIIF API - Request metadata',
     'access arguments' => [ 'access iiif content' ],
     'page callback' => 'dlts_viewer_iiif_api',
@@ -77,6 +76,8 @@ function _dlts_viewer_menu_iiif() {
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/iiif.inc',
   ];
+
+  $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/info.json'] = $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence'];
 
   // Request image.
   // @link https://iiif.io/api/image/2.0
@@ -109,6 +110,15 @@ function _dlts_viewer_menu_iiif() {
     'type' => MENU_CALLBACK,
     'load arguments' => [ '%map', '%index' ],
     'delivery callback' => 'dlts_viewer_ldjson_iiif_presentation_3_output',
+    'file' => 'inc/iiif.inc',
+  ];
+
+  // Redirect deprecated Adore Djakota routes.
+  $items['api/v1/image/resolver'] = [
+    'title' => 'Redirect deprecated Adore Djakota routes',
+    'access arguments' => [ 'access content' ],
+    'page callback' => 'dlts_viewer_djakot_iiif_resolver',
+    'type' => MENU_CALLBACK,
     'file' => 'inc/iiif.inc',
   ];
 
