@@ -168,7 +168,7 @@ function dlts_canvas_page_load($sequence, $map, $index = NULL) {
  * @return object
  *   MongoDB object
  */
-function dlts_resource_sequence_load($sequence, array $map, $resource_index) {
+function dlts_resource_sequence_load($sequence, array $map = [], $resource_index = 0) {
 
   $object = $map[$resource_index - 1];
 

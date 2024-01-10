@@ -7,21 +7,30 @@
 
 /**
  * Search using Solr.
- * @link http://localhost/api/v1/search?query=*&wt=json&fl=ss_representative_image,ss_title_long,ss_ar_title_long,ss_book_identifier,sm_author,ss_uri,sm_publisher,ss_pubdate,iass_pubyear,sm_collection_partner_label,sm_field_topic,ss_call_number,zm_subject,zm_partner,ss_publocation,ss_ar_title,sm_ar_author,sm_ar_publisher,sm_ar_publication_date,sm_ar_partner,sm_ar_subject,ss_ar_sauthor,ss_longlabel,ss_sauthor,sm_ar_sauthor,ss_ar_publocation,ss_ar_publication_location,sm_ar_topic,ds_created,zm_pdf_lo,zm_pdf_hi,score&fq=bundle:dlts_book&fq=sm_collection_code:aco&fq=ss_language:en&rows=10&start=0&sort=ds_created%20desc
+ * @link http://localhost:9000/api/v1/search?query=*&wt=json&fl=ss_representative_image,ss_title_long,ss_ar_title_long,ss_book_identifier,sm_author,ss_uri,sm_publisher,ss_pubdate,iass_pubyear,sm_collection_partner_label,sm_field_topic,ss_call_number,zm_subject,zm_partner,ss_publocation,ss_ar_title,sm_ar_author,sm_ar_publisher,sm_ar_publication_date,sm_ar_partner,sm_ar_subject,ss_ar_sauthor,ss_longlabel,ss_sauthor,sm_ar_sauthor,ss_ar_publocation,ss_ar_publication_location,sm_ar_topic,ds_created,zm_pdf_lo,zm_pdf_hi,score&fq=bundle:dlts_book&fq=sm_collection_code:aco&fq=ss_language:en&rows=10&start=0&sort=ds_created%20desc
  */
 function dlts_viewer_search_json() {
 
-  $env_id = apachesolr_default_environment();
-  
-  $environment = apachesolr_environment_load($env_id);
-  
-  $discoveryUrl = $environment['url'];
+  global $base_url;
+
+  $index_name = 'viewer';
+
+  $default_discovery = variable_get('discovery', 'http://discovery1.dlib.nyu.edu/solr/viewer'); 
+
+  $opensquare = variable_get('opensquare', 'https://discovery1.dlib.nyu.edu/solr/open-square-metadata'); 
+
+  $indexes = [
+    'viewer' => $default_discovery,
+    'opensquare' => $opensquare['solr'],
+  ];
 
   $query_parameters = explode('&', $_SERVER['QUERY_STRING']);
 
   $queryArray = [];
-  
+
   $queryArray[] = 'wt=json';
+
+  $omitHeader = true;
 
   foreach ($query_parameters as $parameters) {
     $explodeParameters = explode('=', $parameters);
@@ -30,17 +39,39 @@ function dlts_viewer_search_json() {
         $queryArray[] = 'q=' . $explodeParameters[1];
       } elseif ($explodeParameters[0] == 'wt') {
         continue;
+      } elseif ($explodeParameters[0] == 'omitHeader' && $explodeParameters[1] == 'false') {
+        $omitHeader = false;
+        continue;
+      } elseif ($explodeParameters[0] == 'index') {
+        $param = filter_xss($explodeParameters[1]);
+        if (isset($indexes[$param])) {
+          $index_name = $param;
+        } else {
+          return [
+            'error' => "Solr \"$param\" does not exists.",
+          ];
+        }
+        continue;
       } else {
         $queryArray[] = $explodeParameters[0] . '=' . $explodeParameters[1];
       }
     }
   }
 
+  $queryArray[] = 'omitHeader=false';
+
   $queryString = implode('&', $queryArray);
 
-  $requestUrl = $discoveryUrl . '/select?' . $queryString;
+  $requestUrl = $indexes[$index_name] . '/select?' . $queryString;
 
-  $request = drupal_http_request($requestUrl);
+  $request = drupal_http_request($requestUrl, [ 'timeout' => 15.0, 'method' => 'GET', 'headers' => [ 'User-Agent' => 'DLTS Viewer (+' . $base_url . ')' ] ]);
+
+  if ($request->code != '200') {
+    return [
+      'error' => 'Solr request failed.',
+      'request' => $request,
+    ];
+  }
 
   $data = json_decode($request->data);
 
@@ -93,7 +124,11 @@ function dlts_viewer_search_json() {
       $doc->zm_subject = $zm_subjects;
     }
   }
-
-  return $data->response;
+ 
+  if ($omitHeader) {
+    return $data->response;
+  } else {
+    return $data;
+  }  
 
 }

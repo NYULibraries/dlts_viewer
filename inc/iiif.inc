@@ -1452,3 +1452,48 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
     'target' => "$base_url/api/presentation/$resource_type/$identifier/canvas/$sequence",
   ];
 }
+
+function dlts_viewer_djakot_iiif_resolver() {
+  $query_parameters = drupal_get_query_parameters();
+  if (isset($query_parameters['rft_id']) && isset($query_parameters['svc_level'])) {
+
+    $pathinfo = pathinfo($query_parameters['rft_id']);
+    
+    $reqinfo = explode('/', $pathinfo['dirname']);
+
+    $resources = [
+      'books' => 'dlts_book',
+      'photos' => 'dlts_photo_set',
+      'photos' => 'dlts_photo',
+      'maps' => 'dlts_map',
+      'postcards' => 'dlts_postcard',
+    ];
+
+    $isPartOf = $reqinfo[5];
+    
+    $type = $reqinfo[4];
+
+    $basename = $pathinfo['basename'];
+
+    $collection_name = dlts_viewer_mongodb_collections_by_type($resources[$type]);
+
+    // Prepare query.
+    $query = [
+      'isPartOf' => $isPartOf,
+      'cm.uri' => "fileserver://$type/$isPartOf/$basename",
+    ];
+  
+    $cursor = mongodb_collection($collection_name);
+    
+    $sequence = $cursor->findOne($query);
+
+    if ($query_parameters['svc_level'] == 1) {
+      dlts_viewer_iiif_tile(null, null, $sequence['cm'], 'full', '250,', '0', 'default.jpg');
+    } else {
+      dlts_viewer_iiif_tile(null, null, $sequence['cm']);
+    }
+
+  } else {
+    die('Missing parameters');
+  }
+}

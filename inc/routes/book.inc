@@ -15,8 +15,6 @@ function _dlts_viewer_menu_book() {
 
   $items = [];
 
-  /*
-   */
   $items['books'] = [
     'title' => 'Books',
     'access arguments' => [ 'access content' ],
