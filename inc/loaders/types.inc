@@ -123,6 +123,6 @@ function dlts_resource_load($identifier) {
  * Route callback for edit page.
  * @link http://localhost:9000/admin/content/{identifier|noid}/edit
  */
-function _dlts_viewer_edit_redirect($entity) {
+function _dlts_viewer_edit_redirect($type, $entity) {
   drupal_goto('node/' . $entity->nid . '/edit');
 }

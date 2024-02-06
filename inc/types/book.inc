@@ -116,7 +116,7 @@ function dlts_viewer_full_book_view($entity) {
   );
 
   drupal_add_js(
-    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.0.0/openseadragon.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js',
     'external',
     [ 
       'group' => JS_LIBRARY,

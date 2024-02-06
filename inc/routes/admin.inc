@@ -36,7 +36,23 @@ function _dlts_viewer_menu_admin() {
     'title' => 'Edit resource',
     'access arguments' => [ 'edit any resource' ],
     'page callback' => '_dlts_viewer_edit_redirect',
-    'page arguments' => [ 2 ],
+    'page arguments' => [ 1, 2 ],
+    'type' => MENU_CALLBACK,
+  ];
+
+  $items['books/%dlts_resource/edit'] = [
+    'title' => 'Edit resource',
+    'access arguments' => [ 'edit any resource' ],
+    'page callback' => '_dlts_viewer_edit_redirect',
+    'page arguments' => [ 0, 1 ],
+    'type' => MENU_CALLBACK,
+  ];
+
+  $items['photos/%dlts_resource/edit'] = [
+    'title' => 'Edit resource',
+    'access arguments' => [ 'edit any resource' ],
+    'page callback' => '_dlts_viewer_edit_redirect',
+    'page arguments' => [ 0, 1 ],
     'type' => MENU_CALLBACK,
   ];
 

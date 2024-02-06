@@ -33,7 +33,24 @@ function dlts_book_load($identifier) {
   $resource = dlts_noid_load($identifier);
 
   if ($resource && isset($resource->nid) && $resource->document == $type) {
-    return node_load($resource->nid);
+    if (array_intersect($language, [ 'en', LANGUAGE_NONE ])) {
+      return node_load($resource->nid);
+    } else {
+      $query = new EntityFieldQuery();
+
+      $result = $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', $bundle)
+        ->propertyCondition('status', 1)
+        ->propertyCondition('language', $language)
+        ->fieldCondition('field_identifier', 'value', $resource->identifier, '=')
+        ->execute();
+
+      if (!empty($result['node'])) {  
+        $keys = array_keys($result['node']);
+        $nid = array_pop($keys);
+        return node_load($nid);
+      }
+    }  
   } else {
 
     $query = new EntityFieldQuery();

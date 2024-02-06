@@ -295,7 +295,6 @@ function dlts_viewer_epubs_identifier($doi) {
  * Undocumented function.
  */
 function dlts_viewer_epubs_metadata_v0($data) {
-  
   // "date":"1997-05-01",
   // "date": "1997",
 
@@ -699,7 +698,13 @@ function dlts_viewer_supafolio($keyword = '*:*') {
   // https://developer.supadu.com/supafolio.html#Preform-a-search
   $api = "http://api.supafolio.com/v2/search?keyword=$keyword&amount=$amount&category_data=1&publisher_data=1&series_data=1";
 
-  $request = drupal_http_request($api, [ 'headers' => [ 'x-apikey' => $apikey ] ]);
+
+  $request = drupal_http_request($api, [ 
+    'headers' => [ 
+      'x-apikey' => $apikey 
+    ],
+    'context' => stream_context_create(['ssl' => ['verify_peer' => FALSE, 'verify_peer_name' => FALSE]]),
+  ]);
   
   if ($request->code == 200) {
     return json_decode($request->data, true);
@@ -713,7 +718,7 @@ function dlts_viewer_supafolio($keyword = '*:*') {
  * Undocumented function.
  */
 function dlts_viewer_supafolio_book($identifier, $reset_cache = false) {
-  
+
   $apiUrl = variable_get('supafolioApiUrl', false);
 
   $apikey = variable_get('supafolioApiKey', false);
@@ -727,8 +732,14 @@ function dlts_viewer_supafolio_book($identifier, $reset_cache = false) {
   }
 
   $api = "$apiUrl/v2/book/$identifier";
-    
-  $request = drupal_http_request($api, [ 'headers' => [ 'x-apikey' => $apikey ] ]);
+  
+
+  $request = drupal_http_request($api, [ 
+    'headers' => [ 
+      'x-apikey' => $apikey 
+    ],
+    'context' => stream_context_create(['ssl' => ['verify_peer' => FALSE, 'verify_peer_name' => FALSE]]),
+  ]);
 
   if ($request->code == 200) {
     $data = json_decode($request->data, true);
@@ -742,6 +753,8 @@ function dlts_viewer_supafolio_book($identifier, $reset_cache = false) {
         return $data;
       }
     }
+  } else {
+    return $request;
   }
 }
 
