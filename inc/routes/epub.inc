@@ -55,9 +55,10 @@ function _dlts_viewer_menu_epub() {
     'type' => MENU_NORMAL_ITEM,
   ];
 
-  // API
-
   // epubs.
+  // curl -b ./cookie http://HOST/api/v0/epubs
+  // curl -b ./cookie -X POST http://HOST/api/v0/epubs
+  // curl -b ./cookie -X PUT -H 'Content-Type: application/json' -H 'Accept: application/json' --data "@data.xml" http://localhost/api/v0/epubs
   // http://HOST/api/v0/epubs
   $items['api/v0/epubs'] = [
     'title' => 'Query repository',
