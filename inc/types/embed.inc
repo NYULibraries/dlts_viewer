@@ -86,7 +86,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'type' => $type,
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'script' => file_get_contents("$module/viewers/uv/uv.4.0.0.js"),
+        'script' => file_get_contents("$module/viewers/uv/dist/uv.4.0.0.js"),
         'style' => file_get_contents("$module/viewers/uv/uv.4.0.0.css"),
       ];
       break;
@@ -102,7 +102,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'type' => $type,
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'script' => file_get_contents("$module/viewers/clover-iiif/clover-iiif.2.3.2.umd.js"),
+        'script' => file_get_contents("$module/viewers/clover-iiif/dist/clover-iiif.2.3.2.umd.js"),
       ];
       break;
     case 'mirador':
