@@ -150,7 +150,15 @@ function dlts_viewer_theme() {
     'viewer_embed_page' => [
       'template' => 'templates/embed',
       'variables' => [],
-    ],    
+    ],
+    'viewer_embed_clover_page' => [
+      'template' => 'templates/embed_clover',
+      'variables' => [],
+    ],
+    'viewer_embed_uv_page' => [
+      'template' => 'templates/embed_uv',
+      'variables' => [],
+    ],
   ];
 }
 

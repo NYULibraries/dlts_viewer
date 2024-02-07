@@ -2,6 +2,7 @@
 <html lang="<?php echo $language ?>">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><?php echo $title ?></title>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V9T13P98V7"></script>
     <script>
@@ -21,7 +22,9 @@
       data-endpoint="<?php echo $endpoint ?>" 
       data-type="<?php echo $type ?>" 
       data-sequence="<?php echo $sequence ?>" 
-      data-identifier="<?php echo $identifier ?>">
+      data-identifier="<?php echo $identifier ?>"
+    >
+      <clover-viewer id="<?php echo $manifest ?>" />
     </div>
     <script>
       <?php echo $script ?>

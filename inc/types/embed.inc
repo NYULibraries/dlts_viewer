@@ -15,6 +15,10 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
   $language = isset($query_parameters['language']) ? filter_xss($query_parameters['language']) : 'en';
 
+  $viewer = isset($query_parameters['viewer']) ? filter_xss($query_parameters['viewer']) : 'mirador';
+
+  $reset = isset($query_parameters['reset']) ? filter_xss($query_parameters['reset']) : false;
+
   $type = $record->document;
 
   $identifier = $record->identifier;
@@ -23,7 +27,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
   $cachepath = "$realpath/iiif/$type/$identifier/manifest.json";
 
-  if (file_exists($cachepath)) {
+  if ($reset && file_exists($cachepath)) {
 
     $cache = file_get_contents($cachepath);
 
@@ -69,16 +73,55 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
     $direction = ($language_list[1][$language]->direction == '1') ? 'rtl' : 'ltr';
   }
 
-  echo theme('viewer_embed_page', [
-    'appid' => 'mirador-app',
-    'title' => $title,
-    'language' => $language,
-    'direction' => $direction,
-    'sequence' => $sequence,
-    'endpoint' => $base_url,
-    'type' => $type,
-    'identifier' => $identifier,
-    'script' => "$base_url/$module/mirador/integration/dist/mirador.js",
-  ]);
+  switch ($viewer) {
+    case 'uv':
+      $template = 'viewer_embed_uv_page';
+      $opts =  [
+        'appid' => 'uv-app',
+        'title' => $title,
+        'language' => $language,
+        'direction' => $direction,
+        'sequence' => $sequence,
+        'endpoint' => $base_url,
+        'type' => $type,
+        'identifier' => $identifier,
+        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+        'script' => file_get_contents("$module/viewers/uv/uv.4.0.0.js"),
+        'style' => file_get_contents("$module/viewers/uv/uv.4.0.0.css"),
+      ];
+      break;
+    case 'clover':
+      $template = 'viewer_embed_clover_page';
+      $opts =  [
+        'appid' => 'clover-app',
+        'title' => $title,
+        'language' => $language,
+        'direction' => $direction,
+        'sequence' => $sequence,
+        'endpoint' => $base_url,
+        'type' => $type,
+        'identifier' => $identifier,
+        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+        'script' => file_get_contents("$module/viewers/clover-iiif/clover-iiif.2.3.2.umd.js"),
+      ];
+      break;
+    case 'mirador':
+      $template = 'viewer_embed_page';
+      $opts =  [
+        'appid' => 'mirador-app',
+        'title' => $title,
+        'language' => $language,
+        'direction' => $direction,
+        'sequence' => $sequence,
+        'endpoint' => $base_url,
+        'type' => $type,
+        'identifier' => $identifier,
+        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+        'script' => file_get_contents("$module/mirador/integration/dist/mirador.js")
+      ];
+      break;
+  }
+
+  echo theme($template, $opts);
 
 }
