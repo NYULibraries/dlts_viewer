@@ -297,30 +297,30 @@ function dlts_viewer_photo_embed_redirect($entity) {
 function dlts_viewer_photo_thumb($entity, $page) {
   if (is_object($entity)) {
     global $base_url;
-    
+
     $wrapper = entity_metadata_wrapper('node', $entity);
-    
+
     $query_parameters = drupal_get_query_parameters();
-    
+
     // Identifier.
     $identifier = $wrapper->field_identifier->value();
-    
+
     $width = '150';
-    
+
     $height = '';
-    
+
     if (isset($query_parameters['w']) && $query_parameters['w']) {
       $width = filter_var($query_parameters['w'], FILTER_UNSAFE_RAW);
     }
 
-    if (isset($query_parameters['h']) &&$query_parameters['h']) {
+    if (isset($query_parameters['h']) && $query_parameters['h']) {
       $width = filter_var($query_parameters['h'], FILTER_UNSAFE_RAW);
     }
 
     $sequence = array_pop($page['sequence']);
 
     drupal_goto("$base_url/api/image/photos/$identifier/$sequence/full/$width,$height/0/default.jpg");
-  
+
   }
   return drupal_exit();
 }

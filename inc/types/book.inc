@@ -52,13 +52,13 @@ function dlts_viewer_dispatch_thumbnails(object $entity) {
   $entity->read_order = ($int_read_order == 1) ? 'rtl' : 'ltr';
 
   // Check for mobile devices.
-  $is_mobile = dlts_viewer_is_mobile();
+  // $is_mobile = dlts_viewer_is_mobile();
 
   $identifier = $wrapper->field_identifier->value();
 
   $sequence_count = (int) $wrapper->field_sequence_count->value();
 
-  $placeholder = "$base_url/$module/images/loadhold.png";
+  // $placeholder = "$base_url/$module/images/loadhold.png";
 
   $type = 'books';
 
@@ -118,7 +118,7 @@ function dlts_viewer_full_book_view($entity) {
   drupal_add_js(
     'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js',
     'external',
-    [ 
+    [
       'group' => JS_LIBRARY,
       'weight' => -101,
     ]
@@ -215,13 +215,10 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
     // Get volume value.
     $volume_number_str = $multivolume_book_wrapper->field_volume_number_str->value();
     // Change entity title.
-    $entity->title = t(
-      '@title @volume',
-      [
-        '@title' => $entity->title,
-        '@volume' => $volume_number_str
-      ]
-    );
+    $entity->title = t('@title @volume', [
+      '@title' => $entity->title,
+      '@volume' => $volume_number_str
+    ]);
   }
 
   $entity->title = html_entity_decode($entity->title, ENT_QUOTES);
@@ -422,7 +419,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
         ],
       ]
     );
-    
+
     $entity->count = $sequence_count;
 
   }
@@ -458,16 +455,16 @@ function _dlts_viewer_book_edit_redirect($node) {
 }
 
 function dlts_viewer_dispatch_books_index() {
-  
+
   $view = views_get_view('books_by_collection');
-  
+
   $view->set_current_page(1);
-  
+
   $view->set_items_per_page(50);
-  
+
   $view->execute();
 
   return $view->render();
 
-  
+
 }

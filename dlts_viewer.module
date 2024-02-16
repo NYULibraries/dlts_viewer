@@ -56,11 +56,10 @@ include_once 'inc/themes.inc';
 include_once 'inc/shutdown.inc';
 
 /**
- * Implementation of hook_init().
+ * Implementation of hook_init().ß
  */
 function dlts_viewer_init() {
   drupal_add_http_header('Access-Control-Allow-Origin', '*');
-  drupal_add_http_header('Permissions-Policy', 'interest-cohort=()');
 }
 
 /**
@@ -180,6 +179,7 @@ function dlts_viewer_preprocess_html(&$vars) {
     if ($resource_language_code) {
       $vars['resource_language_code'] = $resource_language_code;
     }
+
     /**
      * We use Drupal to render objects from MongoDB that don't have a record register
      * in Drupal's database. We don't want Drupal to manage this records. We need a
