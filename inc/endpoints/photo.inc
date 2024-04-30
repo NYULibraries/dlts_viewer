@@ -31,15 +31,16 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
         'verify_peer_name' => FALSE,
       ],
       'http' => [
-        'timeout' => 300,  // 300 Seconds is 5 Minutes
+        'timeout' => 40,
       ],
     ];
 
-    $content = file_get_contents(
-      $image,
-      FALSE,
-      stream_context_create($arrContextOptions)
-    );
+    $content = file_get_contents($image, FALSE, stream_context_create($arrContextOptions));
+
+    if (!isset($http_response_header)) {
+      header('HTTP/1.1 504 Gateway Timeout', TRUE, 504);
+      die('HTTP/1.1 504 Gateway Timeout');
+    }
 
     $original_image_source = file_create_url($sequence['cm']['uri']);
 
@@ -66,6 +67,9 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
             'error' => $http_response_header[0],
             'imageSource' => $original_image_source,
             'request' => $image,
+            'entity' => [
+              'nid' => $entity->nid,
+            ],
           ],
         ];
         drupal_json_output($error);
