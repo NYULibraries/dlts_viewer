@@ -155,6 +155,21 @@ function _dlts_viewer_menu_epub() {
       'access content',
     ],
     'page arguments' => [ 1, 3, 4 ],
+    'load arguments' => array('%map', '%index'),
+    'page callback' => 'dlts_viewer_epubs_indexer',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/types/epub.inc',
+    'type' => MENU_CALLBACK,
+  ];
+
+  $items['api/v1/epubs/%dlts_publisher/%dlts_epub/opt/indexer'] = [
+    'title' => 'Query repository',
+    'load arguments' => array('%map', '%index'),
+    'description' => 'Query epubs API.',
+    'access arguments' => [
+      'access content',
+    ],
+    'page arguments' => [ 1, 3, 4 ],
     'page callback' => 'dlts_viewer_epubs_indexer',
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/types/epub.inc',

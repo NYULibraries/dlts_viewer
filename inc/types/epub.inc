@@ -653,6 +653,8 @@ function dlts_viewer_epubs_metadata_v1($data) {
 
   $format = $data->pages;
 
+  $series = [];
+
   $metadata = [
     'publicationPlace' => 'New York',
     'dateBook' => '', // need source
@@ -664,23 +666,22 @@ function dlts_viewer_epubs_metadata_v1($data) {
     'language' => $custom->language,
     'license' => $license->label,
     'licenseAbbreviation' => $license->abbreviation,
-    'licenseAbbreviationFacet' => $license->label,
     'licenseIcon' => $license->icon,
     'licenseLink' => $license->link,
     'pressUrl' => "https://nyupress.org/$isbnForPrimaryFormat",
     'publisher' =>  $publisher,
     'series' => $series,
     'subjects' => $unique_subjects,
-    'subjectsFacet' => $unique_subjects,
+    // 'subjectsFacet' => $unique_subjects,
     'subtitle' => $data->subtitle,
     'title' => $title,
     'titleSort' => $data->title_without_prefix,
-    'contributor' => $authors_display,
+    'contributors' => json_encode($authors_display),
     'doi' => $custom->permanent_url,
     'dateOpenAccess' => '', // need source
     'yearBook' => '', // need source
     'yearOpenAccess' => '', // need source
-    'seriesOpenAcess' => '', // need source
+    // 'seriesOpenAcess' => '', // need source
     'isbnHardcover' => $custom->hardcover,
     'isbnPaperback' => $custom->paperback,
     'isbnEbook' => $custom->ebook,
@@ -688,6 +689,8 @@ function dlts_viewer_epubs_metadata_v1($data) {
     'isDownloadable' => $custom->open_access_is_downloadable,
     'hasVideo' => $custom->video,
     'hasHiResImages' => $custom->hi_res_images,
+    // hack; must fix solr before removing this.
+    'collection_code' => 'nyupress'
   ];
 
   return $metadata;
@@ -721,18 +724,18 @@ function dlts_viewer_epubs_metadata($version = 'v0', $publisher, $identifier, $r
           ];
         } else {
           switch ($version) {
-            case 0:
+            case 'v1':
               return dlts_viewer_epubs_metadata_v1($data);
             break;
           default:
             return dlts_viewer_epubs_metadata_v0($data);
-}
-
+          }
         }
       }
       else {
         return [
           'error' => 'error',
+          'status' => 'error',
           'message' => 'DLTS Viewer - ePub not available.',
         ];
       }
@@ -740,6 +743,7 @@ function dlts_viewer_epubs_metadata($version = 'v0', $publisher, $identifier, $r
       return [
         'message' => "Action not allowed for $name.",
         'status' => 'error',
+        'error' => 'error',
       ];
     }
   }
@@ -807,12 +811,50 @@ function dlts_viewer_epubs_metadata($version = 'v0', $publisher, $identifier, $r
   }
 }
 
+function dlts_viewer_epubs_indexer_v1($version = 'v0', $_publisher, $epub) {
+
+  // Fix this. Should use conf variable.
+  $discovery = variable_get('opensquare', null);
+
+  $solrurl = $discovery['solr'];
+
+  $solrurl = 'http://sites_solr:8983/solr/opensquare-v2';
+
+  $epub = (object) $epub;
+
+  $epub->id = $epub->openSquareId;
+
+  $options = [
+    'method' => 'POST',
+    'data' => json_encode([$epub]),
+  ];
+
+  $response = drupal_http_request("$solrurl/update/json?_=" . time() . "&commit=true&commitWithin=1000&overwrite=true&wt=json", $options);
+
+  if ($response->code == '200' && isset($response->data)) {
+    $r = json_decode($response->data);
+    $r->status_message = 'Successful request';
+    $r->message = [ 'docs' => $epub ];
+    $r->status = $response->code;
+    return $r;
+  } else {
+     return [
+       'status_message' => $response->status_message,
+       'code' => $response->code,
+       'error' => $response->error,
+       'message' => json_decode($response->data),
+     ];
+  }
+}
+
 /**
  * Undocumented function.
  */
 function dlts_viewer_epubs_indexer($version = 'v0', $_publisher, $epub) {
 
-  // something wrong with format field.
+  if ($version === 'v1') {
+    return dlts_viewer_epubs_indexer_v1($version, $_publisher, $epub);
+  }
 
   // Fix this. Should use conf variable.
   $discovery = variable_get('opensquare', null);

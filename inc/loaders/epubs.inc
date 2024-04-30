@@ -13,15 +13,20 @@
  *
  * @return object
  */
-function dlts_epub_load($identifier, $version = 'v0') {
+function dlts_epub_load($identifier, $map_array, $_index) {
+
+  $version = $map_array[1];
+
+  $publisher = $map_array[3]->code;
+
+  $reset_cache = true;
+
   $identifier = filter_xss($identifier);
-  $result = $result = db_query('SELECT * FROM dlts_viewer_epubs WHERE identifier = :identifier', [ ':identifier' => $identifier ])->fetchObject();
-  if (!empty($result->identifier)) {
-    $data = dlts_viewer_supafolio_book($result->identifier, true);
-    switch ($version) {
-      case 'v0':
-        return dlts_viewer_epubs_metadata_v0($data);
-    }
+
+  $result = dlts_viewer_epubs_metadata($version, $publisher, $identifier, $reset_cache);
+
+  if (!isset($result['error'])) {
+    return $result;
   }
   return FALSE;
 }
