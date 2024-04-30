@@ -20,22 +20,33 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
         $image_id = file_create_url($sequence['cm']['uri']);
         break;
     }
+
     $uri = urlencode($image_id);
+
     $image = "$image_server/iiif/2/$uri/$region/$size/$rotation/$quality";
+
     $arrContextOptions = [
       'ssl' => [
         'verify_peer' => FALSE,
         'verify_peer_name' => FALSE,
       ],
+      'http' => [
+        'timeout' => 300,  // 300 Seconds is 5 Minutes
+      ],
     ];
+
     $content = file_get_contents(
       $image,
       FALSE,
       stream_context_create($arrContextOptions)
     );
+
     $original_image_source = file_create_url($sequence['cm']['uri']);
+
     $requestStatus = substr($http_response_header[0], 9, 3);
+
     $responseType = substr($http_response_header[7], 14);
+
     if ($content && $requestStatus === '200' && $responseType === 'image/jpeg') {
       $etag = md5($content);
       header('Content-type: image/jpeg');
@@ -48,8 +59,17 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
       exit(0);
     } else {
       if (isset($http_response_header)) {
-        header('HTTP/1.1 400 Bad Request', TRUE, 400);
-        die('HTTP/1.1 400 Bad Request');
+        header($http_response_header[0], TRUE, 400);
+        $error = [
+          'response' => [
+            'message' => $http_response_header,
+            'error' => $http_response_header[0],
+            'imageSource' => $original_image_source,
+            'request' => $image,
+          ],
+        ];
+        drupal_json_output($error);
+        die();
       } else {
         header('HTTP/1.1 400 Bad Request', TRUE, 400);
         die('HTTP/1.1 400 Bad Request');

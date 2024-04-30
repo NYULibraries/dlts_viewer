@@ -521,10 +521,22 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
 
   global $base_url;
 
+  $cnid = NULL;
+
+  $partner = NULL;
+
+  $wt = 'solr';
+
+  $filter = '';
+
   $availableLanguages = array_keys(language_list());
 
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
+
+  if (isset($query_parameters['wt'])) {
+    $wt = $query_parameters['wt'];
+  }
 
   if (isset($query_parameters['rows']) && is_numeric($query_parameters['rows'])) {
     $length = $query_parameters['rows'];
@@ -534,17 +546,12 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
     $start = $query_parameters['start'];
   }
 
-  $cnid = NULL;
-
   if (isset($query_parameters['collection'])) {
-    $partner = NULL;
     if (isset($query_parameters['partner'])) {
       $partner = $query_parameters['partner'];
     }
     $cnid = dlts_viewer_collection_nids_by_code($query_parameters['collection'], $partner);
   }
-
-  $filter = '';
 
   if (isset($query_parameters['filter'])) {
     $filter = $query_parameters['filter'];
@@ -597,20 +604,18 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
     ->addMetaData('account', user_load(0))
     ->execute();
 
-  // Try to mimic Apache Solr response.
-  $response = [
-    'response' => [
-      'numFound' => $count,
-      'start' => $start,
-      'docs' => [],
-    ],
-  ];
+  $docs = [];
 
   foreach ($entities['node'] as $node) {
+
     $entity = node_load('node', $node->nid);
+
     $book = entity_metadata_wrapper('node', $entity);
+
     $handle = $book->field_handle->value();
+
     $handle = explode('/', $handle['url']);
+
     $identifier = $book->field_identifier->value();
 
     $translation = dlts_viewer_list_translation($identifier, 'dlts_book');
@@ -619,21 +624,61 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
 
     $isSeries = dlts_viewer_is_series_book($node);
 
-    $response['response']['docs'][] = [
-      'title' => trim($book->field_title->value()),
-      'identifier' => $identifier,
-      'noid' => $handle[count($handle) - 1],
-      'metadata' => "$base_url/api/v1/books/$identifier",
-      'availableLanguages' => array_keys($translation),
-      'isMultivolume' => $multivolume,
-      'isSeries' => $isSeries,
-      'iiif' => [
-        'manifest' => "$base_url/api/presentation/books/$identifier/manifest.json",
-      ],
-    ];
+    switch ($wt) {
+      case 'iiif':
+        $docs[] = [
+          'id' => "$base_url/api/presentation/books/$identifier/manifest.json",
+          'type' => 'Manifest',
+          'label' => [
+            $requestedLang => trim($book->field_title->value()),
+          ],
+        ];
+        break;
+      default:
+        $docs[] = [
+          'title' => trim($book->field_title->value()),
+          'identifier' => $identifier,
+          'noid' => $handle[count($handle) - 1],
+          'metadata' => "$base_url/api/v1/books/$identifier",
+          'availableLanguages' => array_keys($translation),
+          'isMultivolume' => $multivolume,
+          'isSeries' => $isSeries,
+          'iiif' => [
+            'manifest' => "$base_url/api/presentation/books/$identifier/manifest.json",
+          ],
+        ];
+        break;
+    }
   }
 
-  return $response;
+  switch ($wt) {
+    case 'iiif':
+      // "https://iiif.io/api/cookbook/recipe/0032-collection/collection.json"
+      // label
+      // en
+      // 0	"Simple Collection Example"
+      return [
+        '@context' =>	'http://iiif.io/api/presentation/3/context.json',
+        'id' =>	url(current_path(), [ 'absolute' => TRUE, 'query' => drupal_get_query_parameters() ]),
+        'type' =>	'Collection',
+          'label' => [
+            $requestedLang => 'Books',
+          ],
+        'items' => $docs,
+      ];
+      break;
+    default:
+      // Try to mimic Apache Solr response.
+      return [
+        'response' => [
+          'numFound' => $count,
+          'start' => $start,
+          'docs' => $docs,
+        ],
+      ];
+      break;
+  }
+
 }
 
 /**
@@ -825,7 +870,7 @@ function _dlts_viewer_map_loader($node, $reset = FALSE) {
   $realpath = drupal_realpath('public://');
 
   $cachepath = "$realpath/datasource/$bundle/$identifier/info.$requestedLang.json";
-  
+
   if (file_exists($cachepath) && !$reset) {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET');
@@ -873,7 +918,7 @@ function _dlts_viewer_photo_loader($node, $reset = FALSE) {
   $realpath = drupal_realpath('public://');
 
   $cachepath = "$realpath/datasource/$bundle/$identifier/info.$requestedLang.json";
-  
+
   if (file_exists($cachepath) && !$reset) {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET');
@@ -1287,7 +1332,13 @@ function dlts_viewer_api_photo_json($entity, $requestedLang = 'en') {
   if (isset($query_parameters['lang'])) {
     $requestedLang = $query_parameters['lang'];
   }
-  
+
+  // Entity API wrapper.
+  $wrapper = entity_metadata_wrapper('node', $entity);
+
+  // identifier.
+  $identifier = $wrapper->field_identifier->value();
+
   $availableLanguages = language_list();
 
   foreach ($availableLanguages as $code => $lang) {
@@ -1321,16 +1372,16 @@ function dlts_viewer_api_photo_json($entity, $requestedLang = 'en') {
       // Language is not enabled.
       unset($availableLanguages[$code]);
     }
-  }  
+  }
 
   // Default to left-to-rigth.
   $worldDirection = 'ltr';
 
-  // Entity API wrapper.
-  $wrapper = entity_metadata_wrapper('node', $entity);
+  // // Entity API wrapper.
+  // $wrapper = entity_metadata_wrapper('node', $entity);
 
-  // identifier.
-  $identifier = $wrapper->field_identifier->value();
+  // // identifier.
+  // $identifier = $wrapper->field_identifier->value();
 
   // Default title of the book.
   $displayTitle = $title = trim($wrapper->field_title->value());
@@ -1369,7 +1420,7 @@ function dlts_viewer_api_photo_json($entity, $requestedLang = 'en') {
         break;
 
       case 'handle':
-        $handle = $fields[$name]['value'] = $raw_value['url'];        
+        $handle = $fields[$name]['value'] = $raw_value['url'];
         break;
 
       case 'identifier':
@@ -1440,7 +1491,7 @@ function dlts_viewer_api_photo_json($entity, $requestedLang = 'en') {
   $realpath = drupal_realpath('public://') . '/datasource';
 
   $dir_path = "$realpath/$bundle/$identifier";
-  
+
   if (!file_exists($dir_path)) {
     mkdir($dir_path, 0755, TRUE);
   }
@@ -1923,7 +1974,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   $realpath = drupal_realpath('public://') . '/datasource';
 
   $cachepath = "$realpath/$bundle/$identifier/info.$requestedLang.json";
-  
+
   if (!file_exists("$realpath/$bundle/$identifier")) {
     mkdir("$realpath/$bundle/$identifier", 0755, TRUE);
   }
@@ -1963,12 +2014,6 @@ function dlts_viewer_api_v1_dlts_photo_set_sequences($source) {
       if (isset($source['pages'])) {
         // IIIF Image Server.
         $image_server = variable_get('dlts_image_server', 'https://image1.dlib.nyu.edu:8183');
-        $types = [
-          'dlts_book' => 'books',
-          'dlts_map' => 'maps',
-          'dlts_photo_set' => 'photos',
-          'dlts_postcard' => 'postcards',
-        ];      
         $collections = [
           'dlts_book' => 'dlts_books_page',
           'dlts_collection' => 'dlts_collection',
@@ -1981,7 +2026,7 @@ function dlts_viewer_api_v1_dlts_photo_set_sequences($source) {
         foreach ($source['pages']->page as $edit) {
           $uri = $edit->cm->uri;
           $image_id = urlencode(str_replace('fileserver://', '', $uri));
-          $response = drupal_http_request("$image_server/iiif/2/$image_id/info.json", [ 'method' => 'GET', 'timeout' => 15 ]);          
+          $response = drupal_http_request("$image_server/iiif/2/$image_id/info.json", [ 'method' => 'GET', 'timeout' => 300 ]);
           if ($response->code == '200' && isset($response->data)) {
             $data = drupal_json_decode($response->data);
             unset($edit->cm->levels);
@@ -2111,13 +2156,13 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
         if (isset($node['ticket'])) {
           $ticket = trim($node['ticket']);
         }
-      
+
         $noid = '';
         if (isset($source['noid'])) {
           $noid = trim($source['noid']);
         } elseif (isset($handle)) {
           $parsed_url = parse_url($handle);
-          $handlepath = str_replace('/2333.1/', '', $parsed_url['path']);    
+          $handlepath = str_replace('/2333.1/', '', $parsed_url['path']);
           $noid = trim($handlepath);
         }
         $node = [
@@ -2199,7 +2244,7 @@ function dlts_viewer_api_v1_sequences($version = NULL) {
 function dlts_viewer_api_v1_objects($version = NULL) {
   // @todo Also filter by hosts with access
   if (
-    user_access('dlts create object') && 
+    user_access('dlts create object') &&
     $_SERVER['REQUEST_METHOD'] == 'POST'
   ) {
     $datasource = [];

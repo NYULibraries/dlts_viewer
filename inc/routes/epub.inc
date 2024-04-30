@@ -43,7 +43,7 @@ function _dlts_viewer_menu_epub() {
 
   $items['admin/epubs/%dlts_publisher/%dlts_epub'] = [
     'title callback' => 'admin_epub_book_title',
-    'title arguments' => [ 3 ],    
+    'title arguments' => [ 3 ],
     'description' => 'Admin ePubs.',
     'page arguments' => [ 2, 3 ],
     'access arguments' => [
@@ -80,8 +80,23 @@ function _dlts_viewer_menu_epub() {
     'access arguments' => [
       'access content',
     ],
-    'page arguments' => [ 3 ],
-    'page callback' => 'dlts_viewer_api_v0_epubs_publisher',
+    'page arguments' => [ 1, 3 ],
+    'page callback' => 'dlts_viewer_api_epubs_publisher',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/types/epub.inc',
+    'type' => MENU_CALLBACK,
+  ];
+
+  // epubs.
+  // http://HOST/api/v0/epubs/nyu-press
+  $items['api/v1/epubs/%dlts_publisher'] = [
+    'title' => 'Query repository',
+    'description' => 'Query epubs API.',
+    'access arguments' => [
+      'access content',
+    ],
+    'page arguments' => [ 1, 3 ],
+    'page callback' => 'dlts_viewer_api_epubs_publisher',
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/types/epub.inc',
     'type' => MENU_CALLBACK,
@@ -99,6 +114,32 @@ function _dlts_viewer_menu_epub() {
     ],
     'page arguments' => [ 1, 3, 4 ],
     'page callback' => 'dlts_viewer_epubs_metadata',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/types/epub.inc',
+    'type' => MENU_CALLBACK,
+  ];
+
+  $items['api/v1/epubs/%/%'] = [
+    'title' => 'Query repository',
+    'description' => 'Query epubs API.',
+    'access arguments' => [
+      'access content',
+    ],
+    'page arguments' => [ 1, 3, 4 ],
+    'page callback' => 'dlts_viewer_epubs_metadata',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/types/epub.inc',
+    'type' => MENU_CALLBACK,
+  ];
+
+  $items['api/v0/epub-manager/%/%'] = [
+    'title' => 'Query repository',
+    'description' => 'Query epubs API.',
+    'access arguments' => [
+      'access content',
+    ],
+    'page arguments' => [ 1, 3, 4 ],
+    'page callback' => 'dlts_viewer_epubmanager_metadata',
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/types/epub.inc',
     'type' => MENU_CALLBACK,

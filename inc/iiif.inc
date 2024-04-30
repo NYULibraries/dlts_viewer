@@ -64,7 +64,7 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
     "$image_server/iiif/2/$uri/info.json",
     [
       'method' => 'GET',
-      'timeout' => 15,
+      'timeout' => 300,
     ]
   );
 
@@ -285,7 +285,7 @@ function dlts_book_fields_values($wrapper, array $translatable_fields = []) {
   $content_type = node_type_get_type($wrapper->getBundle());
 
   $fields = [];
-  
+
   // Return the value of all the fields.
   $metadata = [];
 
@@ -963,7 +963,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   // $series = [];
   // $collections = [];
   // $summary = [];
-  // $rendering = [];  
+  // $rendering = [];
 
   $availableLanguages = language_list();
 
@@ -972,7 +972,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   if ($field_pdf_file_raw) {
     foreach ($field_pdf_file_raw as $value) {
-      
+
       $data = [
         'uri' => $value['uri'],
         'label' => $value['label'],
@@ -1133,6 +1133,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   foreach ($sequences as $page) {
     // This index is a hack until I figure out the MongoDB query to
     // remove duplicates.
+
     $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_resource_page_canvas(
       $wrapper->getBundle(),
       $entity,
@@ -1376,25 +1377,42 @@ function dlts_viewer_iiif_resource_page_canvas($type, $resource, $page) {
 
   $resource_type = dlts_viewer_resource_type($type);
 
-  return array(
+  return [
     'id' => "$base_url/api/presentation/$resource_type/$identifier/canvas/$sequence",
     'type' => 'Canvas',
     'label' => array(
-      'en' => array(
+      'en' => [
         (string) $sequence,
-      ),
+      ],
     ),
     'width' => (int) $page['width'],
     'height' => (int) $page['height'],
-    'items' => array(
+    'thumbnail' => [
+      [
+        'id' => "$base_url/api/image/$resource_type/$identifier/$sequence/full/!300,300/0/default.jpg",
+        'type' => 'Image',
+        'format' => 'image/jpeg',
+        'height' => 300,
+        'width' => 300,
+        'service' => [
+          [
+            'id' => "$base_url/api/image/$resource_type/$identifier/$sequence",
+            'type' => 'ImageService2',
+            'profile' => 'level1',
+          ],
+      ],
+      ],
+    ],
+    'items' => [
       dlts_viewer_iiif_book_page_annotation_page(
         $type,
         $resource,
         $page,
         $item
       ),
-    ),
-  );
+    ],
+  ];
+
 }
 
 /**
@@ -1458,7 +1476,7 @@ function dlts_viewer_djakot_iiif_resolver() {
   if (isset($query_parameters['rft_id']) && isset($query_parameters['svc_level'])) {
 
     $pathinfo = pathinfo($query_parameters['rft_id']);
-    
+
     $reqinfo = explode('/', $pathinfo['dirname']);
 
     $resources = [
@@ -1470,7 +1488,7 @@ function dlts_viewer_djakot_iiif_resolver() {
     ];
 
     $isPartOf = $reqinfo[5];
-    
+
     $type = $reqinfo[4];
 
     $basename = $pathinfo['basename'];
@@ -1482,9 +1500,9 @@ function dlts_viewer_djakot_iiif_resolver() {
       'isPartOf' => $isPartOf,
       'cm.uri' => "fileserver://$type/$isPartOf/$basename",
     ];
-  
+
     $cursor = mongodb_collection($collection_name);
-    
+
     $sequence = $cursor->findOne($query);
 
     if ($query_parameters['svc_level'] == 1) {
