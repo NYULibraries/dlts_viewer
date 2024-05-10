@@ -143,7 +143,7 @@ function _dlts_viewer_menu_api() {
     'page arguments' => [ 1 ],
     'file' => 'inc/endpoints.inc',
   ];
-  
+
   // Update/Delete book.
   $items['api/v1/objects/books/%dlts_book'] = [
     'title' => 'Update book',
@@ -305,17 +305,6 @@ function _dlts_viewer_menu_api() {
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints/sequence.inc',
   ];
-  
-  $items['api/v1/epubs'] = [
-    'title' => 'Create object',
-    'access arguments' => [
-      'access content',
-    ],
-    'page callback' => 'dlts_viewer_api_v1_objects',
-    'delivery callback' => 'drupal_json_output',
-    'page arguments' => [ 1 ],
-    'file' => 'inc/endpoints.inc',
-  ];  
 
   // Render viewer.
   // https://[HOST]/api/embed/xsj3v3x1

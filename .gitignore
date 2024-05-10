@@ -27,3 +27,6 @@ node_modules
 TODO.md
 delete.sh
 tickets.inc
+
+# Ignore Mirador 4 until we are ready to use it.
+viewers/mirador-4/

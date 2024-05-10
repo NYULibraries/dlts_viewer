@@ -13,20 +13,24 @@
  *
  * @return object
  */
-function dlts_epub_load($identifier, $map_array, $_index) {
+function dlts_epub_load($identifier, $publisher, $version = 'v1', $reset_cache = false) {
 
-  $version = $map_array[1];
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
 
-  $publisher = $map_array[3]->code;
+  $reset_cache = isset($query_parameters['reset_cache']) ? filter_xss($query_parameters['reset_cache']) : $reset_cache;
 
-  $reset_cache = true;
+  $version = isset($query_parameters['version']) ? filter_xss($query_parameters['version']) : $version;
 
   $identifier = filter_xss($identifier);
+
+  $publisher = filter_xss($publisher);
 
   $result = dlts_viewer_epubs_metadata($version, $publisher, $identifier, $reset_cache);
 
   if (!isset($result['error'])) {
     return $result;
   }
+
   return FALSE;
 }
