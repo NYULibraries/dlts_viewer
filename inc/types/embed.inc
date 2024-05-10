@@ -44,7 +44,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
     // Wrapp book entity with Entity API wrapper.
     $wrapper = entity_metadata_wrapper('node', $entity);
 
-    $title = $wrapper->field_title->value();  
+    $title = $wrapper->field_title->value();
 
     $translations = dlts_viewer_list_translation($identifier, $entity->type);
 
@@ -74,22 +74,22 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
   }
 
   switch ($viewer) {
-    case 'uv':
-      $template = 'viewer_embed_uv_page';
-      $opts =  [
-        'appid' => 'uv-app',
-        'title' => $title,
-        'language' => $language,
-        'direction' => $direction,
-        'sequence' => $sequence,
-        'endpoint' => $base_url,
-        'type' => $type,
-        'identifier' => $identifier,
-        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'script' => file_get_contents("$module/viewers/uv/dist/uv.4.0.0.js"),
-        'style' => file_get_contents("$module/viewers/uv/uv.4.0.0.css"),
-      ];
-      break;
+    // case 'uv':
+    //   $template = 'viewer_embed_uv_page';
+    //   $opts =  [
+    //     'appid' => 'uv-app',
+    //     'title' => $title,
+    //     'language' => $language,
+    //     'direction' => $direction,
+    //     'sequence' => $sequence,
+    //     'endpoint' => $base_url,
+    //     'type' => $type,
+    //     'identifier' => $identifier,
+    //     'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+    //     'script' => file_get_contents("$module/viewers/uv/dist/uv.4.0.0.js"),
+    //     'style' => file_get_contents("$module/viewers/uv/uv.4.0.0.css"),
+    //   ];
+    //   break;
     case 'clover':
       $template = 'viewer_embed_clover_page';
       $opts =  [
@@ -105,7 +105,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'script' => file_get_contents("$module/viewers/clover-iiif/dist/clover-iiif.2.3.2.umd.js"),
       ];
       break;
-    case 'mirador':
+    default:
       $template = 'viewer_embed_page';
       $opts =  [
         'appid' => 'mirador-app',
