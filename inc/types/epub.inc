@@ -283,26 +283,32 @@ function dlts_viewer_api_epubs_publisher_list($version, $publisher) {
 
 function dlts_viewer_api_epubs_publisher_create($_version, $publisher, $identifier) {
 
+  $identifier = filter_xss($identifier);
+
   $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE identifier = :identifier AND publisher = :publisher', [ ':identifier' => $identifier, ':publisher' => $publisher->code ]);
 
   $record = $results->fetchObject();
 
   if ($record) {
     return [
-      'error' => 'found',
+      'status' => 'found',
       'message' => "ePub $record->label (ISBN13: $identifier) already published.",
+      'data' => dlts_viewer_epubs_metadata_v0(
+        dlts_viewer_supafolio_book($identifier, false)
+      )
     ];
   }
   else {
     $record = dlts_viewer_supafolio_book($identifier, true);
     if (isset($record->status) && $record->status === 'error') {
       return [
+        'status' => 'error',
         'error' => $record->status,
         'message' => "Supafolio API - " . $record->data['errors'][0]['message'],
       ];
     }
     else {
-      if ($identifier === $record->isbn13) {
+      if ($identifier == $record->isbn13) {
         $metadata = dlts_viewer_epubs_metadata_v1($record);
         db_insert('dlts_viewer_epubs')
           ->fields([
@@ -314,7 +320,11 @@ function dlts_viewer_api_epubs_publisher_create($_version, $publisher, $identifi
             'data' => '',
           ])
           ->execute();
-          return $metadata;
+        return [
+          'status' => 'created',
+          'message' => "Supafolio API - ePub $metadata[title] (ISBN13: $identifier) created.",
+          'data' => $metadata,
+        ];
       }
       else {
         return [
