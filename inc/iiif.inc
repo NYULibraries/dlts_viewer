@@ -124,12 +124,14 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
   $apiVersion = '2';
 
   switch ($static_source) {
+    case 'HttpSource':
+      $image_id = $sequence_uri;
+      break;
     case 'FilesystemSource':
       $image_id = str_replace('fileserver://', '', $sequence_uri);
       break;
-
-    case 'HttpSource':
-      $image_id = $sequence_uri;
+    default:
+      $image_id = str_replace('fileserver://', '', $sequence_uri);
       break;
   }
 
@@ -1474,7 +1476,6 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
 function dlts_viewer_djakot_iiif_resolver() {
   $query_parameters = drupal_get_query_parameters();
   if (isset($query_parameters['rft_id']) && isset($query_parameters['svc_level'])) {
-
     $pathinfo = pathinfo($query_parameters['rft_id']);
 
     $reqinfo = explode('/', $pathinfo['dirname']);
@@ -1492,6 +1493,8 @@ function dlts_viewer_djakot_iiif_resolver() {
     $type = $reqinfo[4];
 
     $basename = $pathinfo['basename'];
+
+    $basename = parse_url($basename, PHP_URL_PATH);
 
     $collection_name = dlts_viewer_mongodb_collections_by_type($resources[$type]);
 
