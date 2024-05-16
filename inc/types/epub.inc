@@ -263,7 +263,7 @@ function dlts_viewer_api_epubs_publisher_list($version, $publisher) {
   $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE publisher = :publisher AND status > 0', [ ':publisher' => $publisher->code ]);
 
   foreach ($results as $record) {
-    $epubs[] = [
+    $epubs[$record->identifier] = [
       'label' => $record->label,
       'identifier' => $record->identifier,
       'modified' => $record->lastModified,
