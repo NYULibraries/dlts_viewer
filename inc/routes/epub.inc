@@ -110,8 +110,9 @@ function _dlts_viewer_menu_epub() {
     'title' => 'Indexer',
     'description' => 'Query epubs API.',
     'access arguments' => [
-      'dlts create object',
+      'access content',
     ],
+    'load arguments' => [ 3, 1 ],
     'page arguments' => [ 1, 3, 4 ],
     'page callback' => 'dlts_viewer_epubs_indexer',
     'delivery callback' => 'drupal_json_output',

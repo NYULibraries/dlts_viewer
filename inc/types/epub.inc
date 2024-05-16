@@ -676,8 +676,6 @@ function dlts_viewer_epubs_metadata_v1($data) {
     }
   }
 
-
-
   $date = (object) $data->date;
 
   $_isbn_date = new DateTime($date->date, new DateTimeZone($date->timezone));
@@ -825,7 +823,7 @@ function dlts_viewer_epubs_metadata($version = 'v1', $publisher, $identifier, $r
   }
 }
 
-function dlts_viewer_epubs_indexer_v1($version = 'v0', $_publisher, $epub) {
+function dlts_viewer_epubs_indexer_v1($epub) {
 
   // Fix this. Should use conf variable.
   $discovery = variable_get('opensquare', null);
@@ -864,10 +862,19 @@ function dlts_viewer_epubs_indexer_v1($version = 'v0', $_publisher, $epub) {
 /**
  * Undocumented function.
  */
-function dlts_viewer_epubs_indexer($version = 'v0', $_publisher, $epub) {
+function dlts_viewer_epubs_indexer($version, $publisher, $epub) {
+
+  if (!user_access('dlts create object')) {
+    return [
+      'status' => 'error',
+      'message' => "Action not allowed.",
+    ];
+  }
+
+  $epub = (object) $epub;
 
   if ($version === 'v1') {
-    return dlts_viewer_epubs_indexer_v1($version, $_publisher, $epub);
+    return dlts_viewer_epubs_indexer_v1($epub);
   }
 
   // Fix this. Should use conf variable.
@@ -875,38 +882,17 @@ function dlts_viewer_epubs_indexer($version = 'v0', $_publisher, $epub) {
 
   $solrurl = $discovery['solr'];
 
-  $epub = (object) $epub;
-
-  $epub->id = $epub->isbn;
-
-  $epub->identifier = $epub->isbn;
-
-  // "subject": "Anthropology / History / Sociology",
-  $epub->subject = ''; // $epub->subject
+  $epub->id = $epub->identifier;
 
   if (!isset($epub->collection_code)) {
     $epub->collection_code = "oa-books";
   }
 
-  $epub->handle = $epub->isbn;
-
-  $epub->type = 'Text';
-
-  unset($epub->bookpubdate);
-
   unset($epub->nyu_press_website_buy_the_book_url);
-
-  unset($epub->citation_link);
 
   unset($epub->permanent_url);
 
   unset($epub->isDownloadable);
-
-  unset($epub->isbn);
-
-  unset($epub->series);
-
-  unset($epub->subjects);
 
   unset($epub->rootUrl);
 
