@@ -498,10 +498,11 @@ function dlts_viewer_epubmanager_metadata($_version, $publisher, $identifier) {
 
 }
 
-/**
- * Undocumented function.
- */
-function dlts_viewer_epubs_metadata_v0($data) {
+function dlts_viewer_epubs_metadata_v0($data, $reset_cache = false) {
+
+  $author = '';
+
+  $author_sort = '';
 
   $identifier = $data->isbn13;
 
@@ -513,35 +514,49 @@ function dlts_viewer_epubs_metadata_v0($data) {
 
   $series = [];
 
-  $isbnForPrimaryFormat = $identifier;
-
   $title = $data->title;
+
+  $data->custom = (object) $data->custom;
 
   $authors = (isset($data->contributors) && !empty($data->contributors)) ? $data->contributors : [];
 
   usort($authors, function($a, $b) {
-    return $a['order'] <=> $b['order'];
+    return $a->order <=> $b->order;
   });
 
   foreach ($authors as $item) {
-    $authors_display[] = [
-      'id'  => $item['contributor_id'],
-      'name' => $item['contributor']['name'],
-      'nameSort' => $item['contributor']['last'] . ', ' . $item['contributor']['first'],
-      'order' => $item['order'],
-      'role' => $item['role'],
-      'seo' => $item['contributor']['seo'],
-    ];
+    $authors_display[] = $item['contributor']['name'];
+  }
+
+  if (count($authors_display) > 1) {
+    $author = implode(', ', $authors_display);
+  } else {
+    if (!empty($authors)) {
+      $author = $authors[0]['contributor']['name'];
+    }
+  }
+
+  if (!empty($authors)) {
+    if (isset($authors[0]['contributor']['first']) && isset($authors[0]['contributor']['last'])) {
+      $author_sort = $authors[0]['contributor']['last'] . ', ' . $authors[0]['contributor']['first'];
+    } else {
+      $author_sort = explode(' ', $authors[0]['contributor']['name']);
+      $lastname = end($author_sort);
+      array_pop($author_sort);
+      $author_sort = $lastname . ', ' . implode(' ', $author_sort);
+    }
   }
 
   if (!empty($data->categories)) {
     foreach ($data->categories as $item) {
       $list = explode(' / ', $item['category']['name']);
-      foreach ($list as $name) {
-        $subjects[] = $name;
-      }
+      $subjects[] = $list[0];
     }
   }
+
+  $unique_subjects = array_unique($subjects);
+
+  sort($unique_subjects);
 
   if (!empty($data->keywords)) {
     $keywords_list = explode('; ', $data->keywords);
@@ -550,76 +565,62 @@ function dlts_viewer_epubs_metadata_v0($data) {
     }
   }
 
-  $date = (object) $data->date;
+  $_isbn_date = new DateTime($data->date['date'], new DateTimeZone($data->date['timezone']));
 
-  $_isbn_date = new DateTime($date->date, new DateTimeZone($date->timezone));
+  $primary_format = array_filter($data->formats, function($item) {
+    return isset($item['primary_format']) && $item['primary_format'] == 1;
+  });
 
-  foreach ($data->formats as $format) {
-    $format = (object) $format;
-    if (is_object($format)) {
-      if (is_object($format->isbn)) {
-        if ($format->isbn->primary_format) {
-          $isbnForPrimaryFormat = $format->isbn->isbn;
-        }
-      }
-      elseif (is_string($format->isbn) && is_object($format->date)) {
-        if ($format->primary_format) {
-          $isbnForPrimaryFormat = $format->isbn;
-        }
-      }
-    }
+  if (isset($primary_format)) {
+    $primary_format = array_shift($primary_format);
+    $primary_format = $primary_format['isbn'];
+  } else {
+    $primary_format = $identifier;
   }
 
-  $custom = (object) $data->custom;
+  $license = dlts_viewer_epub_license($data->custom->license_link);
 
-  $license = dlts_viewer_epub_license($custom->license_link);
-
-  $unique_subjects = array_unique($subjects);
-
-  sort($unique_subjects);
-
-  $_publisher = (object) $data->publisher;
-
-  $publisher = $_publisher->name ? $_publisher->name : 'NYU Press';
+  $publisher = $data->publisher['name'] ? $data->publisher['name'] : 'NYU Press';
 
   if (isset($data->series) && !empty($data->series)) {
     foreach ($data->series as $_series) {
-      $_series = (object) $_series;
-      $_series = (object) $_series->series;
-      $series[] = $_series->name;
+      if (!empty($_series->series->name)) {
+        $series[] = $_series->series->name;
+      }
     }
   }
 
-  if (isset($custom->open_access_series) && !empty($custom->open_access_series)) {
-    $series[] = $custom->open_access_series;
+  if (isset($data->custom->open_access_series) && !empty($data->custom->open_access_series)) {
+    $series[] = $data->custom->open_access_series;
   }
 
   $format = $data->pages;
 
   $metadata = [
-    'contributors' => $authors_display,
-    'bookpubdate' => $_isbn_date->format('Y'),
-    'citation_link' => $custom->permanent_url,
+    'author' => $author,
+    'author_sort' =>  $author_sort,
     'coverHref' => "epub_content/$identifier/ops/images/$identifier.jpg",
     'coverage' => 'New York',
-    'date' => $_isbn_date->format('Y-m-d'),
+    'date' => $_isbn_date->format('Y'),
     'description' => strip_tags($data->description),
     'description_html' => $data->description,
     'format' => "$format pages",
-    'isDownloadable' => $custom->open_access_is_downloadable,
-    'isbn' => $identifier,
-    'language' => $custom->language,
+    'handle' => $data->custom->permanent_url,
+    'identifier' => $identifier,
+    'isDownloadable' => $data->custom->open_access_is_downloadable,
+    'language' => $data->custom->language,
     'license' => $license->label,
     'license_abbreviation' => $license->abbreviation,
     'license_icon' => $license->icon,
     'license_link' => $license->link,
-    'nyu_press_website_buy_the_book_url' => "https://nyupress.org/$isbnForPrimaryFormat",
+    'nyu_press_website_buy_the_book_url' => "https://nyupress.org/$primary_format",
     'packageUrl' =>  "epub_content/$identifier",
+    'permanent_url' => $data->custom->permanent_url,
     'publisher' =>  $publisher,
     'rights' => 'All rights reserved',
     'rootUrl' => "epub_content/$identifier",
-    'series' => $series,
-    'subjects' => $unique_subjects,
+    'series_names' => $series,
+    'subject' => implode(' / ', $unique_subjects),
     'subtitle' => $data->subtitle,
     'thumbHref' => "epub_content/$identifier/ops/images/$identifier-th.jpg",
     'title' => $title,
@@ -674,6 +675,8 @@ function dlts_viewer_epubs_metadata_v1($data) {
       }
     }
   }
+
+
 
   $date = (object) $data->date;
 
@@ -807,9 +810,9 @@ function dlts_viewer_epubs_metadata($version = 'v1', $publisher, $identifier, $r
     else {
       switch ($version) {
         case 'v0':
-          return dlts_viewer_epubs_metadata_v0($data);
+          return dlts_viewer_epubs_metadata_v0($data, $reset_cache);
         default:
-          return dlts_viewer_epubs_metadata_v1($data);
+          return dlts_viewer_epubs_metadata_v1($data, $reset_cache);
       }
     }
   }

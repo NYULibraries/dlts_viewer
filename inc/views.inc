@@ -39,7 +39,7 @@ function dlts_viewer_views_pre_render(&$view) {
         // if (!strpos($field_title, $number) !== FALSE) {
         //  $result->field_field_book_1[0]['rendered']['#markup'] = $field_title . ' ' . $number;
         // }
-        if (strpos($field_title, (string)$number) !== FALSE) {
+        if (!empty($number) && strpos($field_title, (string) $number) !== FALSE) {
           $result->field_field_book_1[0]['rendered']['#markup'] = $field_title . ' ' . $number;
         }
       }
