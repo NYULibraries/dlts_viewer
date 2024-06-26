@@ -19,6 +19,7 @@ function dlts_solr_index_book_series($document, $entity, $searchableFields) {
    * If book belong to a series, populat isSeriesBook.
    */
   dlts_viewer_is_series_book($entity);
+
   if ($entity->isSeriesBook) {
     /*
      * Book is part of a series.
@@ -37,8 +38,11 @@ function dlts_solr_index_book_series($document, $entity, $searchableFields) {
       $document->addField('zm_' . $prefix . 'series_data', json_encode($series));
     }
   }
+
   $m = [];
-  $bundle = 'dlts_series_book';
+
+  // $bundle = 'dlts_series_book';
+
   // Let's find out if this one have a Series books.
   // @link https://jira.nyu.edu/jira/browse/AWDL-211
   $nodes_dlts_series_book = dlts_viewer_series_book($entity->nid);
@@ -102,26 +106,39 @@ function dlts_solr_index_book_series($document, $entity, $searchableFields) {
  * Index Book.
  */
 function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
+
   global $base_url;
+
   module_load_include('inc', 'dlts_viewer', 'inc/datasource');
+
   $language = $entity->language;
+
   // Skip if entity language is not English.
   if ($language != 'en') {
     return;
   }
   // Add translations helper.
   module_load_include('inc', 'dlts_solr', 'inc/translations');
+
   // Wrapp multi-volume entity with Entity API wrapper.
   $wrapper = entity_metadata_wrapper('node', $entity);
+
   // Single-value field.
   $identifier = $wrapper->field_identifier->value();
+
   $book_field_title = $entity->title;
+
   // DLTS book should have a identifier.
   if (!$identifier) {
     return;
   }
+
   $document->addField('ss_book_identifier', $identifier);
+
+  $document->addField('ss_identifier', $identifier);
+
   $document->addField('ss_uri', url("books/$identifier/1", [ 'absolute' => TRUE ]));
+
   // Searchable content; dump all you want to be searchable in this array.
   $searchableFields = [ $document->content ];
 

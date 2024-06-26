@@ -151,6 +151,10 @@ function dlts_viewer_theme() {
       'template' => 'templates/embed',
       'variables' => [],
     ],
+    'viewer_embed_mirador_latest_page' => [
+      'template' => 'templates/embed_mirador',
+      'variables' => [],
+    ],
     'viewer_embed_clover_page' => [
       'template' => 'templates/embed_clover',
       'variables' => [],
@@ -189,7 +193,6 @@ function dlts_viewer_theme_field($variables) {
   $output = '<div dir="' . $dir . '" class="' . $variables['classes'] . '"' . $variables['attributes'] . '>' . $output . '</div>';
   return $output;
 }
-
 
 // See ticker https://jira.nyu.edu/jira/browse/DLTSVIEWER-95
 function theme_field__field_pdf_file(&$variables) {

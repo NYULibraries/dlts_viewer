@@ -455,7 +455,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
 
   global $base_url;
 
-  $cache = FALSE;
+  $module = drupal_get_path('module', 'dlts_viewer');
 
   $wrapper = entity_metadata_wrapper('node', $entity);
 
@@ -528,7 +528,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
   }
 
   if ($sequence_count > 1) {
-    $behavior = array('paged');
+    $behavior = [ 'paged' ];
   }
 
   $collection_name = dlts_viewer_mongodb_collections_by_type($bundle);
@@ -541,11 +541,11 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
     $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_resource_page_canvas(
       $wrapper->getBundle(),
       $entity,
-      array(
+      [
         'sequence' => $page['sequence'],
         'width' => (int) $page['cm']['width'],
         'height' => (int) $page['cm']['height'],
-      )
+      ]
     );
   }
 
@@ -554,15 +554,17 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
     $thumbnail_raw = $items[0]['items'][0]['items'][0]['body'];
     $thumbnail = [
       [
-        'id' => $thumbnail_raw['id'] . '/full/256,/0/default.jpg',
+        'id' => $thumbnail_raw['id'] . '/full/!300,300/0/default.jpg',
         'type' => 'Image',
         'format' => 'image/jpeg',
+        'height' => 300,
+        'width' => 300,
         'service' => $thumbnail_raw['service'],
       ],
     ];
   }
 
-  $logo = 'https://yt3.ggpht.com/-RZYi5isxH_M/AAAAAAAAAAI/AAAAAAAAAAA/rmWpoe2qZzI/s900-c-k-no/photo.jpg';
+  $logo = "$base_url/$module/images/nyu-logo.jpg";
 
   $metadata = array_values($fields);
 
@@ -601,8 +603,8 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
         'id' => $logo,
         'type' => 'Image',
         'format' => 'image/jpeg',
-        'height' => 100,
-        'width' => 120,
+        'height' => 900,
+        'width' => 900,
       ],
     ],
     'thumbnail' => $thumbnail,
@@ -639,6 +641,8 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
 function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
 
   global $base_url;
+
+  $module = drupal_get_path('module', 'dlts_viewer');
 
   $wrapper = entity_metadata_wrapper('node', $entity);
 
@@ -834,28 +838,31 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
     $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_resource_page_canvas(
       $wrapper->getBundle(),
       $entity,
-      array(
+      [
         'sequence' => $page['sequence'],
         'width' => (int) $page['cm']['width'],
         'height' => (int) $page['cm']['height'],
-      )
+      ]
     );
   }
 
   $thumbnail = [];
+
   if ($sequences && !empty($sequences)) {
     $thumbnail_raw = $items[0]['items'][0]['items'][0]['body'];
     $thumbnail = [
       [
-        'id' => $thumbnail_raw['id'] . '/full/256,/0/default.jpg',
+        'id' => $thumbnail_raw['id'] . '/full/!300,300/0/default.jpg',
         'type' => 'Image',
         'format' => 'image/jpeg',
+        'height' => 300,
+        'width' => 300,
         'service' => $thumbnail_raw['service'],
       ],
     ];
   }
 
-  $logo = 'https://yt3.ggpht.com/-RZYi5isxH_M/AAAAAAAAAAI/AAAAAAAAAAA/rmWpoe2qZzI/s900-c-k-no/photo.jpg';
+  $logo = "$base_url/$module/images/nyu-logo.jpg";
 
   $metadata = array_values($fields);
 
@@ -885,8 +892,8 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
         'id' => $logo,
         'type' => 'Image',
         'format' => 'image/jpeg',
-        'height' => 100,
-        'width' => 120,
+        'height' => 900,
+        'width' => 900,
       ],
     ],
     'thumbnail' => $thumbnail,
@@ -927,6 +934,8 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
 function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   global $base_url;
+
+  $module = drupal_get_path('module', 'dlts_viewer');
 
   $wrapper = entity_metadata_wrapper('node', $entity);
 
@@ -1124,6 +1133,26 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     ];
   }
 
+  $partof = [];
+
+  foreach ($wrapper->field_collection->value() as $collection) {
+   $cw = entity_metadata_wrapper('node', $collection);
+    $partof[] = [
+      'id' => $base_url . '/api/presentation/collections/' . $cw->field_identifier->value() . '/manifest.json',
+      'type' => 'Collection',
+      'label' => [
+        $entity->language => [
+          $cw->field_name->value(),
+        ],
+      ],
+      // 'summary' => [
+      //   $entity->language => [
+      //     $cw->body->value(),
+      //   ],
+      // ],
+    ];
+  }
+
   if ($sequence_count > 1) {
     $behavior = [ 'paged' ];
   }
@@ -1132,10 +1161,37 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   $sequences = dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name);
 
+  $thumbnail = [];
+
+  $field_representative_image = $wrapper->field_representative_image->value();
+
+  $field_representative_image_uri = '';
+
+  if (isset($field_representative_image['uri']) && !empty($field_representative_image['uri'])) {
+    $field_representative_image_uri = $field_representative_image['uri'];
+  }
+
   foreach ($sequences as $page) {
+    // find the representative image and use it as the thumbnail.
+    if ($page['cm']['uri'] == $field_representative_image_uri) {
+      $sequence = end($page['sequence']);
+      $thumbnail[] = [
+        'id' => "$base_url/api/image/$type/$identifier/$sequence/full/!300,300/0/default.jpg",
+        'type' => 'Image',
+        'format' => 'image/jpeg',
+        'height' => 300,
+        'width' => 300,
+        'service' => [
+          [
+            'id' => "$base_url/api/image/$type/$identifier/$sequence",
+            'type' => 'ImageService2',
+            'profile' => 'level1',
+          ],
+        ],
+      ];
+    }
     // This index is a hack until I figure out the MongoDB query to
     // remove duplicates.
-
     $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_resource_page_canvas(
       $wrapper->getBundle(),
       $entity,
@@ -1215,6 +1271,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   // @todo to implement we need to change partner content-type
   // to include URI and logo.
   $providers = FALSE;
+
   // $fields['field_partner'];
   // https://iiif.io/api/presentation/3.0/#provider
   // $providers = [
@@ -1250,8 +1307,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   //   ],
   // ];
 
-  $thumbnail = [];
-  if ($sequences && !empty($sequences)) {
+  if (empty($thumbnail) && $sequences && !empty($sequences)) {
     $thumbnail_raw = $items[0]['items'][0]['items'][0]['body'];
     $thumbnail = [
       [
@@ -1263,7 +1319,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     ];
   }
 
-  $logo = 'https://yt3.ggpht.com/-RZYi5isxH_M/AAAAAAAAAAI/AAAAAAAAAAA/rmWpoe2qZzI/s900-c-k-no/photo.jpg';
+  $logo = "$base_url/$module/images/nyu-logo.jpg";
 
   $metadata = array_values($fields);
 
@@ -1293,8 +1349,8 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
         'id' => $logo,
         'type' => 'Image',
         'format' => 'image/jpeg',
-        'height' => 100,
-        'width' => 120,
+        'height' => 900,
+        'width' => 900,
       ],
     ],
     'thumbnail' => $thumbnail,
@@ -1314,6 +1370,10 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   if ($providers) {
     $res['providers'] = $providers;
+  }
+
+  if ($partof) {
+    $res['partOf'] = $partof;
   }
 
   // $series_books = dlts_viewer_series_book($entity->nid);
@@ -1421,7 +1481,7 @@ function dlts_viewer_iiif_resource_page_canvas($type, $resource, $page) {
  * AnnotationPage.
  *
  * @link https://iiif.io/api/presentation/3.0/#overview-annotationpage
- * @link http://localhost:9000/api/v1/books/princeton_aco000102/canvas/p193/1
+ * @link ${HOST}/api/v1/books/princeton_aco000102/canvas/p193/1
  */
 function dlts_viewer_iiif_book_page_annotation_page($type, $resource, $page) {
   global $base_url;
@@ -1441,7 +1501,7 @@ function dlts_viewer_iiif_book_page_annotation_page($type, $resource, $page) {
 /**
  * Annotation.
  *
- * @link http://localhost:9000/api/3/presentation/books/princeton_aco000102/annotation/painting/1
+ * @link ${HOST}/api/3/presentation/books/princeton_aco000102/annotation/painting/1
  */
 function dlts_viewer_iiif_annotation($type, $resource, $item) {
   global $base_url;
@@ -1473,6 +1533,9 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
   ];
 }
 
+/**
+ * Deprecated.
+ */
 function dlts_viewer_djakot_iiif_resolver() {
   $query_parameters = drupal_get_query_parameters();
   if (isset($query_parameters['rft_id']) && isset($query_parameters['svc_level'])) {

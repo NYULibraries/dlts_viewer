@@ -74,7 +74,7 @@ function dlts_viewer_drush_command() {
     'callback' => 'dlts_viewer_drush_viewer_test',
     'description' => dt('Run test while developing.')
   ];
-  
+
   $items['total-resources'] = [
     'callback' => 'dlts_viewer_drush_total_resources',
     'description' => dt('Pick one identifier'),
@@ -83,7 +83,7 @@ function dlts_viewer_drush_command() {
   $items['pick-one-identifier'] = [
     'callback' => 'dlts_viewer_pick_one_identifier',
     'description' => dt('Pick one identifier'),
-  ];  
+  ];
 
   $items['delete-by-identifier'] = [
     'callback' => 'dlts_viewer_delete_by_identifier',
@@ -111,11 +111,33 @@ function dlts_viewer_drush_command() {
     'description' => dt('Add ePub'),
     'options' => [
       'identifier' => dt('Identifier'),
-    ],    
+    ],
   ];
-  
+
+  $items['jira-dlpas-370'] = [
+    'callback' => 'dlts_viewer_drush_jira_dlpas_370',
+    'description' => dt('Update Freedom magazine records.'),
+  ];
+
   return $items;
 
+}
+
+function dlts_viewer_drush_jira_dlpas_370() {
+  global $base_url;
+  $records = drupal_http_request('https://sites.dlib.nyu.edu/viewer/api/v1/objects?collection=fdm&rows=50');
+  $data = json_decode($records->data);
+  foreach ($data->response->docs as $record) {
+    $identifier = $record->identifier;
+    $nid = $record->nid;
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $title = $wrapper->title->value();
+    $wrapper->field_title->set(trim($title));
+    $long_title = $wrapper->field_title->value();
+    $wrapper->save();
+    drush_log("Record $base_url/books/$identifier/1 - $long_title - Updated.", 'ok');
+  }
 }
 
 function dlts_viewer_drush_create_table_resources() {
@@ -165,7 +187,7 @@ function dlts_viewer_drush_add_epub() {
       }
       else {
         $record = dlts_viewer_supafolio_book($identifier, true);
-        if (isset($record->status) && $record->status === 'error') {          
+        if (isset($record->status) && $record->status === 'error') {
           drush_log("Supafolio API - Record with ISBN13 $identifier - " . $record->data['errors'][0]['message'], 'error');
         } else {
           if ($identifier === $record->isbn13) {
@@ -212,7 +234,7 @@ function dlts_viewer_drush_total_resources() {
 }
 
 // $ ./vendor/bin/drush pick-one-identifier
-function dlts_viewer_pick_one_identifier() {  
+function dlts_viewer_pick_one_identifier() {
   $record = db_query("SELECT identifier FROM dlts_viewer_resource")->fetchField();
   echo $record;
 }
@@ -229,7 +251,7 @@ function dlts_viewer_delete_by_identifier() {
     $nid = $record[0]->nid;
     node_delete($nid);
     drush_log("Node $nid deleted.", 'success');
-    db_query("DELETE FROM dlts_viewer_resource WHERE identifier = '$identifier'");    
+    db_query("DELETE FROM dlts_viewer_resource WHERE identifier = '$identifier'");
   } else {
     $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
     if (count($nids) > 0) {
@@ -297,13 +319,13 @@ function dlts_viewer_drush_add_resources() {
     drush_log('Type not supported.', 'error');
     exit();
   }
-  
+
   $sql = '';
-  $sql .= "SELECT"; 
+  $sql .= "SELECT";
   $sql .= " DISTINCT node.nid nid, identifier.field_identifier_value identifier, handle.field_handle_url handle";
   $sql .= " FROM node";
   $sql .= " LEFT JOIN field_data_field_identifier identifier";
-  $sql .= " ON node.nid = identifier.entity_id ";  
+  $sql .= " ON node.nid = identifier.entity_id ";
   $sql .= " LEFT JOIN field_data_field_handle handle ";
   $sql .= " ON node.nid = handle.entity_id ";
   $sql .= " WHERE node.type = '$types[$type]'";
@@ -361,7 +383,7 @@ function dlts_viewer_list_resource_node($resource = null) {
     if ($count < 1) {
       $handle = $wrapper->field_handle->value();
       $parsed_url = parse_url($handle['url']);
-      $noid = str_replace('/2333.1/', '', $parsed_url['path']);      
+      $noid = str_replace('/2333.1/', '', $parsed_url['path']);
       $edit_query = "UPDATE dlts_viewer_resource SET noid = '$noid', identifier = '$identifier', document = '$type', proceed = '1' WHERE nid = '$nid' LIMIT 1;";
       $results = db_query($edit_query);
       return dlts_viewer_list_resource_node();
@@ -373,7 +395,7 @@ function dlts_viewer_list_resource_node($resource = null) {
     ];
   } else {
     die('Error: Node not found or in scope of API.');
-  } 
+  }
 }
 
 /**
@@ -407,7 +429,7 @@ function dlts_viewer_drush_update_resource_pages() {
 
   $log = drush_get_option('log', true);
 
-  $identifier = drush_get_option('identifier', false);  
+  $identifier = drush_get_option('identifier', false);
 
   // MongoDB pagination.
   $page = 0;
@@ -429,11 +451,11 @@ function dlts_viewer_drush_update_resource_pages() {
     'dlts_partner' => 'dlts_partner',
     'dlts_photo_set' => 'dlts_photo',
     'dlts_postcard' => 'dlts_postcard',
-  ];  
+  ];
 
   // IIIF Image Server.
-  $image_server = variable_get('dlts_image_server', 'https://image1.dlib.nyu.edu:8183');  
-  
+  $image_server = variable_get('dlts_image_server', 'https://image1.dlib.nyu.edu:8183');
+
   if ($log === 'false') {
     $log = false;
   } else {
@@ -457,7 +479,7 @@ function dlts_viewer_drush_update_resource_pages() {
   $type = $types[$node->type];
 
   // Collection to search.
-  $collection_name = $collections[$node->type];    
+  $collection_name = $collections[$node->type];
 
   $wrapper = entity_metadata_wrapper('node', $node);
   $filter = [ 'isPartOf' => $identifier, 'cm.width' => '' ];
@@ -467,14 +489,14 @@ function dlts_viewer_drush_update_resource_pages() {
   $count = $cursor->count();
   $handle = $wrapper->field_handle->value();
   $parsed_url = parse_url($handle['url']);
-  $noid = str_replace('/2333.1/', '', $parsed_url['path']);      
+  $noid = str_replace('/2333.1/', '', $parsed_url['path']);
   if ($count > 0) {
     foreach ($records as $doc) {
       $edit = $doc;
       if (isset($doc['cm']) && isset($doc['cm']['uri'])) {
         $uri = $doc['cm']['uri'];
         $realPageNumber = $doc['realPageNumber'];
-        $image_id = urlencode(str_replace('fileserver://', '', $uri));    
+        $image_id = urlencode(str_replace('fileserver://', '', $uri));
         $response = drupal_http_request("$image_server/iiif/2/$image_id/info.json", [ 'method' => 'GET', 'timeout' => 15 ]);
         if ($response->code == '200' && isset($response->data)) {
           $data = drupal_json_decode($response->data);
@@ -484,7 +506,7 @@ function dlts_viewer_drush_update_resource_pages() {
           unset($edit['cm']['levels']);
           unset($edit['cm']['dwtLevels']);
           unset($edit['cm']['compositingLayerCount']);
-          unset($edit['cm']['timestamp']);            
+          unset($edit['cm']['timestamp']);
           $update = dlts_viewer_mongodb_update_sequence($edit, $collection_name);
           if ($update) {
             if ($log) {
@@ -500,7 +522,7 @@ function dlts_viewer_drush_update_resource_pages() {
         // Something is wrong.
         $edit_query = "UPDATE dlts_viewer_resource SET noid = '$noid', identifier = '$identifier', document = '$type', proceed = '5' WHERE nid = '$nid' LIMIT 1;";
         $results = db_query($edit_query);
-        drush_log('Error: MongoDB object is missing CM data.', 'error'); 
+        drush_log('Error: MongoDB object is missing CM data.', 'error');
       }
     }
     // Search collectiong again, if we are done, update the record in Drupal and set it as done.
@@ -518,9 +540,9 @@ function dlts_viewer_drush_update_resource_pages() {
  * e.g., ./vendor/bin/drush index-node-by-identifier --identifier=princeton_aco000102
  */
 function dlts_viewer_drush_index_node() {
-  
+
   $type = 'node';
-  
+
   $identifier = drush_get_option('identifier', NULL);
 
   if ($identifier) {
@@ -543,6 +565,7 @@ function dlts_viewer_drush_index_node() {
         'status' => 1,
       ]
     )->fields([ 'changed' => REQUEST_TIME ])->execute();
+
   } else {
     drush_log('Error: Identifier is missing.', 'error');
   }

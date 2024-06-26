@@ -10,6 +10,8 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
   global $base_url;
 
+  $analytics = variable_get('analytics', []);
+
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
@@ -74,25 +76,25 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
   }
 
   switch ($viewer) {
-    // case 'uv':
-    //   $template = 'viewer_embed_uv_page';
-    //   $opts =  [
-    //     'appid' => 'uv-app',
-    //     'title' => $title,
-    //     'language' => $language,
-    //     'direction' => $direction,
-    //     'sequence' => $sequence,
-    //     'endpoint' => $base_url,
-    //     'type' => $type,
-    //     'identifier' => $identifier,
-    //     'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-    //     'script' => file_get_contents("$module/viewers/uv/dist/uv.4.0.0.js"),
-    //     'style' => file_get_contents("$module/viewers/uv/uv.4.0.0.css"),
-    //   ];
-    //   break;
+    case 'uv':
+      $template = 'viewer_embed_uv_page';
+      $opts =  [
+        'analytics' => $analytics,
+        'appid' => 'uv-app',
+        'title' => $title,
+        'language' => $language,
+        'direction' => $direction,
+        'sequence' => $sequence,
+        'endpoint' => $base_url,
+        'type' => $type,
+        'identifier' => $identifier,
+        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+      ];
+      break;
     case 'clover':
       $template = 'viewer_embed_clover_page';
       $opts =  [
+        'analytics' => $analytics,
         'appid' => 'clover-app',
         'title' => $title,
         'language' => $language,
@@ -105,9 +107,10 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'script' => file_get_contents("$module/viewers/clover-iiif/dist/clover-iiif.2.3.2.umd.js"),
       ];
       break;
-    default:
-      $template = 'viewer_embed_page';
+    case 'mirador4':
+      $template = 'viewer_embed_mirador_latest_page';
       $opts =  [
+        'analytics' => $analytics,
         'appid' => 'mirador-app',
         'title' => $title,
         'language' => $language,
@@ -117,7 +120,23 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'type' => $type,
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'script' => file_get_contents("$module/mirador/integration/dist/mirador.js")
+        'script' => file_get_contents("$module/viewers/mirador-4/dist/mirador.js"),
+      ];
+      break;
+    case 'mirador':
+      $template = 'viewer_embed_page';
+      $opts =  [
+        'analytics' => $analytics,
+        'appid' => 'mirador-app',
+        'title' => $title,
+        'language' => $language,
+        'direction' => $direction,
+        'sequence' => $sequence,
+        'endpoint' => $base_url,
+        'type' => $type,
+        'identifier' => $identifier,
+        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+        'script' => file_get_contents("$module/mirador/integration/dist/mirador.js"),
       ];
       break;
   }

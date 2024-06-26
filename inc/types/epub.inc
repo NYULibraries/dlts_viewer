@@ -830,7 +830,7 @@ function dlts_viewer_epubs_indexer_v1($epub) {
 
   $solrurl = $discovery['solr'];
 
-  $solrurl = 'http://sites_solr:8983/solr/opensquare-v2';
+  $solrurl = 'http://sites_solr:8983/solr/opensquarev2';
 
   $epub = (object) $epub;
 

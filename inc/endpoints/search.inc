@@ -15,13 +15,16 @@ function dlts_viewer_search_json() {
 
   $index_name = 'viewer';
 
-  $default_discovery = variable_get('discovery', 'http://discovery1.dlib.nyu.edu/solr/viewer'); 
+  $default_discovery = variable_get('discovery', 'http://sites_solr:8983/solr/viewer');
 
-  $opensquare = variable_get('opensquare', 'https://discovery1.dlib.nyu.edu/solr/open-square-metadata'); 
+  $opensquare = variable_get('opensquare', 'https://discovery1.dlib.nyu.edu/solr/open-square-metadata');
+
+  $opensquare2 = variable_get('opensquare', 'https://discovery1.dlib.nyu.edu/solr/open-square-metadata');
 
   $indexes = [
     'viewer' => $default_discovery,
     'opensquare' => $opensquare['solr'],
+    'opensquare2' => $opensquare2['solr'],
   ];
 
   $query_parameters = explode('&', $_SERVER['QUERY_STRING']);
@@ -124,11 +127,11 @@ function dlts_viewer_search_json() {
       $doc->zm_subject = $zm_subjects;
     }
   }
- 
+
   if ($omitHeader) {
     return $data->response;
   } else {
     return $data;
-  }  
+  }
 
 }

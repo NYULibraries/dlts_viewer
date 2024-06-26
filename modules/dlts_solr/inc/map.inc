@@ -9,21 +9,31 @@
  * Index Map.
  */
  function dlts_solr_index_map(&$document, &$entity, $entity_type, $env_id) {
+
   global $base_url;
+
   // Datasource.
   module_load_include('inc', 'dlts_viewer', 'inc/datasource');
+
   $language = $entity->language;
+
   $wrapper = entity_metadata_wrapper('node', $entity);
+
   // Single-value field.
   $identifier = $wrapper->field_identifier->value();
+
   // Should have a identifier.
   if (!$identifier) {
     return;
   }
+
   $document->addField('ss_identifier', $identifier);
+
   $document->addField('ss_uri', url("maps/$identifier/1", ['absolute' => TRUE]));
+
   // Searchable content; dump all you want to be searchable in this array.
   $searchableFields = [ $document->content ];
+
   // Collection (field_collection): Multi-value field.
   dlts_solr_index_collection($wrapper->field_collection->value(), $document, $entity, $searchableFields);
 
@@ -36,10 +46,12 @@
   if (!empty($handle)) {
     $document->addField('ss_handle', $handle['url']);
     $noid = explode('/', $handle['url']);
-    $document->addField('ss_noid', $noid[count($noid) - 1]);    
+    $document->addField('ss_noid', $noid[count($noid) - 1]);
   }
 
   $document->addField('ss_manifest', "$base_url/api/presentation/maps/$identifier/manifest.json");
+
+  $field_title = trim($entity->title);
 
   // Title (field_title): Single-value field.
   $title_long = $wrapper->field_title->value();
@@ -81,7 +93,7 @@
     $document->addField('ss_call_number', $call_number);
     $searchableFields[] = $call_number;
   }
-    
+
   $document->addField('ss_representative_image', "$base_url/api/image/maps/$identifier/1/full/full/0/default.jpg");
 
   $document->addField('ss_site_image', "$base_url/api/image/maps/$identifier/1/full/full/0/default.jpg");
@@ -215,8 +227,10 @@
    * PDF
    * @link DLTSACO-775
    */
-  $pdfs = array();
+  $pdfs = [];
+
   $field_pdf = $wrapper->field_pdf_file->value();
+
   if ($field_pdf && !empty($field_pdf)) {
     foreach ($field_pdf as $key => $pdf) {
       $pdf_identifier = '';

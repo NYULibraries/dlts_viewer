@@ -74,7 +74,6 @@ function _dlts_viewer_menu_epub() {
   // epubs.
   // http://HOST/api/v0/epubs/nyu-press
   // ====== curl -b ./cookie -X POST http://localhost:9000/api/v0/epubs/nyu-press/9780814744758
-  // ====== curl -b ./cookie -X PUT -H 'Content-Type: application/json' -H 'Accept: application/json' --data "@data.json" http://localhost:9000/api/v0/epubs/nyupress/9780814707517
   $items['api/%dlts_version/epubs/%dlts_publisher'] = [
     'title' => 'Query repository',
     'description' => 'Query epubs API.',

@@ -5,66 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title><?php echo $title ?></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/universalviewer@4.0.0/dist/uv.css" />
     <style>
-      <?php echo $style ?>
-    </style>
-    <style>
-      body {
+      body, #uv {
+        width: 100%;
+        height: 100%;
         margin: 0;
         padding: 0;
-        overflow: hidden;
       }
     </style>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V9T13P98V7"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag('js', new Date());
-      gtag('config', 'G-V9T13P98V7');
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/universalviewer@4.0.0/dist/umd/UV.js"></script>
+    <?php if (isset($analytics) && $analytics['enabled']): ?>
+      <script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo $analytics['code'] ?>"></script>
+      <script>
+        window.dataLayer = window.dataLayer || []
+        function gtag() {
+          dataLayer.push(arguments)
+        }
+        gtag('js', new Date())
+        gtag('config', '<?php echo $analytics['code'] ?>')
+      </script>
+    <?php endif; ?>
   </head>
   <body>
-    <div 
-      id="<?php echo $appid ?>"
-      class="uv"
-      dir="<?php echo $direction ?>"
-      data-language="<?php echo $language ?>" 
-      data-endpoint="<?php echo $endpoint ?>" 
-      data-type="<?php echo $type ?>" 
-      data-sequence="<?php echo $sequence ?>" 
-      data-identifier="<?php echo $identifier ?>"
-    >
+    <div class="uv" id="uv"></div>
     <script>
-
-      <?php echo $script ?>
-
-      var urlAdaptor = new UV.URLAdaptor(true);
-
-      const data = urlAdaptor.getInitialData({
-        embedded: true
-      });
-
-      uv = UV.init("<?php echo $appid ?>", data);
-
-      document.addEventListener("DOMContentLoaded", function () {
-        var $UV = document.getElementById("uv");
-
-        function resize() {
-          $UV.setAttribute("style", "width:" + window.innerWidth + "px");
-          $UV.setAttribute("style", "height:" + window.innerHeight + "px");
+      function setDynamicHeight() {
+        document.getElementById('uv').style.height = `${window.innerHeight}px`
+      }
+      window.addEventListener('DOMContentLoaded', () => {
+        setDynamicHeight()
+        let data = {
+          manifest: '<?php echo $manifest ?>',
+          embedded: true // needed for codesandbox frame
         }
-
-        document.addEventListener("resize", function () {
-          resize();
-        });
-
-        resize();
-      });
-
+        let uv = UV.init('uv', data)
+      })
+      window.addEventListener('resize', setDynamicHeight)
     </script>
-    </div>
   </body>
 </html>
 

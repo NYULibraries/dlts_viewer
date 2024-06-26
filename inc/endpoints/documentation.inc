@@ -25,7 +25,14 @@ function dlts_viewer_api_v1_documentation() {
         $route['delivery callback'] == 'dlts_viewer_ldjson_iiif_presentation_3_output'
       )
     ) {
-      $routes[$key] = $route;
+      $routes[$key] = [
+        'title' => $route['title'],
+        'path' => $key,
+        'access' => $route['access arguments'],
+        'delivery' => $route['delivery callback'],
+        'page arguments' => (isset($route['page arguments'])) ? $route['page arguments'] : [],
+        'page callback' => $route['page callback'],
+      ];
     }
   }
 

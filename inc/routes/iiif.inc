@@ -67,7 +67,7 @@ function _dlts_viewer_menu_iiif() {
   // Proxy Image service.
   // @link https://[HOST]/api/image/books/uaena_aco000016/1
   $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence'] = [
-    'title' => 'IIIF API - Request metadata',
+    'title' => 'IIIF Image API 2.1.1 - Request metadata',
     'access arguments' => [ 'access iiif content' ],
     'page callback' => 'dlts_viewer_iiif_api',
     'page arguments' => [ 2, 3, 4 ],
@@ -84,7 +84,7 @@ function _dlts_viewer_menu_iiif() {
   // @link https://[HOST]/api/image/books/princeton_aco000102/1/full/max/0/default.jpg
   // @details https://[HOST]/api/image/books/princeton_aco000102/1/{region}/{size}/{rotation}/{quality}.{format}
   $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence/%dlts_iiif_region/%dlts_iiif_size/%dlts_iiif_rotation/%dlts_iiif_quality'] = [
-    'title' => 'IIIF API - Request image',
+    'title' => 'IIIF Image API 2.1.1 - Request image',
     'access arguments' => [ 'access iiif content' ],
     'page callback' => 'dlts_viewer_iiif_tile',
     'page arguments' => [ 2, 3, 4, 5, 6, 7, 8 ],

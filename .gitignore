@@ -28,5 +28,10 @@ TODO.md
 delete.sh
 tickets.inc
 
+vendor
+composer.lock
+composer.phar
+
+
 # Ignore Mirador 4 until we are ready to use it.
 viewers/mirador-4/

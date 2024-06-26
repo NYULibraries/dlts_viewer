@@ -25,6 +25,8 @@ function _dlts_viewer_menu_api() {
     'type' => MENU_CALLBACK,
   ];
 
+$items['api/documentation'] = $items['api/v1'];
+
   $items['api/v1/repository'] = [
     'title' => 'Query repository',
     'description' => 'Query repository.',

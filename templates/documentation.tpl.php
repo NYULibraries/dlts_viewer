@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+
 <style>
 #branding, #navigation, .breadcrumb, .page-title {
   position: absolute !important;
@@ -34,30 +35,31 @@ ol li {
   </div>
 </section>
 <div class="content">
-<section class="section">
-  <ul>
-    <li><a href="#apache-solr-proxy">Apache Solr Search</a></li>
-    <li><a href="#dlts-resources">DLTS Resources</a></li>
-    <li><a href="#discovery-api">DLTS Discovery API</a></li>
-    <li><a href="#iiif-presentation">IIIF Presentation API 3.0</a></li>
-    <li><a href="#iiif-image">IIIF Image API 2.1.1</a></li>
-  </ul>
-</section>
-<section class="section">
-  <article class="content">
-    <h3 class="title" id="apache-solr-proxy">Apache Solr Search</h3>
-    <p>DLTS Viewer uses Apache Solr to make its content searchable (JSON output format only). DLTS Viewer content can be search with knowledge of <a href="https://solr.apache.org/guide/6_6/common-query-parameters.html#common-query-parameters">Common Query Parameters</a> (NOTE: This endpoint use <em>query</em> as the query term instead of <em>q</em>). URI for DLTS Viewer Discovery:</p>
-      <article class="message is-info">
-      <div class="message-body">
-        <a href="<?php echo $base_url ?>/api/v1/search" target="_blank"><?php echo $base_url ?>/api/v1/search</a>
-      </div>
-    </article>
-    <h5 class="title">Sample URL</h5>
+
+  <section class="section">
     <ul>
-      <li><a href="<?php echo $base_url ?>/api/v1/search?query=monkey" target="_blank"><?php echo $base_url ?>/api/v1/search?query=monkey</a></li>
+      <li><a href="#apache-solr-proxy">Apache Solr Search</a></li>
+      <li><a href="#dlts-resources">DLTS Resources</a></li>
+      <li><a href="#discovery-api">DLTS Discovery API</a></li>
+      <li><a href="#iiif-presentation">IIIF Presentation API 3.0</a></li>
+      <li><a href="#iiif-image">IIIF Image API 2.1.1</a></li>
     </ul>
-    <p>For more information on how to use this endpoint, refer to <a href="https://solr.apache.org/guide/6_6/index.html">Apache Solr Reference Guide</a>.</p>
-  </article>
+  </section>
+  <section class="section">
+    <article class="content">
+      <h3 class="title" id="apache-solr-proxy">Apache Solr Search</h3>
+      <p>DLTS Viewer uses Apache Solr to make its content searchable (JSON output format only). DLTS Viewer content can be search with knowledge of <a href="https://solr.apache.org/guide/6_6/common-query-parameters.html#common-query-parameters">Common Query Parameters</a> (NOTE: This endpoint use <em>query</em> as the query term instead of <em>q</em>). URI for DLTS Viewer Discovery:</p>
+        <article class="message is-info">
+        <div class="message-body">
+          <a href="<?php echo $base_url ?>/api/v1/search" target="_blank"><?php echo $base_url ?>/api/v1/search</a>
+        </div>
+      </article>
+      <h5 class="title">Sample URL</h5>
+      <ul>
+        <li><a href="<?php echo $base_url ?>/api/v1/search?query=monkey" target="_blank"><?php echo $base_url ?>/api/v1/search?query=monkey</a></li>
+      </ul>
+      <p>For more information on how to use this endpoint, refer to <a href="https://solr.apache.org/guide/6_6/index.html">Apache Solr Reference Guide</a>.</p>
+    </article>
   <article class="content">
     <h3 class="title" id="dlts-resources">DLTS Resources</h3>
     <table class="table is-bordered is-striped">
@@ -246,10 +248,23 @@ ol li {
     <p>For more information about URI syntax and others, please refer to <a href="https://iiif.io/api/image/2.1">IIIF Image API 2.1.1</a></p>
   </article>
   <article class="content">
-    <h3 class="title" id="app-demo">Demo app</h3>
-    <ul>
-      <li><a href="https://objective-johnson-b22e71.netlify.app/ "> https://objective-johnson-b22e71.netlify.app/</a></li>
-    </ul>
+    <h5 class="title">Routes</h5>
+    <table class="table is-bordered is-striped">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Path</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach($routes as $route): ?>
+          <tr>
+            <td><?php echo $route['title'] ?></td>
+            <td><?php echo $route['path'] ?></td>
+          </tr>
+        <?php endforeach ?>
+      </tbody>
+    </table>
   </article>
 </section>
 </div>

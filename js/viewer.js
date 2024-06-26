@@ -154,6 +154,7 @@ async function ViewerApp(Y) {
           toggleview(osd)
           break
       }
+
       // Configuration for the new sequence.
       const message = {
         id: osd.id,
@@ -546,6 +547,8 @@ async function ViewerApp(Y) {
   if (type == 'maps') {
     options.showNavigator = true
   }
+
+  console.log(options)
 
   Y.Viewer = Y.OpenSeadragon(options)
 

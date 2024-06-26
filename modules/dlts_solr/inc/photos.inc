@@ -13,11 +13,11 @@
   global $base_url;
   // Datasource.
   module_load_include('inc', 'dlts_viewer', 'inc/datasource');
-  
+
   $language = $entity->language;
-  
+
   $wrapper = entity_metadata_wrapper('node', $entity);
-  
+
   // Single-value field.
   $identifier = $wrapper->field_identifier->value();
 
@@ -49,7 +49,7 @@
 
   $document->addField('ss_noid', $noid[count($noid) - 1]);
 
-  $field_title = $node->title;
+  $field_title = $entity->title;
 
   $document->addField('ss_manifest', "$base_url/api/presentation/photos/$identifier/manifest.json");
 
