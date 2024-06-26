@@ -15,7 +15,7 @@ function dlts_viewer_search_json() {
 
   $index_name = 'viewer';
 
-  $default_discovery = variable_get('discovery', 'http://sites_solr:8983/solr/viewer');
+  $default_discovery = variable_get('discovery', 'http://discovery-stage-alb-1091406983.us-east-1.elb.amazonaws.com:8983/solr/viewer');
 
   $opensquare = variable_get('opensquare', 'https://discovery1.dlib.nyu.edu/solr/open-square-metadata');
 

@@ -2322,3 +2322,102 @@ function _dlts_viewer_noid_loader($resource, $reset = FALSE) {
   }
   return false;
 }
+
+
+/**
+ * List entities.
+ *
+ * @param int $start
+ *   Index to start.
+ * @param int $length
+ *   Length of items in request.
+ *
+ * @return json|array
+ *   A keyed array to be converted into JSON.
+ */
+function dlts_viewer_list_entities(int $start = 0, int $length = 10) {
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  if (isset($query_parameters['rows']) && is_numeric($query_parameters['rows'])) {
+    $length = $query_parameters['rows'];
+  }
+
+  if (isset($query_parameters['start']) && is_numeric($query_parameters['start'])) {
+    $start = $query_parameters['start'];
+  }
+
+  $status = 0;
+  if (isset($query_parameters['status']) && is_numeric($query_parameters['status'])) {
+    $status = $query_parameters['status'];
+  }
+
+  $type = '';
+  if (isset($query_parameters['type'])) {
+    $type = $query_parameters['type'];
+  }
+
+  $placeholders = [
+    ':status' => $status,
+  ];
+
+  $query = "
+    SELECT
+      dlts_viewer_resource.nid,
+      dlts_viewer_resource.noid,
+      dlts_viewer_resource.document type,
+      dlts_viewer_resource.identifier,
+      dlts_viewer_resource.proceed,
+      title.field_title_value title,
+      handle.field_handle_url handle,
+      collection_code.field_code_value collection_code,
+      partner_code.field_code_value partner_code
+    FROM dlts_viewer_resource
+    LEFT JOIN field_data_field_title title
+      ON dlts_viewer_resource.nid = title.entity_id
+    LEFT JOIN field_data_field_handle handle
+      ON dlts_viewer_resource.nid = handle.entity_id
+    LEFT JOIN field_data_field_collection collection
+      ON dlts_viewer_resource.nid = collection.entity_id
+    INNER JOIN field_data_field_code collection_code
+      ON collection.field_collection_nid = collection_code.entity_id
+    LEFT JOIN field_data_field_partner partner
+      ON dlts_viewer_resource.nid = partner.entity_id
+    INNER JOIN field_data_field_code partner_code
+      ON partner.field_partner_nid = partner_code.entity_id
+    WHERE dlts_viewer_resource.proceed > :status";
+
+  $count = db_query($query, $placeholders)->fetchField();
+
+  if (isset($query_parameters['type'])) {
+    $query = $query . ' AND dlts_viewer_resource.document = :type';
+    $placeholders[':type'] = filter_xss($query_parameters['type']);
+  }
+
+  $results = db_query_range($query, $start, $length, $placeholders)->fetchAll();
+
+  $nodes = [];
+
+  foreach ($results as $result) {
+    $nodes[] = [
+      'nid' => $result->nid,
+      'noid' => $result->noid,
+      'type' => $result->type,
+      'identifier' => $result->identifier,
+      'title' => $result->title,
+      'handle' => $result->handle,
+      'collections' => $result->collection_code,
+      'partners' => $result->partner_code,
+    ];
+  }
+  // Try to mimic Apache Solr response.
+  $response = [
+    'response' => [
+      'numFound' => (int) $count,
+      'start' => (int) $start,
+      'docs' => $nodes,
+    ],
+  ];
+  return $response;
+
+}

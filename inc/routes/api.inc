@@ -349,6 +349,16 @@ $items['api/documentation'] = $items['api/v1'];
     'file' => 'inc/endpoints/ijson.inc',
   ];
 
+  // List documents.
+  $items['api/v1/entities'] = [
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_list_entities',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints.inc',
+  ];
+
   return $items;
 
 }

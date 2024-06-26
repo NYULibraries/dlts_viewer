@@ -125,17 +125,34 @@ function dlts_viewer_drush_command() {
 
 function dlts_viewer_drush_jira_dlpas_370() {
   global $base_url;
-  $records = drupal_http_request('https://sites.dlib.nyu.edu/viewer/api/v1/objects?collection=fdm&rows=50');
+  $records = drupal_http_request('https://sites.dlib.nyu.edu/viewer/api/v1/objects?collection=fdm&rows=500');
   $data = json_decode($records->data);
   foreach ($data->response->docs as $record) {
     $identifier = $record->identifier;
     $nid = $record->nid;
     $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
+    $type = 'node';
+    $wrapper = entity_metadata_wrapper($type, $node);
     $title = $wrapper->title->value();
     $wrapper->field_title->set(trim($title));
     $long_title = $wrapper->field_title->value();
     $wrapper->save();
+
+    $indexer_table = apachesolr_get_indexer_table($type);
+
+    db_merge($indexer_table)->key(
+      [
+        'entity_type' => $type,
+        'entity_id' => $node->nid,
+      ]
+    )->insertFields(
+      [
+        'entity_type' => $type,
+        'entity_id' => $node->nid,
+        'bundle' => $wrapper->getBundle(),
+        'status' => 1,
+      ]
+    )->fields([ 'changed' => REQUEST_TIME ])->execute();
     drush_log("Record $base_url/books/$identifier/1 - $long_title - Updated.", 'ok');
   }
 }
