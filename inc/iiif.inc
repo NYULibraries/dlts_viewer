@@ -1581,3 +1581,188 @@ function dlts_viewer_djakot_iiif_resolver() {
     die('Missing parameters');
   }
 }
+
+function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = TRUE) {
+
+  global $base_url;
+
+  $wrapper = entity_metadata_wrapper('node', $entity);
+
+  $identifier = $wrapper->field_identifier->value();
+
+  $name = $wrapper->field_name->value();
+
+  $partner = $wrapper->field_partner->value();
+
+  $pwrapper = entity_metadata_wrapper('node', $partner[0]);
+
+  $partner_code = $pwrapper->field_code->value();
+
+  $partner_name = $pwrapper->field_name->value();
+
+  $query = new EntityFieldQuery();
+
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->propertyCondition('language', ['en', 'und'])
+    ->propertyCondition('status', 1)
+    ->fieldCondition('field_collection', 'nid', $entity->nid, '=')
+    ->addTag('node_access')
+    ->execute();
+
+  $items = [];
+
+  if (!empty($result['node'])) {
+    $nodes = node_load_multiple(array_keys($result['node']));
+    foreach ($nodes as $node) {
+      $ew = entity_metadata_wrapper('node', $node);
+      $eidentifier = $ew->field_identifier->value();
+      $bundle = $ew->getBundle();
+      $type = dlts_viewer_resource_type($bundle);
+      $items[] = [
+        'id' => "$base_url/api/presentation/$type/$eidentifier/manifest.json",
+        'type' => 'Manifest',
+        'label' => [
+          'en' => [
+            $ew->title->value(),
+          ],
+        ],
+        'thumbnail' => [
+          [
+            'id' => "$base_url/api/image/$type/$eidentifier/1/full/!300,300/0/default.jpg",
+            'type' => 'Image',
+            'format' => 'image/jpeg',
+          ],
+        ],
+      ];
+    }
+  }
+
+  return [
+    '@context' => 'http://iiif.io/api/presentation/3/context.json',
+    'id' => "$base_url/api/presentation/collections/$identifier,$partner_code/manifest.json",
+    'type' => 'Collection',
+    'label' => [
+      'en' => [
+        "$name - $partner_name",
+      ],
+    ],
+    'items' => $items,
+  ];
+
+}
+
+function dlts_viewer_iiif_resource_manifest_collections($entities, $cache = TRUE) {
+
+  global $base_url;
+
+  if (count($entities) == 1) {
+    $entity = reset($entities);
+    return dlts_viewer_iiif_resource_manifest_collections_item($entity);
+  }
+  else {
+
+    $items = [];
+
+    foreach ($entities as $entity) {
+
+      $wrapper = entity_metadata_wrapper('node', $entity);
+
+      $name = $wrapper->field_name->value();
+
+      $collection_code = $wrapper->field_code->value();
+
+      $partner = $wrapper->field_partner->value();
+
+      $pwrapper = entity_metadata_wrapper('node', $partner[0]);
+
+      $partner_code = $pwrapper->field_code->value();
+
+      $partner_name = $pwrapper->field_name->value();
+
+      $items[] = [
+        'id' => "$base_url/api/presentation/collections/$collection_code:$partner_code/manifest.json",
+        'type' => 'Collection',
+        'label' => [
+          'en' => [
+            "$name - $partner_name",
+          ],
+        ],
+      ];
+    }
+
+  }
+
+  $entity = next($entities);
+
+  $wrapper = entity_metadata_wrapper('node', $entity);
+
+  $name = $wrapper->field_name->value();
+
+  $collection_code = $wrapper->field_code->value();
+
+  return [
+    '@context' => 'http://iiif.io/api/presentation/3/context.json',
+    'id' => "$base_url/api/presentation/collections/$collection_code/manifest.json",
+    'type' => 'Collection',
+    'label' => [
+      'en' => [
+        $name,
+      ],
+    ],
+    'items' => $items,
+  ];
+
+}
+
+// https://iiif.io/api/presentation/3.0/#a-summary-of-property-requirements
+function dlts_viewer_iiif_resource_manifest_collections_list() {
+
+  global $base_url;
+
+  $query = new EntityFieldQuery();
+
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_collection')
+    ->propertyCondition('status', 1)
+    ->addTag('node_access')
+    ->execute();
+
+  $items = [];
+
+  if (!empty($result['node'])) {
+    $nodes = node_load_multiple(array_keys($result['node']));
+    foreach ($nodes as $node) {
+      $ew = entity_metadata_wrapper('node', $node);
+      $identifier = $ew->field_identifier->value();
+      $collection_code = $ew->field_code->value();
+      $partner_field = $ew->field_partner->value();
+      $pw = entity_metadata_wrapper('node', $partner_field[0]);
+      $partner_code = $pw->field_code->value();
+      $partner_name = $pw->field_name->value();
+      $collection_name = $ew->field_name->value();
+      $items[] = [
+        'id' => "$base_url/api/presentation/collections/$collection_code,$partner_code/manifest.json",
+        'type' => 'Manifest',
+        'label' => [
+          'en' => [
+            "$collection_name - $partner_name",
+          ],
+        ],
+      ];
+    }
+  }
+
+  return [
+    '@context' => 'http://iiif.io/api/presentation/3/context.json',
+    'id' => "$base_url/api/presentation/collections/manifest.json",
+    'type' => 'Collection',
+    'label' => [
+      'en' => [
+        "All Collections",
+      ],
+    ],
+    'items' => $items,
+  ];
+}

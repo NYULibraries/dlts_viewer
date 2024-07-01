@@ -113,6 +113,39 @@ function _dlts_viewer_menu_iiif() {
     'file' => 'inc/iiif.inc',
   ];
 
+  /*
+   * Register IIIF Presentation Manifest routes for collections.
+   * @link https://iiif.io/api/cookbook/recipe/0032-collection
+   *
+   * @return array
+   *   IIIF Presentation collections manifest.
+   */
+  $items['api/presentation/collections/manifest.json'] = [
+    'title' => 'IIIF Presentation collections API 3 - Manifest',
+    'access arguments' => [ 'access iiif content' ],
+    'page callback' => 'dlts_viewer_iiif_resource_manifest_collections_list',
+    'type' => MENU_CALLBACK,
+    'delivery callback' => 'dlts_viewer_ldjson_iiif_presentation_3_output',
+    'file' => 'inc/iiif.inc',
+  ];
+
+  /*
+   * Register IIIF Presentation Manifest routes for collections.
+   * @link https://iiif.io/api/cookbook/recipe/0032-collection
+   *
+   * @return array
+   *   IIIF Presentation collections manifest.
+   */
+  $items['api/presentation/collections/%dlts_collection/manifest.json'] = [
+    'title' => 'IIIF Presentation collections API 3 - Manifest',
+    'access arguments' => [ 'access iiif content' ],
+    'page callback' => 'dlts_viewer_iiif_resource_manifest_collections',
+    'page arguments' => [ 3 ],
+    'type' => MENU_CALLBACK,
+    'delivery callback' => 'dlts_viewer_ldjson_iiif_presentation_3_output',
+    'file' => 'inc/iiif.inc',
+  ];
+
   // Redirect deprecated Adore Djakota routes.
   $items['api/v1/image/resolver'] = [
     'title' => 'Redirect deprecated Adore Djakota routes',
