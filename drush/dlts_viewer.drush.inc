@@ -621,18 +621,22 @@ function dlts_viewer_drush_list_translation() {
 
 function dlts_viewer_drush_add_translation_strings() {
 
+  $table = 'dlts_viewer_locale';
+
+  db_drop_table($table);
+
   // Define the schema for the new table.
   $schema = [
     'fields' => [
       'source' => [
         'type' => 'text',
-        'mysql_type' => 'blob',
+        'size' => 'normal',
         'not null' => TRUE,
         'description' => 'The original string.',
       ],
       'translation' => [
         'type' => 'text',
-        'mysql_type' => 'blob',
+        'size' => 'normal',
         'not null' => TRUE,
         'description' => 'Translation string value in this language.',
       ],
@@ -647,7 +651,7 @@ function dlts_viewer_drush_add_translation_strings() {
   ];
 
   // Create the table using the schema.
-  db_create_table('dlts_viewer_locale', $schema);
+  db_create_table($table, $schema);
 
   $strings = [
 

@@ -971,7 +971,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   global $base_url;
 
-  $cache = false;
+  // $cache = false;
 
   $wrapper = entity_metadata_wrapper('node', $entity);
 
@@ -1626,6 +1626,7 @@ function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = T
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->propertyCondition('language', ['en', 'und'])
+    ->entityCondition('bundle', [ 'dlts_map', 'dlts_book', 'dlts_photo_set' ])
     ->propertyCondition('status', 1)
     ->fieldCondition('field_collection', 'nid', $entity->nid, '=')
     ->addTag('node_access')
@@ -1641,7 +1642,6 @@ function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = T
       $bundle = $ew->getBundle();
       $type = dlts_viewer_resource_type($bundle);
       $items[] = [
-        'id' => "$base_url/api/presentation/$type/$eidentifier/manifest.json",
         'type' => 'Manifest',
         'label' => [
           'en' => [
