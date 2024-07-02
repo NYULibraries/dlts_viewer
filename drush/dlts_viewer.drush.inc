@@ -119,6 +119,12 @@ function dlts_viewer_drush_command() {
     'description' => dt('Update Freedom magazine records.'),
   ];
 
+  $items['dlts-add-translation-strings'] = [
+    'callback' => 'dlts_viewer_drush_add_translation_strings',
+    'description' => dt('Populate DLTS locale table.'),
+  ];
+
+
   return $items;
 
 }
@@ -611,3 +617,291 @@ function dlts_viewer_drush_list_translation() {
     drush_log($lang, 'ok');
   }
 }
+
+
+function dlts_viewer_drush_add_translation_strings() {
+
+  // Define the schema for the new table.
+  $schema = [
+    'fields' => [
+      'source' => [
+        'type' => 'text',
+        'mysql_type' => 'blob',
+        'not null' => TRUE,
+        'description' => 'The original string.',
+      ],
+      'translation' => [
+        'type' => 'text',
+        'mysql_type' => 'blob',
+        'not null' => TRUE,
+        'description' => 'Translation string value in this language.',
+      ],
+      'language' => [
+        'description' => 'Language code.',
+        'type' => 'varchar',
+        'length' => 12,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+    ],
+  ];
+
+  // Create the table using the schema.
+  db_create_table('dlts_viewer_locale', $schema);
+
+  $strings = [
+
+    [ 'source' => 'Call number', 'translation' => 'Call number', 'language' => 'en', ],
+    [ 'source' => 'Call number', 'translation' => 'رقم الاستدعاء', 'language' => 'ar', ],
+
+    [ 'source' => 'Contains any', 'translation' => 'Contains any', 'language' => 'en', ],
+    [ 'source' => 'Contains any', 'translation' => 'يحتوي على اي', 'language' => 'ar', ],
+
+    [ 'source' => 'Contains all', 'translation' => 'Contains all', 'language' => 'en', ],
+    [ 'source' => 'Contains all', 'translation' => 'يحتوي على كل', 'language' => 'ar', ],
+
+    [ 'source' => 'Showing books where', 'translation' => 'Showing books where', 'language' => 'en', ],
+    [ 'source' => 'Showing books where', 'translation' => 'عرض الكتب حيث', 'language' => 'ar', ],
+
+    [ 'source' => 'Add a filter', 'translation' => 'Add a filter', 'language' => 'en', ],
+    [ 'source' => 'Add a filter', 'translation' => 'أضِف فلتر', 'language' => 'ar', ],
+
+    [ 'source' => 'Refine results', 'translation' => 'Refine results', 'language' => 'en', ],
+    [ 'source' => 'Refine results', 'translation' => 'حسِّن نتائج البحث', 'language' => 'ar', ],
+
+    [ 'source' => 'Title', 'translation' => 'Title', 'language' => 'en', ],
+    [ 'source' => 'Title', 'translation' => 'العنوان', 'language' => 'ar', ],
+
+    [ 'source' => 'Author', 'translation' => 'Author', 'language' => 'en', ],
+    [ 'source' => 'Author', 'translation' => 'الكاتب', 'language' => 'ar', ],
+
+    [ 'source' => 'Provider', 'translation' => 'Provider', 'language' => 'en', ],
+    [ 'source' => 'Provider', 'translation' => 'المزوِّد', 'language' => 'ar', ],
+
+    [ 'source' => 'Publisher', 'translation' => 'Publisher', 'language' => 'en', ],
+    [ 'source' => 'Publisher', 'translation' => 'الناشر', 'language' => 'ar', ],
+
+    [ 'source' => 'Place of publication', 'translation' => 'Place of publication', 'language' => 'en', ],
+    [ 'source' => 'Place of publication', 'translation' => 'مكان النشر', 'language' => 'ar', ],
+
+    [ 'source' => 'Date of publication', 'translation' => 'Date of publication', 'language' => 'en', ],
+    [ 'source' => 'Date of publication', 'translation' => 'تاريخ النشر', 'language' => 'ar', ],
+
+    [ 'source' => 'Subject', 'translation' => 'Subject', 'language' => 'en', ],
+    [ 'source' => 'Subject', 'translation' => 'الموضوع', 'language' => 'ar', ],
+
+    [ 'source' => 'Equals', 'translation' => 'Equals', 'language' => 'en', ],
+    [ 'source' => 'Equals', 'translation' => 'يساوي', 'language' => 'ar', ],
+
+    [ 'source' => 'Contains', 'translation' => 'Contains', 'language' => 'en', ],
+    [ 'source' => 'Contains', 'translation' => 'يحتوي على', 'language' => 'ar', ],
+
+    [ 'source' => 'Does not equal', 'translation' => 'Does not equal', 'language' => 'en', ],
+    [ 'source' => 'Does not equal', 'translation' => 'لا يساوي', 'language' => 'ar', ],
+
+    [ 'source' => 'Does not contain', 'translation' => 'Does not contain', 'language' => 'en', ],
+    [ 'source' => 'Does not contain', 'translation' => 'لا يحتوي علی', 'language' => 'ar', ],
+
+    [ 'source' => 'Starts with', 'translation' => 'Starts with', 'language' => 'en', ],
+    [ 'source' => 'Starts with', 'translation' => 'يبدأ بـ', 'language' => 'ar', ],
+
+    [ 'source' => 'Ends with', 'translation' => 'Ends with', 'language' => 'en', ],
+    [ 'source' => 'Ends with', 'translation' => 'ينتهي بـ', 'language' => 'ar', ],
+
+    [ 'source' => 'Is empty', 'translation' => 'Is empty', 'language' => 'en', ],
+    [ 'source' => 'Is empty', 'translation' => 'فارغ', 'language' => 'ar', ],
+
+    [ 'source' => 'Is not empty', 'translation' => 'Is not empty', 'language' => 'en', ],
+    [ 'source' => 'Is not empty', 'translation' => 'ليس فارغ', 'language' => 'ar', ],
+
+    [ 'source' => 'Update', 'translation' => 'Update', 'language' => 'en', ],
+    [ 'source' => 'Update', 'translation' => 'نفِّذ', 'language' => 'ar', ],
+
+    [ 'source' => 'Showing 10 per page', 'translation' => 'عرض 10 في كل صفحة', 'language' => 'ar', ],
+    [ 'source' => 'Showing 10 per page', 'translation' => 'Showing 10 per page', 'language' => 'en', ],
+
+    [ 'source' => 'Any field', 'translation' => 'أي مُصطلح', 'language' => 'ar', ],
+    [ 'source' => 'Any field', 'translation' => 'Any field', 'language' => 'en', ],
+
+    [ 'source' => 'Recently added', 'translation' => 'Recently added', 'language' => 'en' ],
+    [ 'source' => 'Recently added', 'translation' => 'وضِعت مؤخراً', 'language' => 'ar' ],
+
+    [ 'source' => 'Seach Collections', 'translation' => 'إبحث في المجموعات', 'language' => 'ar' ],
+    [ 'source' => 'Seach Collections', 'translation' => 'Seach Collections', 'language' => 'en' ],
+
+    [ 'source' => 'Close', 'translation' => 'Close', 'language' => 'en' ],
+    [ 'source' => 'Close', 'translation' => 'اغلق', 'language' => 'ar' ],
+
+    [ 'source' => 'Library of Congress Class', 'translation' => 'Library of Congress Class', 'language' => 'en' ],
+    [ 'source' => 'Library of Congress Class', 'translation' => 'تصنيف مكتبة الكونغرس', 'language' => 'ar' ],
+
+    [ 'source' => 'All', 'translation' => 'All', 'language' => 'en' ],
+    [ 'source' => 'All', 'translation' => 'المجموعة', 'language' => 'ar' ],
+
+    [ 'source' => 'Browse by Category', 'translation' => 'Browse by Category', 'language' => 'en' ],
+    [ 'source' => 'Browse by Category', 'translation' => 'تصفح حسب فئة الموضوع', 'language' => 'ar' ],
+
+    [ 'source' => 'Category', 'translation' => 'Category', 'language' => 'en' ],
+    [ 'source' => 'Category', 'translation' => 'فئة الموضوع', 'language' => 'ar' ],
+
+    [ 'source' => 'Books', 'translation' => 'Books', 'language' => 'en' ],
+    [ 'source' => 'Books', 'translation' => 'كتب', 'language' => 'ar' ],
+
+    [ 'source' => 'PDF', 'translation' => 'PDF', 'language' => 'en' ],
+    [ 'source' => 'PDF', 'translation' => 'تحميل الكتاب (پي دي اف)', 'language' => 'ar' ],
+
+    [ 'source' => 'High resolution', 'translation' => 'High resolution', 'language' => 'en' ],
+    [ 'source' => 'High resolution', 'translation' => 'دِقّة عالية', 'language' => 'ar' ],
+
+    [ 'source' => 'Low resolution', 'translation' => 'Low resolution', 'language' => 'en' ],
+    [ 'source' => 'Low resolution', 'translation' => 'دِقّة منخفضة', 'language' => 'ar' ],
+
+    [ 'source' => 'High-resolution', 'translation' => 'High-resolution', 'language' => 'en' ],
+    // [ 'source' => 'High-resolution', 'translation' => '', 'language' => 'ar' ],
+
+    [ 'source' => 'Low-resolution', 'translation' => 'Low-resolution', 'language' => 'en' ],
+    // [ 'source' => 'Low-resolution', 'translation' => '', 'language' => 'ar' ],
+
+    [ 'source' => 'High-resolution PDF', 'translation' => 'High-resolution PDF', 'language' => 'en' ],
+    // [ 'source' => 'High-resolution PDF', 'translation' => '', 'language' => 'ar' ],
+
+    [ 'source' => 'Low-resolution PDF', 'translation' => 'Low-resolution PDF', 'language' => 'en' ],
+    // [ 'source' => 'Low-resolution PDF', 'translation' => '', 'language' => 'ar' ],
+
+    [ 'source' => 'Download', 'translation' => 'Download', 'language' => 'en' ],
+    [ 'source' => 'Download', 'translation' => 'تحميل', 'language' => 'ar' ],
+
+    [ 'source' => 'Searchable', 'translation' => 'Searchable', 'language' => 'en' ],
+    [ 'source' => 'Searchable', 'translation' => 'قابل للبحث', 'language' => 'ar' ],
+
+    [ 'source' => 'Vol.', 'translation' => 'Vol.', 'language' => 'en' ],
+    [ 'source' => 'Vol.', 'translation' => 'المجلد', 'language' => 'ar' ],
+
+    [ 'source' => 'Author/Contributor', 'translation' => 'Author/Contributor', 'language' => 'en' ],
+    [ 'source' => 'Author/Contributor', 'translation' => 'المؤلف/المساهم', 'language' => 'ar' ],
+
+    [ 'source' => 'Binding Orientation', 'translation' => 'Binding Orientation', 'language' => 'en' ],
+    [ 'source' => 'Binding Orientation', 'translation' => 'اتجاه التجليد', 'language' => 'ar' ],
+
+    [ 'source' => 'Collection', 'translation' => 'Collection', 'language' => 'en' ],
+    [ 'source' => 'Collection', 'translation' => 'المجموعة', 'language' => 'ar' ],
+
+    [ 'source' => 'Contributor', 'translation' => 'Contributor', 'language' => 'en' ],
+    [ 'source' => 'Contributor', 'translation' => 'المساهم', 'language' => 'ar' ],
+
+    [ 'source' => 'Creator', 'translation' => 'Creator', 'language' => 'en' ],
+    [ 'source' => 'Creator', 'translation' => 'المؤلف', 'language' => 'ar' ],
+
+    [ 'source' => 'Description', 'translation' => 'Description', 'language' => 'en' ],
+    [ 'source' => 'Description', 'translation' => 'الوصف', 'language' => 'ar' ],
+
+    [ 'source' => 'Dimensions', 'translation' => 'Dimensions', 'language' => 'en' ],
+    [ 'source' => 'Dimensions', 'translation' => 'الأبعاد', 'language' => 'ar' ],
+
+    [ 'source' => 'Editor', 'translation' => 'Editor', 'language' => 'en' ],
+    [ 'source' => 'Editor', 'translation' => 'المحرر', 'language' => 'ar' ],
+
+    [ 'source' => 'Geographic Coordinates', 'translation' => 'Geographic Coordinates', 'language' => 'en' ],
+    [ 'source' => 'Geographic Coordinates', 'translation' => 'الإحداثيات الجغرافية', 'language' => 'ar' ],
+
+    [ 'source' => 'Geographic Subject', 'translation' => 'Geographic Subject', 'language' => 'en' ],
+    [ 'source' => 'Geographic Subject', 'translation' => 'الموضوع الجغرافي', 'language' => 'ar' ],
+
+    [ 'source' => 'Permanent Link', 'translation' => 'Permanent Link', 'language' => 'en' ],
+    [ 'source' => 'Permanent Link', 'translation' => 'الرابط الثابت', 'language' => 'ar' ],
+
+    [ 'source' => 'Identifier', 'translation' => 'Identifier', 'language' => 'en' ],
+    [ 'source' => 'Identifier', 'translation' => 'المعرف', 'language' => 'ar' ],
+
+    [ 'source' => 'ISBN', 'translation' => 'ISBN', 'language' => 'en' ],
+    [ 'source' => 'ISBN', 'translation' => 'رقم الدولي الموحد للكتاب', 'language' => 'ar' ],
+
+    [ 'source' => 'Language', 'translation' => 'Language', 'language' => 'en' ],
+    [ 'source' => 'Language', 'translation' => 'اللغة', 'language' => 'ar' ],
+
+    [ 'source' => 'Language Code', 'translation' => 'Language Code', 'language' => 'en' ],
+    [ 'source' => 'Language Code', 'translation' => 'رمز اللغة', 'language' => 'ar' ],
+
+    [ 'source' => 'Number', 'translation' => 'Number', 'language' => 'en' ],
+    [ 'source' => 'Number', 'translation' => 'الرقم', 'language' => 'ar' ],
+
+    [ 'source' => 'OCR Text', 'translation' => 'OCR Text', 'language' => 'en' ],
+    [ 'source' => 'OCR Text', 'translation' => 'نص التعرف الضوئي على الحروف', 'language' => 'ar' ],
+
+    [ 'source' => 'Other Version', 'translation' => 'Other Version', 'language' => 'en' ],
+    [ 'source' => 'Other Version', 'translation' => 'نسخة أخرى', 'language' => 'ar' ],
+
+    [ 'source' => 'Page Count', 'translation' => 'Page Count', 'language' => 'en' ],
+    [ 'source' => 'Page Count', 'translation' => 'عدد الصفحات', 'language' => 'ar' ],
+
+    [ 'source' => 'Read Order', 'translation' => 'Read Order', 'language' => 'en' ],
+    [ 'source' => 'Read Order', 'translation' => 'ترتيب القراءة', 'language' => 'ar' ],
+
+    [ 'source' => 'Representative Image', 'translation' => 'Representative Image', 'language' => 'en' ],
+    [ 'source' => 'Representative Image', 'translation' => 'الصورة الممثلة', 'language' => 'ar' ],
+
+    [ 'source' => 'Rights', 'translation' => 'Rights', 'language' => 'en' ],
+    [ 'source' => 'Rights', 'translation' => 'الحقوق', 'language' => 'ar' ],
+
+    [ 'source' => 'Scan Date', 'translation' => 'Scan Date', 'language' => 'en' ],
+    [ 'source' => 'Scan Date', 'translation' => 'تاريخ المسح', 'language' => 'ar' ],
+
+    [ 'source' => 'Scan Order', 'translation' => 'Scan Order', 'language' => 'en' ],
+    [ 'source' => 'Scan Order', 'translation' => 'ترتيب المسح', 'language' => 'ar' ],
+
+    [ 'source' => 'Scanning Notes', 'translation' => 'Scanning Notes', 'language' => 'en' ],
+    [ 'source' => 'Scanning Notes', 'translation' => 'ملاحظات المسح', 'language' => 'ar' ],
+
+    [ 'source' => 'Sequence Count', 'translation' => 'Sequence Count', 'language' => 'en' ],
+    [ 'source' => 'Sequence Count', 'translation' => 'عدد التسلسل', 'language' => 'ar' ],
+
+    [ 'source' => 'Subtitle', 'translation' => 'Subtitle', 'language' => 'en' ],
+    [ 'source' => 'Subtitle', 'translation' => 'العنوان الفرعي', 'language' => 'ar' ],
+
+    [ 'source' => 'Topic', 'translation' => 'Topic', 'language' => 'en' ],
+    [ 'source' => 'Topic', 'translation' => 'الموضوع', 'language' => 'ar' ],
+
+    [ 'source' => 'Volume', 'translation' => 'Volume', 'language' => 'en' ],
+    [ 'source' => 'Volume', 'translation' => 'المجلد', 'language' => 'ar' ],
+
+    [ 'source' => 'Arabic Collections Online', 'translation' => 'Arabic Collections Online', 'language' => 'en' ],
+    [ 'source' => 'Arabic Collections Online', 'translation' => 'المجموعات العربية على الإنترنت', 'language' => 'ar' ],
+
+    [ 'source' => 'Arabic collections online', 'translation' => 'Arabic collections online', 'language' => 'en' ],
+    [ 'source' => 'Arabic collections online', 'translation' => 'المجموعات العربية على الانترنت', 'language' => 'ar' ],
+
+    [ 'source' => 'New York University Libraries', 'translation' => 'New York University Libraries', 'language' => 'en' ],
+    [ 'source' => 'New York University Libraries', 'translation' => 'مكتبات جامعة نيويورك', 'language' => 'ar' ],
+
+    [ 'source' => 'Princeton University Libraries', 'translation' => 'Princeton University Libraries', 'language' => 'en' ],
+    [ 'source' => 'Princeton University Libraries', 'translation' => 'مكتبات جامعة برينستون', 'language' => 'ar' ],
+
+    [ 'source' => 'Cornell University Libraries', 'translation' => 'Cornell University Libraries', 'language' => 'en' ],
+    [ 'source' => 'Cornell University Libraries', 'translation' => 'مكتبات جامعة كورنيل', 'language' => 'ar' ],
+
+    [ 'source' => 'Columbia University Libraries', 'translation' => 'Columbia University Libraries', 'language' => 'en' ],
+    [ 'source' => 'Columbia University Libraries', 'translation' => 'مكتبات جامعة كولومبيا', 'language' => 'ar' ],
+
+    [ 'source' => 'American University of Beirut', 'translation' => 'American University of Beirut', 'language' => 'en' ],
+    [ 'source' => 'American University of Beirut', 'translation' => 'الجامعة الاميركية في بيروت', 'language' => 'ar' ],
+
+    [ 'source' => 'American University in Cairo', 'translation' => 'American University in Cairo', 'language' => 'en' ],
+    [ 'source' => 'American University in Cairo', 'translation' => 'الجامعة الاميركية بالقاهرة', 'language' => 'ar' ],
+
+    [ 'source' => 'United Arab Emirates National Archives', 'translation' => 'United Arab Emirates National Archives', 'language' => 'en' ],
+    [ 'source' => 'United Arab Emirates National Archives', 'translation' => 'الامارات العربية المتحدة - الارشيف الوطني', 'language' => 'ar' ],
+
+  ];
+
+  foreach ($strings as $translation) {
+    db_insert('dlts_viewer_locale')
+      ->fields([
+        'source' => $translation['source'],
+        'translation' => $translation['translation'],
+        'language' => $translation['language'],
+      ])
+      ->execute();
+    }
+}
+
+
