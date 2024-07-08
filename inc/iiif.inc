@@ -1138,8 +1138,8 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   ];
 
   // https://iiif.io/api/presentation/3.0/#metadata
-  foreach ($translations as $translation) {
-    $values[$translation->language->value()] = dlts_book_fields_values($translation, $metadata_fields);
+  foreach ($translations as $lang => $translation) {
+    $values[$lang] = dlts_book_fields_values($translation, $metadata_fields);
   }
 
   foreach ($values as $lang => $field) {
@@ -1193,6 +1193,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $pw = entity_metadata_wrapper('node',  $field_partner[0]);
     $partner_code = $pw->field_code->value();
     $partof[] = [
+      // '@context' => 'http://iiif.io/api/presentation/3/context.json',
       'id' => "$base_url/api/presentation/collections/$collection_code:$partner_code/manifest.json",
       'type' => 'Collection',
       'label' => [
@@ -1205,6 +1206,62 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   if ($sequence_count > 1) {
     $behavior = [ 'paged' ];
+  }
+
+  // Check if this books is part of a multivol.
+  $multivolume_book = dlts_viewer_is_multivolume_book($entity);
+
+  // If book is part of multi-volume; append volume value to entity title.
+  if ($multivolume_book) {
+
+    $multivolume_book_wrapper = entity_metadata_wrapper('node', $multivolume_book);
+
+    $multivolume_idenfier = $multivolume_book_wrapper->field_identifier->value();
+
+    $multivolume_partof = [
+      // '@context' => 'http://iiif.io/api/presentation/3/context.json',
+      'id' => "$base_url/api/presentation/multivolume/$multivolume_idenfier/manifest.json",
+      'type' => 'Collection',
+      'label' => [
+        $multivolume_book_wrapper->language->value() => [
+          $multivolume_book_wrapper->title->value(),
+        ],
+      ],
+      'items' => [],
+    ];
+
+    // Get volume value.
+    $volume_number_str = $multivolume_book_wrapper->field_volume_number_str->value();
+
+    // Change entity title.
+    foreach ($fields['field_title']['value'] as $key => $value) {
+      $fields['field_title']['value'][$key][0] = t('@title @volume', [ '@title' => $value[0], '@volume' => $volume_number_str ]);
+    }
+
+    $multivolume_books = dlts_viewer_books_is_partof_multivolume($multivolume_book_wrapper->field_multivol->value()->nid);
+
+    foreach ($multivolume_books as $mb) {
+      // wrapp multi-volume entity with Entity API wrapper
+      $mb_wrapper = entity_metadata_wrapper('node', $mb);
+      // the book we map to this multivolume
+      $bs_wrapper = entity_metadata_wrapper('node', $mb_wrapper->field_book->value());
+      $multivolume_book_idenfier = $bs_wrapper->field_identifier->value();
+
+      // @TODO:  Here I need to find out if the book has translations; if so, I need to get the translation.
+      $multivolume_partof['items'][] = [
+        'id' => "$base_url/api/presentation/books/$multivolume_book_idenfier/manifest.json",
+        'type' => 'Manifest',
+        'label' => [
+          $multivolume_book_wrapper->language->value() => t('@title @volume', [ '@title' => $mb->title, '@volume' => $mb_wrapper->field_volume_number_str->value() ]),
+        ],
+      ];
+
+      unset($mb_wrapper);
+    }
+    unset($multivolume_book);
+    asort($volumes);
+
+    $partof[] = $multivolume_partof;
   }
 
   $collection_name = dlts_viewer_mongodb_collections_by_type($bundle);
@@ -1250,43 +1307,6 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
         'height' => (int) $page['cm']['height'],
       ]
     );
-  }
-
-  // Check if this books is part of a multivol.
-  $multivolume_book = dlts_viewer_is_multivolume_book($entity);
-
-  // If book is part of multi-volume; append volume value to entity title.
-  if ($multivolume_book) {
-    $wrapper = entity_metadata_wrapper('node', $multivolume_book);
-    // Get volume value.
-    $volume_number_str = $wrapper->field_volume_number_str->value();
-    // Change entity title.
-    foreach ($fields['field_title']['value'] as $key => $value) {
-      $fields['field_title']['value'][$key][0] = t('@title @volume', [
-        '@title' => $value[0],
-        '@volume' => $volume_number_str,
-      ]);
-    }
-    // $multivolume_books = dlts_viewer_books_is_partof_multivolume($wrapper->field_multivol->value()->nid);
-    // foreach ($multivolume_books as $mb) {
-    //   // wrapp multi-volume entity with Entity API wrapper
-    //   $mb_wrapper = entity_metadata_wrapper('node', $mb);
-    //   $volume = $mb_wrapper->field_volume_number->value();
-    //   // the book we map to this multivolume
-    //   $bs_wrapper = entity_metadata_wrapper('node', $mb_wrapper->field_book->value());
-    //   $volumes[$volume] = array(
-    //     'identifier' => $bs_wrapper->field_identifier->value(),
-    //     'selected' => ($bs_wrapper->nid->value() == $entity->nid),
-    //     'title' => t('@title @volume', array(
-    //       '@title' => $mb->title,
-    //       '@volume' => $mb_wrapper->field_volume_number_str->value(),
-    //       )
-    //     ),
-    //   );
-    //   unset($mb_wrapper);
-    // }
-    unset($multivolume_books);
-    asort($volumes);
   }
 
   if (empty($thumbnail) && $sequences && !empty($sequences)) {
@@ -1350,50 +1370,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $res['requiredStatement'] = $required_statement;
   }
 
-  // @todo to implement we need to change partner content-type
-  // to include URI and logo.
-  $providers = FALSE;
-
-  // $fields['field_partner'];
-  // https://iiif.io/api/presentation/3.0/#provider
-  // $providers = [
-  //   [
-  //     'id' => 'http://dlib.nyu.edu',
-  //     'type' => 'Agent',
-  //     'label' => [
-  //       'en' => [
-  //         'New York University',
-  //       ],
-  //     ],
-  //     'homepage' => [
-  //       [
-  //         'id' => 'http://dlib.nyu.edu/',
-  //         'type' => 'Text',
-  //         'label' => [
-  //           'en' => [
-  //             'New York University',
-  //           ],
-  //         ],
-  //         'format' => 'text/html',
-  //       ],
-  //     ],
-  //     'logo' => [
-  //       [
-  //         'id' => 'http://dlib.nyu.edu/aco/images/logos/nyu_short_color.png',
-  //         'type' => 'Image',
-  //         'format' => 'image/png',
-  //         'height' => 100,
-  //         'width' => 120,
-  //       ],
-  //     ],
-  //   ],
-  // ];
-
-  if ($providers) {
-    $res['providers'] = $providers;
-  }
-
-  if ($partof) {
+  if (isset($partof) && !empty($partof)) {
     $res['partOf'] = $partof;
   }
 
@@ -1642,6 +1619,7 @@ function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = T
       $bundle = $ew->getBundle();
       $type = dlts_viewer_resource_type($bundle);
       $items[] = [
+        'id' => "$base_url/api/presentation/$type/$eidentifier/manifest.json",
         'type' => 'Manifest',
         'label' => [
           'en' => [

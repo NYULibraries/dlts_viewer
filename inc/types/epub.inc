@@ -661,7 +661,7 @@ function dlts_viewer_epubs_metadata_v1($data) {
     $authors_display[] = [
       'contributorName' => $item['contributor']['name'],
       'contributorNameSort' => $item['contributor']['last'] . ', ' . $item['contributor']['first'],
-      'contrubutorRole' => $item['role'],
+      'contributorRole' => $item['role'],
       'contributorOrder' => $item['order'],
       'contributorBio' => $item['contributor']['bio'],
     ];
