@@ -329,7 +329,6 @@ function dlts_viewer_flush_caches() {
   t('Binding Orientation');
 
   t('Call Number');
-  // رقم الاستدعاء
 
   t('Collection');
 

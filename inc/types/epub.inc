@@ -647,8 +647,6 @@ function dlts_viewer_epubs_metadata_v1($data) {
 
   $reviews = [];
 
-  $isbnForPrimaryFormat = $identifier;
-
   $title = $data->title;
 
   $authors = (isset($data->contributors) && !empty($data->contributors)) ? $data->contributors : [];
@@ -667,14 +665,18 @@ function dlts_viewer_epubs_metadata_v1($data) {
     ];
   }
 
+  // https://jira.nyu.edu/browse/NYUP-980
   if (!empty($data->categories)) {
     foreach ($data->categories as $item) {
       $list = explode(' / ', $item['category']['name']);
-      foreach ($list as $name) {
-        $subjects[] = $name;
-      }
+      // Only top-level subjects should appear in Open Square
+      $subjects[] = $list[0];
     }
   }
+
+  $unique_subjects = array_unique($subjects);
+
+  sort($unique_subjects);
 
   $date = (object) $data->date;
 
@@ -697,10 +699,6 @@ function dlts_viewer_epubs_metadata_v1($data) {
   $custom = (object) $data->custom;
 
   $license = dlts_viewer_epub_license($custom->license_link);
-
-  $unique_subjects = array_unique($subjects);
-
-  sort($unique_subjects);
 
   $publisher = $data->publisher['name'] ? $data->publisher['name'] : 'NYU Press';
 
@@ -791,6 +789,12 @@ function dlts_viewer_epubs_metadata_dispatch($version = 'v1', $publisher, $metad
  * Undocumented function.
  */
 function dlts_viewer_epubs_metadata($version = 'v1', $publisher, $identifier, $reset_cache = false) {
+
+  $version = filter_xss($version);
+
+  $identifier = filter_xss($identifier);
+
+  $publisher = filter_xss($publisher);
 
   $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE identifier = :identifier AND publisher = :publisher', [ ':identifier' => $identifier, ':publisher' => $publisher ]);
 
