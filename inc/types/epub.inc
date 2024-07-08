@@ -745,7 +745,7 @@ function dlts_viewer_epubs_metadata_v1($data) {
     'subtitle' => $data->subtitle,
     'title' => $title,
     'titleSort' => $data->title_without_prefix,
-    'contributors' => json_encode($authors_display),
+    'contributors' => $authors_display,
     'doi' => $custom->permanent_url,
     'dateOpenAccess' => '', // need source
     'yearBook' => $_isbn_date->format('Y'),
