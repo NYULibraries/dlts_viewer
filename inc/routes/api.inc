@@ -158,6 +158,17 @@ $items['api/documentation'] = $items['api/v1'];
     'file' => 'inc/endpoints/book.inc',
   ];
 
+  $items['api/objects/resource/%dlts_noid'] = [
+    'title' => 'Update or delete resource',
+    'access arguments' => [
+      'dlts create object',
+    ],
+    'page callback' => 'dlts_viewer_api_update_resource',
+    'delivery callback' => 'drupal_json_output',
+    'page arguments' => [ 3 ],
+    'file' => 'inc/endpoints/api.inc',
+  ];
+
   $items['api/v1.0.1/objects'] = [
     'title' => 'Create object',
     'access arguments' => [
@@ -357,6 +368,16 @@ $items['api/documentation'] = $items['api/v1'];
     'page callback' => 'dlts_viewer_list_entities',
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints.inc',
+  ];
+
+  // List documents.
+  $items['api/services/status/mongodb'] = [
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_api_check_status_mongodb',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/api.inc',
   ];
 
   return $items;

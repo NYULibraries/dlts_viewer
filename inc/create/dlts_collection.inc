@@ -36,14 +36,16 @@ function create_dlts_collection($node) {
 
   if (isset($node['title'])) {
     $ewrapper->title->set($node['title']);
+  } elseif (isset($node['name'])) {
+    $ewrapper->title->set($node['name']);
   } else {
-    $ewrapper->title->set('collection ' . $uniqid);
+    $ewrapper->title->set('Collection ' . $uniqid);
   }
 
   if (isset($node['identifier'])) {
     $ewrapper->field_identifier->set($node['identifier']);
   } else {
-    $ewrapper->title->set('collection ' . $uniqid);
+    $ewrapper->field_identifier->set($uniqid);
   }
 
   if (isset($node['code'])) {
@@ -60,6 +62,19 @@ function create_dlts_collection($node) {
       $ewrapper->field_partner->set([ $partner_nid ]);
     } else {
       $partner_nid = create_dlts_partner($node['partner']);
+      if ($partner_nid) {
+        $ewrapper->field_partner->set([ $partner_nid ]);
+      }
+    }
+  }
+
+  // new api
+  if (isset($node['provider']) && !isset($node['partner'])) {
+    $partner_nid = partner_nid($node['provider']->uuid);
+    if ($partner_nid) {
+      $ewrapper->field_partner->set([ $partner_nid ]);
+    } else {
+      $partner_nid = create_dlts_provider($node['provider']);
       if ($partner_nid) {
         $ewrapper->field_partner->set([ $partner_nid ]);
       }

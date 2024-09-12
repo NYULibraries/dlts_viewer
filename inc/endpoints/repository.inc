@@ -244,6 +244,7 @@ function dlts_viewer_search_repository_partner() {
  * @link http://localhost:9000/api/v1/repository?digi_id=princeton_aco002112
  */
 function dlts_viewer_search_repository() {
+  global $base_url;
   try {
     if (!user_access('access dlts repository')) {
       throw new Exception('User not allowed.');
@@ -315,7 +316,7 @@ function dlts_viewer_search_repository() {
       if (!empty($result['node'])) {
         $keys = array_keys($result['node']);
         $nid = array_pop($keys);
-        $node = node_load($nid); 
+        $node = node_load($nid);
         $wrapper = entity_metadata_wrapper('node', $node);
         $handle_raw = $wrapper->field_handle->value();
         $handle = explode('/', $handle_raw['url']);
@@ -323,20 +324,25 @@ function dlts_viewer_search_repository() {
         foreach ($wrapper->field_collection->value() as $collection) {
           $collection_wrapper = entity_metadata_wrapper('node', $collection);
           $field_partner = $collection_wrapper->field_partner->value();
-          $partner_wrapper = entity_metadata_wrapper('node', $field_partner[0]);
-          $isPartOf[] = [
-            'uuid' => $collection_wrapper->field_identifier->value(),
-            'type' => dlts_viewer_rsbe_types_alias_map($collection_wrapper->getBundle()),
-            'code' => $collection_wrapper->field_code->value(),
-            'name' => $collection_wrapper->field_name->value(),
-            'provider' => [
-              'uuid' => $partner_wrapper->field_identifier->value(),
-              'type' => dlts_viewer_rsbe_types_alias_map($partner_wrapper->getBundle()),
-              'code' => $partner_wrapper->field_code->value(),
-              'name' => $partner_wrapper->field_name->value(),
-            ],
-          ];
+          if (!empty($field_partner)) {
+            $partner_wrapper = entity_metadata_wrapper('node', $field_partner[0]);
+            $isPartOf[] = [
+              // 'uuid' => $collection_wrapper->field_identifier->value(),
+              'type' => dlts_viewer_rsbe_types_alias_map($collection_wrapper->getBundle()),
+              'code' => $collection_wrapper->field_code->value(),
+              'name' => $collection_wrapper->field_name->value(),
+              'provider' => [
+                // 'uuid' => $partner_wrapper->field_identifier->value(),
+                'type' => dlts_viewer_rsbe_types_alias_map($partner_wrapper->getBundle()),
+                'code' => $partner_wrapper->field_code->value(),
+                'name' => $partner_wrapper->field_name->value(),
+              ],
+            ];
+          } else {
+            throw new Exception("Entity $base_url/node/$node->nid malformed. Fields collection and partner can't not be empty.");
+          }
         }
+        $entity['nid'] = $node->nid;
         $entity['noid'] = $handle[count($handle) - 1];
         $entity['type'] = dlts_viewer_rsbe_types_alias_map($wrapper->getBundle());
         $entity['isPartOf'] = $isPartOf;

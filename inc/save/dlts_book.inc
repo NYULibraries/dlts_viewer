@@ -117,11 +117,11 @@ function save_dlts_book($node, $language = 'en') {
 
     // We do not translate all the values.
     if ($node_language == 'en') {
-      
+
       if (!empty($node['ticket'])) {
         $ewrapper->field_ticket->set($node['ticket']);
       }
-      
+
       // if (!empty($node['noid'])) {
       //  $ewrapper->field_noid->set(trim($node['noid']));
       // }
@@ -318,7 +318,7 @@ function save_dlts_book($node, $language = 'en') {
       $ewrapper->field_subtitle->set($node['subtitle']);
     }
     if (!empty($node['description'])) {
-      $ewrapper->field_description->set($node['description']);
+      $ewrapper->field_description->set(implode('; ', $node['description']));
     }
     if (!empty($node['editor'])) {
       $ewrapper->field_editor->set($node['editor']);
