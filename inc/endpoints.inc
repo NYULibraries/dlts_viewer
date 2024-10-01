@@ -147,6 +147,8 @@ function dlts_viewer_book_metadata($node) {
  */
 function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
 
+  global $base_url;
+
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
@@ -288,14 +290,18 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
         'name' => $partner_wrapper->field_name->value(),
       ];
     }
+    $result_type = str_replace('dlts_', '', $wrapper->getBundle());
+    $result_alias = $result_type . 's';
+    $result_identifier = $wrapper->field_identifier->value();
     $nodes[] = [
       'nid' => $node->nid,
       'noid' => $handle[count($handle) - 1],
-      'type' => str_replace('dlts_', '', $wrapper->getBundle()),
+      'type' => $result_type,
       'identifier' => $wrapper->field_identifier->value(),
       'title' => $wrapper->field_title->value(),
       'collections' => $collections,
       'partners' => $partners,
+      'uri' => "$base_url/api/v1/$result_alias/$result_identifier",
     ];
   }
   // Try to mimic Apache Solr response.

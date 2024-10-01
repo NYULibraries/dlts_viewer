@@ -121,6 +121,9 @@ function dlts_viewer_admin_epub($publisher, $epub) {
 
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_admin_partner_epubs($publisher) {
 
   global $base_url;
@@ -252,6 +255,9 @@ function dlts_viewer_epub_license($link) {
 
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_api_epubs_publisher_list($version, $publisher) {
 
   global $base_url;
@@ -281,6 +287,9 @@ function dlts_viewer_api_epubs_publisher_list($version, $publisher) {
   ];
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_api_epubs_publisher_create($_version, $publisher, $identifier) {
 
   $identifier = filter_xss($identifier);
@@ -458,7 +467,9 @@ function dlts_viewer_epubmanager_metadata($_version, $publisher, $identifier) {
       }
 
       $metadata['response']['enviorments']['production']['epub'] = false;
+
       $epub = get_headers("https://mc.dlib.nyu.edu/files/nyupress/epubs/$identifier.epub", true);
+
       if ($epub) {
         $metadata['response']['enviorments']['production']['epub'] = [
         'message' => $epub[0],
@@ -467,7 +478,9 @@ function dlts_viewer_epubmanager_metadata($_version, $publisher, $identifier) {
       }
 
       $metadata['response']['enviorments']['production']['pdf'] = false;
+
       $pdf = get_headers("https://mc.dlib.nyu.edu/files/nyupress/pdfs/$identifier.pdf", true);
+
       if ($pdf) {
         $metadata['response']['enviorments']['production']['pdf'] = [
           'message' => $pdf[0],
@@ -476,15 +489,15 @@ function dlts_viewer_epubmanager_metadata($_version, $publisher, $identifier) {
       }
 
       $metadata['response']['enviorments']['production']['website'] = false;
+
       $pdf = get_headers("https://opensquare.nyupress.org/books/$identifier", true);
+
       if ($pdf) {
         $metadata['response']['enviorments']['production']['website'] = [
           'message' => $pdf[0],
           'url' => "https://opensquare.nyupress.org/books/$identifier",
         ];
       }
-
-
 
     }
 
@@ -498,6 +511,9 @@ function dlts_viewer_epubmanager_metadata($_version, $publisher, $identifier) {
 
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_epubs_metadata_v0($data, $reset_cache = false) {
 
   $author = '';
@@ -657,11 +673,11 @@ function dlts_viewer_epubs_metadata_v1($data) {
 
   foreach ($authors as $item) {
     $authors_display[] = [
-      'contributorName' => $item['contributor']['name'],
-      'contributorNameSort' => $item['contributor']['last'] . ', ' . $item['contributor']['first'],
-      'contributorRole' => $item['role'],
-      'contributorOrder' => $item['order'],
-      'contributorBio' => $item['contributor']['bio'],
+      'bio' => $item['contributor']['bio'],
+      'name' => $item['contributor']['name'],
+      'nameSort' => $item['contributor']['last'] . ', ' . $item['contributor']['first'],
+      'order' => $item['order'],
+      'role' => $item['role']['name'],
     ];
   }
 
@@ -708,63 +724,91 @@ function dlts_viewer_epubs_metadata_v1($data) {
     }
   }
 
-  if (isset($data->custom->open_access_series) && !empty($data->custom->open_access_series)) {
-    $series[] = $data->custom->open_access_series;
-  }
-
   $format = $data->pages;
 
   if (isset($data->reviews) && !empty($data->reviews)) {
     foreach ($data->reviews as $review) {
       $reviews[] = [
-        'reviewer' => $review['review']['reviewer'],
         'review' => $review['review']['description'],
+        'reviewer' => $review['review']['reviewer'],
       ];
     }
   }
 
+  // dateOpenAccess <- formats[*].date <- Hardcover ($custom->hardcover) or Paperback (isbnPaperback) if Hardcover is empty
+  $dateBook = '';
+  $hardcoverId = $custom->hardcover;
+
+  // Use array_filter to find the matching object
+  $matchingFormat = array_filter($data->formats, function($book) use ($hardcoverId) {
+    return $book['isbn'] === $hardcoverId;
+  });
+
+  // Get the first match if it exists
+  $foundBook = !empty($matchingFormat) ? array_values($matchingFormat)[0] : null;
+
+  if (empty($foundBook)) {
+    $isbnPaperbackId = $custom->paperback;
+    // Use array_filter to find the matching object
+    $matchingFormat = array_filter($data->formats, function($book) use ($isbnPaperbackId) {
+      return $book['isbn'] === $isbnPaperbackId;
+    });
+
+    // Get the first match if it exists
+    $foundBook = !empty($matchingFormat) ? array_values($matchingFormat)[0] : null;
+  }
+
+  if ($foundBook) {
+    $dateBook_date = new DateTime($foundBook['date']['date'], new DateTimeZone($foundBook['date']['timezone']));
+    $dateBook = $dateBook_date->format('Y-m-d');
+  }
+
+  // Schema/Crosswalk
+  // https://docs.google.com/spreadsheets/d/1j0P4WP80sJ-e_umdqDPbLjQZovoduQC_I7fGdI1O4iQ/edit?gid=0#gid=0
   $metadata = [
-    'publicationPlace' => 'New York',
-    'dateBook' => $_isbn_date->format('Y-m-d'),
+    'contributors' => $authors_display,
+    'dateBook' => $dateBook,
+    'dateOpenAccess' => $custom->scheduled_date,
     'description' => strip_tags($data->description),
     'descriptionHtml' => $data->description,
-    'pages' => "$format pages",
+    'doi' => $custom->permanent_url,
     'handle' => $custom->permanent_url,
-    'openSquareId' => $identifier,
+    'hasHiResImages' => $custom->hi_res_images,
+    'hasVideo' => $custom->video,
+    'isbnEbook' => $custom->ebook,
+    'isbnHardcover' => $custom->hardcover,
+    'isbnLibrary' => $custom->library,
+    'isbnPaperback' => $custom->paperback,
+    'isDownloadable' => $custom->open_access_is_downloadable,
     'language' => $custom->language,
     'license' => $license->label,
     'licenseAbbreviation' => $license->abbreviation,
     'licenseAbbreviationFacet' => null,
     'licenseIcon' => $license->icon,
     'licenseLink' => $license->link,
+    'openSquareId' => $identifier,
+    'pages' => "$format pages",
     'pressUrl' => "https://nyupress.org/$isbnForPrimaryFormat",
     'publisher' =>  $publisher,
+    'reviews' => $reviews,
     'series' => $series,
+    'seriesOpenAccess' => !empty($custom->open_access_series) ? $custom->open_access_series : [],
     'subjects' => $unique_subjects,
-    'subjectsFacet' => $unique_subjects,
     'subtitle' => $data->subtitle,
     'title' => $title,
     'titleSort' => $data->title_without_prefix,
-    'contributors' => $authors_display,
-    'doi' => $custom->permanent_url,
-    'dateOpenAccess' => '', // need source
+    'titleGroupId' => $data->title_id,
     'yearBook' => $_isbn_date->format('Y'),
     'yearOpenAccess' => '', // need source
-    // 'seriesOpenAcess' => '', // need source
-    'isbnHardcover' => $custom->hardcover,
-    'isbnPaperback' => $custom->paperback,
-    'isbnEbook' => $custom->ebook,
-    'isbnLibrary' => $custom->library,
-    'isDownloadable' => $custom->open_access_is_downloadable,
-    'hasVideo' => $custom->video,
-    'hasHiResImages' => $custom->hi_res_images,
-    'reviews' => $reviews,
   ];
 
   return $metadata;
 
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_epubs_metadata_dispatch($version = 'v1', $publisher, $metadata) {
   if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (user_access('access content')) {
@@ -827,6 +871,9 @@ function dlts_viewer_epubs_metadata($version = 'v1', $publisher, $identifier, $r
   }
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_epubs_indexer_v1($epub) {
 
   // Fix this. Should use conf variable.
@@ -962,7 +1009,7 @@ function dlts_viewer_supafolio($keyword = '*:*') {
 /**
  * Undocumented function.
  */
-function dlts_viewer_supafolio_book($identifier, $reset_cache = false) {
+function dlts_viewer_supafolio_book($identifier, $reset_cache = true) {
 
   $apiUrl = variable_get('supafolioApiUrl', false);
 
@@ -997,6 +1044,7 @@ function dlts_viewer_supafolio_book($identifier, $reset_cache = false) {
 
     if ($request->code == 200) {
       $data = json_decode($request->data, true);
+
       if (isset($data['data']['book'][0])) {
         if (!is_dir($dir_path)) {
           if (!mkdir($dir_path, 0775, true)) {
