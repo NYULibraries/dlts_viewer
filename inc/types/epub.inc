@@ -765,6 +765,7 @@ function dlts_viewer_epubs_metadata_v1($data) {
 
   // Schema/Crosswalk
   // https://docs.google.com/spreadsheets/d/1j0P4WP80sJ-e_umdqDPbLjQZovoduQC_I7fGdI1O4iQ/edit?gid=0#gid=0
+  // https://jira.nyu.edu/browse/NYUP-739
   $metadata = [
     'contributors' => $authors_display,
     'dateBook' => $dateBook,
