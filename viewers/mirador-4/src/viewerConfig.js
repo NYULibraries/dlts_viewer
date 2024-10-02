@@ -46,6 +46,10 @@ const defaultConfig = {
         secondary: {
           main: '#4db6ac',
         },
+        background: {
+          default: '#424242',
+          paper: '#424242',
+        },
       },
     },
   },
