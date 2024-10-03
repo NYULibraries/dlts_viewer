@@ -763,6 +763,17 @@ function dlts_viewer_epubs_metadata_v1($data) {
     $dateBook = $dateBook_date->format('Y-m-d');
   }
 
+  // https://jira.nyu.edu/browse/NYUP-986
+  $open_access_series = [];
+
+  if (!empty($custom->open_access_series)) {
+    if (is_array($custom->open_access_series)) {
+      $open_access_series = $custom->open_access_series;
+    } elseif (is_string($custom->open_access_series)) {
+      $open_access_series = explode(',', $custom->open_access_series);
+    }
+  }
+
   // Schema/Crosswalk
   // https://docs.google.com/spreadsheets/d/1j0P4WP80sJ-e_umdqDPbLjQZovoduQC_I7fGdI1O4iQ/edit?gid=0#gid=0
   // https://jira.nyu.edu/browse/NYUP-739
@@ -793,7 +804,7 @@ function dlts_viewer_epubs_metadata_v1($data) {
     'publisher' =>  $publisher,
     'reviews' => $reviews,
     'series' => $series,
-    'seriesOpenAccess' => !empty($custom->open_access_series) ? $custom->open_access_series : [],
+    'seriesOpenAccess' => $open_access_series,
     'subjects' => $unique_subjects,
     'subtitle' => $data->subtitle,
     'title' => $title,
