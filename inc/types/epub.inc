@@ -701,11 +701,11 @@ function dlts_viewer_epubs_metadata_v1($data) {
   foreach ($data->formats as $format) {
     $format = (object) $format;
     if (is_object($format->isbn)) {
-      if ($format->isbn->primary_format) {
+      if ($format->isbn->primary_format && !empty($format->isbn->primary_format)) {
         $isbnForPrimaryFormat = $format->isbn->isbn;
       }
     }
-    elseif (is_string($format->isbn) && is_object($format->date)) {
+    elseif (is_string($format->isbn)) {
       if ($format->primary_format) {
         $isbnForPrimaryFormat = $format->isbn;
       }
@@ -798,7 +798,7 @@ function dlts_viewer_epubs_metadata_v1($data) {
     'subtitle' => $data->subtitle,
     'title' => $title,
     'titleSort' => $data->title_without_prefix,
-    'titleGroupId' => $data->title_id,
+    'titleGroupId' => $custom->cs_title_group,
     'yearBook' => $_isbn_date->format('Y'),
     'yearOpenAccess' => '', // need source
   ];
