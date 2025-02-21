@@ -29,6 +29,8 @@ delete.sh
 tickets.inc
 
 vendor
+vendor/*
 composer.lock
 composer.phar
 
+viewers/mirador-4

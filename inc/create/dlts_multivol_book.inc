@@ -68,7 +68,12 @@ function create_dlts_multivol_book($node) {
       $collections = $node->collection;
     }
     foreach ($collections as $collection) {
-      $nid = collection_nid($collection->identifier);
+      if (isset($collection->identifier)) {
+        $collection_identifier = $collection->identifier;
+      } elseif (isset($collection->uuid)) {
+        $collection_identifier = $collection->uuid;
+      }
+      $nid = collection_nid($collection_identifier);
       if ($nid) {
         $nids[] = $nid;
       }

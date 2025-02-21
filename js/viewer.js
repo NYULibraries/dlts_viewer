@@ -548,8 +548,6 @@ async function ViewerApp(Y) {
     options.showNavigator = true
   }
 
-  console.log(options)
-
   Y.Viewer = Y.OpenSeadragon(options)
 
   // OpenSeadragon event.

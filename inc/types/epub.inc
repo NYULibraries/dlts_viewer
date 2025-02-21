@@ -264,9 +264,22 @@ function dlts_viewer_api_epubs_publisher_list($version, $publisher) {
 
   $start = 0;
 
+  $query_parameters = drupal_get_query_parameters();
+
   $epubs = [];
 
-  $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE publisher = :publisher AND status > 0 ORDER BY label ASC', [ ':publisher' => $publisher->code ]);
+  $query = 'SELECT * FROM dlts_viewer_epubs WHERE publisher = :publisher AND status > 0';
+
+  $filters = [ ':publisher' => $publisher->code ];
+
+  if (isset($query_parameters['tid'])) {
+    $filters[':data'] = filter_xss($query_parameters['tid']);
+    $query .= ' AND data = :data';
+  }
+
+  $query .= ' ORDER BY data DESC';
+
+  $results = db_query($query, $filters);
 
   foreach ($results as $record) {
     $epubs[$record->identifier] = [
@@ -275,6 +288,7 @@ function dlts_viewer_api_epubs_publisher_list($version, $publisher) {
       'modified' => $record->lastModified,
       'status' => $record->status,
       'uri' => "$base_url/api/$version/epubs/$publisher->code/$record->identifier",
+      'tid' => $record->data, // must rename data to tid
     ];
   }
 
@@ -290,23 +304,42 @@ function dlts_viewer_api_epubs_publisher_list($version, $publisher) {
 /**
  * Undocumented function.
  */
-function dlts_viewer_api_epubs_publisher_create($_version, $publisher, $identifier) {
+function dlts_viewer_api_epubs_publisher_create($publisher, $identifier) {
+
+  $query_parameters = drupal_get_query_parameters();
 
   $identifier = filter_xss($identifier);
+
+  $tid = null;
+  if (isset($query_parameters['tid'])) {
+    $tid = filter_xss($query_parameters['tid']);
+  }
 
   $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE identifier = :identifier AND publisher = :publisher', [ ':identifier' => $identifier, ':publisher' => $publisher->code ]);
 
   $record = $results->fetchObject();
 
+  $data = dlts_viewer_supafolio_book($identifier, true);
+
+  // update
   if ($record) {
+    db_update('dlts_viewer_epubs')
+      ->fields([
+        'label' => $data->title,
+        'status' => 1,
+        'lastModified' => date('Y-m-d'),
+        'data' => $tid,
+      ])
+      ->condition('identifier', $identifier)
+      ->condition('publisher', $publisher->code)
+      ->execute();
     return [
       'status' => 'found',
-      'message' => "ePub $record->label (ISBN13: $identifier) already published.",
-      'data' => dlts_viewer_epubs_metadata_v0(
-        dlts_viewer_supafolio_book($identifier, false)
-      )
+      'message' => "ePub $data->title (ISBN13: $identifier) updated.",
+      'data' => dlts_viewer_epubs_metadata_v1( $data )
     ];
   }
+  // create
   else {
     $record = dlts_viewer_supafolio_book($identifier, true);
     if (isset($record->status) && $record->status === 'error') {
@@ -347,7 +380,7 @@ function dlts_viewer_api_epubs_publisher_create($_version, $publisher, $identifi
 
 /**
  * Undocumented function.
- * curl -b ./cookie -X POST -H "Content-Type: application/json" -d '{"identifier": "9781479899388"}' https://192.168.0.8/viewer/api/v1/epubs/nyu-press --insecure
+ * curl -b ./cookie -X POST -H "Content-Type: application/json" -d '{"identifier": "9781479899388"}' https://192.168.0.8/viewer/api/v1/epubs/nyu-press
  */
 function dlts_viewer_api_epubs_publisher($version, $publisher) {
 
@@ -361,21 +394,21 @@ function dlts_viewer_api_epubs_publisher($version, $publisher) {
     $name = "user $user->name";
   }
 
-  $available_proxies = [ 'stage', 'prod', ];
+  // $available_proxies = [ 'stage', 'prod', ];
 
   // get from prod.
-  $query_parameters = drupal_get_query_parameters();
+  // $query_parameters = drupal_get_query_parameters();
 
-  if (isset($query_parameters['proxy']) && in_array(filter_xss($query_parameters['proxy']), $available_proxies)) {
-    $proxy = filter_xss($query_parameters['proxy']);
+  // if (isset($query_parameters['proxy']) && in_array(filter_xss($query_parameters['proxy']), $available_proxies)) {
+  //   $proxy = filter_xss($query_parameters['proxy']);
 
-    $proxy_url = "https://sites.dlib.nyu.edu/viewer/api/$version/epubs/$publisher->code";
+  //   $proxy_url = "https://sites.dlib.nyu.edu/viewer/api/$version/epubs/$publisher->code";
 
-    $request = drupal_http_request($proxy_url);
+  //   $request = drupal_http_request($proxy_url);
 
-    return json_decode($request->data);
+  //   return json_decode($request->data);
 
-  }
+  // }
 
   if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     return dlts_viewer_api_epubs_publisher_list($version, $publisher);
@@ -399,6 +432,13 @@ function dlts_viewer_api_epubs_publisher($version, $publisher) {
       ];
     }
   }
+  else {
+    return [
+      'status' => 'error',
+      'message' => "Method not allowed.",
+    ];
+  }
+
 }
 
 /**
@@ -514,7 +554,7 @@ function dlts_viewer_epubmanager_metadata($_version, $publisher, $identifier) {
 /**
  * Undocumented function.
  */
-function dlts_viewer_epubs_metadata_v0($data, $reset_cache = false) {
+function dlts_viewer_epubs_metadata_v0($data, $reset_cache = true) {
 
   $author = '';
 
@@ -737,6 +777,7 @@ function dlts_viewer_epubs_metadata_v1($data) {
 
   // dateOpenAccess <- formats[*].date <- Hardcover ($custom->hardcover) or Paperback (isbnPaperback) if Hardcover is empty
   $dateBook = '';
+
   $hardcoverId = $custom->hardcover;
 
   // Use array_filter to find the matching object
@@ -744,24 +785,33 @@ function dlts_viewer_epubs_metadata_v1($data) {
     return $book['isbn'] === $hardcoverId;
   });
 
+  // Sort formats by date
+  usort($data->formats, function ($a, $b) {
+    return strtotime($a['date']['date']) <=> strtotime($b['date']['date']);
+  });
+
+  $earliest = $data->formats[0];
+
   // Get the first match if it exists
-  $foundBook = !empty($matchingFormat) ? array_values($matchingFormat)[0] : null;
+  // $foundBook = !empty($matchingFormat) ? array_values($matchingFormat)[0] : null;
 
-  if (empty($foundBook)) {
-    $isbnPaperbackId = $custom->paperback;
-    // Use array_filter to find the matching object
-    $matchingFormat = array_filter($data->formats, function($book) use ($isbnPaperbackId) {
-      return $book['isbn'] === $isbnPaperbackId;
-    });
+  // if (empty($foundBook)) {
+  //   $isbnPaperbackId = $custom->paperback;
+  //   // Use array_filter to find the matching object
+  //   $matchingFormat = array_filter($data->formats, function($book) use ($isbnPaperbackId) {
+  //     return $book['isbn'] === $isbnPaperbackId;
+  //   });
 
-    // Get the first match if it exists
-    $foundBook = !empty($matchingFormat) ? array_values($matchingFormat)[0] : null;
-  }
+  //   // Get the first match if it exists
+  //   $foundBook = !empty($matchingFormat) ? array_values($matchingFormat)[0] : null;
+  // }
 
-  if ($foundBook) {
-    $dateBook_date = new DateTime($foundBook['date']['date'], new DateTimeZone($foundBook['date']['timezone']));
-    $dateBook = $dateBook_date->format('Y-m-d');
-  }
+  // if ($foundBook) {
+  $dateBook_date = new DateTime($earliest['date']['date'], new DateTimeZone($earliest['date']['timezone']));
+  $dateBook = $dateBook_date->format('Y-m-d');
+  // https://jira.nyu.edu/browse/NYUP-1009
+  $yearBook = $dateBook_date->format('Y');
+  // }
 
   // https://jira.nyu.edu/browse/NYUP-986
   $open_access_series = [];
@@ -774,13 +824,27 @@ function dlts_viewer_epubs_metadata_v1($data) {
     }
   }
 
+  // https://jira.nyu.edu/browse/NYUP-1003
+  $dateOpenAccessformattedDate = '';
+  $yearOpenAccess = '';
+
+  // Create a DateTime object from the original format
+  // Original date string in DD/MM/YYYY format
+  $dateOpenAccessObject = DateTime::createFromFormat('d/m/Y', $custom->scheduled_date);
+
+  // Format the date as YYYY-MM-DD
+  if ($dateOpenAccessObject) {
+    $dateOpenAccessformattedDate = $dateOpenAccessObject->format('Y-m-d');
+    $yearOpenAccess = $dateOpenAccessObject->format('Y');
+  }
+
   // Schema/Crosswalk
   // https://docs.google.com/spreadsheets/d/1j0P4WP80sJ-e_umdqDPbLjQZovoduQC_I7fGdI1O4iQ/edit?gid=0#gid=0
   // https://jira.nyu.edu/browse/NYUP-739
   $metadata = [
     'contributors' => $authors_display,
     'dateBook' => $dateBook,
-    'dateOpenAccess' => $custom->scheduled_date,
+    'dateOpenAccess' => $dateOpenAccessformattedDate ,
     'description' => strip_tags($data->description),
     'descriptionHtml' => $data->description,
     'doi' => $custom->permanent_url,
@@ -810,8 +874,8 @@ function dlts_viewer_epubs_metadata_v1($data) {
     'title' => $title,
     'titleSort' => $data->title_without_prefix,
     'titleGroupId' => $custom->cs_title_group,
-    'yearBook' => $_isbn_date->format('Y'),
-    'yearOpenAccess' => '', // need source
+    'yearBook' => $yearBook,
+    'yearOpenAccess' => $yearOpenAccess,
   ];
 
   return $metadata;
@@ -822,29 +886,38 @@ function dlts_viewer_epubs_metadata_v1($data) {
  * Undocumented function.
  */
 function dlts_viewer_epubs_metadata_dispatch($version = 'v1', $publisher, $metadata) {
-  if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+  global $user;
+
+  $name = $user->name;
+
+  if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     if (user_access('access content')) {
       return $metadata;
-    }
-    elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    } else {
       return [
         'status' => 'error',
-        'message' => 'Method not implemented.',
-      ];
-    }
-    else {
-      return [
-        'status' => 'error',
-        'message' => "Method not allowed.",
+        'message' => "Action by user $name not allowed.",
       ];
     }
   }
+
+  if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (user_access('dlts create object')) {
+      return dlts_viewer_api_epubs_publisher_create($publisher, $metadata->custom['library']);
+    } else {
+      return [
+        'status' => 'error',
+        'message' => "The action to create object is not allowed for user with id $name.",
+      ];
+    }
+  }
+
 }
 
 /**
  * Undocumented function.
  */
-function dlts_viewer_epubs_metadata($version = 'v1', $publisher, $identifier, $reset_cache = false) {
+function dlts_viewer_epubs_metadata($version = 'v1', $publisher, $identifier, $reset_cache = true) {
 
   $version = filter_xss($version);
 
@@ -891,9 +964,15 @@ function dlts_viewer_epubs_indexer_v1($epub) {
   // Fix this. Should use conf variable.
   $discovery = variable_get('opensquare', null);
 
-  $solrurl = $discovery['solr'];
+  // $solrurl = $discovery['solr'];
 
-  $solrurl = 'http://sites_solr:8983/solr/opensquarev2';
+  // $solrurl = 'http://sites_solr:8983/solr/opensquarev2';
+
+  // http://discovery-stage-alb-1091406983.us-east-1.elb.amazonaws.com:8983/solr/open-square-metadata/select
+
+  // $solrurl = 'https://stagediscovery.dlib.nyu.edu/solr/open-square-metadata';
+
+  $solrurl = 'http://discovery-stage-alb-1091406983.us-east-1.elb.amazonaws.com:8983/solr/open-square-metadata';
 
   $epub = (object) $epub;
 
@@ -936,14 +1015,37 @@ function dlts_viewer_epubs_indexer($version, $publisher, $epub) {
 
   $epub = (object) $epub;
 
-  if ($version === 'v1') {
-    return dlts_viewer_epubs_indexer_v1($epub);
+  $identifier = $epub->identifier;
+
+  $code = $publisher->code;
+
+  $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE identifier = :identifier AND publisher = :publisher', [ ':identifier' => $identifier, ':publisher' => $code ]);
+
+  $record = $results->fetchObject();
+
+  $args = drupal_get_query_parameters();
+
+  $tranche = '1';
+
+  if (isset($record->data)) {
+    $tranche = filter_xss($record->data);
   }
+
+  // V1 is not working at the moment.
+  // if ($version === 'v1') {
+  //  return dlts_viewer_epubs_indexer_v1($epub);
+  // }
 
   // Fix this. Should use conf variable.
   $discovery = variable_get('opensquare', null);
 
-  $solrurl = $discovery['solr'];
+  // $solrurl = $discovery['solr'];
+
+  // stage
+  $solrurl = 'http://discovery-stage-alb-1091406983.us-east-1.elb.amazonaws.com:8983/solr/open-square-metadata';
+
+  // prod
+  $solrurl = 'https://discovery1.dlib.nyu.edu/solr/open-square-metadata';
 
   $epub->id = $epub->identifier;
 
@@ -958,6 +1060,8 @@ function dlts_viewer_epubs_indexer($version, $publisher, $epub) {
   unset($epub->isDownloadable);
 
   unset($epub->rootUrl);
+
+  $epub->tid_s = $tranche;
 
   $options = [
     'method' => 'POST',

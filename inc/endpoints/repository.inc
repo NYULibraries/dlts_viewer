@@ -19,49 +19,60 @@ function dlts_viewer_rsbe_types_alias_map($type) {
 }
 
 function dlts_viewer_search_repository_partner_code($code) {
-  $partners = dlts_viewer_search_repository_partner();
-  $found_key = array_search($code, array_column($partners, 'code'));
-  $expand_partner = FALSE;
-  if ($found_key) {
-    if (!$expand_partner) {
-      return $partners[$found_key];
-    }
-    // Username for the repository challange.
-    $user = variable_get('repository_user', NULL);
-    // Password for repository challange.
-    $pass = variable_get('repository_pass', NULL);
-    // Repository URL.
-    $endpoint = variable_get('repository_endpoint', NULL);
-    // We need this values to continue.
-    if ($user && $pass && $endpoint) {
-      /*
-       * Not available. Search repository. NoId will not be set to null.
-       */
-      $endpoint = parse_url($partners[$found_key]->url);
-      $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'] . $endpoint['path'] . '/colls';
+
+  $code = filter_xss($code);
+
+  // Username for the repository challange.
+  $user = variable_get('repository_user', NULL);
+  // Password for repository challange.
+  $pass = variable_get('repository_pass', NULL);
+  // Repository URL.
+  $endpoint = variable_get('repository_endpoint', NULL);
+
+  // We need this values to continue.
+  if ($user && $pass && $endpoint) {
+    /*
+     * Not available. Search repository. NoId will not be set to null.
+     */
+
+    $partner_url = "$endpoint/api/v0/partners/$code";
+
+    $endpoint = parse_url($partner_url);
+
+    $requestUrl = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'] . $endpoint['path'];
+
+    $request = drupal_http_request($requestUrl);
+
+    if ($request->code == '200') {
+
+      $data = json_decode($request->data);
+
+      $data->collections = [];
+
+      $parsed_endpoint = parse_url($data->colls_url);
+
+      $endpoint = $parsed_endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $parsed_endpoint['host'] . $parsed_endpoint['path'];
+
       $request = drupal_http_request($endpoint);
+
       if ($request->code == '200') {
-        $data = json_decode($request->data);
-        unset($partners[$found_key]->created_at);
-        unset($partners[$found_key]->updated_at);
-        unset($partners[$found_key]->url);
-        $collections = [];
-        foreach ($data as $col) {
-          $collections[] = [
-            'id' => $col->id,
-            'code' => $col->code,
-            'name' => $col->name,
-          ];
+        $collections = json_decode($request->data);
+        foreach ($collections as $collection) {
+          unset($collection->created_at);
+          unset($collection->updated_at);
+          $data->collections[] = $collection;
         }
-        $partners[$found_key]->collections = $collections;
-        return $partners[$found_key];
       } else {
-        throw new Exception('Request failed with status code ' . $request->code . '.');
+        print_r($request);
       }
+
+      return $data;
+
     }
-  } else {
+  }
+  else {
     return [
-      'error' => "Partners with code $code not found."
+      'error' => "Configuration error."
     ];
   }
 }
@@ -129,13 +140,144 @@ function dlts_viewer_search_repository_collection_ses($partner, $collection) {
   }
 }
 
+// https://stage-sites.dlib.nyu.edu/viewer/api/v1/repository/collections/351dd2ed-7967-424a-b2b8-521f85735861
+function dlts_viewer_repository_query_repository_by_collection_id($collectionId) {
+  global $base_url;
+  try {
+    // if (!user_access('access dlts repository')) {
+    if (!user_access('access content')) { // for now.
+      throw new Exception('User not allowed.');
+    }
+    // Holds array of collection + partner.
+    // Username for the repository challange.
+    $user = variable_get('repository_user', NULL);
+    // Password for repository challange.
+    $pass = variable_get('repository_pass', NULL);
+    // Repository URL.
+    $endpoint = variable_get('repository_endpoint', NULL);
+    // We need this values to continue.
+    if ($user && $pass && $endpoint) {
+      // @todo Cache response.
+      $cache = md5($_SERVER['QUERY_STRING']);
+      // Path to public directory.
+      // @todo Migth want to use private instead of public.
+      $realpath = drupal_realpath('public://') . '/datasource';
+      // Path to use to cache response/return value.
+      $dir_path = $realpath . '/rsbe';
+      /*
+       * Not available. Search repository. NoId will not be set to null.
+       */
+
+      $endpoint = parse_url($endpoint);
+
+      $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'];
+
+      // Get query.
+      // @todo Should we use Drupal's method?
+      parse_str(
+        parse_url(
+          $_SERVER['REQUEST_URI'],
+          PHP_URL_QUERY
+        ),
+        $args
+      );
+
+      $partOf = [];
+      
+      $requestUrl = "$endpoint/api/v0/colls/$collectionId";
+
+      $request = drupal_http_request($requestUrl);
+
+      if ($request->code == '200') {
+        
+        $collection = [];
+
+        $coll_data = json_decode($request->data);
+
+        $collection['name'] = $coll_data->name;
+
+        $collection['code'] = $coll_data->code;
+
+        $collection['display_code'] = $coll_data->display_code;
+
+        $collection['ready_for_content'] = $coll_data->ready_for_content;
+
+        $collection['partner'] = [];
+
+        $partner_url_endpoint = parse_url($coll_data->partner_url);
+
+        $request_partner = drupal_http_request($partner_url_endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $partner_url_endpoint['host'] . $partner_url_endpoint['path']);
+
+        $provider = [];
+
+        if ($request_partner->code == '200') {
+          $partner_data = json_decode($request_partner->data);
+          $collection['partner'] = [
+            'id' => $partner_data->id,
+            'code' => $partner_data->code,
+            'name' => $partner_data->name,
+          ];
+        }
+
+        $owner_url_endpoint = parse_url($coll_data->owner_url);
+
+        $request_owner = drupal_http_request($owner_url_endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $owner_url_endpoint['host'] . $owner_url_endpoint['path']);
+        
+        if ($request_owner->code == '200') {
+          $owner_data = json_decode($request_owner->data);
+          $collection['owner'] = [
+            'id' => $owner_data->id,
+            'name' => $owner_data->name,
+            'code' => $owner_data->code,
+          ];
+        }
+
+        $ses_url_endpoint = parse_url($coll_data->ses_url);
+
+        $request_ses = drupal_http_request($ses_url_endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $ses_url_endpoint['host'] . $ses_url_endpoint['path']);
+
+        if ($request_ses->code == '200') {
+          $collection['ses'] = [];
+          $ses_data = json_decode($request_ses->data);
+          foreach ($ses_data as $se_data) {
+            $collection['ses'][] = [
+              'id' => $se_data->id,
+              'digi_id' => $se_data->digi_id,
+              'do_type' => $se_data->do_type,
+              'status' => $se_data->status,
+              'created_at' => $se_data->created_at,
+              'updated_at' => $se_data->updated_at,
+            ];
+          }
+        }
+
+        // $ies_url_endpoint = parse_url($coll_data->ies_url);
+
+        return $collection;
+
+      } else {
+        throw new Exception('Request failed with status code ' . $request->code . '.');
+      }
+    }
+  } catch (Exception $e) {
+    return [
+      'error' => $e->getMessage(),
+    ];
+  }
+  return [
+    'error' => 'Fatal error, cause unknow.',
+  ];
+}
+
 /**
  * Search using Solr.
  * @link http://localhost:9000/api/v1/repository/partners
  */
 function dlts_viewer_search_repository_partner() {
+  global $base_url;
   try {
-    if (!user_access('access dlts repository')) {
+    // if (!user_access('access dlts repository')) {
+    if (!user_access('access content')) { // for now.
       throw new Exception('User not allowed.');
     }
     // Response/Return value.
@@ -160,7 +302,9 @@ function dlts_viewer_search_repository_partner() {
       /*
        * Not available. Search repository. NoId will not be set to null.
        */
+
       $endpoint = parse_url($endpoint);
+
       $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'];
 
       // Get query.
@@ -172,6 +316,7 @@ function dlts_viewer_search_repository_partner() {
         ),
         $args
       );
+
       // Entity language.
       $language = 'en';
       if (isset($args['lang']) && !empty($args['lang'])) {
@@ -222,6 +367,11 @@ function dlts_viewer_search_repository_partner() {
         $request = drupal_http_request($requestUrl);
         if ($request->code == '200') {
           $data = json_decode($request->data);
+
+          foreach ($data as $entry) {
+            $entryId = $entry->id;
+            $entry->proxy = "$base_url/api/v1/repository/partners/$entryId";
+          }
           return $data;
         } else {
           throw new Exception('Request failed with status code ' . $request->code . '.');
@@ -240,7 +390,6 @@ function dlts_viewer_search_repository_partner() {
 }
 
 /**
- * Search using Solr.
  * @link http://localhost:9000/api/v1/repository?digi_id=princeton_aco002112
  */
 function dlts_viewer_search_repository() {
@@ -312,6 +461,8 @@ function dlts_viewer_search_repository() {
         ->propertyCondition('language', $language)
         ->fieldCondition('field_identifier', 'value', $entity['digi_id'], '=')
         ->execute();
+      
+      $noid = NULL;
 
       if (!empty($result['node'])) {
         $keys = array_keys($result['node']);
@@ -320,37 +471,39 @@ function dlts_viewer_search_repository() {
         $wrapper = entity_metadata_wrapper('node', $node);
         $handle_raw = $wrapper->field_handle->value();
         $handle = explode('/', $handle_raw['url']);
-        $partOf = [];
-        foreach ($wrapper->field_collection->value() as $collection) {
-          $collection_wrapper = entity_metadata_wrapper('node', $collection);
-          $field_partner = $collection_wrapper->field_partner->value();
-          if (!empty($field_partner)) {
-            $partner_wrapper = entity_metadata_wrapper('node', $field_partner[0]);
-            $isPartOf[] = [
-              // 'uuid' => $collection_wrapper->field_identifier->value(),
-              'type' => dlts_viewer_rsbe_types_alias_map($collection_wrapper->getBundle()),
-              'code' => $collection_wrapper->field_code->value(),
-              'name' => $collection_wrapper->field_name->value(),
-              'provider' => [
-                // 'uuid' => $partner_wrapper->field_identifier->value(),
-                'type' => dlts_viewer_rsbe_types_alias_map($partner_wrapper->getBundle()),
-                'code' => $partner_wrapper->field_code->value(),
-                'name' => $partner_wrapper->field_name->value(),
-              ],
-            ];
-          } else {
-            throw new Exception("Entity $base_url/node/$node->nid malformed. Fields collection and partner can't not be empty.");
-          }
-        }
-        $entity['nid'] = $node->nid;
-        $entity['noid'] = $handle[count($handle) - 1];
-        $entity['type'] = dlts_viewer_rsbe_types_alias_map($wrapper->getBundle());
-        $entity['isPartOf'] = $isPartOf;
+        $noid = $handle[count($handle) - 1];
+        // $partOf = [];
+        // foreach ($wrapper->field_collection->value() as $collection) {
+        //   $collection_wrapper = entity_metadata_wrapper('node', $collection);
+        //   $field_partner = $collection_wrapper->field_partner->value();
+        //   if (!empty($field_partner)) {
+        //     $partner_wrapper = entity_metadata_wrapper('node', $field_partner[0]);
+        //     $isPartOf[] = [
+        //       // 'uuid' => $collection_wrapper->field_identifier->value(),
+        //       'type' => dlts_viewer_rsbe_types_alias_map($collection_wrapper->getBundle()),
+        //       'code' => $collection_wrapper->field_code->value(),
+        //       'name' => $collection_wrapper->field_name->value(),
+        //       'provider' => [
+        //         // 'uuid' => $partner_wrapper->field_identifier->value(),
+        //         'type' => dlts_viewer_rsbe_types_alias_map($partner_wrapper->getBundle()),
+        //         'code' => $partner_wrapper->field_code->value(),
+        //         'name' => $partner_wrapper->field_name->value(),
+        //       ],
+        //     ];
+        //   } else {
+        //     throw new Exception("Entity $base_url/node/$node->nid malformed. Fields collection and partner can't not be empty.");
+        //   }
+        // }
+        // $entity['nid'] = $node->nid;
+        // $entity['noid'] = $handle[count($handle) - 1];
+        // $entity['type'] = dlts_viewer_rsbe_types_alias_map($wrapper->getBundle());
+        // $entity['isPartOf'] = $isPartOf;
       }
+
       /*
        * Not available. Search repository. NoId will not be set to null.
        */
-      else {
+      // else {
         $scope = 'ses';
 
         $endpoint = parse_url($endpoint);
@@ -371,7 +524,7 @@ function dlts_viewer_search_repository() {
             $digi_url = $endpoint . $digi_url['path'];
             $request = drupal_http_request($digi_url);
             if ($request->code == '200') {
-              $entity['noid'] = NULL;
+              $entity['noid'] = $noid;
               $digi_data = json_decode($request->data);
               if (isset($digi_data->fids) && isset($digi_data->fids->noid)) {
                 $entity['noid'] = $digi_data->fids->noid;
@@ -426,7 +579,7 @@ function dlts_viewer_search_repository() {
         } else {
           throw new Exception('Request failed with status code ' . $request->code . '.');
         }
-      }
+      // }
     } else {
       throw new Exception('Incorrect configuration.');
     }

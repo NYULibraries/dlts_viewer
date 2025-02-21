@@ -26,11 +26,15 @@ function dlts_epub_load($identifier, $publisher, $version = 'v1', $reset_cache =
 
   $publisher = filter_xss($publisher);
 
-  $result = dlts_viewer_epubs_metadata($version, $publisher, $identifier, $reset_cache);
-
-  if (!isset($result['error'])) {
-    return $result;
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    return dlts_viewer_supafolio_book($identifier);
+  } else {
+    $result = dlts_viewer_epubs_metadata($version, $publisher, $identifier, $reset_cache);
+    if (!isset($result['error'])) {
+      return $result;
+    } else {
+      return FALSE;
+    }
   }
-
   return FALSE;
 }

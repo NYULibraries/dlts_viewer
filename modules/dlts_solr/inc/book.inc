@@ -41,8 +41,6 @@ function dlts_solr_index_book_series($document, $entity, $searchableFields) {
 
   $m = [];
 
-  // $bundle = 'dlts_series_book';
-
   // Let's find out if this one have a Series books.
   // @link https://jira.nyu.edu/jira/browse/AWDL-211
   $nodes_dlts_series_book = dlts_viewer_series_book($entity->nid);

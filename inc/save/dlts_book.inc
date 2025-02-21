@@ -118,9 +118,9 @@ function save_dlts_book($node, $language = 'en') {
     // We do not translate all the values.
     if ($node_language == 'en') {
 
-      if (!empty($node['ticket'])) {
-        $ewrapper->field_ticket->set($node['ticket']);
-      }
+      // if (!empty($node['ticket'])) {
+      //   $ewrapper->field_ticket->set($node['ticket']);
+      // }
 
       // if (!empty($node['noid'])) {
       //  $ewrapper->field_noid->set(trim($node['noid']));

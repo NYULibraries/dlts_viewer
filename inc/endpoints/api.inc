@@ -50,6 +50,12 @@ function dlts_viewer_api_check_status_mongodb() {
  * Update resource (PUT) or delete resource (DELETE).
  */
 function dlts_viewer_api_update_resource($resource) {
+
+  return [
+    'status' => 'error',
+    'message' => 'Action not allowed.'
+  ];
+
   // @todo Also filter by hosts with access
   if (user_access('dlts create object')) {
     try {
@@ -93,6 +99,9 @@ function dlts_viewer_api_update_resource($resource) {
           "message" => "Resource $resource->identifier with noid $resource->noid has been suscefully deleted."
         ];
         cache_clear_all();
+      }
+      if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+        return $resource;
       }
       return [
         'status' => 'error',
