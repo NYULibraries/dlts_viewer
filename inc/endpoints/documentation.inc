@@ -16,23 +16,22 @@ function dlts_viewer_api_v1_documentation() {
 
   $routes = [];
 
-  foreach (dlts_viewer_menu() as $key => $route) {
-    if (
-      isset($route['title']) &&
-      isset($route['delivery callback']) &&
-      (
+  if (user_access('dlts create object')) {
+    foreach (dlts_viewer_menu() as $key => $route) {
+      if (isset($route['title']) && isset($route['delivery callback']) && (
         $route['delivery callback'] == 'drupal_json_output' ||
         $route['delivery callback'] == 'dlts_viewer_ldjson_iiif_presentation_3_output'
       )
-    ) {
-      $routes[$key] = [
-        'title' => $route['title'],
-        'path' => $key,
-        'access' => $route['access arguments'],
-        'delivery' => $route['delivery callback'],
-        'page arguments' => (isset($route['page arguments'])) ? $route['page arguments'] : [],
-        'page callback' => $route['page callback'],
-      ];
+      ) {
+        $routes[$key] = [
+          'title' => $route['title'],
+          'path' => $key,
+          'access' => $route['access arguments'],
+          'delivery' => $route['delivery callback'],
+          'page arguments' => (isset($route['page arguments'])) ? $route['page arguments'] : [],
+          'page callback' => $route['page callback'],
+        ];
+      }
     }
   }
 

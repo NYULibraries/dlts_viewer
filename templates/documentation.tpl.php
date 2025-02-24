@@ -35,7 +35,6 @@ ol li {
   </div>
 </section>
 <div class="content">
-
   <section class="section">
     <ul>
       <li><a href="#apache-solr-proxy">Apache Solr Search</a></li>
@@ -246,26 +245,28 @@ ol li {
       </tbody>
     </table>
     <p>For more information about URI syntax and others, please refer to <a href="https://iiif.io/api/image/2.1">IIIF Image API 2.1.1</a></p>
-  </article>
-  <article class="content">
-    <h5 class="title">Routes</h5>
-    <table class="table is-bordered is-striped">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Path</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach($routes as $route): ?>
+  </article>  
+  <?php if (!empty($routes)) : ?>
+    <article class="content">
+      <h5 class="title">Routes</h5>
+      <table class="table is-bordered is-striped">
+        <thead>
           <tr>
-            <td><?php echo $route['title'] ?></td>
-            <td><?php echo $route['path'] ?></td>
+            <th>Title</th>
+            <th>Path</th>
           </tr>
-        <?php endforeach ?>
-      </tbody>
-    </table>
-  </article>
+        </thead>
+        <tbody>
+          <?php foreach ($routes as $route): ?>
+            <tr>
+              <td><?php echo $route['title'] ?></td>
+              <td><?php echo $route['path'] ?></td>
+            </tr>
+          <?php endforeach ?>
+        </tbody>
+      </table>
+    </article>
+  <?php endif; ?>
 </section>
 </div>
 <footer class="footer">

@@ -380,7 +380,7 @@ function dlts_viewer_api_epubs_publisher_create($publisher, $identifier) {
 
 /**
  * Undocumented function.
- * curl -b ./cookie -X POST -H "Content-Type: application/json" -d '{"identifier": "9781479899388"}' https://192.168.0.8/viewer/api/v1/epubs/nyu-press
+ * curl -b ./cookie -X POST -H "Content-Type: application/json" -d '{"identifier": "9781479899388"}' https://[HOST]/viewer/api/v1/epubs/nyu-press
  */
 function dlts_viewer_api_epubs_publisher($version, $publisher) {
 
@@ -792,26 +792,12 @@ function dlts_viewer_epubs_metadata_v1($data) {
 
   $earliest = $data->formats[0];
 
-  // Get the first match if it exists
-  // $foundBook = !empty($matchingFormat) ? array_values($matchingFormat)[0] : null;
-
-  // if (empty($foundBook)) {
-  //   $isbnPaperbackId = $custom->paperback;
-  //   // Use array_filter to find the matching object
-  //   $matchingFormat = array_filter($data->formats, function($book) use ($isbnPaperbackId) {
-  //     return $book['isbn'] === $isbnPaperbackId;
-  //   });
-
-  //   // Get the first match if it exists
-  //   $foundBook = !empty($matchingFormat) ? array_values($matchingFormat)[0] : null;
-  // }
-
-  // if ($foundBook) {
   $dateBook_date = new DateTime($earliest['date']['date'], new DateTimeZone($earliest['date']['timezone']));
+
   $dateBook = $dateBook_date->format('Y-m-d');
+
   // https://jira.nyu.edu/browse/NYUP-1009
   $yearBook = $dateBook_date->format('Y');
-  // }
 
   // https://jira.nyu.edu/browse/NYUP-986
   $open_access_series = [];
@@ -826,16 +812,24 @@ function dlts_viewer_epubs_metadata_v1($data) {
 
   // https://jira.nyu.edu/browse/NYUP-1003
   $dateOpenAccessformattedDate = '';
+
   $yearOpenAccess = '';
 
-  // Create a DateTime object from the original format
-  // Original date string in DD/MM/YYYY format
-  $dateOpenAccessObject = DateTime::createFromFormat('d/m/Y', $custom->scheduled_date);
+  if (!empty($custom->scheduled_date)) {
 
-  // Format the date as YYYY-MM-DD
-  if ($dateOpenAccessObject) {
-    $dateOpenAccessformattedDate = $dateOpenAccessObject->format('Y-m-d');
-    $yearOpenAccess = $dateOpenAccessObject->format('Y');
+    $scheduled_date = trim($custom->scheduled_date);
+
+    // Create a DateTime object from the original format
+    // Original date string in MM/DD/YYYY format
+    // https://jira.nyu.edu/browse/NYUP-1021
+    $dateOpenAccessObject = DateTime::createFromFormat('m/d/Y', $scheduled_date);
+
+    // Format the date as YYYY-MM-DD
+    if ($dateOpenAccessObject) {
+      $dateOpenAccessformattedDate = $dateOpenAccessObject->format('Y-m-d');
+      $yearOpenAccess = $dateOpenAccessObject->format('Y');
+    }
+
   }
 
   // Schema/Crosswalk
@@ -961,6 +955,8 @@ function dlts_viewer_epubs_metadata($version = 'v1', $publisher, $identifier, $r
  */
 function dlts_viewer_epubs_indexer_v1($epub) {
 
+  die(__FUNCTION__);
+
   // Fix this. Should use conf variable.
   $discovery = variable_get('opensquare', null);
 
@@ -1025,27 +1021,19 @@ function dlts_viewer_epubs_indexer($version, $publisher, $epub) {
 
   $args = drupal_get_query_parameters();
 
-  $tranche = '1';
+  $tranche = 'NYUP-1021';
 
   if (isset($record->data)) {
     $tranche = filter_xss($record->data);
   }
 
-  // V1 is not working at the moment.
-  // if ($version === 'v1') {
-  //  return dlts_viewer_epubs_indexer_v1($epub);
-  // }
+  $discovery = variable_get('discovery', []);
 
-  // Fix this. Should use conf variable.
-  $discovery = variable_get('opensquare', null);
+  $_e = variable_get('env', 'stage');
 
-  // $solrurl = $discovery['solr'];
-
-  // stage
-  $solrurl = 'http://discovery-stage-alb-1091406983.us-east-1.elb.amazonaws.com:8983/solr/open-square-metadata';
-
-  // prod
-  $solrurl = 'https://discovery1.dlib.nyu.edu/solr/open-square-metadata';
+  if (isset($discovery['opensquaremetadata'][$_e])) {
+    $solrurl = $discovery['opensquaremetadata'][$_e]['url'];
+  }
 
   $epub->id = $epub->identifier;
 
@@ -1084,6 +1072,7 @@ function dlts_viewer_epubs_indexer($version, $publisher, $epub) {
        'message' => json_decode($response->data),
      ];
   }
+
 }
 
 /**
