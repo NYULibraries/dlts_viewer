@@ -67,6 +67,7 @@ function dlts_viewer_init() {
  * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_theme/7
  */
 function dlts_viewer_custom_theme() {
+
   if (dlts_viewer_is_resource()) {
     return 'tao';
   }
@@ -128,9 +129,6 @@ function dlts_viewer_entity_info_alter(&$entity_info) {
  * https://api.drupal.org/api/drupal/includes%21theme.inc/function/template_preprocess_html/7
  */
 function dlts_viewer_preprocess_html(&$vars) {
-
-  $vars['analytics'] = variable_get('analytics', []);
-
   if (isset($vars['head_title_array']['title'])) {
     $vars['head_title'] = $vars['head_title_array']['title'];
   }
@@ -181,6 +179,7 @@ function dlts_viewer_preprocess_html(&$vars) {
     if ($resource_language_code) {
       $vars['resource_language_code'] = $resource_language_code;
     }
+
     /**
      * We use Drupal to render objects from MongoDB that don't have a record register
      * in Drupal's database. We don't want Drupal to manage this records. We need a
@@ -195,9 +194,7 @@ function dlts_viewer_preprocess_html(&$vars) {
         $function_to_call($vars);
       }
     }
-
   }
-
 }
 
 /**
@@ -229,7 +226,6 @@ function dlts_viewer_preprocess_node(&$vars) {
  * https://api.drupal.org/api/drupal/includes%21theme.inc/function/template_preprocess_page/7
  */
 function dlts_viewer_preprocess_page(&$vars) {
-
   if (dlts_viewer_is_resource()) {
     $vars['language_dir'] = dlts_viewer_viewer_language($vars);
   }
@@ -329,6 +325,7 @@ function dlts_viewer_flush_caches() {
   t('Binding Orientation');
 
   t('Call Number');
+  // رقم الاستدعاء
 
   t('Collection');
 

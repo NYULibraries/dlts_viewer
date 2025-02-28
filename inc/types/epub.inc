@@ -126,6 +126,7 @@ function dlts_viewer_admin_epub($publisher, $epub) {
  */
 function dlts_viewer_admin_partner_epubs($publisher) {
 
+
   global $base_url;
 
   drupal_add_css(
@@ -137,26 +138,57 @@ function dlts_viewer_admin_partner_epubs($publisher) {
     ]
   );
 
+  $css = '
+    #add-epub {
+      width: 100%;
+      margin-top: 1em;
+      margin-bottom: 1.5em;
+    }
+
+    a[role="button"].small {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    table th {
+      text-shadow: #fff 0 1px 0;
+      text-align: center;
+    }
+
+    .opt-index {
+      margin-right: .5em;
+    }
+
+  ';
+
+  drupal_add_css($css, array('type' => 'inline'));
+
   $module = drupal_get_path('module', 'dlts_viewer');
 
   $epubs = [];
 
-  $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE publisher = :publisher', [ ':publisher' => $publisher->code ]);
+  $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE publisher = :publisher ORDER by data DESC', [ ':publisher' => $publisher->code ]);
+
+  $version = 'v0';
 
   foreach ($results as $record) {
     $epubs[] = [
-      'label' => $record->label,
+      'label' => l($record->label, "admin/epubs/$record->publisher/$record->identifier"),
       'identifier' => $record->identifier,
       'modified' => $record->lastModified,
       'status' => ($record->status > 0) ? 'published' : 'not published',
-      'operations' => l('view', "admin/epubs/$record->publisher/$record->identifier") . ' | ' . l('index', "api/v1/epubs/$record->publisher/$record->identifier/opt/indexer") . ' | ' . l('delete', "api/v1/epubs/$record->publisher/$record->identifier/opt/delete"),
+      'ticket' => $record->data,
+      'operations' => l('index', "api/$version/epubs/$record->publisher/$record->identifier/opt/indexer", [ 'attributes' => [ 'role' => 'button', 'class' => [ 'contrast', 'small', 'opt-index', ], ] ],) . ' ' . l('delete', "api/v1/epubs/$record->publisher/$record->identifier/opt/delete", [ 'attributes' => [ 'role' => 'button', 'class' => [ 'secondary', 'small', 'opt-delete', ], ] ],),
     ];
   }
+
+
+  $epubs_count = count($epubs);
 
   $output = theme(
     'table',
     [
-      'header' => [ 'Label', 'Identifier', 'Last-Modified', 'Status', 'Operations' ],
+      'header' => [ 'Label', 'Identifier', 'Last-Modified', 'Status', 'Ticket', 'Operations' ],
       'rows' => $epubs,
       'attributes' => [
         'class' => [
@@ -174,10 +206,12 @@ function dlts_viewer_admin_partner_epubs($publisher) {
 
   $x = file_get_contents("https://unpkg.com/sweetalert@2.1.2/dist/sweetalert.min.js");
 
+  $version = 'v0';
+
   $o = '
-    <div id="add-epub-container" data-api="' . $base_url . '/api/v1/epubs" data-partner="' . $publisher->code . '">
+    <div id="add-epub-container" data-api="' . $base_url . '/api/' . $version . '/epubs" data-partner="' . $publisher->code . '">
     <div class="headings">
-      <h2 class="title">' . $publisher->label . ' ePubs</h2>
+      <h2 class="title">Displaying ' . $epubs_count . ' out of ' . $epubs_count . ' ePubs</h2>
     </div>
     <button class="contrast" id="add-epub">Add ePub</button>
     <script> ' . $x . '</script><script> ' . $js . '</script>
@@ -577,7 +611,7 @@ function dlts_viewer_epubs_metadata_v0($data, $reset_cache = true) {
   $authors = (isset($data->contributors) && !empty($data->contributors)) ? $data->contributors : [];
 
   usort($authors, function($a, $b) {
-    return $a->order <=> $b->order;
+    return $a['order'] <=> $b['order'];
   });
 
   foreach ($authors as $item) {
@@ -908,6 +942,40 @@ function dlts_viewer_epubs_metadata_dispatch($version = 'v1', $publisher, $metad
 
 }
 
+function dlts_viewer_epubs_delete($version = 'v1', $publisher, $metadata) {
+  if ($_SERVER['REQUEST_METHOD'] == 'DELETE' && user_access('dlts create object')) {
+
+    $title = $metadata['title'];
+
+    $identifier = $metadata['isbnLibrary'];
+
+    $num_deleted = db_delete('dlts_viewer_epubs')->condition('identifier', $identifier)->execute();
+
+    if ($num_deleted > 0) {
+
+      $message = t('Epub @title (@identifier) deleted.', [ '@title' => $title, '@identifier' => $identifier ]);
+
+      watchdog('dlts_viewer', $message, [], WATCHDOG_NOTICE);
+
+      return [ 'status' => 'ok', 'message' => $message ];
+
+    } else {
+      watchdog('dlts_viewer_epubs', 'No records found with provided ID: @id', [ '@id' => $identifier ], WATCHDOG_WARNING);
+
+      return 0;
+    }
+
+
+  } else {
+    drupal_add_http_header('Status', '401 Unauthorized');
+    watchdog('dlts_viewer_epubs', '401 Unauthorized', [], WATCHDOG_ERROR);
+    return [
+      'status' => 'unauthorized',
+      'message' => "Not allowed.",
+    ];
+  }
+}
+
 /**
  * Undocumented function.
  */
@@ -959,14 +1027,6 @@ function dlts_viewer_epubs_indexer_v1($epub) {
 
   // Fix this. Should use conf variable.
   $discovery = variable_get('opensquare', null);
-
-  // $solrurl = $discovery['solr'];
-
-  // $solrurl = 'http://sites_solr:8983/solr/opensquarev2';
-
-  // http://discovery-stage-alb-1091406983.us-east-1.elb.amazonaws.com:8983/solr/open-square-metadata/select
-
-  // $solrurl = 'https://stagediscovery.dlib.nyu.edu/solr/open-square-metadata';
 
   $solrurl = 'http://discovery-stage-alb-1091406983.us-east-1.elb.amazonaws.com:8983/solr/open-square-metadata';
 
@@ -1021,7 +1081,7 @@ function dlts_viewer_epubs_indexer($version, $publisher, $epub) {
 
   $args = drupal_get_query_parameters();
 
-  $tranche = 'NYUP-1021';
+  $tranche = 'und';
 
   if (isset($record->data)) {
     $tranche = filter_xss($record->data);
@@ -1033,6 +1093,11 @@ function dlts_viewer_epubs_indexer($version, $publisher, $epub) {
 
   if (isset($discovery['opensquaremetadata'][$_e])) {
     $solrurl = $discovery['opensquaremetadata'][$_e]['url'];
+  } else {
+    return [
+      'status' => 'error',
+      'message' => "Discovery Url incorrectly configured.",
+    ];
   }
 
   $epub->id = $epub->identifier;

@@ -72,6 +72,9 @@ function _dlts_viewer_menu_epub() {
   ];
 
   // epubs.
+  // http://HOST/api/v0/epubs/nyu-press
+  // ====== curl -b ./cookie -X POST http://localhost:9000/api/v0/epubs/nyu-press/9780814744758
+  // ====== curl -b ./cookie -X PUT -H 'Content-Type: application/json' -H 'Accept: application/json' --data "@data.json" http://localhost:9000/api/v0/epubs/nyupress/9780814707517
   $items['api/%dlts_version/epubs/%dlts_publisher'] = [
     'title' => 'Query repository',
     'description' => 'Query epubs API.',
@@ -112,6 +115,20 @@ function _dlts_viewer_menu_epub() {
     'load arguments' => [ 3, 1 ],
     'page arguments' => [ 1, 3, 4 ],
     'page callback' => 'dlts_viewer_epubs_indexer',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/types/epub.inc',
+    'type' => MENU_CALLBACK,
+  ];
+
+  $items['api/%dlts_version/epubs/%dlts_publisher/%dlts_epub/opt/delete'] = [
+    'title' => 'Indexer',
+    'description' => 'Query epubs API.',
+    'access arguments' => [
+      'dlts create object',
+    ],
+    'load arguments' => [ 3, 1 ],
+    'page arguments' => [ 1, 3, 4 ],
+    'page callback' => 'dlts_viewer_epubs_delete',
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/types/epub.inc',
     'type' => MENU_CALLBACK,

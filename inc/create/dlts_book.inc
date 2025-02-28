@@ -114,15 +114,10 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
   // Partners the book belong.
   if (isset($metadata->partner)) {
     foreach ($metadata->partner->value as $value) {
-      if (isset($value->label)) {
-        $title = $value->label;
-      } else {
-        $title = $value->name;
-      }
       $partners[] = [
-        'title' => $title,
+        'title' => $value->label,
         'language' => $value->language,
-        'identifier' => $value->identifier,
+        'identifier' => $value->uuid,
         'code' => $value->code,
         'name' => $value->name,
       ];
@@ -132,15 +127,10 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
   // Collections the book belong.
   if (isset($metadata->collection)) {
     foreach ($metadata->collection->value as $value) {
-      if (isset($value->label)) {
-        $title = $value->label;
-      } else {
-        $title = $value->name;
-      }
       $collections[] = [
-        'title' => $title,
+        'title' => $value->label,
         'language' => $value->language,
-        'identifier' => $value->identifier,
+        'identifier' => $value->uuid,
         'code' => $value->code,
         'name' => $value->name,
         'partner' => $value->partner,
@@ -168,14 +158,8 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
     $call_number = $metadata->call_number->value[0];
   }
 
-  $description = [];
-
   if (isset($metadata->description) && !empty($metadata->description->value)) {
-    $description[] = $metadata->description->value[0];
-  }
-
-  if (isset($metadata->physical_description) && !empty($metadata->physical_description->value)) {
-    $description[] = $metadata->physical_description->value[0];
+    $description = $metadata->description->value[0];
   }
 
   if (isset($metadata->dimensions) && !empty($metadata->dimensions->value)) {
@@ -422,18 +406,17 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
   }
 
   $ticket = '';
-
   if (isset($data['ticket'])) {
     $ticket = trim($data['ticket']);
   }
-
+  
   $noid = '';
   if (isset($data['noid'])) {
     $noid = trim($data['noid']);
   } elseif (isset($metadata->handle)) {
     $handlepath = trim($metadata->handle->value[0]);
     $parsed_url = parse_url($handlepath);
-    $handlepath = str_replace('/2333.1/', '', $parsed_url['path']);
+    $handlepath = str_replace('/2333.1/', '', $parsed_url['path']);    
     $noid = trim($handlepath);
   }
 
@@ -524,7 +507,7 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
   try {
 
     global $user;
-
+    
     $username = $user->name;
 
     if (!user_access('dlts create object')) {
@@ -535,7 +518,7 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
       throw new Exception('Wrong entity type.');
     }
 
-    module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book');
+    module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book');    
 
     // Check if request has all the keys we required.
     if (
@@ -576,7 +559,7 @@ function dlts_viewer_api_v1_dlts_book_objects($source) {
  *  @example curl -b ./cookie -X POST  --data "$(curl http://stage-sites.dlib.nyu.edu/viewer/api/v1/books/ifa_egypt000132)" http://localhost:9000/api/v1.0.1/objects
  */
 function create_dlts_book_from_json_v1_0_1($data) {
-
+  
   module_load_include('inc', 'dlts_viewer', 'inc/save/dlts_book.1.0.1');
 
   $dimensions = NULL;
@@ -897,11 +880,11 @@ function create_dlts_book_from_json_v1_0_1($data) {
   if (isset($data['ticket'])) {
     $ticket = trim($data['ticket']);
   }
-
+  
   $noid = '';
   if (isset($data['noid'])) {
     $noid = trim($data['noid']);
-  }
+  }  
 
   $node = [
     'entity_title' => $entity_title,

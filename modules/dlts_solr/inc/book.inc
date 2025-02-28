@@ -362,37 +362,33 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
       $document->addField('sort_pubyear', $publication_year);
       $document->addField('iass_pubyear', $publication_year);
       $document->addField('iass_timestamp', $timestamp);
-                $document->addField('ds_timestamp', date('Y-m-d\TG:i:s\Z', strtotime($publication_date['value'])));
+      $document->addField('ds_timestamp', date('Y-m-d\TG:i:s\Z', strtotime($publication_date['value'])));
     } else {
-        if (!empty($publication_date_text)) {
-            $publication_date_text_norm=preg_replace('(u|?)','0',$publication_date_text);
-            preg_match_all('\b\d{4}\b', $publication_date_text_norm, $years);
-            if(!empty($years)) {
-                foreach ($years as $index => $publication_year) {
-                    $searchableFields[] = $publication_year;
-                    if ($index == 0) {
-                        $document->addField('sort_pubyear', $publication_year);
-                        $document->addField('iass_pubyear', $publication_year);
-                    }
-                    $document->addField('dm_pubyear', date('Y-m-d\TG:i:s', strtotime($publication_year)));
-                }
+      if (!empty($publication_date_text)) {
+        $publication_date_text_norm = preg_replace('(u|?)','0', $publication_date_text);
+        preg_match_all('\b\d{4}\b', $publication_date_text_norm, $years);
+        if (!empty($years)) {
+          foreach ($years as $index => $publication_year) {
+            $searchableFields[] = $publication_year;
+              if ($index == 0) {
+                $document->addField('sort_pubyear', $publication_year);
+                $document->addField('iass_pubyear', $publication_year);
+              }
+              $document->addField('dm_pubyear', date('Y-m-d\TG:i:s', strtotime($publication_year)));
             }
+          }
         }
-
-      }
+    }
   }
   unset($publication_date);
   unset($publication_year);
   /** Publication date (field_publication_date) */
   /** single-value field */
-
   if (!empty($publication_date_text)) {
     /** @TODO: Find the right field for this field */
     $document->addField('ss_publication_date_text', $publication_date_text);
     $document->addField('ss_pubdate', $publication_date_text); // remove this?
     $document->addField('ss_spubdate', strtolower($publication_date_text));
-  } else {
-
   }
   unset($publication_date_text);
   /** Publication location (field_publication_location) */
@@ -427,21 +423,16 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
   $field_pdf = $wrapper->field_pdf_file->value();
   if ($field_pdf && !empty($field_pdf)) {
     foreach ($field_pdf as $key => $pdf) {
-      $pdf_identifier = '';
       $pdf_kind = 'und';
       $pdf_pathinfo = pathinfo($pdf['uri']);
       $pdf_basename = $pdf_pathinfo['basename'];
       preg_match('/(.*)_(lo|hi)\.pdf/', $pdf_basename, $pdf_matches);
-
       if ($pdf_matches && isset($pdf_matches[1]) && isset($pdf_matches[2])) {
-        $pdf_identifier = $pdf_matches[1];
         $pdf_kind = $pdf_matches[2];
       }
-
       $pdfs[$pdf_kind] = array(
         'kind' => $pdf_kind,
       );
-
       // Label
       if (isset( $pdf['label'])) {
         $pdfs[$pdf_kind]['label'] = $pdf['label'];
@@ -450,7 +441,6 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
       if (isset($pdf['uri'])) {
         $pdfs[$pdf_kind]['uri'] = file_create_url($pdf['uri']);
       }
-
       // Filezise
       if (dlts_viewer_is_serialized($pdf['data'])) {
         $pdf_data = unserialize($pdf['data']);
@@ -525,5 +515,5 @@ function dlts_solr_index_book(&$document, &$entity, $entity_type, $env_id) {
   /** add translations */
   dlts_solr_index_book_translations($document, $entity, $entity_type, $env_id, $searchableFields);
   unset($document->content);
-  $document->addField('content', implode($searchableFields, ' '));
+  $document->addField('content', implode(' ', $searchableFields));
 }
