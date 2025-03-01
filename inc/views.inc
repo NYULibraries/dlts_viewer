@@ -27,6 +27,7 @@ function dlts_viewer_views_pre_render(&$view) {
         $number = $wrapper->field_volume_number_str->value();
         $book = $wrapper->field_book->value();
         $book_wrapper = entity_metadata_wrapper('node', $book);
+
         if ($book->language != $language) {
           $field_identifier = $book_wrapper->field_identifier->value();
           $lang_book = dlts_book_load($field_identifier);
@@ -35,10 +36,15 @@ function dlts_viewer_views_pre_render(&$view) {
         } else {
           $field_title = $book_wrapper->field_title->value();
         }
+
         // https://jira.nyu.edu/browse/DLPAS-341
-        // if (!strpos($field_title, $number) !== FALSE) {
-        //  $result->field_field_book_1[0]['rendered']['#markup'] = $field_title . ' ' . $number;
-        // }
+        // DLPAS-341 introduced a bug where the volume number was being appended to the title
+        // See https://jira.nyu.edu/browse/DLTSVIEWER-182
+        // This code checks if the volume number is already appended to the title
+        if (strpos($field_title, (string) $number) === false) {
+          $result->field_field_book_1[0]['rendered']['#markup'] = $field_title . ' ' . $number;
+        }
+
         if (!empty($number) && strpos($field_title, (string) $number) !== FALSE) {
           $result->field_field_book_1[0]['rendered']['#markup'] = $field_title . ' ' . $number;
         }
