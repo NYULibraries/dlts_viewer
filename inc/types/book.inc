@@ -30,7 +30,7 @@ function dlts_viewer_preprocess_node_dlts_book(&$vars) {
  * Dispatch thumbnails.
  *
  * @param string $identifier
- *   Resorce identifier.
+ *   Resource identifier.
  */
 function dlts_viewer_dispatch_thumbnails(object $entity) {
 
@@ -186,7 +186,10 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
   $arg = $seq;
 
   // Check if this collection has searchable PDFs.
-  // $pdf_is_searchable = dlts_viewer_pdf_is_searchable($entity);
+  // Once the fn gets called, a global flag gets set
+  // so that the template can use it without the
+  // $entity context.
+  dlts_viewer_pdf_is_searchable($entity);
 
   // Check for mobile devices.
   $is_mobile = dlts_viewer_is_mobile();
@@ -194,22 +197,22 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
   // Get query parameters.
   // $query_parameters = drupal_get_query_parameters();
 
-  // Test if resource, will return the maped type of resource (e.g., books).
+  // Test if resource, will return the mapped type of resource (e.g., books).
   $is_resource = dlts_viewer_is_resource();
 
   if ($is_resource) {
     dlts_viewer_resource_language_code($entity);
   }
 
-  // Wrapp book entity with Entity API wrapper.
+  //Wrap book entity with Entity API wrapper.
   $wrapper = entity_metadata_wrapper('node', $entity);
 
   $entity->title = $wrapper->field_title->value();
 
-  // Check if this books is part of a multi-volume.
+  // Check if this book is part of a multi-volume series.
   $multivolume_book = dlts_viewer_is_multivolume_book($entity);
 
-  // If book is part of multi-volume; use append volume value to entity title.
+  // If the book is part of a multi-volume set, append volume value to entity title.
   if ($multivolume_book) {
     $multivolume_book_wrapper = entity_metadata_wrapper('node', $multivolume_book);
     // Get volume value.
@@ -249,7 +252,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
       $entity->sequence = min($sequence);
       // $sequence_max = max($sequence);
       // $sequence_min = min($sequence);
-      // Check if this is a double page view.
+      // Check if this is a double-page view.
       if (count($sequence) > 1) {
         $is_single_page = FALSE;
       }
@@ -437,7 +440,7 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
 }
 
 /**
- * Route callback for books edit page.
+ * Route callback for the books edit page.
  * @link http://localhost:9000/books/{identifier}/edit
  */
 function _dlts_viewer_book_edit_redirect($node) {
