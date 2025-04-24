@@ -480,7 +480,8 @@ function dlts_book_fields_values($wrapper, array $translatable_fields = []) {
  * IIIF Presentation API v3 - Photo manifest.
  *
  * @link https://manifests.sub.uni-goettingen.de/iiif/presentation/PPN857449303/manifest
- * @link http://localhost:9000/api/3/presentation/books/princeton_aco000102/manifest.json
+ * @link http://localhost:9000/api/presentation/books/princeton_aco000102/manifest.json
+ * @link http://localhost:9000/api/presentation/books/princeton_aco000102/manifest.json
  *
  * @param object $entity
  *   Book node.
@@ -493,6 +494,8 @@ function dlts_book_fields_values($wrapper, array $translatable_fields = []) {
  */
 function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
 
+  $cache = false;
+
   global $base_url;
 
   $module = drupal_get_path('module', 'dlts_viewer');
@@ -500,6 +503,10 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
   $wrapper = entity_metadata_wrapper('node', $entity);
 
   $identifier = $wrapper->field_identifier->value();
+
+  $ids = dlts_noid_load($identifier);
+
+  $noid = $ids->noid;
 
   $realpath = drupal_realpath('public://');
 
@@ -523,25 +530,22 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
 
   $fields = [];
 
-  $rendering = [];
-
   $items = [];
-
-  $summary = [];
 
   $values = [];
 
   $fields = [];
 
+  $thumbnail = [];
+
+  $collection_codes = [];
+
+  $partner_codes = [];
+
   // Default to left-to-rigth.
   $viewingDirection = 'left-to-right';
 
-  $lang_map = [
-    0 => 'left-to-right',
-    1 => 'right-to-left',
-  ];
-
-  $behavior = ['paged'];
+  $behavior = [ 'paged' ];
 
   $sequence_count = $wrapper->field_sequence_count->value();
 
@@ -559,11 +563,23 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
       if (empty($value['value'])) {
         continue;
       }
+
+      if ($name == 'field_sequence_count') continue;
+
       if (!isset($fields[$name])) {
         $fields[$name] = [];
+
       }
+
       $fields[$name]['label'][$lang] = [$value['label']];
-      $fields[$name]['value'][$lang] = $value['value'];
+
+      if ($name == 'field_handle') {
+        $value = $value['value'][0];
+        $fields[$name]['value'][$lang][] = "<a href='$value'>$value</a>";
+      } else {
+        $fields[$name]['value'][$lang] = $value['value'];
+      }
+
     }
   }
 
@@ -589,7 +605,6 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
     );
   }
 
-  $thumbnail = [];
   if ($sequences && !empty($sequences)) {
     $thumbnail_raw = $items[0]['items'][0]['items'][0]['body'];
     $thumbnail = [
@@ -604,18 +619,207 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
     ];
   }
 
-  $logo = "$base_url/$module/images/nyu-logo.jpg";
-
-  $metadata = array_values($fields);
-
   if (isset($fields['field_title']['value'])) {
     $label = $fields['field_title']['value'];
   }
   else {
     $label = [
-      $entity->language => [$entity->title],
+      $entity->language => [ $entity->title ],
     ];
   }
+
+  foreach ($wrapper->field_collection->value() as $collection) {
+    $cw = entity_metadata_wrapper('node', $collection);
+    $collection_code = $cw->field_code->value();
+    $field_partner = $cw->field_partner->value();
+    $pw = entity_metadata_wrapper('node',  $field_partner[0]);
+    $partner_code = $pw->field_code->value();
+    $collection_codes[] = $collection_code;
+    $partner_codes[] = $partner_code;
+    $partof[] = [
+      // '@context' => 'http://iiif.io/api/presentation/3/context.json',
+      'id' => "$base_url/api/presentation/collections/$collection_code:$partner_code/manifest.json",
+      'type' => 'Collection',
+      'label' => [
+        $entity->language => [
+          $cw->field_name->value(),
+        ],
+      ],
+    ];
+  }
+
+  $collection_code = $collection_codes[0];
+
+  $partner_code = $partner_codes[0];
+
+  // Username for the repository challange.
+  $user = variable_get('publisher_user', NULL);
+
+  // Password for repository challange.
+  $pass = variable_get('publisher_pass', NULL);
+
+  // Repository URL.
+  $endpoint = variable_get('publisher_endpoint', NULL);
+
+  // We need this values to continue.
+  if ($user && $pass && $endpoint) {
+
+    $endpoint = parse_url($endpoint);
+
+    $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'] . (isset($endpoint['path']) ? $endpoint['path'] : '');
+
+    $item_metadata_endpoint = "$endpoint/metadata/api/v0/hjson/$noid.json";
+
+    $realpath = drupal_realpath('public://');
+
+    $dir_path = "$realpath/ijson/$type/";
+
+    $file_path = "$dir_path/ijson.$noid.json";
+
+    if (file_exists($file_path)) {
+      $cached_ijson = json_decode(file_get_contents($file_path));
+    } else {
+      if (preg_match('/^([a-zA-Z]+)(\d+)$/',$collection_code, $matches)) {
+        array_shift($matches);
+        $collection_code = implode('_', $matches);
+        // https://jira.nyu.edu/browse/RSTAR-713
+        // A few things:
+        // 1.) the paths in the EAD publisher iJSON and hJSON API are based on the collection codes
+        // used in ArchivesSpace, which are slightly different than those in R*.
+        // e.g.,
+        // aspace       : AD.MC.094
+        // ead publisher: ad_mc_094
+        // rstar        : ad_mc094
+        //
+        // This means that the URL for the Arab Art Archive AD.MC.094 iJSON is:
+        // https://[host]/metadata/api/v0/ijson/arabartarchive/ad_mc_094/ad_mc_094.json
+        $ijson_endpoint = "$endpoint/metadata/api/v0/ijson/$partner_code/$collection_code/$collection_code.json";
+
+        $ijson_request = drupal_http_request($ijson_endpoint);
+
+        if ($ijson_request ->code == '200') {
+          $cached_ijson = json_decode($ijson_request->data);
+          drupal_register_shutdown_function('dlts_viewer_cache_ijson', [ 'noid' => $noid, 'type' => $type, 'data' => $cached_ijson, ]);
+        }
+      }
+    }
+
+    if (isset($cached_ijson) && !empty($cached_ijson)) {
+
+      $eadheader = $cached_ijson->eadheader;
+
+      if (isset($eadheader->eadid->url)) {
+        $eadidUrl = $eadheader->eadid->url;
+        $fields['eadidurl']['label'][$lang] = [ 'Finding Aid URL' ];
+        $fields['eadidurl']['value'][$lang] = [ "<a href='$eadidUrl'>$eadidUrl</a>" ];
+      }
+
+      // if (isset($eadheader->filedesc->titlestmt->author)) {
+      //   $fields['author']['label'][$lang] = [ 'Author' ];
+      //   $fields['author']['value'][$lang] = [ $eadheader->filedesc->titlestmt->author ];
+      // }
+
+      if (isset($eadheader->filedesc->titlestmt->sponsor)) {
+        $fields['sponsor']['label'][$lang] = [ 'Sponsor' ];
+        $fields['sponsor']['value'][$lang] = [ $eadheader->filedesc->titlestmt->sponsor ];
+      }
+
+      if (isset($eadheader->filedesc->titlestmt->titleproper)) {
+        $fields['titleproper']['label'][$lang] = [ 'Finding Aid Title' ];
+        $fields['titleproper']['value'][$lang] = [ $eadheader->filedesc->titlestmt->titleproper ];
+      }
+
+      if (isset($cached_ijson->archdesc->accessrestrict)) {
+        $accessrestrict = $cached_ijson->archdesc->accessrestrict;
+        foreach ($accessrestrict as $key => $value) {
+          if (!isset($fields['accessrestrict'][$key])) {
+            $fields['accessrestrict'][$key] = [];
+          }
+          $fields['accessrestrict'][$key]['label'][$lang] = [ $value->head->value ];
+          foreach ($value->children as $c => $children) {
+            if (!isset($fields['accessrestrict'][$key])) {
+              $fields['accessrestrict'][$key]['value'][$lang] = [];
+            }
+            $fields['accessrestrict'][$key]['value'][$lang][$c] = $children->value->value;
+          }
+        }
+      }
+
+      if (isset($cached_ijson->archdesc->custodhist)) {
+        $custodhist = $cached_ijson->archdesc->custodhist;
+        foreach ($custodhist as $key => $value) {
+          if (!isset($fields['custodhist'][$key])) {
+            $fields['custodhist'][$key] = [];
+          }
+          $fields['custodhist'][$key]['label'][$lang] = [ $value->head->value ];
+          foreach ($value->children as $c => $children) {
+            if (!isset($fields['custodhist'][$key])) {
+              $fields['custodhist'][$key]['value'][$lang] = [];
+            }
+            $fields['custodhist'][$key]['value'][$lang][$c] = $children->value->value;
+          }
+        }
+      }
+
+      if (isset($cached_ijson->archdesc->userestrict)) {
+        $userestrict = $cached_ijson->archdesc->userestrict;
+        foreach ($userestrict as $key => $value) {
+          if (!isset($fields['userestrict'][$key])) {
+            $fields['userestrict'][$key] = [];
+          }
+          $fields['userestrict'][$key]['label'][$lang] = [ $value->head->value ];
+          foreach ($value->children as $c => $children) {
+            if (!isset($fields['userestrict'][$key])) {
+              $fields['userestrict'][$key]['value'][$lang] = [];
+            }
+            $fields['userestrict'][$key]['value'][$lang][$c] = $children->value->value;
+          }
+        }
+      }
+
+      if (isset($cached_ijson->archdesc->did->langmaterial)) {
+        $langmaterial = $cached_ijson->archdesc->did->langmaterial;
+        $fields['langmaterial']['label'][$lang] = [ 'Language of Material' ];
+        $fields['langmaterial']['value'][$lang] = [ $langmaterial[0]->value ];
+      }
+
+    }
+
+    $request = drupal_http_request($item_metadata_endpoint);
+
+    if ($request->code == '200') {
+
+      $data = json_decode($request->data);
+
+      $label = html_entity_decode($data->title);
+
+      $fields['unittitle']['label'][$lang] = [ 'Title' ];
+      $fields['unittitle']['value'][$lang] = [ html_entity_decode($data->unittitle) ];
+
+      $fields['parenttitle']['label'][$lang] = [ 'Series' ];
+      $fields['parenttitle']['value'][$lang] = [ $data->parenttitle ];
+
+      // https://eadiva.com/daodesc/
+      // <daodesc> was deprecated late in the process. However, it functioned as a descriptive note
+      // for the <dao> element and was therefore logically replaced with <descriptivenote>.
+      // $fields['daodesc']['label'][$lang] = [ 'Digital Archival Object Description' ];
+      // $fields['daodesc']['value'][$lang] = [ $data->daodesc ];
+      // https://eadiva.com/unitdate/
+      $fields['unitdate']['label'][$lang] = [ 'Unit' ];
+      $fields['unitdate']['value'][$lang] = [ $data->unitdate[0]->value ];
+
+    } else {
+      return [
+        'error' => 'Request to Metadata endpoint failed with status code ' . $request->code . '.',
+        'noid' => $noid,
+        'identifier' => $identifier,
+        'type' => $type,
+        'status' => 404,
+      ];
+    }
+  }
+
+  $metadata = array_values($fields);
 
   $res = [
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
@@ -640,23 +844,24 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
     ],
     'logo' => [
       [
-        'id' => $logo,
+        'id' => "$base_url/$module/images/nyu-logo.jpg",
         'type' => 'Image',
         'format' => 'image/jpeg',
         'height' => 900,
         'width' => 900,
       ],
     ],
+    'partOf' => $partof,
     'thumbnail' => $thumbnail,
   ];
 
   drupal_register_shutdown_function(
     'dlts_viewer_cache_manifest',
-    array(
+    [
       'type' => $type,
       'resource' => $entity,
       'data' => $res,
-    )
+    ]
   );
 
   return $res;
@@ -1261,7 +1466,8 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     unset($multivolume_book);
     asort($volumes);
 
-    $partof[] = $multivolume_partof;
+    // Need fix
+    // $partof[] = $multivolume_partof;
   }
 
   $collection_name = dlts_viewer_mongodb_collections_by_type($bundle);
@@ -1586,9 +1792,11 @@ function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = T
 
   $wrapper = entity_metadata_wrapper('node', $entity);
 
-  $identifier = $wrapper->field_identifier->value();
+  // $identifier = $wrapper->field_identifier->value();
 
   $name = $wrapper->field_name->value();
+
+  $code = $wrapper->field_code->value();
 
   $partner = $wrapper->field_partner->value();
 
@@ -1626,20 +1834,20 @@ function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = T
             $ew->title->value(),
           ],
         ],
-        'thumbnail' => [
-          [
-            'id' => "$base_url/api/image/$type/$eidentifier/1/full/!300,300/0/default.jpg",
-            'type' => 'Image',
-            'format' => 'image/jpeg',
-          ],
-        ],
+        // 'thumbnail' => [
+        //   [
+        //     'id' => "$base_url/api/image/$type/$eidentifier/1/full/!300,300/0/default.jpg",
+        //     'type' => 'Image',
+        //     'format' => 'image/jpeg',
+        //   ],
+        // ],
       ];
     }
   }
 
   return [
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
-    'id' => "$base_url/api/presentation/collections/$identifier,$partner_code/manifest.json",
+    'id' => "$base_url/api/presentation/collections/$code:$partner_code/manifest.json",
     'type' => 'Collection',
     'label' => [
       'en' => [
@@ -1742,7 +1950,7 @@ function dlts_viewer_iiif_resource_manifest_collections_list() {
       $partner_name = $pw->field_name->value();
       $collection_name = $ew->field_name->value();
       $items[] = [
-        'id' => "$base_url/api/presentation/collections/$collection_code,$partner_code/manifest.json",
+        'id' => "$base_url/api/presentation/collections/$collection_code:$partner_code/manifest.json",
         'type' => 'Manifest',
         'label' => [
           'en' => [

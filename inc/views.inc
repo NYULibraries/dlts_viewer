@@ -38,7 +38,7 @@ function dlts_viewer_views_pre_render(&$view) {
         }
 
         // https://jira.nyu.edu/browse/DLPAS-341
-        // DLPAS-341 introduced a bug where the volume number was being appended to the title
+        // DLPAS-341 introduced a bug
         // See https://jira.nyu.edu/browse/DLTSVIEWER-182
         // This code checks if the volume number is already appended to the title
         if (strpos($field_title, (string) $number) === false) {

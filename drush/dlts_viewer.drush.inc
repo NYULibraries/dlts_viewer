@@ -42,6 +42,12 @@ function dlts_viewer_drush_command() {
     'description' => dt('Returns list of all resources in the table dlts_viewer_resources')
   ];
 
+  $items['resources-list-by-type'] = [
+    'callback' => 'dlts_viewer_drush_list_resources_type',
+    'description' => dt('Returns list of all resources in the table dlts_viewer_resources')
+  ];
+
+
   $items['resources-list-cleanup'] = [
     'callback' => 'dlts_viewer_drush_resources_list_cleanup',
     'description' => dt('Delete all records from the resources list')
@@ -123,7 +129,6 @@ function dlts_viewer_drush_command() {
     'callback' => 'dlts_viewer_drush_add_translation_strings',
     'description' => dt('Populate DLTS locale table.'),
   ];
-
 
   return $items;
 
@@ -370,6 +375,37 @@ function dlts_viewer_drush_add_resources() {
     $handle = explode('/', $handlepathinfo['path']);
     $noid = trim($handle[2]);
     db_query("INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', '$type', '1')");
+  }
+
+}
+
+// ./vendor/bin/drush resources-list-by-type --type=books
+// ./vendor/bin/drush resources-list-by-type --type=maps
+// ./vendor/bin/drush resources-list-by-type --type=photos
+function dlts_viewer_drush_list_resources_type() {
+  global $base_url;
+  $type = drush_get_option('type', FALSE);
+  if (!$type) {
+    drush_log('No type selected.', 'error');
+    exit();
+  }
+
+  $types = [
+    'books',
+    'maps',
+    'photos',
+    'postcards',
+  ];
+  if (in_array($type, $types)) {
+    $sql = "SELECT noid, identifier FROM dlts_viewer_resource WHERE document = '$type'";
+    $nodes = db_query($sql)->fetchAll();
+    foreach ($nodes as $node) {
+      $noid = $node->noid;
+      echo "$base_url/api/embed/$noid?reset=true", PHP_EOL;
+    }
+  } else {
+    drush_log('Type not supported.', 'error');
+    exit();
   }
 
 }

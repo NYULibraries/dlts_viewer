@@ -15,16 +15,19 @@ function dlts_viewer_search_json() {
 
   $index_name = 'viewer';
 
-  $default_discovery = variable_get('discovery', 'http://discovery1.dlib.nyu.edu/solr/viewer'); 
+  $_e = variable_get('env', 'stage');
 
-  $indexes = [
-    'viewer' => $default_discovery,
-    'opensquare' => 'https://discovery1.dlib.nyu.edu/solr/open-square-metadata',
-    'open-square-metadata-v1-stage' => 'https://discovery1.dlib.nyu.edu/solr/open-square-metadata',
-    'open-square-metadata-v1-discovery' => 'https://discovery1.dlib.nyu.edu/solr/open-square-metadata',
-    'open-square-metadata-v0-stage' => 'http://discovery-stage-alb-1091406983.us-east-1.elb.amazonaws.com:8983/solr/open-square-metadata',
-    'open-square-metadata-v0-discovery' => 'http://discovery-stage-alb-1091406983.us-east-1.elb.amazonaws.com:8983/solr/open-square-metadata'
-  ];
+  $discovery = variable_get('discovery', []);
+
+  if (empty($discovery)) {
+    return [
+      'error' => "Discovery configuration error.",
+    ];
+  }
+
+  if (!empty($discovery) && isset($discovery[$index_name]) && isset($discovery[$index_name][$_e])) {
+    $solrurl = $discovery[$index_name][$_e]['url'];
+  }
 
   $query_parameters = explode('&', $_SERVER['QUERY_STRING']);
 
@@ -39,15 +42,15 @@ function dlts_viewer_search_json() {
     if (is_array($explodeParameters) && count($explodeParameters) == 2) {
       if ($explodeParameters[0] == 'query') {
         $queryArray[] = 'q=' . $explodeParameters[1];
-      } elseif ($explodeParameters[0] == 'wt') { // only JSON
+      } elseif ($explodeParameters[0] == 'wt') {
         continue;
       } elseif ($explodeParameters[0] == 'omitHeader' && $explodeParameters[1] == 'false') {
         $omitHeader = false;
         continue;
       } elseif ($explodeParameters[0] == 'index') {
         $param = filter_xss($explodeParameters[1]);
-        if (isset($indexes[$param])) {
-          $index_name = $param;
+        if (isset($discovery[$param]) && isset($discovery[$param][$_e])) {
+          $solrurl = $discovery[$param][$_e]['url'];
         } else {
           return [
             'error' => "Solr \"$param\" does not exists.",
@@ -64,7 +67,7 @@ function dlts_viewer_search_json() {
 
   $queryString = implode('&', $queryArray);
 
-  $requestUrl = $indexes[$index_name] . '/select?' . $queryString;
+  $requestUrl = $solrurl . '/select?' . $queryString;
 
   $request = drupal_http_request($requestUrl, [ 'timeout' => 15.0, 'method' => 'GET', 'headers' => [ 'User-Agent' => 'DLTS Viewer (+' . $base_url . ')' ] ]);
 
@@ -125,18 +128,29 @@ function dlts_viewer_search_json() {
       }
       $doc->zm_subject = $zm_subjects;
     }
-    if (isset($doc->tid_s)) {
-      unset($doc->tid_s);      
+    if (isset($doc->contributors)) {
+      $contributors = [];
+      foreach ($doc->contributors as $contributor) {
+        $contributors[] = json_decode($contributor);
+      }
+      $doc->contributors = $contributors;
+    }
+    if (isset($doc->reviews)) {
+      $reviews = [];
+      foreach ($doc->reviews as $review) {
+        $reviews[] = json_decode($review);
+      }
+      $doc->reviews = $contributors;
     }
     if (isset($doc->_version_)) {
-      unset($doc->_version_);      
+      unset($doc->_version_);
     }
   }
- 
+
   if ($omitHeader) {
     return $data->response;
   } else {
     return $data;
-  }  
+  }
 
 }

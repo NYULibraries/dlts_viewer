@@ -126,7 +126,6 @@ function dlts_viewer_admin_epub($publisher, $epub) {
  */
 function dlts_viewer_admin_partner_epubs($publisher) {
 
-
   global $base_url;
 
   drupal_add_css(
@@ -138,57 +137,26 @@ function dlts_viewer_admin_partner_epubs($publisher) {
     ]
   );
 
-  $css = '
-    #add-epub {
-      width: 100%;
-      margin-top: 1em;
-      margin-bottom: 1.5em;
-    }
-
-    a[role="button"].small {
-      padding: 0.25rem 0.5rem;
-      font-size: 0.875rem;
-    }
-
-    table th {
-      text-shadow: #fff 0 1px 0;
-      text-align: center;
-    }
-
-    .opt-index {
-      margin-right: .5em;
-    }
-
-  ';
-
-  drupal_add_css($css, array('type' => 'inline'));
-
   $module = drupal_get_path('module', 'dlts_viewer');
 
   $epubs = [];
 
-  $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE publisher = :publisher ORDER by data DESC', [ ':publisher' => $publisher->code ]);
-
-  $version = 'v0';
+  $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE publisher = :publisher', [ ':publisher' => $publisher->code ]);
 
   foreach ($results as $record) {
     $epubs[] = [
-      'label' => l($record->label, "admin/epubs/$record->publisher/$record->identifier"),
+      'label' => $record->label,
       'identifier' => $record->identifier,
       'modified' => $record->lastModified,
       'status' => ($record->status > 0) ? 'published' : 'not published',
-      'ticket' => $record->data,
-      'operations' => l('index', "api/$version/epubs/$record->publisher/$record->identifier/opt/indexer", [ 'attributes' => [ 'role' => 'button', 'class' => [ 'contrast', 'small', 'opt-index', ], ] ],) . ' ' . l('delete', "api/v1/epubs/$record->publisher/$record->identifier/opt/delete", [ 'attributes' => [ 'role' => 'button', 'class' => [ 'secondary', 'small', 'opt-delete', ], ] ],),
+      'operations' => l('view', "admin/epubs/$record->publisher/$record->identifier") . ' | ' . l('index', "api/v1/epubs/$record->publisher/$record->identifier/opt/indexer") . ' | ' . l('delete', "api/v1/epubs/$record->publisher/$record->identifier/opt/delete"),
     ];
   }
-
-
-  $epubs_count = count($epubs);
 
   $output = theme(
     'table',
     [
-      'header' => [ 'Label', 'Identifier', 'Last-Modified', 'Status', 'Ticket', 'Operations' ],
+      'header' => [ 'Label', 'Identifier', 'Last-Modified', 'Status', 'Operations' ],
       'rows' => $epubs,
       'attributes' => [
         'class' => [
@@ -206,12 +174,10 @@ function dlts_viewer_admin_partner_epubs($publisher) {
 
   $x = file_get_contents("https://unpkg.com/sweetalert@2.1.2/dist/sweetalert.min.js");
 
-  $version = 'v0';
-
   $o = '
-    <div id="add-epub-container" data-api="' . $base_url . '/api/' . $version . '/epubs" data-partner="' . $publisher->code . '">
+    <div id="add-epub-container" data-api="' . $base_url . '/api/v1/epubs" data-partner="' . $publisher->code . '">
     <div class="headings">
-      <h2 class="title">Displaying ' . $epubs_count . ' out of ' . $epubs_count . ' ePubs</h2>
+      <h2 class="title">' . $publisher->label . ' ePubs</h2>
     </div>
     <button class="contrast" id="add-epub">Add ePub</button>
     <script> ' . $x . '</script><script> ' . $js . '</script>
@@ -428,22 +394,6 @@ function dlts_viewer_api_epubs_publisher($version, $publisher) {
     $name = "user $user->name";
   }
 
-  // $available_proxies = [ 'stage', 'prod', ];
-
-  // get from prod.
-  // $query_parameters = drupal_get_query_parameters();
-
-  // if (isset($query_parameters['proxy']) && in_array(filter_xss($query_parameters['proxy']), $available_proxies)) {
-  //   $proxy = filter_xss($query_parameters['proxy']);
-
-  //   $proxy_url = "https://sites.dlib.nyu.edu/viewer/api/$version/epubs/$publisher->code";
-
-  //   $request = drupal_http_request($proxy_url);
-
-  //   return json_decode($request->data);
-
-  // }
-
   if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     return dlts_viewer_api_epubs_publisher_list($version, $publisher);
   }
@@ -611,7 +561,7 @@ function dlts_viewer_epubs_metadata_v0($data, $reset_cache = true) {
   $authors = (isset($data->contributors) && !empty($data->contributors)) ? $data->contributors : [];
 
   usort($authors, function($a, $b) {
-    return $a['order'] <=> $b['order'];
+    return $a->order <=> $b->order;
   });
 
   foreach ($authors as $item) {
@@ -906,9 +856,63 @@ function dlts_viewer_epubs_metadata_v1($data) {
     'yearOpenAccess' => $yearOpenAccess,
   ];
 
+  $libraryIsbn = $custom->library;
+
+  $metadata['files'] = [];
+
+  $fileserver_pdf_endpoint = "https://mc.dlib.nyu.edu/files/nyupress/pdfs/$libraryIsbn.pdf";
+
+  $pdf_file_exists = dlts_viewer_remote_file_exists($fileserver_pdf_endpoint);
+
+  if ($pdf_file_exists) {
+    $metadata['files']['pdf'] = $pdf_file_exists;
+  }
+
+  $fileserver_epub_endpoint = "https://mc.dlib.nyu.edu/files/nyupress/epubs/$libraryIsbn.epub";
+
+  $epub_file_exists = dlts_viewer_remote_file_exists($fileserver_epub_endpoint);
+
+  if ($epub_file_exists) {
+    $metadata['files']['epub'] = $epub_file_exists;
+  }
+
+  $cloudreader_file_exists = dlts_viewer_remote_file_exists("https://opensquare-stage.nyupress.org/open-square-reader/cloud-reader/epub_content/$libraryIsbn/META-INF/container.xml");
+  if ($cloudreader_file_exists) {
+    $metadata['files']['cloudreader'] = $cloudreader_file_exists;
+  }
+
   return $metadata;
 
 }
+
+function dlts_viewer_remote_file_exists($url) {
+  $headers = @get_headers($url, 1);
+  $fileInfo = [];
+  if ($headers && is_array($headers)) {
+    $fileInfo['url'] = $url;
+    // Extract Content-Type
+    if (isset($headers['Content-Type'])) {
+      $fileInfo['Content-Type'] = is_array($headers['Content-Type']) ? end($headers['Content-Type']) : $headers['Content-Type'];
+    }
+    // Extract Last-Modified
+    if (isset($headers['Last-Modified'])) {
+      $fileInfo['Last-Modified'] = is_array($headers['Last-Modified']) ? end($headers['Last-Modified']) : $headers['Last-Modified'];
+    }
+    // Extract Content-Length
+    if (isset($headers['Content-Length'])) {
+      $fileInfo['Content-Length'] = is_array($headers['Content-Length']) ? end($headers['Content-Length']) : $headers['Content-Length'];
+    }
+    // Optionally include status code for more context
+    if (isset($headers[0])) {
+      if (preg_match('/HTTP\/\d\.\d\s(\d{3})/', $headers[0], $matches)) {
+        $fileInfo['http_code'] = (int) $matches[1];
+      }
+    }
+    return $fileInfo;
+  }
+  return false;
+}
+
 
 /**
  * Undocumented function.
@@ -940,40 +944,6 @@ function dlts_viewer_epubs_metadata_dispatch($version = 'v1', $publisher, $metad
     }
   }
 
-}
-
-function dlts_viewer_epubs_delete($version = 'v1', $publisher, $metadata) {
-  if ($_SERVER['REQUEST_METHOD'] == 'DELETE' && user_access('dlts create object')) {
-
-    $title = $metadata['title'];
-
-    $identifier = $metadata['isbnLibrary'];
-
-    $num_deleted = db_delete('dlts_viewer_epubs')->condition('identifier', $identifier)->execute();
-
-    if ($num_deleted > 0) {
-
-      $message = t('Epub @title (@identifier) deleted.', [ '@title' => $title, '@identifier' => $identifier ]);
-
-      watchdog('dlts_viewer', $message, [], WATCHDOG_NOTICE);
-
-      return [ 'status' => 'ok', 'message' => $message ];
-
-    } else {
-      watchdog('dlts_viewer_epubs', 'No records found with provided ID: @id', [ '@id' => $identifier ], WATCHDOG_WARNING);
-
-      return 0;
-    }
-
-
-  } else {
-    drupal_add_http_header('Status', '401 Unauthorized');
-    watchdog('dlts_viewer_epubs', '401 Unauthorized', [], WATCHDOG_ERROR);
-    return [
-      'status' => 'unauthorized',
-      'message' => "Not allowed.",
-    ];
-  }
 }
 
 /**
@@ -1021,18 +991,98 @@ function dlts_viewer_epubs_metadata($version = 'v1', $publisher, $identifier, $r
 /**
  * Undocumented function.
  */
-function dlts_viewer_epubs_indexer_v1($epub) {
+function dlts_viewer_epubs_indexer_v1($publisher, $epub) {
 
-  die(__FUNCTION__);
+  $_e = variable_get('env', 'stage');
 
-  // Fix this. Should use conf variable.
-  $discovery = variable_get('opensquare', null);
+  $discovery = variable_get('discovery', []);
 
-  $solrurl = 'http://discovery-stage-alb-1091406983.us-east-1.elb.amazonaws.com:8983/solr/open-square-metadata';
+  if (!empty($discovery) && isset($discovery['open-square-metadata-v1']) && isset($discovery['open-square-metadata-v1'][$_e])) {
+
+    $solrurl = $discovery['open-square-metadata-v1'][$_e]['url'];
+
+    $epub = (object) $epub;
+
+    $epub->id = $epub->openSquareId;
+
+    $epub->contributors = json_encode($epub->contributors);
+
+    $epub->reviews = json_encode($epub->reviews);
+
+    unset($epub->files);
+
+    $options = [
+      'method' => 'POST',
+      'data' => json_encode([$epub]),
+    ];
+
+    $response = drupal_http_request("$solrurl/update/json?_=" . time() . "&commit=true&commitWithin=1000&overwrite=true&wt=json", $options);
+
+    if ($response->code == '200' && isset($response->data)) {
+      $r = json_decode($response->data);
+      $r->status_message = 'Successful request';
+      $r->message = [ 'docs' => $epub ];
+      $r->status = $response->code;
+      return $r;
+    } else {
+       return [
+         'status_message' => $response->status_message,
+         'code' => $response->code,
+         'error' => $response->error,
+         'message' => json_decode($response->data),
+       ];
+    }
+
+  }
+
+}
+
+/**
+ * Undocumented function.
+ */
+function dlts_viewer_epubs_indexer_v0($publisher, $epub) {
 
   $epub = (object) $epub;
 
-  $epub->id = $epub->openSquareId;
+  $identifier = $epub->identifier;
+
+  $code = $publisher->code;
+
+  $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE identifier = :identifier AND publisher = :publisher', [ ':identifier' => $identifier, ':publisher' => $code ]);
+
+  $record = $results->fetchObject();
+
+  $tranche = 'und';
+
+  if (isset($record->data)) {
+    $tranche = filter_xss($record->data);
+  }
+
+  $discovery = variable_get('discovery', []);
+
+  $_e = variable_get('env', 'stage');
+
+  if (isset($discovery['opensquaremetadata'][$_e])) {
+    $solrurl = $discovery['opensquaremetadata'][$_e]['url'];
+  }
+
+  $epub->id = $epub->identifier;
+
+  if (!isset($epub->collection_code)) {
+    $epub->collection_code = "oa-books";
+  }
+
+  unset($epub->nyu_press_website_buy_the_book_url);
+
+  unset($epub->permanent_url);
+
+  unset($epub->isDownloadable);
+
+  unset($epub->rootUrl);
+
+   unset($epub->files);
+
+  $epub->tid_s = $tranche;
 
   $options = [
     'method' => 'POST',
@@ -1062,80 +1112,18 @@ function dlts_viewer_epubs_indexer_v1($epub) {
  */
 function dlts_viewer_epubs_indexer($version, $publisher, $epub) {
 
-  if (!user_access('dlts create object')) {
-    return [
-      'status' => 'error',
-      'message' => "Action not allowed.",
-    ];
-  }
+ if (!user_access('dlts create object')) {
+   return [
+     'status' => 'error',
+     'message' => "Action not allowed.",
+   ];
+ }
 
-  $epub = (object) $epub;
-
-  $identifier = $epub->identifier;
-
-  $code = $publisher->code;
-
-  $results = db_query('SELECT * FROM dlts_viewer_epubs WHERE identifier = :identifier AND publisher = :publisher', [ ':identifier' => $identifier, ':publisher' => $code ]);
-
-  $record = $results->fetchObject();
-
-  $args = drupal_get_query_parameters();
-
-  $tranche = 'und';
-
-  if (isset($record->data)) {
-    $tranche = filter_xss($record->data);
-  }
-
-  $discovery = variable_get('discovery', []);
-
-  $_e = variable_get('env', 'stage');
-
-  if (isset($discovery['opensquaremetadata'][$_e])) {
-    $solrurl = $discovery['opensquaremetadata'][$_e]['url'];
-  } else {
-    return [
-      'status' => 'error',
-      'message' => "Discovery Url incorrectly configured.",
-    ];
-  }
-
-  $epub->id = $epub->identifier;
-
-  if (!isset($epub->collection_code)) {
-    $epub->collection_code = "oa-books";
-  }
-
-  unset($epub->nyu_press_website_buy_the_book_url);
-
-  unset($epub->permanent_url);
-
-  unset($epub->isDownloadable);
-
-  unset($epub->rootUrl);
-
-  $epub->tid_s = $tranche;
-
-  $options = [
-    'method' => 'POST',
-    'data' => json_encode([$epub]),
-  ];
-
-  $response = drupal_http_request("$solrurl/update/json?_=" . time() . "&commit=true&commitWithin=1000&overwrite=true&wt=json", $options);
-
-  if ($response->code == '200' && isset($response->data)) {
-    $r = json_decode($response->data);
-    $r->status_message = 'Successful request';
-    $r->message = [ 'docs' => $epub ];
-    $r->status = $response->code;
-    return $r;
-  } else {
-     return [
-       'status_message' => $response->status_message,
-       'code' => $response->code,
-       'error' => $response->error,
-       'message' => json_decode($response->data),
-     ];
+  switch ($version) {
+    case 'v1':
+      return dlts_viewer_epubs_indexer_v1($publisher, $epub);
+    default:
+      return dlts_viewer_epubs_indexer_v0($publisher, $epub);
   }
 
 }
@@ -1159,7 +1147,6 @@ function dlts_viewer_supafolio($keyword = '*:*') {
 
   // https://developer.supadu.com/supafolio.html#Preform-a-search
   $api = "http://api.supafolio.com/v2/search?keyword=$keyword&amount=$amount&category_data=1&publisher_data=1&series_data=1";
-
 
   $request = drupal_http_request($api, [
     'headers' => [
