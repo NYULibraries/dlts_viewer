@@ -805,7 +805,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
       // $fields['daodesc']['label'][$lang] = [ 'Digital Archival Object Description' ];
       // $fields['daodesc']['value'][$lang] = [ $data->daodesc ];
       // https://eadiva.com/unitdate/
-      $fields['unitdate']['label'][$lang] = [ 'Unit' ];
+      $fields['unitdate']['label'][$lang] = [ 'Date' ];
       $fields['unitdate']['value'][$lang] = [ $data->unitdate[0]->value ];
 
     } else {
@@ -1972,4 +1972,26 @@ function dlts_viewer_iiif_resource_manifest_collections_list() {
     ],
     'items' => $items,
   ];
+}
+
+function dlts_viewer_iiif_resource_manifest_boutique($identifier) {
+
+  global $base_url;
+
+  $items = [];
+
+  $identifier = filter_xss($identifier);
+
+  $realpath = drupal_realpath('public://');
+
+  $filepath = "$realpath/boutique/$identifier.json";
+
+  if (file_exists($filepath)) {
+    return drupal_json_decode(
+      file_get_contents($filepath)
+    );
+  }
+
+  die('Not implemented yet');
+
 }

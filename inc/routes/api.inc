@@ -215,6 +215,17 @@ $items['api/documentation'] = $items['api/v1'];
   ];
 
   // List collections.
+  $items['api/v1/collections/%dlts_collection'] = [
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_list_collections_collection',
+    'page arguments' => [ 3 ],
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints.inc',
+  ];
+
+  // List collections.
   $items['api/v1/collections'] = [
     'access arguments' => [
       'access content',

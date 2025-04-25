@@ -301,6 +301,9 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
       'title' => $wrapper->field_title->value(),
       'collections' => $collections,
       'partners' => $partners,
+      'iiif' => [
+        'presentation' => "$base_url/api/presentation/$result_alias/$result_identifier/manifest.json",
+      ],
       'uri' => "$base_url/api/v1/$result_alias/$result_identifier",
     ];
   }
@@ -315,6 +318,167 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
   return $response;
 }
 
+function dlts_viewer_list_collections_collection($collections) {
+
+  global $base_url;
+
+  $start = 0;
+
+  $length = 10;
+
+  $status = 1;
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  if (isset($query_parameters['rows']) && is_numeric($query_parameters['rows'])) {
+    $length = $query_parameters['rows'];
+  }
+
+  if (isset($query_parameters['start']) && is_numeric($query_parameters['start'])) {
+    $start = $query_parameters['start'];
+  }
+
+  foreach ($collections as $collection) {
+
+    $partners = [];
+
+    $collection_wrapper = entity_metadata_wrapper('node', $collection);
+
+    $collection_code = $collection_wrapper->field_code->value();
+
+    $collection_name = $collection_wrapper->field_name->value();
+
+    $placeholders = [
+      ':status' => $status,
+    ];
+
+    $query = "
+      SELECT
+        DISTINCT COUNT(node.nid) numFound
+      FROM node
+      LEFT JOIN field_data_field_title title
+        ON node.nid = title.entity_id
+      LEFT JOIN field_data_field_handle handle
+        ON node.nid = handle.entity_id
+      LEFT JOIN field_data_field_identifier identifier
+        ON node.nid = identifier.entity_id
+      LEFT JOIN field_data_field_collection collection
+        ON node.nid = collection.entity_id
+      INNER JOIN field_data_field_code collection_code
+        ON collection.field_collection_nid = collection_code.entity_id
+      LEFT JOIN field_data_field_partner partner
+        ON node.nid = partner.entity_id
+      INNER JOIN field_data_field_code partner_code
+        ON partner.field_partner_nid = partner_code.entity_id
+      WHERE node.status = :status";
+
+    foreach ($collection_wrapper->field_partner->value() as $partner) {
+      $partner_wrapper = entity_metadata_wrapper('node', $partner);
+      $partners[] = [
+        'code' => $partner_wrapper->field_code->value(),
+        'name' => $partner_wrapper->field_name->value(),
+      ];
+    }
+
+    $partner = $partners[0];
+
+    $partner_code = $partner['code'];
+
+    if (isset($collection_code)) {
+      $query = $query . ' AND collection_code.field_code_value = :collection';
+      $placeholders[':collection'] = filter_xss($collection_code);
+    }
+
+    if (isset($partner_code)) {
+      $query = $query . ' AND partner_code.field_code_value = :partner';
+      $placeholders[':partner'] = filter_xss($partner_code);
+    }
+
+    $count = db_query($query, $placeholders)->fetchField();
+
+    // SELECT node.nid, node.type, title, handle.field_handle_url, identifier.field_identifier_value FROM node LEFT JOIN field_data_field_title title ON node.nid = title.entity_id LEFT JOIN field_data_field_handle handle ON node.nid = handle.entity_id LEFT JOIN field_data_field_identifier identifier ON node.nid = identifier.entity_id LEFT JOIN field_data_field_collection collection ON node.nid = collection.entity_id INNER JOIN field_data_field_code code ON collection.field_collection_nid = code.entity_id LEFT JOIN field_data_field_partner partner ON node.nid = partner.entity_id INNER JOIN field_data_field_code partner_code ON partner.field_partner_nid = partner_code.entity_id WHERE node.status = 1 AND code.field_code_value = 'aco' AND partner_code.field_code_value = 'nyu'
+    $query = "
+      SELECT
+        node.nid,
+        node.type,
+        title,
+        handle.field_handle_url,
+        identifier.field_identifier_value
+      FROM node
+      LEFT JOIN field_data_field_title title
+        ON node.nid = title.entity_id
+      LEFT JOIN field_data_field_handle handle
+        ON node.nid = handle.entity_id
+      LEFT JOIN field_data_field_identifier identifier
+        ON node.nid = identifier.entity_id
+      LEFT JOIN field_data_field_collection collection
+        ON node.nid = collection.entity_id
+      INNER JOIN field_data_field_code code
+        ON collection.field_collection_nid = code.entity_id
+      LEFT JOIN field_data_field_partner partner
+        ON node.nid = partner.entity_id
+      INNER JOIN field_data_field_code partner_code
+        ON partner.field_partner_nid = partner_code.entity_id
+      WHERE node.status = :status";
+
+    if (isset($collection_code)) {
+      $query = $query . ' AND code.field_code_value = :collection';
+    }
+
+    if (isset($partner_code)) {
+      $query = $query . ' AND partner_code.field_code_value = :partner';
+    }
+
+    $results = db_query_range($query, $start, $length, $placeholders)->fetchAll();
+
+    $nodes = [];
+
+    foreach ($results as $result) {
+
+      $handle_raw = $result->field_handle_url;
+
+      $handle = explode('/', $handle_raw);
+
+      $result_type = str_replace('dlts_', '', $result->type);
+
+      $result_alias = $result_type . 's';
+
+      $identifier = $result->field_identifier_value;
+
+      $nodes[] = [
+        'nid' => $result->nid,
+        'noid' => $handle[count($handle) - 1],
+        'type' => $result_type,
+        'identifier' => $identifier,
+        'title' => $result->title,
+        'collections' => [
+          'code' => $collection_code,
+          'name' => $collection_name,
+        ],
+        'partners' => $partners,
+        'iiif' => [
+          'presentation' => "$base_url/api/presentation/$result_alias/$identifier/manifest.json",
+        ],
+        'uri' => "$base_url/api/v1/$result_alias/$identifier",
+      ];
+    }
+
+  }
+
+  // Try to mimic Apache Solr response.
+  $response = [
+    'response' => [
+      'numFound' => (int) $count,
+      'start' => (int) $start,
+      'docs' => $nodes,
+    ],
+  ];
+
+  return $response;
+
+}
+
 /**
  * List collections.
  *
@@ -327,6 +491,8 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
  *   A keyed array to be converted into JSON.
  */
 function dlts_viewer_list_collections(int $start = 0, int $length = 100) {
+
+  global $base_url;
 
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
@@ -368,6 +534,8 @@ function dlts_viewer_list_collections(int $start = 0, int $length = 100) {
     $entity = node_load('node', $node->nid);
     $wrapper = entity_metadata_wrapper('node', $entity);
     $partners = [];
+    $collection_code = '';
+    $partners_code = '';
     foreach ($wrapper->field_partner->getIterator() as $delta => $partner_wrapper) {
       if ($partner_wrapper->getBundle() == 'dlts_partner') {
         $partners[] = [
@@ -376,11 +544,20 @@ function dlts_viewer_list_collections(int $start = 0, int $length = 100) {
         ];
       }
     }
+
+    $collection_code = $wrapper->field_code->value();
+
+    $partners_code = $partners[0]['code'];
+
     $response['response']['docs'][] = [
       'title' => trim($wrapper->field_name->value()),
       'identifier' => $wrapper->field_identifier->value(),
       'code' => $wrapper->field_code->value(),
       'partners' => $partners,
+      'iiif' => [
+        'presentation' => "$base_url/api/presentation/collections/$collection_code:$partners_code/manifest.json",
+      ],
+      'uri' => "$base_url/api/v1/collections/$collection_code:$partners_code",
     ];
   }
 
