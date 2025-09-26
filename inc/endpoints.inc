@@ -318,6 +318,11 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
   return $response;
 }
 
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
 function dlts_viewer_list_collections_collection($collections) {
 
   global $base_url;
@@ -332,11 +337,11 @@ function dlts_viewer_list_collections_collection($collections) {
   $query_parameters = drupal_get_query_parameters();
 
   if (isset($query_parameters['rows']) && is_numeric($query_parameters['rows'])) {
-    $length = $query_parameters['rows'];
+    $length = filter_xss($query_parameters['rows']);
   }
 
   if (isset($query_parameters['start']) && is_numeric($query_parameters['start'])) {
-    $start = $query_parameters['start'];
+    $start = filter_xss($query_parameters['start']);
   }
 
   foreach ($collections as $collection) {
@@ -397,7 +402,6 @@ function dlts_viewer_list_collections_collection($collections) {
 
     $count = db_query($query, $placeholders)->fetchField();
 
-    // SELECT node.nid, node.type, title, handle.field_handle_url, identifier.field_identifier_value FROM node LEFT JOIN field_data_field_title title ON node.nid = title.entity_id LEFT JOIN field_data_field_handle handle ON node.nid = handle.entity_id LEFT JOIN field_data_field_identifier identifier ON node.nid = identifier.entity_id LEFT JOIN field_data_field_collection collection ON node.nid = collection.entity_id INNER JOIN field_data_field_code code ON collection.field_collection_nid = code.entity_id LEFT JOIN field_data_field_partner partner ON node.nid = partner.entity_id INNER JOIN field_data_field_code partner_code ON partner.field_partner_nid = partner_code.entity_id WHERE node.status = 1 AND code.field_code_value = 'aco' AND partner_code.field_code_value = 'nyu'
     $query = "
       SELECT
         node.nid,
