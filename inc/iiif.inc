@@ -565,6 +565,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
       }
 
       if ($name == 'field_sequence_count') continue;
+      if ($name == 'field_page_count') continue;
 
       if (!isset($fields[$name])) {
         $fields[$name] = [];
