@@ -6,10 +6,10 @@
  */
 
  /**
- * A wildcard loader for dlts_epub, using the ePub edition ISBN13.
+ * A wildcard loader for publishers.
  *
  * @parameter $identifier
- *  The value of ePub edition ISBN13.
+ *  The value of ePub publisher.
  *
  * @return object
  */
@@ -17,10 +17,26 @@ function dlts_publisher_load($identifier) {
 
   $identifier = filter_xss($identifier);
 
-  $results = db_query('SELECT field_data_field_code.field_code_value as code, field_data_field_name.field_name_value as label FROM field_data_field_code LEFT JOIN field_data_field_name on field_data_field_name.entity_id = field_data_field_code.entity_id WHERE field_data_field_code.field_code_value = :identifier', [ ':identifier' => $identifier ])->fetchObject();
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
 
-  if (!empty($results->code)) {
-    return $results;
+  $proxy_request = $query_parameters['proxy'] ? filter_xss($query_parameters['proxy']) : FALSE;
+
+  if ($proxy_request) {
+    $proxy_request = dlts_proxy_load($proxy_request);
+    $proxy_url = $proxy_request['url'];
+    $record = drupal_http_request("$proxy_url/api/v1/epubs/$identifier?reset_cache=true");
+    if ($record->code == '200' && isset($record->data)) {
+      $data = json_decode($record->data);
+      return $data;
+    } else {
+      return FALSE;
+    }
+  } else {
+    $results = db_query('SELECT field_data_field_code.field_code_value as code, field_data_field_name.field_name_value as label FROM field_data_field_code LEFT JOIN field_data_field_name on field_data_field_name.entity_id = field_data_field_code.entity_id WHERE field_data_field_code.field_code_value = :identifier', [ ':identifier' => $identifier ])->fetchObject();
+    if (!empty($results->code)) {
+      return $results;
+    }
   }
   return FALSE;
 }
