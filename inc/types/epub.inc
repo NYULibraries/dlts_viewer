@@ -995,11 +995,11 @@ function dlts_viewer_epubs_indexer_v1($publisher, $epub) {
 
   $_e = variable_get('env', 'stage');
 
-  $discovery = variable_get('discovery', []);
+  $discovery = variable_get('dlts_discovery', []);
 
-  if (!empty($discovery) && isset($discovery['open-square-metadata-v1']) && isset($discovery['open-square-metadata-v1'][$_e])) {
+  if (!empty($discovery) && isset($discovery[$_e]['open-square-metadata-v1']['url'])) {
 
-    $solrurl = $discovery['open-square-metadata-v1'][$_e]['url'];
+    $solrurl = $discovery[$_e]['open-square-metadata-v1']['url'];
 
     $epub = (object) $epub;
 
