@@ -2,16 +2,10 @@
 
 function dlts_proxy_load($identifier) {
   $identifier = filter_xss($identifier);
-  $envs = [
-    'stage' => [
-      'url' => 'https://stage-sites.dlib.nyu.edu/viewer',
-    ],
-    'prod' => [
-      'url' => 'https://stage.dlts.org',
-    ],
-  ];
-  if (in_array($identifier, [ 'stage', 'prod' ])) {
-    return true;
+  $proxies = variable_get('dlts_proxies', []);
+  $keys = array_keys($proxies);
+  if (in_array($identifier, $keys)) {
+    return $proxies[$identifier];
   }
   return false;
 }
@@ -50,7 +44,8 @@ function dlts_epub_load($identifier, $publisher, $version = 'v1', $reset_cache =
     return dlts_viewer_supafolio_book($identifier);
   } else {
     if ($proxy_request) {
-      $record = drupal_http_request("https://stage-sites.dlib.nyu.edu/viewer/api/$version/epubs/$publisher/$identifier?reset_cache=true");
+      $proxy_url = $proxy_request['url'];
+      $record = drupal_http_request("$proxy_url/api/$version/epubs/$publisher/$identifier?reset_cache=true");
       if ($record->code == '200' && isset($record->data)) {
         return json_decode($record->data);
       } else {
