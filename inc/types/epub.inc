@@ -6,6 +6,35 @@
  */
 
 /**
+ * Formats an array of names into a sentence-ready list, 
+ * using 'and' before the last item if there are two or more.
+ *
+ * @param array $array The array of names.
+ * @return string The formatted list of names.
+ */
+function dlts_viewer_api_format_list_with_and($array) {
+    $count = count($array);
+
+    if ($count === 0) {
+        return '';
+    }
+    
+    // If there is one item, return it as is.
+    if ($count === 1) {
+        return $array[0];
+    }
+
+    // Get the last item to be prefixed with 'and'.
+    $last_item = array_pop($array);
+
+    // Join the remaining items with a comma and space.
+    $first_part = implode(', ', $array);
+
+    // Combine the parts: "Item1, Item2, and LastItem"
+    return $first_part . ' and ' . $last_item;
+}
+
+/**
  * Undocumented function.
  */
 function dlts_viewer_api_epubs($version) {
@@ -695,14 +724,42 @@ function dlts_viewer_epubs_metadata_v1($data) {
     return $a['order'] <=> $b['order'];
   });
 
+  $df = [];
+
+  $contributorsInOrder = [];
+
   foreach ($authors as $item) {
-    $authors_display[] = [
+    if ($item['role']['name'] === 'By (author)') {
+      $item['role']['name'] = 'By';
+    }
+
+    $contributorsInOrder[] = $item['contributor']['name'];
+
+    $gf = [
       'bio' => $item['contributor']['bio'],
       'name' => $item['contributor']['name'],
       'nameSort' => $item['contributor']['last'] . ', ' . $item['contributor']['first'],
       'order' => $item['order'],
       'role' => $item['role']['name'],
     ];
+
+    $authors_display[] = $gf;
+
+    $df[$item['role']['name']][] = $item['contributor']['name'];
+
+  }
+
+  $contributorsAsASentence = '';
+
+  foreach ($df as $roleId => $dff) {
+    // 1. Format the list of names using the function.
+    $formatted_names = dlts_viewer_api_format_list_with_and($dff);
+    
+    // 2. Append the role, the names, and the Unicode line separator.
+    // Note: When printing, PHP treats the literal string "\u2028" differently 
+    // than the actual Unicode character. Using "\u{2028}" or escaping it 
+    // is necessary for correct output.
+    $contributorsAsASentence .= $roleId . ' ' .  $formatted_names . "\u{2028}";
   }
 
   // https://jira.nyu.edu/browse/NYUP-980
@@ -821,6 +878,8 @@ function dlts_viewer_epubs_metadata_v1($data) {
   // https://jira.nyu.edu/browse/NYUP-739
   $metadata = [
     'contributors' => $authors_display,
+    'contributorsInOrder' => $contributorsInOrder,
+    'contributorsAsASentence' => $contributorsAsASentence,
     'dateBook' => $dateBook,
     'dateOpenAccess' => $dateOpenAccessformattedDate ,
     'description' => strip_tags($data->description),
@@ -829,6 +888,7 @@ function dlts_viewer_epubs_metadata_v1($data) {
     'handle' => $custom->permanent_url,
     'hasHiResImages' => $custom->hi_res_images,
     'hasVideo' => $custom->video,
+    'id' => '', // ?
     'isbnEbook' => $custom->ebook,
     'isbnHardcover' => $custom->hardcover,
     'isbnLibrary' => $custom->library,
@@ -1062,9 +1122,13 @@ function dlts_viewer_epubs_indexer_v0($publisher, $epub) {
 
   $_e = variable_get('env', 'stage');
 
+  $solrurl = '';
+
   if (isset($discovery['opensquaremetadata'][$_e])) {
     $solrurl = $discovery['opensquaremetadata'][$_e]['url'];
   }
+  
+  // must exit with error if $solrurl is empty.
 
   $epub->id = $epub->identifier;
 

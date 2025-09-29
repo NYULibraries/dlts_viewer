@@ -32,7 +32,11 @@ function dlts_epub_load($identifier, $publisher, $version = 'v1', $reset_cache =
 
   $version = isset($query_parameters['version']) ? filter_xss($query_parameters['version']) : $version;
 
-  $proxy_request = $query_parameters['proxy'] ? filter_xss($query_parameters['proxy']) : FALSE;
+  $proxy_request = FALSE;
+
+  if (isset($query_parameters['proxy']) && !empty($query_parameters['proxy'])) {
+    $proxy_request = filter_xss($query_parameters['proxy']);
+  }
 
   $identifier = filter_xss($identifier);
 

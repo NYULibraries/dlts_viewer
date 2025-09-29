@@ -20,7 +20,11 @@ function dlts_publisher_load($identifier) {
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
-  $proxy_request = $query_parameters['proxy'] ? filter_xss($query_parameters['proxy']) : FALSE;
+  $proxy_request = FALSE;
+
+  if (isset($query_parameters['proxy']) && !empty($query_parameters['proxy'])) {
+    $proxy_request = filter_xss($query_parameters['proxy']);
+  }
 
   if ($proxy_request) {
     $proxy_request = dlts_proxy_load($proxy_request);
