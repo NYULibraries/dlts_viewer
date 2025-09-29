@@ -425,6 +425,7 @@ function dlts_viewer_js_alter(&$javascript) {
   if (dlts_viewer_is_resource()) {
     $allow = [
       'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.1/openseadragon.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/openseadragon/5.0.1/openseadragon.min.js',
       'https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js',
       'https://cdnjs.cloudflare.com/ajax/libs/keyboardjs/2.6.2/keyboard.min.js',
       'sites/all/modules/dlts_viewer/dist/polyfill.bundle.js',
