@@ -916,7 +916,6 @@ function dlts_viewer_epubs_metadata_v1($data) {
     'handle' => $custom->permanent_url,
     'hasHiResImages' => $custom->hi_res_images,
     'hasVideo' => $custom->video,
-    'id' => '', // ?
     'isbnEbook' => $custom->ebook,
     'isbnHardcover' => $custom->hardcover,
     'isbnLibrary' => $custom->library,

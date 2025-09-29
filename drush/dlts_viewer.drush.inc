@@ -130,7 +130,33 @@ function dlts_viewer_drush_command() {
     'description' => dt('Populate DLTS locale table.'),
   ];
 
+  $items['dlts-index-epubs'] = [
+    'callback' => 'dlts_viewer_drush_index_epubs',
+    'description' => dt('Index all ePubs.'),
+  ];
+
+
   return $items;
+
+}
+
+function dlts_viewer_drush_index_epubs() {
+
+  $results = db_query('SELECT * FROM dlts_viewer_epubs');
+
+  foreach ($results as $record) {
+
+    $identifier = $record->identifier;
+
+    $publisher = $record->publisher;
+
+    $epub = dlts_viewer_epubs_metadata('v1', $publisher, $identifier, false);
+
+    $request = dlts_viewer_epubs_indexer_v1($publisher, $epub);
+
+    drush_log("{$record->label} - {$identifier} - {$request->status_message}", 'ok');
+
+  }
 
 }
 
