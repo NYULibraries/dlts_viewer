@@ -6,6 +6,34 @@
  */
 
 /**
+ * Undocumented function.
+ */
+function dlts_viewer_remote_file_size($filepath) {
+
+  // Get the headers of the remote file
+  $headers = @get_headers($filepath, 1); // The '1' makes it an associative array
+
+  if ($headers && isset($headers['Content-Length'])) {
+    $fileSize = $headers['Content-Length'];
+    if (is_array($fileSize)) {
+        // Some servers might send multiple Content-Length headers,
+        // the last one is usually the correct one.
+        $fileSize = end($fileSize);
+    }
+
+    return [
+      'bytes' => $fileSize,
+      'formatted' => dlts_viewer_format_filesize($fileSize),
+    ];
+
+  } else {
+    return [
+    'error' => 'Could not retrieve file size information.',
+    ];
+  }
+}
+
+/**
  * Formats an array of names into a sentence-ready list, 
  * using 'and' before the last item if there are two or more.
  *
@@ -918,27 +946,42 @@ function dlts_viewer_epubs_metadata_v1($data) {
 
   $libraryIsbn = $custom->library;
 
+  $fileserver = variable_get('fileserver', false);
+
   $metadata['files'] = [];
 
-  $fileserver_pdf_endpoint = "https://mc.dlib.nyu.edu/files/nyupress/pdfs/$libraryIsbn.pdf";
+  if (isset($fileserver) && isset($fileserver['url'])) {
 
-  $pdf_file_exists = dlts_viewer_remote_file_exists($fileserver_pdf_endpoint);
+    $fileserver_url = $fileserver['url'];
 
-  if ($pdf_file_exists) {
-    $metadata['files']['pdf'] = $pdf_file_exists;
+    $fileserver_pdf_endpoint = "$fileserver_url/nyupress/pdfs/$libraryIsbn.pdf";
+
+    $pdf_file_exists = dlts_viewer_remote_file_exists($fileserver_pdf_endpoint);
+
+    if ($pdf_file_exists) {
+      $metadata['files']['pdf'] = $pdf_file_exists;
+    }
+
+    $fileserver_epub_endpoint = "$fileserver_url/nyupress/epubs/$libraryIsbn.epub";
+
+    $epub_file_exists = dlts_viewer_remote_file_exists($fileserver_epub_endpoint);
+
+    if ($epub_file_exists) {
+      $metadata['files']['epub'] = $epub_file_exists;
+    }
   }
 
-  $fileserver_epub_endpoint = "https://mc.dlib.nyu.edu/files/nyupress/epubs/$libraryIsbn.epub";
-
-  $epub_file_exists = dlts_viewer_remote_file_exists($fileserver_epub_endpoint);
-
-  if ($epub_file_exists) {
-    $metadata['files']['epub'] = $epub_file_exists;
-  }
-
-  $cloudreader_file_exists = dlts_viewer_remote_file_exists("https://opensquare-stage.nyupress.org/open-square-reader/cloud-reader/epub_content/$libraryIsbn/META-INF/container.xml");
-  if ($cloudreader_file_exists) {
-    $metadata['files']['cloudreader'] = $cloudreader_file_exists;
+  $epubs_conf = variable_get('epubs', false);
+  if (isset($epubs_conf) && isset($epubs_conf['nyu-press']) && isset($epubs_conf['nyu-press']['cloudreader'])) {
+    $cloudreader_url = $epubs_conf['nyu-press']['cloudreader'];
+    $cloudreader_ebook_url = "$cloudreader_url/epub_content/$libraryIsbn";
+    $cloudreader_file_exists = dlts_viewer_remote_file_exists("$cloudreader_ebook_url/META-INF/container.xml");  
+    if ($cloudreader_file_exists) {
+      $metadata['files']['cloudreader'] = [
+        'url' => "$cloudreader_url/?epub=epub_content/$libraryIsbn&embedded=true",
+        'http_code' => $cloudreader_file_exists['http_code'],
+      ];
+    }
   }
 
   return $metadata;
