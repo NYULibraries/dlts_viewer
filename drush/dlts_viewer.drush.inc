@@ -37,16 +37,15 @@ function dlts_viewer_drush_command() {
     ],
   ];
 
-  $items['resources-list'] = [
-    'callback' => 'dlts_viewer_drush_resources_list',
-    'description' => dt('Returns list of all resources in the table dlts_viewer_resources')
-  ];
-
   $items['resources-list-by-type'] = [
     'callback' => 'dlts_viewer_drush_list_resources_type',
     'description' => dt('Returns list of all resources in the table dlts_viewer_resources')
   ];
 
+  $items['resources-list'] = [
+    'callback' => 'dlts_viewer_drush_resources_list',
+    'description' => dt('Returns list of all resources in the table dlts_viewer_resources')
+  ];
 
   $items['resources-list-cleanup'] = [
     'callback' => 'dlts_viewer_drush_resources_list_cleanup',
@@ -135,19 +134,81 @@ function dlts_viewer_drush_command() {
     'description' => dt('Index all ePubs.'),
   ];
 
+  $items['dlts-task-dlts326'] = [
+    'callback' => 'dlts_viewer_drush_task_dlts326',
+    'description' => dt('Task - DLTSBOOKS-326'),
+  ];
 
   return $items;
 
 }
 
+function dlts_viewer_drush_task_dlts326() {
+  
+  global $base_url;
+
+  $module = DRUPAL_ROOT . '/' .drupal_get_path('module', 'dlts_viewer');
+
+  $filepath = "{$module}/drush/data/DLTSBOOKS-326.txt";
+ 
+  if (file_exists($filepath)) {
+    $handle = fopen($filepath, 'r');
+    if ($handle) {
+      $mv = [];
+      while (($line = fgets($handle)) !== false) {
+
+        $identifier = trim($line);
+
+        $node = dlts_resource_load($identifier);
+
+        drush_log("Book id {$node->nid} - {$base_url}/books/{$identifier}/1", 'ok');
+
+        $query = new EntityFieldQuery();
+
+        $result = $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'dlts_multivol_book')
+          ->propertyCondition('status', 1)
+          ->fieldCondition('field_book', 'nid', $node->nid, '=')
+          ->execute();
+
+        if (!empty($result['node'])) {  
+          $keys = array_keys($result['node']);
+          $nid = array_pop($keys);
+          $multivolbook = node_load($nid);
+          if ($multivolbook) {
+            drush_log("Multivol book nid {$nid}", 'ok');
+            if ($multivolbook) {
+              $wrapper = entity_metadata_wrapper('node', $multivolbook);
+              $mvi = $wrapper->field_multivol->value();
+              if ($mvi) {
+                $mv[] = $mvi->nid;
+              }
+              unset($wrapper);
+              node_delete_multiple([$nid]);
+            }
+          }
+        }
+      }
+      fclose($handle);
+      $ids = array_unique($mv);
+      node_delete_multiple($ids);
+    } else {
+      echo "Error: Could not open file $filepath";
+    }
+  }
+}
+
 function dlts_viewer_drush_index_epubs() {
+  // $records = drupal_http_request('https://sites.dlib.nyu.edu/viewer/api/v1/objects?collection=fdm&rows=500');
+  // $data = json_decode($records->data);
+  global $base_url;
+
+  $docs = [];
 
   $results = db_query('SELECT * FROM dlts_viewer_epubs');
 
   foreach ($results as $record) {
-
     $identifier = $record->identifier;
-
     $publisher = $record->publisher;
 
     $epub = dlts_viewer_epubs_metadata('v1', $publisher, $identifier, false);
@@ -156,6 +217,37 @@ function dlts_viewer_drush_index_epubs() {
 
     drush_log("{$record->label} - {$identifier} - {$request->status_message}", 'ok');
 
+  }
+
+}
+
+// ./vendor/bin/drush resources-list-by-type --type=books
+// ./vendor/bin/drush resources-list-by-type --type=maps
+// ./vendor/bin/drush resources-list-by-type --type=photos
+function dlts_viewer_drush_list_resources_type() {
+  global $base_url;
+  $type = drush_get_option('type', FALSE);
+  if (!$type) {
+    drush_log('No type selected.', 'error');
+    exit();
+  }
+
+  $types = [
+    'books',
+    'maps',
+    'photos',
+    'postcards',
+  ];
+  if (in_array($type, $types)) {
+    $sql = "SELECT noid, identifier FROM dlts_viewer_resource WHERE document = '$type'";
+    $nodes = db_query($sql)->fetchAll();
+    foreach ($nodes as $node) {
+      $noid = $node->noid;
+      echo "$base_url/api/embed/$noid?reset=true", PHP_EOL;
+    }
+  } else {
+    drush_log('Type not supported.', 'error');
+    exit();
   }
 
 }
@@ -401,37 +493,6 @@ function dlts_viewer_drush_add_resources() {
     $handle = explode('/', $handlepathinfo['path']);
     $noid = trim($handle[2]);
     db_query("INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', '$type', '1')");
-  }
-
-}
-
-// ./vendor/bin/drush resources-list-by-type --type=books
-// ./vendor/bin/drush resources-list-by-type --type=maps
-// ./vendor/bin/drush resources-list-by-type --type=photos
-function dlts_viewer_drush_list_resources_type() {
-  global $base_url;
-  $type = drush_get_option('type', FALSE);
-  if (!$type) {
-    drush_log('No type selected.', 'error');
-    exit();
-  }
-
-  $types = [
-    'books',
-    'maps',
-    'photos',
-    'postcards',
-  ];
-  if (in_array($type, $types)) {
-    $sql = "SELECT noid, identifier FROM dlts_viewer_resource WHERE document = '$type'";
-    $nodes = db_query($sql)->fetchAll();
-    foreach ($nodes as $node) {
-      $noid = $node->noid;
-      echo "$base_url/api/embed/$noid?reset=true", PHP_EOL;
-    }
-  } else {
-    drush_log('Type not supported.', 'error');
-    exit();
   }
 
 }
@@ -969,5 +1030,3 @@ function dlts_viewer_drush_add_translation_strings() {
       ->execute();
     }
 }
-
-
