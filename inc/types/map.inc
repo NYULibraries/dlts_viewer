@@ -235,110 +235,166 @@ function dlts_viewer_map_metadata_display($node) {
  */
 function _dlts_viewer_map_json($entity, $add_pages = TRUE) {
 
-  header("Access-Control-Allow-Origin: *");
-
-  header('Content-Type: application/json;charset=utf-8');
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
 
+  // Assuming $entity is the node object being wrapped.
+  $entity_type = 'node';
+
+  $bundle_name = $entity->type; // This would typically be 'book' for a node of type 'book'
+
   // Wrapp book entity with Entity API wrapper.
-  $map = entity_metadata_wrapper('node', $entity);
+  $map = entity_metadata_wrapper($entity_type, $entity);
 
   // Identifier.
   $identifier = $map->field_identifier->value();
 
   $title = $entity->title;
 
-  $type = dlts_viewer_content_types_type($entity->type);
-
   $fields = [];
 
   $pages = [];
 
-  foreach ($type['fields'] as $field) {
-    $name = str_replace('field_', '', $field['field_name']);
-    $raw_value = $map->$field['field_name']->value();
-    if ($field['label'] != 'Representative Image') {
-      if ($field['type'] == 'options_buttons') {
-        $value = $field['settings']['allowed_values'][$raw_value];
-      }
-      elseif ($field['type'] == 'link_field' && isset($raw_value['url'])) {
-        $value = $raw_value['url'];
-      }
-      elseif ($field['type'] == 'field_fileserver_link') {
-        $value = array();
-        foreach ((array) $raw_value as $pdf_file) {
-          $value[] = ($pdf_file['uri']);
-        }
-      }
-      elseif ($field['type'] == 'date_text') {
-        $raw_value['value'];
-      }
-      elseif ($field['type'] == 'taxonomy_autocomplete') {
-        $value = array();
-        foreach ($raw_value as $taxonomy) {
-          $value[] = $taxonomy->name;
-        }
-      }
-      elseif ($field['label'] == 'Collection') {
-        $value = array();
-        foreach ($raw_value as $collection) {
-          $collection_wrapper = entity_metadata_wrapper('node', $collection);
-          $col_partner = $collection_wrapper->field_partner->value();
-          $partner_wrapper = entity_metadata_wrapper('node', $col_partner[0]);
-          $value[] = array(
-            'title' => $collection_wrapper->title->value(),
-            'identifier' => $collection_wrapper->field_identifier->value(),
-            'code' => $collection_wrapper->field_code->value(),
-            'name' => $collection_wrapper->field_name->value(),
-            'type' => 'dlts_collection',
-            'language' => 'und',
-            'partner' => array(
-              'title' => $partner_wrapper->title->value(),
-              'type' => 'dlts_partner',
-              'language' => 'und',
-              'identifier' => $partner_wrapper->field_identifier->value(),
-              'code' => $partner_wrapper->field_code->value(),
-              'name' => $partner_wrapper->field_name->value(),
-            ),
-          );
-        }
-      }
-      elseif ($field['label'] == 'Provider') {
-        $value = array();
-        foreach ($raw_value as $partner) {
-          $partner_wrapper = entity_metadata_wrapper('node', $partner);
-          $value[] = array(
-            'title' => $partner_wrapper->title->value(),
-            'identifier' => $partner_wrapper->field_identifier->value(),
-            'code' => $partner_wrapper->field_code->value(),
-            'name' => $partner_wrapper->field_name->value(),
-            'type' => 'dlts_partner',
-            'language' => 'und',
-          );
-        }
-      }
-      else {
-        $value = $raw_value;
-      }
-      $fields[$name] = array(
-        'label' => $field['label'],
-        'value' => (array) $value,
-      );
-    }
-    else {
-      $fields[$name] = array(
-        'isPartOf' => $identifier,
-        'sequence' => array(1),
-        'realPageNumber' => 1,
-        'cm' => array(
-          'uri' => $raw_value['uri'],
-        ),
-      );
+  $fields['collections'] = [];
+
+  $fields['partners'] = [];
+
+  foreach ($map->field_collection->value() as $collection) {
+    $collection_wrapper = entity_metadata_wrapper('node', $collection);
+    $col_partner = $collection_wrapper->field_partner->value();
+    $partner_wrapper = entity_metadata_wrapper('node', $col_partner[0]);
+    $fields['collections'][] = [
+      'title' => $collection_wrapper->title->value(),
+      'identifier' => $collection_wrapper->field_identifier->value(),
+      'code' => $collection_wrapper->field_code->value(),
+      'name' => $collection_wrapper->field_name->value(),
+      'type' => 'dlts_collection',
+      'language' => 'und',
+      'partner' => [
+        'title' => $partner_wrapper->title->value(),
+        'type' => 'dlts_partner',
+        'language' => 'und',
+        'identifier' => $partner_wrapper->field_identifier->value(),
+        'code' => $partner_wrapper->field_code->value(),
+        'name' => $partner_wrapper->field_name->value(),
+      ],
+    ];
+  }
+
+  foreach ($map->field_partner->value() as $partner) {
+    $partner_wrapper = entity_metadata_wrapper('node', $partner);
+    $fields['partners'][] = [
+      'title' => $partner_wrapper->title->value(),
+      'identifier' => $partner_wrapper->field_identifier->value(),
+      'code' => $partner_wrapper->field_code->value(),
+      'name' => $partner_wrapper->field_name->value(),
+      'type' => 'dlts_partner',
+      'language' => 'und',
+    ];
+  }
+
+  $ffs = [
+    'field_author',
+    'field_identifier',
+    'field_call_number',
+    'field_contributor',
+    'field_creator',
+    'field_description',
+    'field_dimensions',
+    'field_geographic_coordinates',
+    'field_geographic_subject',
+    'field_identifier',
+    'field_notes_field',
+    'field_other_version',
+    'field_physical_description',
+    'field_publication_date',
+    'field_publication_date_text',
+    'field_publication_location',
+    'field_publisher',
+    'field_scan_date',
+    'field_scanning_notes',
+    'field_subtitle',
+    'field_title',
+    'field_topic',
+    'field_language',
+    'field_language_code',
+    'field_rights',
+  ];
+
+  foreach ($ffs as $field_name) {
+    $field_value = $map->$field_name->value();
+    $field_instance = field_info_instance($entity_type, $field_name, $bundle_name);
+    if (!empty($field_value)) {
+      $key = str_replace('field_', '', $field_name);
+      $fields[$key] = [
+        'label' => $field_instance['label'],
+        'value' => (array) $field_value,
+      ];
     }
   }
 
-  // $page_count = $entity->field_page_count['en'][0]['value'];
+  $field_handle = $map->field_handle->value();
+  if (!empty($field_handle)) {
+    $field_handle_instance = field_info_instance($entity_type, 'field_handle', $bundle_name);
+    $fields['handle'] = [
+      'label' => $field_handle_instance['label'],
+      'value' => $field_handle['url'],
+    ];
+  }
+
+  $field_subject = $map->field_subject->value();
+  if (!empty($field_subject)) {
+    $field_subject_instance = field_info_instance($entity_type, 'field_subject', $bundle_name);
+    $fields['subject'] = [
+      'label' => $field_subject_instance['label'],
+      'value' => [],
+    ];
+    foreach ($field_subject as $subject) {
+      $fields['subject']['value'][] = $subject->name;
+    }
+  }
+
+  $field_pdf_file_raw = $map->field_pdf_file->value();
+
+  if ($field_pdf_file_raw) {
+    $pdfs = [];
+    foreach ($field_pdf_file_raw as $value) {
+      $data = [
+        'uri' => $value['uri'],
+        'label' => $value['label'],
+      ];
+      $data['uri'] = file_create_url($data['uri']);
+      $filename = pathinfo($data['uri'], PATHINFO_FILENAME);
+      preg_match('/_(hi|lo)/', $filename, $matches);
+      if (isset($matches) && isset($matches[1])) {
+        switch ($matches[1]) {
+          case 'hi':
+            $pdfs[] = [
+              'id' => $data['uri'],
+              'type' => 'Text',
+              'format' => 'application/pdf',
+              'label' => locale('High-resolution PDF', NULL, 'en'),
+            ];
+            break;
+
+          case 'lo':
+            $pdfs[] = [
+              'id' => $data['uri'],
+              'type' => 'Text',
+              'format' => 'application/pdf',
+              'label' => locale('Low-resolution PDF', NULL, 'en'),
+            ];
+            break;
+        }
+      }
+    }
+  }
+
+  $fields['rendering'] = [
+    'label' => 'Rendering',
+    'value' => $pdfs,
+  ];
 
   if ($add_pages) {
     $pages_raw = dlts_viewer_mongodb_load_by_item_identifier($identifier, 'dlts_map_page');
@@ -346,33 +402,31 @@ function _dlts_viewer_map_json($entity, $add_pages = TRUE) {
       $page = [
         'page' => [
           'isPartOf' => $identifier,
-          'realPageNumber' => $page_raw['realPageNumber'],
           'sequence' => $page_raw['sequence'],
-          'cm' => [
-            'uri' => $page_raw['cm']['uri'],
-            'width' => $page_raw['cm']['width'],
-            'height' => $page_raw['cm']['height'],
-            'levels' => $page_raw['cm']['levels'],
-            'dwtLevels' => $page_raw['cm']['dwtLevels'],
-            'compositingLayerCount' => $page_raw['cm']['compositingLayerCount'],
-            'timestamp' => $page_raw['cm']['timestamp'],
-          ],
+          'uri' => $page_raw['cm']['uri'],
+          'width' => $page_raw['cm']['width'],
+          'height' => $page_raw['cm']['height'],
         ],
       ];
       $pages[] = $page;
     }
   }
+
+  header('Access-Control-Allow-Origin: *');
+
+  header('Content-Type: application/json;charset=utf-8');
+
   echo json_encode(
-    array(
+    [
       'entity_title' => !empty($title) ? $title : $entity->title,
       'identifier' => $identifier,
-      'entity_path' => url('maps/' . $identifier . '/1', array('absolute' => TRUE)),
-      'base_url' => url('', array('absolute' => TRUE)),
+      'entity_path' => url('maps/' . $identifier . '/1', [ 'absolute' => TRUE ]),
+      'base_url' => url('', [ 'absolute' => TRUE ]),
       'entity_language' => $entity->language,
       'entity_status' => $entity->status,
       'entity_type' => $entity->type,
       'metadata' => $fields,
       'pages' => $pages,
-    )
+    ]
   );
 }

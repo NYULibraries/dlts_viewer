@@ -2,7 +2,8 @@
 
 // https://jira.nyu.edu/browse/RSTAR-545
 // https://localhost/viewer/api/v1/ijson/akkasah/ad_mc_002
-function dlts_viewer_ijson_dispatcher($partner, $collection) {  
+function dlts_viewer_ijson_dispatcher($partner, $collection) {
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
   // Username for the repository challange.
   $user = variable_get('publisher_user', NULL);
   // Password for repository challange.

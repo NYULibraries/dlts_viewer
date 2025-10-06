@@ -2,6 +2,8 @@
 
 function dlts_viewer_eads_dispatcher($noid) {
 
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+
   $module = DRUPAL_ROOT . '/' . drupal_get_path('module', 'dlts_viewer') . '/fales_mss208_cuid1200.json';
 
   $data = json_decode(file_get_contents($module), true);

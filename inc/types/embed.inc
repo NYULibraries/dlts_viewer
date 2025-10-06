@@ -8,6 +8,8 @@
  */
 function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+
   global $base_url;
 
   $analytics = variable_get('analytics', []);

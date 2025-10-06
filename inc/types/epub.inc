@@ -67,6 +67,8 @@ function dlts_viewer_api_format_list_with_and($array) {
  */
 function dlts_viewer_api_epubs($version) {
 
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+
   global $base_url;
 
   $docs = [];
@@ -441,6 +443,8 @@ function dlts_viewer_api_epubs_publisher_create($publisher, $identifier) {
  */
 function dlts_viewer_api_epubs_publisher($version, $publisher) {
 
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+
   global $user;
 
   $uid = $user->uid;
@@ -503,6 +507,7 @@ function dlts_viewer_epubs_identifier($doi) {
  * Undocumented function.
  */
 function dlts_viewer_epubmanager_metadata($_version, $publisher, $identifier) {
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
   if (user_access('access content')) {
     $reset_cache = false;
 
@@ -1015,11 +1020,13 @@ function dlts_viewer_remote_file_exists($url) {
   return false;
 }
 
-
 /**
  * Undocumented function.
  */
 function dlts_viewer_epubs_metadata_dispatch($version = 'v1', $publisher, $metadata) {
+
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+
   global $user;
 
   $name = $user->name;
@@ -1218,12 +1225,14 @@ function dlts_viewer_epubs_indexer_v0($publisher, $epub) {
  */
 function dlts_viewer_epubs_indexer($version, $publisher, $epub) {
 
- if (!user_access('dlts create object')) {
-   return [
-     'status' => 'error',
-     'message' => "Action not allowed.",
-   ];
- }
+  if (!user_access('dlts create object')) {
+    return [
+      'status' => 'error',
+      'message' => "Action not allowed.",
+    ];
+  }
+
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
   switch ($version) {
     case 'v1':
@@ -1347,4 +1356,23 @@ function admin_epub_publisher_title($publisher) {
  */
 function admin_epub_book_title($epub) {
   return $epub['title'];
+}
+
+/**
+ * Undocumented function.
+ */
+function dlts_viewer_epubs_delete($epub) {
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+  return [
+    'status' => 'error',
+    'message' => 'HTTP 501 Not Implemented ',
+  ];
+}
+
+/**
+ * Undocumented function.
+ */
+function dlts_viewer_supafolio_book_dispatcher($identifier) {
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+  return dlts_viewer_supafolio_book($identifier, true);
 }

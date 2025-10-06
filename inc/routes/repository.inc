@@ -29,7 +29,6 @@ function _dlts_viewer_menu_repository() {
  
   // List all partners.
   // https://HOST/api/v1/repository/partners
-  // https://stage-sites.dlib.nyu.edu/viewer/api/v1/repository/partners
   $items['api/v1/repository/partners'] = [
     'title' => 'Query repository partners',
     'description' => 'Query repository.',
@@ -43,7 +42,6 @@ function _dlts_viewer_menu_repository() {
   ];
 
   // https://HOST/api/v1/repository/partners/8c32791e-0fcd-4508-86e0-6fd28ee4550d
-  // https://stage-sites.dlib.nyu.edu/viewer/api/v1/repository/partners/8c32791e-0fcd-4508-86e0-6fd28ee4550d
   $items['api/v1/repository/partners/%'] = [
     'title' => 'Query repository by partner code',
     'description' => 'Query repository.',

@@ -57,13 +57,6 @@ function _dlts_viewer_menu_iiif() {
     'file' => 'inc/iiif.inc',
   ];
 
-  /*
-   * For the Image service we can not add the version to
-   * the URL. If we add the version, the page arguments
-   * for the request turns out to be 10 arguments, and
-   * Drupal's router can not deal with this.
-   */
-
   // Proxy Image service.
   // @link https://[HOST]/api/image/books/uaena_aco000016/1
   $items['api/image/%dlts_type/%dlts_resource/%dlts_resource_sequence'] = [
@@ -97,7 +90,7 @@ function _dlts_viewer_menu_iiif() {
   /*
    * Register IIIF Presentation Manifest routes.
    * @link https://iiif.io/api/presentation/3.0/
-   * @link https://[HOST]/api/presentation/books/princeton_aco000102/manifest.json
+   * @link /api/presentation/books/princeton_aco000102/manifest.json
    *
    * @return array
    *   IIIF Presentation Manifest.

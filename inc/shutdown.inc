@@ -7,8 +7,6 @@
 
 /**
  * Undocumented function.
- *
- * @todo document function
  */
 function dlts_viewer_cache_ijson($edit) {
 
@@ -34,8 +32,6 @@ function dlts_viewer_cache_ijson($edit) {
 
 /**
  * Undocumented function.
- *
- * @todo document function
  */
 function dlts_viewer_cache_manifest($edit) {
 
@@ -59,8 +55,6 @@ function dlts_viewer_cache_manifest($edit) {
 
 /**
  * Undocumented function.
- *
- * @todo document function
  */
 function dlts_viewer_cache_book_sequence($edit) {
 
@@ -79,5 +73,34 @@ function dlts_viewer_cache_book_sequence($edit) {
   file_prepare_directory($dir_path, FILE_CREATE_DIRECTORY);
 
   file_unmanaged_save_data($edit['data'], $file_destination, FILE_EXISTS_REPLACE);
+
+}
+
+/**
+ * Undocumented function.
+ * @link https://nyu.atlassian.net/browse/DLTSVIEWER-187
+ */
+function dlts_viewer_shutdown_log_api_requests($request) {
+
+  global $user;
+
+  $q = $_GET['q'];
+
+  $REQUEST_TIME = $_SERVER['REQUEST_TIME'];
+
+  $HTTP_USER_AGENT = $_SERVER['HTTP_USER_AGENT'];
+
+  // $REDIRECT_URL = $_SERVER['REDIRECT_URL'];
+
+  $HTTP_REFERER = $_SERVER['HTTP_REFERER'];
+
+  db_insert('dlts_viewer_apilog')->fields([
+    'q' => $q,
+    'time' => $REQUEST_TIME,
+    'useragent' => $HTTP_USER_AGENT,
+    'referer' => $HTTP_REFERER,
+    'user' => $user->uid,
+  ])
+  ->execute();
 
 }

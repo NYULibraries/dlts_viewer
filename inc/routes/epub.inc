@@ -142,7 +142,7 @@ function _dlts_viewer_menu_epub() {
     'access arguments' => [
       'access content',
     ],
-    'page callback' => 'dlts_viewer_supafolio_book',
+    'page callback' => 'dlts_viewer_supafolio_book_dispatcher',
     'file' => 'inc/types/epub.inc',
     'type' => MENU_CALLBACK,
     'delivery callback' => 'drupal_json_output',

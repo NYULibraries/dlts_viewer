@@ -139,6 +139,11 @@ function dlts_viewer_drush_command() {
     'description' => dt('Task - DLTSBOOKS-326'),
   ];
 
+  $items['dlts-task-dlts187'] = [
+    'callback' => 'dlts_viewer_drush_create_table_apilog',
+    'description' => dt('Task - DLTSVIEWER-187'),
+  ];
+
   return $items;
 
 }
@@ -1029,4 +1034,21 @@ function dlts_viewer_drush_add_translation_strings() {
       ])
       ->execute();
     }
+}
+
+function dlts_viewer_drush_create_table_apilog() {
+  $tablename = 'dlts_viewer_apilog';
+  if (!db_table_exists($tablename)) {
+    $table = [
+      'description' => 'Apilog table',
+      'fields' => [
+        'q' => [ 'type' => 'text' ],
+        'time' => [ 'type' => 'text' ],
+        'useragent' => [ 'type' => 'text' ],
+        'referer' => [ 'type' => 'text' ],
+        'user' => [ 'type' => 'text' ],
+      ]
+    ];
+    db_create_table($tablename, $table);
+  }
 }

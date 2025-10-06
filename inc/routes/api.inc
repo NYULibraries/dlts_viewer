@@ -25,8 +25,7 @@ function _dlts_viewer_menu_api() {
     'type' => MENU_CALLBACK,
   ];
 
-$items['api/documentation'] = $items['api/v1'];
-
+  $items['api/documentation'] = $items['api/v1'];
 
   $items['api/v1/search'] = [
     'title' => 'Apache Solr Search',
@@ -94,18 +93,6 @@ $items['api/documentation'] = $items['api/v1'];
     'delivery callback' => 'drupal_json_output',
     'page arguments' => [ 4 ],
     'file' => 'inc/endpoints/book.inc',
-  ];
-
-  // api/objects/resource/arabartarchive_ad_mc094_cuid298
-  $items['api/objects/resource/%dlts_noid'] = [
-    'title' => 'Update or delete resource',
-    'access arguments' => [
-      'dlts create object',
-    ],
-    'page callback' => 'dlts_viewer_api_update_resource',
-    'delivery callback' => 'drupal_json_output',
-    'page arguments' => [ 3 ],
-    'file' => 'inc/endpoints/api.inc',
   ];
 
   $items['api/v1.0.1/objects'] = [
@@ -182,7 +169,7 @@ $items['api/documentation'] = $items['api/v1'];
     'file' => 'inc/endpoints/photo.inc',
   ];
 
-  // @link api/v1/princeton_aco000102/thumbnails
+  // @link api/v1/books/princeton_aco000102/thumbnails
   $items['api/v1/books/%dlts_book/thumbnails'] = [
     'access arguments' => [
       'access content',
@@ -201,16 +188,6 @@ $items['api/documentation'] = $items['api/v1'];
     'page callback' => '_dlts_viewer_book_loader',
     'delivery callback' => 'drupal_json_output',
     'page arguments' => [ 3 ],
-    'file' => 'inc/endpoints.inc',
-  ];
-
-  // Stream tile from resource page.
-  $items['api/v1/tile'] = [
-    'title' => 'Stream image tile',
-    'access arguments' => [
-      'access content',
-    ],
-    'page callback' => 'dlts_viewer_djakota_stream_book_page',
     'file' => 'inc/endpoints.inc',
   ];
 

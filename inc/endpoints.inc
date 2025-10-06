@@ -147,6 +147,8 @@ function dlts_viewer_book_metadata($node) {
  */
 function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
 
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+
   global $base_url;
 
   // Get query parameters.
@@ -320,10 +322,12 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
 
 /**
  * Undocumented function.
- *
+ * @link api/v1/collections/aco:princeton
  * @todo document function
  */
 function dlts_viewer_list_collections_collection($collections) {
+
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
   global $base_url;
 
@@ -496,6 +500,8 @@ function dlts_viewer_list_collections_collection($collections) {
  */
 function dlts_viewer_list_collections(int $start = 0, int $length = 100) {
 
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+
   global $base_url;
 
   // Get query parameters.
@@ -584,6 +590,8 @@ function dlts_viewer_list_collections(int $start = 0, int $length = 100) {
  *   A keyed array to be converted into JSON.
  */
 function dlts_viewer_api_list_topics(int $start = 0, int $length = 50, $requestedLang = 'en') {
+
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
   $availableLanguages = array_keys(language_list());
 
@@ -705,6 +713,8 @@ function dlts_viewer_api_list_topics(int $start = 0, int $length = 50, $requeste
  *   A keyed array to be converted into JSON.
  */
 function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requestedLang = 'en') {
+
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
   global $base_url;
 
@@ -883,6 +893,8 @@ function dlts_viewer_api_list_books(int $start = 0, int $length = 15, $requested
  */
 function dlts_viewer_api_list_maps(int $start = 0, int $length = 15, $requestedLang = 'en') {
 
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+
   $availableLanguages = array_keys(language_list());
 
   // Get query parameters.
@@ -987,6 +999,8 @@ function dlts_viewer_api_list_maps(int $start = 0, int $length = 15, $requestedL
  *   A keyed array to be converted into JSON.
  */
 function _dlts_viewer_book_loader($node, $reset = FALSE) {
+
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
   $wrapper = entity_metadata_wrapper('node', $node);
 
@@ -1125,6 +1139,8 @@ function _dlts_viewer_photo_loader($node, $reset = FALSE) {
  */
 function _dlts_viewer_book_thumbnails_loader($identifier, $page = 0, $per_page = 10) {
 
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+
   $items = [];
 
   $image_server = variable_get('dlts_viewer_image_server', 'http://127.0.0.1:8182');
@@ -1142,9 +1158,9 @@ function _dlts_viewer_book_thumbnails_loader($identifier, $page = 0, $per_page =
     $per_page = $query_parameters['per_page'];
   }
 
-  $query = (object) array(
+  $query = [
     'isPartOf' => $identifier,
-  );
+  ];
 
   $cursor = mongodb_collection($collection_name)->find($query);
 
@@ -2181,6 +2197,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
  *   Sequence object from MongoDB.
  */
 function dlts_viewer_imageserver_book_page(array $sequence) {
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
   return $sequence;
 }
 
@@ -2387,9 +2404,7 @@ function dlts_viewer_api_v1_dlts_photo_set_objects($source) {
  */
 function dlts_viewer_api_v1_sequences($version = NULL) {
   // @todo Also filter by hosts with access
-  if (
-    user_access('dlts create object') &&  $_SERVER['REQUEST_METHOD'] == 'POST'
-  ) {
+  if (user_access('dlts create object') &&  $_SERVER['REQUEST_METHOD'] == 'POST') {
     $datasource = [];
     $entity_types = [
       'image_set',
@@ -2488,6 +2503,7 @@ function dlts_viewer_api_v1_objects($version = NULL) {
  *   A keyed array to be converted into JSON.
  */
 function _dlts_viewer_noid_loader($resource, $reset = FALSE) {
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
   if (isset($resource->nid)) {
     $entity = node_load('node', $resource->nid);
     switch ($resource->document) {
@@ -2510,7 +2526,6 @@ function _dlts_viewer_noid_loader($resource, $reset = FALSE) {
   return false;
 }
 
-
 /**
  * List entities.
  *
@@ -2523,6 +2538,9 @@ function _dlts_viewer_noid_loader($resource, $reset = FALSE) {
  *   A keyed array to be converted into JSON.
  */
 function dlts_viewer_list_entities(int $start = 0, int $length = 10) {
+
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 

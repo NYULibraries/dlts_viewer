@@ -131,7 +131,7 @@ function dlts_viewer_search_repository_collection_ses($partner, $collection) {
 
 /**
  * Search using Solr.
- * @link http://localhost:9000/api/v1/repository/partners
+ * @link /api/v1/repository/partners
  */
 function dlts_viewer_search_repository_partner() {
   try {

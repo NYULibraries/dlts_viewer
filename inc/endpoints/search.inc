@@ -17,16 +17,18 @@ function dlts_viewer_search_json() {
 
   $_e = variable_get('env', 'stage');
 
-  $discovery = variable_get('discovery', []);
+  $discovery = variable_get('dlts_discovery', []);
+
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
   if (empty($discovery)) {
     return [
-      'error' => "Discovery configuration error.",
+      'error' => 'Discovery configuration error.',
     ];
   }
 
-  if (!empty($discovery) && isset($discovery[$index_name]) && isset($discovery[$index_name][$_e])) {
-    $solrurl = $discovery[$index_name][$_e]['url'];
+  if (!empty($discovery) && isset($discovery[$_e]) && isset($discovery[$_e][$index_name])) {
+    $solrurl = $discovery[$_e][$index_name]['url'];
   }
 
   $query_parameters = explode('&', $_SERVER['QUERY_STRING']);
