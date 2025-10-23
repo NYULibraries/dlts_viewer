@@ -292,9 +292,17 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
         'name' => $partner_wrapper->field_name->value(),
       ];
     }
+
     $result_type = str_replace('dlts_', '', $wrapper->getBundle());
+
     $result_alias = $result_type . 's';
+
+    if ($result_alias === 'photo_sets') {
+      $result_alias = 'photos';
+    }
+
     $result_identifier = $wrapper->field_identifier->value();
+
     $nodes[] = [
       'nid' => $node->nid,
       'noid' => $handle[count($handle) - 1],
@@ -1524,8 +1532,6 @@ function dlts_viewer_api_photo_json($entity, $requestedLang = 'en') {
 
   drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
 
-  $image_server = variable_get('dlts_viewer_image_server', 'http://127.0.0.1:8182');
-
   $fields = $collections = [];
 
   // Get query parameters.
@@ -2444,7 +2450,6 @@ function dlts_viewer_api_v1_sequences($version = NULL) {
  * API callback.
  */
 function dlts_viewer_api_v1_objects($version = NULL) {
-  // @todo Also filter by hosts with access
   if (
     user_access('dlts create object') &&
     $_SERVER['REQUEST_METHOD'] == 'POST'

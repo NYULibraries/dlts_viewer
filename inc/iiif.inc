@@ -8,7 +8,7 @@
 
 /**
  * Proxy Image service.
- * @link http://localhost:9000/api/image/books/uaena_aco000016/1
+ * @link /api/image/books/uaena_aco000016/1
  *
  * @param string $type
  *   Entity type.
@@ -23,6 +23,8 @@
  *   Resource as array.
  */
 function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence, $cache = TRUE) {
+
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
   $type = dlts_viewer_resource_type($type);
 
@@ -178,6 +180,7 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
  *   Node.
  */
 function dlts_viewer_iiif_resource_manifest($type, $entity, $cache = TRUE) {
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
   $query_parameters = drupal_get_query_parameters();
   if (isset($query_parameters['reset'])) {
     $cache = FALSE;
@@ -219,21 +222,6 @@ function dlts_photo_fields_values($wrapper) {
   // Return the value of all the fields.
   $metadata = [];
 
-  $translatable_fields = [
-    'field_page_count',
-    'field_sequence_count',
-  ];
-
-  foreach ($translatable_fields as $field_name) {
-    $field_value = $wrapper->$field_name->value();
-    if (!empty($field_value)) {
-      $metadata[$field_name] = [
-        'label' => $fields[$field_name],
-        'value' => is_array($field_value) ? $field_value : [$field_value],
-      ];
-    }
-  }
-
   $field_collection_raw = $wrapper->field_collection->value();
   if (!empty($field_collection_raw)) {
     $metadata['field_collection'] = [
@@ -255,11 +243,6 @@ function dlts_photo_fields_values($wrapper) {
       ],
     ];
   }
-
-  $lang_map = array(
-    0 => 'Left to right',
-    1 => 'Right to left',
-  );
 
   $field_partner_raw = $wrapper->field_partner->value();
   if (!empty($field_partner_raw)) {
@@ -478,23 +461,18 @@ function dlts_book_fields_values($wrapper, array $translatable_fields = []) {
 
 /**
  * IIIF Presentation API v3 - Photo manifest.
- *
- * @link https://manifests.sub.uni-goettingen.de/iiif/presentation/PPN857449303/manifest
- * @link http://localhost:9000/api/presentation/books/princeton_aco000102/manifest.json
- * @link http://localhost:9000/api/presentation/books/princeton_aco000102/manifest.json
+ * @link https://localhost/viewer/api/presentation/photos/fales_mss208_cuid4751/manifest.json
  *
  * @param object $entity
- *   Book node.
+ *   Photo node.
  * @param bool $cache
  *   TRUE if is ok to return a cached (in-disk) version of the manifest. Set
  *   to false if the manifest needs to be recreated from database.
  *
  * @return array
- *   IIIF Presentation API v3 - Book manifest as array.
+ *   IIIF Presentation API v3 - Photo manifest as array.
  */
-function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
-
-  $cache = false;
+function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
 
   global $base_url;
 
@@ -514,27 +492,21 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
 
   $type = dlts_viewer_get_bundle_alias($bundle);
 
-  $dir_path = $realpath . '/iiif/' . $type . '/' . $identifier;
+  $dir_path = "{$realpath}/iiif/{$type}/{$identifier}";
 
   $file_destination = "$dir_path/manifest.json";
 
   if ($cache && file_exists($file_destination)) {
-    // @todo Thinks about this, we are decoding a JSON file
-    // so that we can pass it to drupal_json_output
-    // and then json_encode it again...
-    // should we create another output callback?
     return drupal_json_decode(
       file_get_contents($file_destination)
     );
   }
 
+  $lang = 'en';
+
   $fields = [];
 
   $items = [];
-
-  $values = [];
-
-  $fields = [];
 
   $thumbnail = [];
 
@@ -549,41 +521,6 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
 
   $sequence_count = $wrapper->field_sequence_count->value();
 
-  $translations = [
-    $entity->language => $wrapper,
-  ];
-
-  // https://iiif.io/api/presentation/3.0/#metadata
-  foreach ($translations as $translation) {
-    $values[$translation->language->value()] = dlts_photo_fields_values($translation);
-  }
-
-  foreach ($values as $lang => $field) {
-    foreach ($field as $name => $value) {
-      if (empty($value['value'])) {
-        continue;
-      }
-
-      if ($name == 'field_sequence_count') continue;
-      if ($name == 'field_page_count') continue;
-
-      if (!isset($fields[$name])) {
-        $fields[$name] = [];
-
-      }
-
-      $fields[$name]['label'][$lang] = [$value['label']];
-
-      if ($name == 'field_handle') {
-        $value = $value['value'][0];
-        $fields[$name]['value'][$lang][] = "<a href='$value'>$value</a>";
-      } else {
-        $fields[$name]['value'][$lang] = $value['value'];
-      }
-
-    }
-  }
-
   if ($sequence_count > 1) {
     $behavior = [ 'paged' ];
   }
@@ -593,11 +530,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
   $sequences = dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name);
 
   foreach ($sequences as $page) {
-    // This index is a hack until I figure out the MongoDB query to
-    // remove duplicates.
-    $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_resource_page_canvas(
-      $wrapper->getBundle(),
-      $entity,
+    $items[$page['realPageNumber'] - 1] = dlts_viewer_iiif_resource_page_canvas($bundle, $entity,
       [
         'sequence' => $page['sequence'],
         'width' => (int) $page['cm']['width'],
@@ -620,14 +553,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
     ];
   }
 
-  if (isset($fields['field_title']['value'])) {
-    $label = $fields['field_title']['value'];
-  }
-  else {
-    $label = [
-      $entity->language => [ $entity->title ],
-    ];
-  }
+  $partners = [];
 
   foreach ($wrapper->field_collection->value() as $collection) {
     $cw = entity_metadata_wrapper('node', $collection);
@@ -635,10 +561,13 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
     $field_partner = $cw->field_partner->value();
     $pw = entity_metadata_wrapper('node',  $field_partner[0]);
     $partner_code = $pw->field_code->value();
+    $partners[] = [
+      'label' => $field_partner[0]->title,
+      'code' => $partner_code,
+    ];
     $collection_codes[] = $collection_code;
     $partner_codes[] = $partner_code;
     $partof[] = [
-      // '@context' => 'http://iiif.io/api/presentation/3/context.json',
       'id' => "$base_url/api/presentation/collections/$collection_code:$partner_code/manifest.json",
       'type' => 'Collection',
       'label' => [
@@ -653,171 +582,150 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
 
   $partner_code = $partner_codes[0];
 
-  // Username for the repository challange.
-  $user = variable_get('publisher_user', NULL);
+  $hjson = dlts_viewer_repository_hjson($noid, $cache);
 
-  // Password for repository challange.
-  $pass = variable_get('publisher_pass', NULL);
+  $ijson = dlts_viewer_repository_ijson($noid, $partner_code, $collection_code);
 
-  // Repository URL.
-  $endpoint = variable_get('publisher_endpoint', NULL);
+  // I want to add this information to the request header.
+  $sourcefile = $ijson->runinfo->sourcefile;
 
-  // We need this values to continue.
-  if ($user && $pass && $endpoint) {
+  $reposidentifier = $ijson->pubinfo->reposidentifier;
 
-    $endpoint = parse_url($endpoint);
+  $archdesc = $ijson->archdesc;
 
-    $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'] . (isset($endpoint['path']) ? $endpoint['path'] : '');
+  unset($archdesc->level);
+  unset($archdesc->accessrestrict);
+  unset($archdesc->appraisal);
+  unset($archdesc->arrangement);
+  unset($archdesc->bioghist);
+  unset($archdesc->controlaccess);
+  unset($archdesc->custodhist);
+  unset($archdesc->did);
+  unset($archdesc->dsc);
 
-    $item_metadata_endpoint = "$endpoint/metadata/api/v0/hjson/$noid.json";
+  $eadheader = $ijson->eadheader;
 
-    $realpath = drupal_realpath('public://');
+  // Resource
+  $fields['resource'] = [
+    'label' => [ $lang => 'Resource' ],
+    'value' => [ $lang => $hjson->daodesc ],
+  ];
 
-    $dir_path = "$realpath/ijson/$type/";
+  // Finding Aid Title
+  if (isset($eadheader->filedesc->titlestmt->titleproper)) {
+    $fields['findingaidtitle'] = [
+      'label' => [ $lang => 'Finding Aid Title' ],
+      'value' => [ $lang => strip_tags($eadheader->filedesc->titlestmt->titleproper) ],
+    ];
+  }
 
-    $file_path = "$dir_path/ijson.$noid.json";
+  // Permanent Link
+  if (isset($hjson->href)) {
+    $fields['permanentlink'] = [
+      'label' => [ $lang => 'Permanent Link' ],
+      'value' => [ $lang => "<a href='{$hjson->href}'>{$hjson->href}</a>" ],
+    ];
+  }
 
-    if (file_exists($file_path)) {
-      $cached_ijson = json_decode(file_get_contents($file_path));
-    } else {
-      if (preg_match('/^([a-zA-Z]+)(\d+)$/',$collection_code, $matches)) {
-        array_shift($matches);
-        $collection_code = implode('_', $matches);
-        // https://jira.nyu.edu/browse/RSTAR-713
-        // A few things:
-        // 1.) the paths in the EAD publisher iJSON and hJSON API are based on the collection codes
-        // used in ArchivesSpace, which are slightly different than those in R*.
-        // e.g.,
-        // aspace       : AD.MC.094
-        // ead publisher: ad_mc_094
-        // rstar        : ad_mc094
-        //
-        // This means that the URL for the Arab Art Archive AD.MC.094 iJSON is:
-        // https://[host]/metadata/api/v0/ijson/arabartarchive/ad_mc_094/ad_mc_094.json
-        $ijson_endpoint = "$endpoint/metadata/api/v0/ijson/$partner_code/$collection_code/$collection_code.json";
+  // Provider
+  if (isset($partners)) {
+    $fields['provider'] = [
+      'label' => [ $lang => 'Provider' ],
+      'value' => [ $lang => $partners[0]['label'] ],
+    ];
+  }
 
-        $ijson_request = drupal_http_request($ijson_endpoint);
+  // Finding Aid URL
+  if (isset($eadheader->eadid) && isset($eadheader->eadid->url)) {
+    $fields['findingaidurl'] = [
+      'label' => [ $lang => 'Finding Aid URL' ],
+      'value' => [ $lang => $eadheader->eadid->url ],
+    ];
+  }
 
-        if ($ijson_request ->code == '200') {
-          $cached_ijson = json_decode($ijson_request->data);
-          drupal_register_shutdown_function('dlts_viewer_cache_ijson', [ 'noid' => $noid, 'type' => $type, 'data' => $cached_ijson, ]);
+  // Language of Material
+  if (isset($eadheader->profiledesc) && isset($eadheader->profiledesc->langusage) && isset($eadheader->profiledesc->langusage->value)) {
+    $fields['langmaterial'] = [
+      'label' => [ $lang => 'Language of Material' ],
+      'value' => [ $lang => $eadheader->profiledesc->langusage->value ],
+    ];
+  }
+
+  // Title - this looks wrong need fix
+  $title = html_entity_decode($hjson->title);
+  $fields['title'] = [
+    'label' => [ $lang => 'Title' ],
+    'value' => [ $lang => $title ],
+  ];
+
+  // Series
+  // https://nyu.atlassian.net/browse/DLTSIMAGES-515
+  if (isset($hjson->parenttitle) && !empty($hjson->parenttitle) && strtolower($hjson->parenttitle) != 'view inventory') {
+    $fields['series'] = [
+      'label' => [ $lang => 'Series' ],
+      'value' => [ $lang => $hjson->parenttitle ],
+    ];
+  }
+
+  // Date
+  if (isset($hjson->unitdate) && !empty($hjson->unitdate)) {
+    $fields['unitdate'] = [
+      'label' => [ $lang => 'Date' ],
+      'value' => [ $lang => $hjson->unitdate[0]->value ],
+    ];
+  }
+
+  // Sponsor
+  if (isset($eadheader->filedesc->titlestmt->sponsor)) {
+    $fields['sponsor'] = [
+      'label' => [ $lang => 'Sponsor' ],
+      'value' => [ $lang => $eadheader->filedesc->titlestmt->sponsor ],
+    ];
+  }
+
+  $required_statement = [];
+
+  // Conditions Governing Use
+  // Add 'Conditions Governing Use' <userrestrict> metadata field to Mirador viewer for archival objects
+  // Should go in Copyright section
+  if (isset($archdesc->userestrict) && !empty($archdesc->userestrict[0])) {
+    $conditionsgoverninguse = '';
+    foreach ($archdesc->userestrict as $userestrict) {
+      if (isset($userestrict->children) && !empty($userestrict->children)) {
+        foreach ($userestrict->children as $item) {
+          $conditionsgoverninguse .= "<p>{$item->value->value}</p>";
+          $required_statement[]= "<p>{$item->value->value}</p>";
         }
       }
     }
+    // $fields['conditionsgoverninguse'] = [
+    //   'label' => [ $lang => 'Conditions Governing Use' ],
+    //   'value' => [ $lang => $conditionsgoverninguse ],
+    // ];
+  }
 
-    if (isset($cached_ijson) && !empty($cached_ijson)) {
+  // relatedmaterial - interesting.
+  // $archdesc->relatedmaterial
 
-      $eadheader = $cached_ijson->eadheader;
-
-      if (isset($eadheader->eadid->url)) {
-        $eadidUrl = $eadheader->eadid->url;
-        $fields['eadidurl']['label'][$lang] = [ 'Finding Aid URL' ];
-        $fields['eadidurl']['value'][$lang] = [ "<a href='$eadidUrl'>$eadidUrl</a>" ];
-      }
-
-      // if (isset($eadheader->filedesc->titlestmt->author)) {
-      //   $fields['author']['label'][$lang] = [ 'Author' ];
-      //   $fields['author']['value'][$lang] = [ $eadheader->filedesc->titlestmt->author ];
-      // }
-
-      if (isset($eadheader->filedesc->titlestmt->sponsor)) {
-        $fields['sponsor']['label'][$lang] = [ 'Sponsor' ];
-        $fields['sponsor']['value'][$lang] = [ $eadheader->filedesc->titlestmt->sponsor ];
-      }
-
-      if (isset($eadheader->filedesc->titlestmt->titleproper)) {
-        $fields['titleproper']['label'][$lang] = [ 'Finding Aid Title' ];
-        $fields['titleproper']['value'][$lang] = [ $eadheader->filedesc->titlestmt->titleproper ];
-      }
-
-      if (isset($cached_ijson->archdesc->accessrestrict)) {
-        $accessrestrict = $cached_ijson->archdesc->accessrestrict;
-        foreach ($accessrestrict as $key => $value) {
-          if (!isset($fields['accessrestrict'][$key])) {
-            $fields['accessrestrict'][$key] = [];
-          }
-          $fields['accessrestrict'][$key]['label'][$lang] = [ $value->head->value ];
-          foreach ($value->children as $c => $children) {
-            if (!isset($fields['accessrestrict'][$key])) {
-              $fields['accessrestrict'][$key]['value'][$lang] = [];
-            }
-            $fields['accessrestrict'][$key]['value'][$lang][$c] = $children->value->value;
-          }
-        }
-      }
-
-      if (isset($cached_ijson->archdesc->custodhist)) {
-        $custodhist = $cached_ijson->archdesc->custodhist;
-        foreach ($custodhist as $key => $value) {
-          if (!isset($fields['custodhist'][$key])) {
-            $fields['custodhist'][$key] = [];
-          }
-          $fields['custodhist'][$key]['label'][$lang] = [ $value->head->value ];
-          foreach ($value->children as $c => $children) {
-            if (!isset($fields['custodhist'][$key])) {
-              $fields['custodhist'][$key]['value'][$lang] = [];
-            }
-            $fields['custodhist'][$key]['value'][$lang][$c] = $children->value->value;
-          }
-        }
-      }
-
-      if (isset($cached_ijson->archdesc->userestrict)) {
-        $userestrict = $cached_ijson->archdesc->userestrict;
-        foreach ($userestrict as $key => $value) {
-          if (!isset($fields['userestrict'][$key])) {
-            $fields['userestrict'][$key] = [];
-          }
-          $fields['userestrict'][$key]['label'][$lang] = [ $value->head->value ];
-          foreach ($value->children as $c => $children) {
-            if (!isset($fields['userestrict'][$key])) {
-              $fields['userestrict'][$key]['value'][$lang] = [];
-            }
-            $fields['userestrict'][$key]['value'][$lang][$c] = $children->value->value;
-          }
-        }
-      }
-
-      if (isset($cached_ijson->archdesc->did->langmaterial)) {
-        $langmaterial = $cached_ijson->archdesc->did->langmaterial;
-        $fields['langmaterial']['label'][$lang] = [ 'Language of Material' ];
-        $fields['langmaterial']['value'][$lang] = [ $langmaterial[0]->value ];
-      }
-
+  // Preferred Citation
+  // Should go in Copyright section
+  if (isset($archdesc->prefercite)) {
+    $prefercite = $archdesc->prefercite[0];
+    $prefercite_children = '';
+    foreach ($prefercite->children as $children) {
+      $prefercite_children .= "<p>{$children->value->value}</p>";
+      $required_statement[] = $prefercite_children;
     }
+    // $fields['prefercite'] = [
+    //   'label' => [ $lang => 'Preferred Citation' ],
+    //   'value' => [ $lang => $prefercite_children ],
+    // ];
+  }
 
-    $request = drupal_http_request($item_metadata_endpoint);
-
-    if ($request->code == '200') {
-
-      $data = json_decode($request->data);
-
-      $label = html_entity_decode($data->title);
-
-      $fields['unittitle']['label'][$lang] = [ 'Title' ];
-      $fields['unittitle']['value'][$lang] = [ html_entity_decode($data->unittitle) ];
-
-      $fields['parenttitle']['label'][$lang] = [ 'Series' ];
-      $fields['parenttitle']['value'][$lang] = [ $data->parenttitle ];
-
-      // https://eadiva.com/daodesc/
-      // <daodesc> was deprecated late in the process. However, it functioned as a descriptive note
-      // for the <dao> element and was therefore logically replaced with <descriptivenote>.
-      // $fields['daodesc']['label'][$lang] = [ 'Digital Archival Object Description' ];
-      // $fields['daodesc']['value'][$lang] = [ $data->daodesc ];
-      // https://eadiva.com/unitdate/
-      $fields['unitdate']['label'][$lang] = [ 'Date' ];
-      $fields['unitdate']['value'][$lang] = [ $data->unitdate[0]->value ];
-
-    } else {
-      return [
-        'error' => 'Request to Metadata endpoint failed with status code ' . $request->code . '.',
-        'noid' => $noid,
-        'identifier' => $identifier,
-        'type' => $type,
-        'status' => 404,
-      ];
-    }
+  if (isset($hjson->daodesc)) {
+    $label = $hjson->daodesc;
+  } else {
+    $label = $entity->title;
   }
 
   $metadata = array_values($fields);
@@ -826,7 +734,9 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
     'id' => "$base_url/api/presentation/$type/$identifier/manifest.json",
     'type' => 'Manifest',
-    'label' => $label,
+    'label' => [
+      $lang => [ $label ],
+    ],
     'behavior' => $behavior,
     'items' => $items,
     'metadata' => $metadata,
@@ -856,14 +766,21 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = TRUE) {
     'thumbnail' => $thumbnail,
   ];
 
-  drupal_register_shutdown_function(
-    'dlts_viewer_cache_manifest',
-    [
-      'type' => $type,
-      'resource' => $entity,
-      'data' => $res,
-    ]
-  );
+  if (isset($required_statement)) {
+
+    $res['requiredStatement'] = [
+      'label' => [
+        'en' => [
+          'Rights',
+        ],
+      ],
+      'value' => [
+        'en' => implode($required_statement),
+      ],
+    ];
+  }
+
+  drupal_register_shutdown_function('dlts_viewer_cache_manifest', [ 'type' => $type, 'resource' => $entity, 'data' => $res, ]);
 
   return $res;
 
@@ -905,10 +822,6 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
   $file_destination = "$dir_path/manifest.json";
 
   if ($cache && file_exists($file_destination)) {
-    // @todo Thinks about this, we are decoding a JSON file
-    // so that we can pass it to drupal_json_output
-    // and then json_encode it again...
-    // should we create another output callback?
     return drupal_json_decode(
       file_get_contents($file_destination)
     );
@@ -1176,8 +1089,6 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
 function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   global $base_url;
-
-  // $cache = false;
 
   $wrapper = entity_metadata_wrapper('node', $entity);
 
@@ -1742,6 +1653,7 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
  * Deprecated.
  */
 function dlts_viewer_djakot_iiif_resolver() {
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
   $query_parameters = drupal_get_query_parameters();
   if (isset($query_parameters['rft_id']) && isset($query_parameters['svc_level'])) {
     $pathinfo = pathinfo($query_parameters['rft_id']);
@@ -1787,6 +1699,9 @@ function dlts_viewer_djakot_iiif_resolver() {
   }
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = TRUE) {
 
   global $base_url;
@@ -1860,7 +1775,11 @@ function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = T
 
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_iiif_resource_manifest_collections($entities, $cache = TRUE) {
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
   global $base_url;
 
@@ -1923,9 +1842,13 @@ function dlts_viewer_iiif_resource_manifest_collections($entities, $cache = TRUE
 
 }
 
-// https://iiif.io/api/presentation/3.0/#a-summary-of-property-requirements
+/**
+ * Undocumented function.
+ * @link https://iiif.io/api/presentation/3.0/#a-summary-of-property-requirements
+ * @todo document function
+ */
 function dlts_viewer_iiif_resource_manifest_collections_list() {
-
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
   global $base_url;
 
   $query = new EntityFieldQuery();
@@ -1975,6 +1898,9 @@ function dlts_viewer_iiif_resource_manifest_collections_list() {
   ];
 }
 
+/**
+ * Undocumented function.
+ */
 function dlts_viewer_iiif_resource_manifest_boutique($identifier) {
 
   global $base_url;
@@ -1994,5 +1920,182 @@ function dlts_viewer_iiif_resource_manifest_boutique($identifier) {
   }
 
   die('Not implemented yet');
+
+}
+
+/**
+ * Fetches HJSON metadata for a resource from the repository.
+ *
+ * This function retrieves HJSON metadata for a given noid.
+ * It can use a local file cache to avoid repeated HTTP requests. If the data
+ * is not in the cache or if caching is disabled, it fetches the data from the
+ * repository's metadata API endpoint, using credentials stored in Drupal
+ * variables.
+ *
+ * @param string $noid
+ *   The noid of the resource.
+ * @param bool $cache
+ *   (optional) Whether to use the cached version of the metadata if available.
+ *   Defaults to TRUE.
+ *
+ * @return object|array
+ *   The decoded HJSON metadata as a PHP object or array, or an error array
+ *   if the repository credentials are not configured.
+ */
+function dlts_viewer_repository_hjson($noid, $cache = true) {
+
+  // Username for the repository challange.
+  $user = variable_get('publisher_user', NULL);
+
+  // Password for repository challange.
+  $pass = variable_get('publisher_pass', NULL);
+
+  // Repository URL.
+  $endpoint = variable_get('publisher_endpoint', NULL);
+
+  if ($user && $pass && $endpoint) {
+
+    $endpoint = parse_url($endpoint);
+
+    $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'] . (isset($endpoint['path']) ? $endpoint['path'] : '');
+
+    $item_metadata_endpoint = "$endpoint/metadata/api/v0/hjson/$noid.json";
+
+    $realpath = drupal_realpath('public://');
+
+    $dir_path = "$realpath/hjson";
+
+    $file_path= "$dir_path/$noid.json";
+
+    if ($cache && file_exists($file_path)) {
+
+      $data = json_decode(
+        file_get_contents($file_path)
+      );
+
+    } else {
+
+      $request = drupal_http_request($item_metadata_endpoint);
+
+      if ($request->code == '200') {
+
+        $data = json_decode($request->data);
+
+        drupal_register_shutdown_function('dlts_viewer_cache_hjson', [ 'noid' => $noid, 'data' => $request->data, ]);
+
+      }
+
+    }
+
+    return $data;
+
+  } else {
+  
+    return [ 'error' => 'error' ];
+
+  }
+
+}
+
+/**
+ * Fetches ijson metadata for a resource from the repository.
+ *
+ * This function retrieves ijson metadata for a given noid, partner code, and
+ * collection code. It first checks for a cached version of the data. If
+ * available and caching is enabled, it returns the cached data. Otherwise,
+ * it constructs the appropriate API endpoint using repository credentials
+ * (username, password, and endpoint URL) retrieved from Drupal variables.
+ * It then makes an HTTP request to this endpoint, caches the response upon
+ * success, and returns the decoded JSON data. The collection code is
+ * transformed based on predefined patterns before constructing the API URL.
+ *
+ * @param string $noid
+ *   The noid of the resource.
+ * @param string $partner_code
+ *   The code of the partner associated with the resource.
+ * @param string $collection_code
+ *   The code of the collection associated with the resource.
+ * @param bool $cache
+ *   (optional) Whether to use the cached version of the metadata if available.
+ *   Defaults to TRUE.
+ *
+ * @return object|array
+ *   The decoded ijson metadata as a PHP object or array, or an error array
+ *   if the repository credentials are not configured or the request fails.
+ */
+function  dlts_viewer_repository_ijson($noid, $partner_code, $collection_code, $cache = true) {
+
+  // Username for the repository challange.
+  $user = variable_get('publisher_user', NULL);
+
+  // Password for repository challange.
+  $pass = variable_get('publisher_pass', NULL);
+
+  // Repository URL.
+  $endpoint = variable_get('publisher_endpoint', NULL);
+
+  if ($user && $pass && $endpoint) {
+
+    $endpoint = parse_url($endpoint);
+
+    $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'] . (isset($endpoint['path']) ? $endpoint['path'] : '');
+
+    $realpath = drupal_realpath('public://');
+
+    $dir_path = "$realpath/ijson";
+
+    $file_path = "$dir_path/$noid.json";
+
+    if ($cache && file_exists($file_path)) {
+
+      $data = json_decode(
+        file_get_contents($file_path)
+      );
+
+    } else {
+
+      $collection_code_transformed = $collection_code;
+
+      // 1. Preferred Pattern: Handles R* code like 'ad_mc016' and transforms it to 'ad_mc_016'
+      // Pattern: (Letters) _ (Letters) (Digits) -> Transformation: (Letters) _ (Letters) _ (Digits)
+      if (preg_match('/^([a-zA-Z]+)_([a-zA-Z]+)(\d+)$/', $collection_code, $matches)) {
+        array_shift($matches);
+        $collection_code_transformed = implode('_', $matches); // Result: 'ad_mc_016'
+      }
+
+      // 2. NEW PATTERN: Handles codes like 'tam674' and transforms it to 'tam_674'
+      // Pattern: (Letters)(Digits) -> Transformation: (Letters)_(Digits)
+      else if (preg_match('/^([a-zA-Z]+)(\d+)$/', $collection_code, $matches)) {
+        array_shift($matches);
+        $collection_code_transformed = implode('_', $matches); // Result: 'tam_674'
+      }
+
+      // 3. Original, Faulty Pattern Test (Included for completeness/debugging)
+      // Pattern: (Letters)(Digits)_(Digits)
+      else if (preg_match('/^([a-zA-Z]+)(\d+)_(\d+)$/', $collection_code, $matches)) {
+        array_shift($matches);
+        $collection_code_transformed = implode('_', $matches);
+      }
+    
+      else {
+        return [ 'error' => 'error' ];
+      }
+
+      $ijson_endpoint = "$endpoint/metadata/api/v0/ijson/$partner_code/$collection_code_transformed/$collection_code_transformed.json";
+
+      $ijson_request = drupal_http_request($ijson_endpoint);
+
+      if ($ijson_request ->code == '200') {
+        $data = json_decode($ijson_request->data);
+        drupal_register_shutdown_function('dlts_viewer_cache_ijson', [ 'noid' => $noid, 'data' => $ijson_request->data, ]);
+      } else {
+        return [ 'error' => 'error' ];
+      }
+
+    }
+
+    return $data;
+
+  }
 
 }

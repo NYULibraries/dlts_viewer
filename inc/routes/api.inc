@@ -191,6 +191,16 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
+  $items['api/v1/photos/%dlts_photo_handle'] = [
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => '_dlts_viewer_photo_loader',
+    'delivery callback' => 'drupal_json_output',
+    'page arguments' => [ 3 ],
+    'file' => 'inc/endpoints.inc',
+  ];
+
   // List collections.
   $items['api/v1/collections/%dlts_collection'] = [
     'access arguments' => [

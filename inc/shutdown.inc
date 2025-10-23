@@ -12,21 +12,38 @@ function dlts_viewer_cache_ijson($edit) {
 
   $noid = $edit['noid'];
 
-  $type = $edit['type'];
-
   $data = $edit['data'];
 
-  $realpath = drupal_realpath('public://');
+  $dir_path = drupal_realpath('public://') . '/ijson/';
 
-  $dir_path = $realpath . '/ijson/' . $type . '/';
-
-  $file_destination = "$dir_path/ijson.$noid.json";
+  $file_destination = "$dir_path/$noid.json";
 
   file_prepare_directory($dir_path, FILE_CREATE_DIRECTORY);
 
-  file_unmanaged_save_data(drupal_json_encode($data), $file_destination, FILE_EXISTS_REPLACE);
+  file_unmanaged_save_data($data, $file_destination, FILE_EXISTS_REPLACE);
 
   watchdog('dlts_viewer', 'Cached ijson %ijson', [ '%ijson' => $file_destination ], WATCHDOG_INFO);
+
+}
+
+/**
+ * Undocumented function.
+ */
+function dlts_viewer_cache_hjson($edit) {
+
+  $noid = $edit['noid'];
+
+  $data = $edit['data'];
+
+  $dir_path = drupal_realpath('public://') . '/hjson';
+
+  $file_destination = "$dir_path/$noid.json";
+
+  file_prepare_directory($dir_path, FILE_CREATE_DIRECTORY);
+
+  file_unmanaged_save_data($data, $file_destination, FILE_EXISTS_REPLACE);
+
+  watchdog('dlts_viewer', 'Cached hjson %hjson', [ '%hjson' => $file_destination ], WATCHDOG_INFO);
 
 }
 

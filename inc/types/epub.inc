@@ -782,18 +782,13 @@ function dlts_viewer_epubs_metadata_v1($data) {
 
   }
 
-  $contributorsAsASentence = '';
+  $contributorsAsASentenceArray = [];
 
   foreach ($df as $roleId => $dff) {
-    // 1. Format the list of names using the function.
-    $formatted_names = dlts_viewer_api_format_list_with_and($dff);
-    
-    // 2. Append the role, the names, and the Unicode line separator.
-    // Note: When printing, PHP treats the literal string "\u2028" differently 
-    // than the actual Unicode character. Using "\u{2028}" or escaping it 
-    // is necessary for correct output.
-    $contributorsAsASentence .= $roleId . ' ' .  $formatted_names . "\u{2028}";
+    $contributorsAsASentenceArray[] = $roleId . ' ' .  dlts_viewer_api_format_list_with_and($dff);
   }
+
+  $contributorsAsASentence = implode('<br/>', $contributorsAsASentenceArray);
 
   // https://jira.nyu.edu/browse/NYUP-980
   if (!empty($data->categories)) {
