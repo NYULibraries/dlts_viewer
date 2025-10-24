@@ -111,6 +111,27 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
       break;
     case 'mirador4':
       $template = 'viewer_embed_mirador_latest_page';
+
+      $basePath = "$module/viewers/mirador4/dist";
+
+      // Find the JS and CSS files regardless of hash
+      $jsFiles = glob("$basePath/mirador4.*.js");
+
+      $cssFiles = glob("$basePath/mirador4.*.css");
+
+      // Get the first match (there should only be one)
+      $jsPath = $jsFiles ? $jsFiles[0] : null;
+      $cssPath = $cssFiles ? $cssFiles[0] : null;
+
+      // Example: read contents
+      if ($jsPath) {
+          $jsContent = file_get_contents($jsPath);
+      }
+
+      if ($cssPath) {
+          $cssContent = file_get_contents($cssPath);
+      }
+
       $opts =  [
         'analytics' => $analytics,
         'appid' => 'mirador-app',
@@ -122,8 +143,10 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'type' => $type,
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'script' => file_get_contents("$module/viewers/mirador-4/dist/mirador.js"),
+        'css' => $cssContent,
+        'script' => $jsContent,
       ];
+
       break;
     case 'mirador':
       $template = 'viewer_embed_page';

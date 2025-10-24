@@ -317,6 +317,15 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints/api.inc',
   ];
 
+  $items['api/services/api/usage'] = [
+    'access arguments' => [
+      'dlts create object',
+    ],
+    'page callback' => 'dlts_viewer_services_api_usage',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/api.inc',
+  ];
+
   return $items;
 
 }

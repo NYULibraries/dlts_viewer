@@ -14,6 +14,7 @@
         gtag('config', '<?php echo $analytics['code'] ?>')
       </script>
     <?php endif; ?>
+    <style><?php echo $css ?></style>
   </head>
   <body>
     <div

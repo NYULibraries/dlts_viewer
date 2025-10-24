@@ -476,6 +476,12 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
 
   global $base_url;
 
+  $query_parameters = drupal_get_query_parameters();
+
+  if (isset($query_parameters['reset']) && $query_parameters['reset'] == 'true') {
+    $cache = false;
+  }
+
   $module = drupal_get_path('module', 'dlts_viewer');
 
   $wrapper = entity_metadata_wrapper('node', $entity);
@@ -587,99 +593,94 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
   $ijson = dlts_viewer_repository_ijson($noid, $partner_code, $collection_code);
 
   // I want to add this information to the request header.
-  $sourcefile = $ijson->runinfo->sourcefile;
+  // $sourcefile = $ijson->runinfo->sourcefile;
 
-  $reposidentifier = $ijson->pubinfo->reposidentifier;
+  // $reposidentifier = $ijson->pubinfo->reposidentifier;
 
   $archdesc = $ijson->archdesc;
-
-  unset($archdesc->level);
-  unset($archdesc->accessrestrict);
-  unset($archdesc->appraisal);
-  unset($archdesc->arrangement);
-  unset($archdesc->bioghist);
-  unset($archdesc->controlaccess);
-  unset($archdesc->custodhist);
-  unset($archdesc->did);
-  unset($archdesc->dsc);
 
   $eadheader = $ijson->eadheader;
 
   // Resource
   $fields['resource'] = [
-    'label' => [ $lang => 'Resource' ],
-    'value' => [ $lang => $hjson->daodesc ],
+    'label' => [ $lang => [ 'Resource' ], ],
+    'value' => [ $lang => [ $hjson->daodesc ], ],
   ];
 
   // Finding Aid Title
   if (isset($eadheader->filedesc->titlestmt->titleproper)) {
     $fields['findingaidtitle'] = [
-      'label' => [ $lang => 'Finding Aid Title' ],
-      'value' => [ $lang => strip_tags($eadheader->filedesc->titlestmt->titleproper) ],
+      'label' => [ $lang => [ 'Finding Aid Title' ], ],
+      'value' => [ $lang => [ strip_tags($eadheader->filedesc->titlestmt->titleproper) ], ],
     ];
   }
 
   // Permanent Link
   if (isset($hjson->href)) {
     $fields['permanentlink'] = [
-      'label' => [ $lang => 'Permanent Link' ],
-      'value' => [ $lang => "<a href='{$hjson->href}'>{$hjson->href}</a>" ],
+      'label' => [ $lang => [ 'Permanent Link' ], ],
+      'value' => [ $lang => [ "<a href='{$hjson->href}'>{$hjson->href}</a>" ], ],
     ];
   }
 
   // Provider
   if (isset($partners)) {
     $fields['provider'] = [
-      'label' => [ $lang => 'Provider' ],
-      'value' => [ $lang => $partners[0]['label'] ],
+      'label' => [ $lang => [ 'Provider' ], ],
+      'value' => [ $lang => [ $partners[0]['label'] ], ],
     ];
   }
 
   // Finding Aid URL
   if (isset($eadheader->eadid) && isset($eadheader->eadid->url)) {
     $fields['findingaidurl'] = [
-      'label' => [ $lang => 'Finding Aid URL' ],
-      'value' => [ $lang => $eadheader->eadid->url ],
+      'label' => [ $lang => [ 'Finding Aid URL' ], ],
+      'value' => [ $lang => [ $eadheader->eadid->url ], ],
     ];
   }
 
   // Language of Material
+  // Should I use $archdesc->did->langmaterial? See:
+  // print '<pre>';
+  // print_r( $archdesc->did->langmaterial );
+  // print '</pre>';
   if (isset($eadheader->profiledesc) && isset($eadheader->profiledesc->langusage) && isset($eadheader->profiledesc->langusage->value)) {
     $fields['langmaterial'] = [
-      'label' => [ $lang => 'Language of Material' ],
-      'value' => [ $lang => $eadheader->profiledesc->langusage->value ],
+      'label' => [ $lang => [ 'Language of Material' ] ],
+      'value' => [ $lang => [ $eadheader->profiledesc->langusage->value ], ],
     ];
   }
 
   // Title - this looks wrong need fix
-  $title = html_entity_decode($hjson->title);
+  $title = html_entity_decode($hjson->unittitle);
+
   $fields['title'] = [
-    'label' => [ $lang => 'Title' ],
-    'value' => [ $lang => $title ],
+    'label' => [ $lang => [ 'Title' ], ],
+    'value' => [ $lang => [ $title ], ],
   ];
 
   // Series
   // https://nyu.atlassian.net/browse/DLTSIMAGES-515
   if (isset($hjson->parenttitle) && !empty($hjson->parenttitle) && strtolower($hjson->parenttitle) != 'view inventory') {
     $fields['series'] = [
-      'label' => [ $lang => 'Series' ],
-      'value' => [ $lang => $hjson->parenttitle ],
+      'label' => [ $lang => [ 'Series' ], ],
+      'value' => [ $lang => [ $hjson->parenttitle ], ],
     ];
   }
 
   // Date
   if (isset($hjson->unitdate) && !empty($hjson->unitdate)) {
     $fields['unitdate'] = [
-      'label' => [ $lang => 'Date' ],
-      'value' => [ $lang => $hjson->unitdate[0]->value ],
+      'label' => [ $lang => [ 'Date' ], ],
+      'value' => [ $lang => [ $hjson->unitdate[0]->value ], ],
     ];
   }
 
   // Sponsor
   if (isset($eadheader->filedesc->titlestmt->sponsor)) {
     $fields['sponsor'] = [
-      'label' => [ $lang => 'Sponsor' ],
-      'value' => [ $lang => $eadheader->filedesc->titlestmt->sponsor ],
+      'label' => [ $lang => [ 'Sponsor' ], ],
+      'value' => [ $lang => [ $eadheader->filedesc->titlestmt->sponsor ], ],
     ];
   }
 
@@ -722,8 +723,8 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
     // ];
   }
 
-  if (isset($hjson->daodesc)) {
-    $label = $hjson->daodesc;
+  if (isset($title)) {
+    $label = $title;
   } else {
     $label = $entity->title;
   }
@@ -740,6 +741,24 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
     'behavior' => $behavior,
     'items' => $items,
     'metadata' => $metadata,
+    'provider' => [ [
+      'id' => 'https://dlib.nyu.edu/',
+      'type' => 'Agent',
+      'label' => [ $lang => [ "NYU Digital Library Technology Services" ], ],
+      'homepage' => [ [
+        'id' => 'https://dlib.nyu.edu/',
+        'type' => 'Text',
+        'label' => [ $lang => [ "NYU Digital Library Technology Services" ], ],
+        'format' => 'text/html',
+      ], ],
+      'logo' => [ [
+        'id' => "$base_url/$module/images/nyu-logo.jpg",
+        'type' => 'Image',
+        'format' => 'image/jpeg',
+        'height' => 900,
+        'width' => 900,
+      ], ],
+    ], ],
     'viewingDirection' => $viewingDirection,
     'homepage' => [
       [
@@ -753,15 +772,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
         'format' => 'text/html',
       ],
     ],
-    'logo' => [
-      [
-        'id' => "$base_url/$module/images/nyu-logo.jpg",
-        'type' => 'Image',
-        'format' => 'image/jpeg',
-        'height' => 900,
-        'width' => 900,
-      ],
-    ],
+
     'partOf' => $partof,
     'thumbnail' => $thumbnail,
   ];
@@ -775,7 +786,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
         ],
       ],
       'value' => [
-        'en' => implode($required_statement),
+        'en' =>  [ implode($required_statement) ],
       ],
     ];
   }
