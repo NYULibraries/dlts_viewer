@@ -144,6 +144,12 @@ function dlts_viewer_drush_command() {
     'description' => dt('Task - DLTSVIEWER-187'),
   ];
 
+  $items['dlts-task-update-photos-title'] = [
+    'callback' => 'dlts_viewer_drush_update_photos_title',
+    'description' => dt('Task - Update photos title'),
+  ];
+
+
   return $items;
 
 }
@@ -230,8 +236,13 @@ function dlts_viewer_drush_index_epubs() {
 // ./vendor/bin/drush resources-list-by-type --type=maps
 // ./vendor/bin/drush resources-list-by-type --type=photos
 function dlts_viewer_drush_list_resources_type() {
+
   global $base_url;
+
+  $module = DRUPAL_ROOT . '/' .drupal_get_path('module', 'dlts_viewer');
+
   $type = drush_get_option('type', FALSE);
+
   if (!$type) {
     drush_log('No type selected.', 'error');
     exit();
@@ -243,12 +254,16 @@ function dlts_viewer_drush_list_resources_type() {
     'photos',
     'postcards',
   ];
+  
+  include_once  "{$module}/inc/iiif.inc";
+
   if (in_array($type, $types)) {
-    $sql = "SELECT noid, identifier FROM dlts_viewer_resource WHERE document = '$type'";
+    $sql = "SELECT noid, identifier FROM dlts_viewer_resource WHERE document = '$type' LIMIT 500";
     $nodes = db_query($sql)->fetchAll();
     foreach ($nodes as $node) {
       $noid = $node->noid;
-      echo "$base_url/api/embed/$noid?reset=true", PHP_EOL;
+      $hjson = dlts_viewer_repository_hjson($noid);
+      print_r($hjson);
     }
   } else {
     drush_log('Type not supported.', 'error');
@@ -1051,4 +1066,111 @@ function dlts_viewer_drush_create_table_apilog() {
     ];
     db_create_table($tablename, $table);
   }
+}
+
+function dlts_viewer_drush_update_photos_title_create_table() {
+
+  $tablename = 'dlts_viewer_titles_update';
+
+  if (!db_table_exists($tablename)) {
+
+    $table = [
+      'description' => 'Resource table',
+      'fields' => [
+        'nid' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
+        'noid' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
+        'identifier' => [ 'type' => 'varchar', 'length' => 255, 'not null' => FALSE ],
+        'status' => [ 'type' => 'text' ],
+      ]
+    ];
+
+    db_create_table($tablename, $table);
+
+  }
+
+  $type = 'dlts_photo_set';
+
+  $sql = '';
+  $sql .= "SELECT";
+  $sql .= " DISTINCT node.nid nid, identifier.field_identifier_value identifier, handle.field_handle_url handle";
+  $sql .= " FROM node";
+  $sql .= " LEFT JOIN field_data_field_identifier identifier";
+  $sql .= " ON node.nid = identifier.entity_id ";
+  $sql .= " LEFT JOIN field_data_field_handle handle ";
+  $sql .= " ON node.nid = handle.entity_id ";
+  $sql .= " WHERE node.type = '$type'";
+  $sql .= " AND node.status = 1";
+  $sql .= " AND (node.language = 'und' OR  node.language = 'en')";
+
+  $nodes = db_query($sql)->fetchAll();
+
+  foreach ($nodes as $node) {
+    $nid = $node->nid;
+    $identifier = $node->identifier;
+    $handlepathinfo = parse_url($node->handle);
+    $handle = explode('/', $handlepathinfo['path']);
+    $noid = trim($handle[2]);
+
+    db_query("INSERT INTO $tablename (nid, noid, identifier, status) VALUES ('$nid', '$noid', '$identifier', '0')");
+
+    drush_log("{$nid} - {$identifier} - {$noid}", 'ok');
+
+  }
+
+}
+
+function dlts_viewer_drush_update_photos_title() {
+
+  $module = DRUPAL_ROOT . '/' . drupal_get_path('module', 'dlts_viewer');
+
+  include_once "{$module}/inc/iiif.inc";
+
+  $tablename = 'dlts_viewer_titles_update';
+
+  $sql = "SELECT nid, noid, identifier FROM {$tablename} WHERE status = '0' LIMIT 1000";
+
+  $nodes = db_query($sql)->fetchAll();
+
+  foreach ($nodes as $node) {
+
+    $hjson = dlts_viewer_repository_hjson($node->noid, true);
+
+    if ($hjson) {
+
+      // Load the node by NID.
+      $entity = node_load($node->nid);
+
+      // Wrap it with Entity API.
+      $wrapper = entity_metadata_wrapper('node', $entity);
+
+      $title = html_entity_decode(trim($hjson->unittitle), ENT_QUOTES, 'UTF-8');
+
+      $wrapper->title->set($title);
+
+      $wrapper->field_title->set($title);
+
+      $saved = $wrapper->save();
+
+      if ($saved) {
+
+        $edit_query = "UPDATE `dlts_viewer_titles_update` SET `status` = '1' WHERE `nid` = '{$node->nid}' LIMIT 1;";
+
+        db_query($edit_query);
+
+        drush_log($hjson->unittitle, 'ok');
+
+      }
+
+    } else {
+
+      $edit_query = "UPDATE `dlts_viewer_titles_update` SET `status` = '9' WHERE `nid` = '{$node->noid}' LIMIT 1;";
+
+      db_query($edit_query);
+
+      drush_log("No HJON for id {$node->noid}", 'error');
+
+    }
+
+  }
+
 }

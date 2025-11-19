@@ -7,20 +7,29 @@
  */
 
 /**
- * Proxy Image service.
+ * IIIF Image API proxy.
+ *
+ * This function acts as a proxy to a IIIF image server. It retrieves image
+ * information (info.json) for a specific sequence of a resource. It can
+ * cache the response to a file to improve performance.
+ *
  * @link /api/image/books/uaena_aco000016/1
+ * @link https://iiif.io/api/image/2.1/#image-information
  *
  * @param string $type
- *   Entity type.
+ *   The entity type (e.g., 'books', 'photos').
  * @param object $resource
- *   Node entity.
+ *   The node object representing the resource.
  * @param array $resource_sequence
- *   Sequence record.
+ *   An array containing sequence information, including the sequence number and
+ *   the image identifier (URL or file ID).
  * @param bool $cache
- *   True if can return cached version of the request.
+ *   Whether to use a cached version of the info.json response if available.
+ *   Defaults to TRUE.
  *
  * @return array
- *   Resource as array.
+ *   The decoded JSON response from the IIIF image server as an array, or an
+ *   HTTP error response array.
  */
 function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence, $cache = TRUE) {
 
@@ -96,24 +105,29 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
 }
 
 /**
- * Returns III Image tile.
- * @link https://iiif.io/api/image/3.0/#4-image-requests
+ * Returns a IIIF Image tile.
+ *
+ * This function retrieves an image tile from a IIIF image server based on the
+ * provided parameters. It constructs the IIIF image URL and fetches the
+ * image content, then serves it to the client with appropriate headers.
+ *
+ * @link https://iiif.io/api/image/2.1/#image-requests
  * @link http://[HOST]/api/image/books/princeton_aco000102/1/full/max/0/default.jpg
  *
  * @param string $type
- *   Resource type.
+ *   The resource type (e.g., 'books', 'photos').
  * @param object $resource
- *   Node.
- * @param string $sequence
- *   Mongo DB object.
+ *   The node object representing the resource.
+ * @param array $sequence
+ *   A sequence array from MongoDB containing the image URI.
  * @param string $region
- *   Defines the rectangular portion of the underlying image content.
+ *   The region of the image to be returned. Defaults to 'full'.
  * @param string $size
- *   Specifies the dimensions to which the extracted region.
+ *   The size of the image to be returned. Defaults to 'max'.
  * @param int $rotation
- *   Mirroring and rotation.
+ *   The rotation of the image. Defaults to 0.
  * @param string $quality
- *   Whether the image is delivered in color, grayscale or black and white.
+ *   The quality of the image. Defaults to 'default.jpg'.
  */
 function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
 
@@ -172,12 +186,22 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
 }
 
 /**
- * Dispatch resource manifest.
+ * Dispatches manifest generation to the appropriate function based on entity type.
+ *
+ * This function acts as a router for generating IIIF Presentation API manifests.
+ * It takes an entity and calls the corresponding manifest generation function
+ * (e.g., for books, photos, maps).
  *
  * @param string $type
- *   Resource type.
+ *   The resource type (e.g., 'books', 'photos', 'maps').
  * @param object $entity
- *   Node.
+ *   The node object for which to generate the manifest.
+ * @param bool $cache
+ *   Whether to allow returning a cached version of the manifest. Defaults to
+ *   TRUE. Can be overridden with a 'reset' query parameter.
+ *
+ * @return array
+ *   The IIIF manifest as a PHP array.
  */
 function dlts_viewer_iiif_resource_manifest($type, $entity, $cache = TRUE) {
   drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
@@ -198,11 +222,18 @@ function dlts_viewer_iiif_resource_manifest($type, $entity, $cache = TRUE) {
 }
 
 /**
- * Build metadata values to return as metadata.
+ * Build metadata values for a photo resource.
+ *
+ * This function extracts metadata field values from a photo entity wrapper and
+ * formats them for inclusion in a IIIF manifest's metadata section.
+ *
  * @link https://iiif.io/api/presentation/3.0/#metadata
  *
- * @param string $wrapper
- *   Resource Entity wrapper.
+ * @param EntityMetadataWrapper $wrapper
+ *   The entity metadata wrapper for the photo node.
+ *
+ * @return array
+ *   An array of metadata fields, where each field has a 'label' and a 'value'.
  */
 function dlts_photo_fields_values($wrapper) {
 
@@ -259,11 +290,21 @@ function dlts_photo_fields_values($wrapper) {
 }
 
 /**
- * Build metadata values to return as metadata.
+ * Build metadata values for a book resource.
+ *
+ * This function extracts metadata field values from a book entity wrapper and
+ * formats them for inclusion in a IIIF manifest's metadata section. It handles
+ * translatable fields and looks up localized labels.
+ *
  * @link https://iiif.io/api/presentation/3.0/#metadata
  *
- * @param string $wrapper
- *   Resource Entity wrapper.
+ * @param EntityMetadataWrapper $wrapper
+ *   The entity metadata wrapper for the book node.
+ * @param array $translatable_fields
+ *   An array of field names that should be processed.
+ *
+ * @return array
+ *   An array of metadata fields, where each field has a 'label' and a 'value'.
  */
 function dlts_book_fields_values($wrapper, array $translatable_fields = []) {
 
@@ -640,14 +681,10 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
   }
 
   // Language of Material
-  // Should I use $archdesc->did->langmaterial? See:
-  // print '<pre>';
-  // print_r( $archdesc->did->langmaterial );
-  // print '</pre>';
-  if (isset($eadheader->profiledesc) && isset($eadheader->profiledesc->langusage) && isset($eadheader->profiledesc->langusage->value)) {
+  if (isset($archdesc->did) && isset($archdesc->did->langmaterial) && isset($archdesc->did->langmaterial[0])) {
     $fields['langmaterial'] = [
       'label' => [ $lang => [ 'Language of Material' ] ],
-      'value' => [ $lang => [ $eadheader->profiledesc->langusage->value ], ],
+      'value' => [ $lang => [ $archdesc->did->langmaterial[0]->value ], ],
     ];
   }
 
@@ -798,19 +835,19 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
 }
 
 /**
- * IIIF Presentation API v3 - Map manifest.
+ * Generates a IIIF Presentation API v3 manifest for a map resource.
  *
  * @link https://manifests.sub.uni-goettingen.de/iiif/presentation/PPN857449303/manifest
  * @link http://localhost:9000/api/presentation/maps/fales_io_map000205/manifest.json
  *
  * @param object $entity
- *   Book node.
+ *   The map node object.
  * @param bool $cache
- *   TRUE if is ok to return a cached (in-disk) version of the manifest. Set
- *   to false if the manifest needs to be recreated from database.
+ *   TRUE if it is ok to return a cached (in-disk) version of the manifest.
+ *   Set to FALSE if the manifest needs to be recreated from the database.
  *
  * @return array
- *   IIIF Presentation API v3 - Book manifest as array.
+ *   The IIIF Presentation API v3 map manifest as a PHP array.
  */
 function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
 
@@ -1548,9 +1585,24 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 }
 
 /**
- * Undocumented function.
+ * Creates a IIIF canvas for a single page of a resource.
  *
- * @todo document function
+ * This function constructs a canvas object for the IIIF manifest, representing
+ * a single page or view of the resource. It includes the canvas dimensions,
+ * a thumbnail, and the annotation page that links to the actual image.
+ *
+ * @link https://iiif.io/api/presentation/3.0/#canvas
+ *
+ * @param string $type
+ *   The bundle name of the resource (e.g., 'dlts_book', 'dlts_photo_set').
+ * @param object $resource
+ *   The node object of the resource.
+ * @param array $page
+ *   An array containing page information, including sequence number, width,
+ *   and height.
+ *
+ * @return array
+ *   A IIIF canvas object as a PHP array.
  */
 function dlts_viewer_iiif_resource_page_canvas($type, $resource, $page) {
 
@@ -1605,10 +1657,23 @@ function dlts_viewer_iiif_resource_page_canvas($type, $resource, $page) {
 }
 
 /**
- * AnnotationPage.
+ * Creates a IIIF AnnotationPage for a canvas.
  *
- * @link https://iiif.io/api/presentation/3.0/#overview-annotationpage
+ * An AnnotationPage groups the annotations that apply to a canvas. In this
+ * case, it contains the painting annotation that links the image to the canvas.
+ *
+ * @link https://iiif.io/api/presentation/3.0/#annotationpage
  * @link ${HOST}/api/v1/books/princeton_aco000102/canvas/p193/1
+ *
+ * @param string $type
+ *   The bundle name of the resource.
+ * @param object $resource
+ *   The node object of the resource.
+ * @param array $page
+ *   An array containing page information.
+ *
+ * @return array
+ *   A IIIF AnnotationPage object as a PHP array.
  */
 function dlts_viewer_iiif_book_page_annotation_page($type, $resource, $page) {
   global $base_url;
@@ -1626,9 +1691,23 @@ function dlts_viewer_iiif_book_page_annotation_page($type, $resource, $page) {
 }
 
 /**
- * Annotation.
+ * Creates a IIIF painting annotation.
  *
+ * This function creates the annotation that "paints" the image onto the
+ * canvas. It links the image resource to the canvas it belongs to.
+ *
+ * @link https://iiif.io/api/presentation/3.0/#painting-annotations
  * @link ${HOST}/api/3/presentation/books/princeton_aco000102/annotation/painting/1
+ *
+ * @param string $type
+ *   The bundle name of the resource.
+ * @param object $resource
+ *   The node object of the resource.
+ * @param array $item
+ *   An array containing item information (sequence, width, height).
+ *
+ * @return array
+ *   A IIIF Annotation object as a PHP array.
  */
 function dlts_viewer_iiif_annotation($type, $resource, $item) {
   global $base_url;
@@ -1661,7 +1740,10 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
 }
 
 /**
- * Deprecated.
+ * Deprecated IIIF resolver.
+ *
+ * This function was used to resolve IIIF requests from an older system
+ * (Djatoka). It is now deprecated.
  */
 function dlts_viewer_djakot_iiif_resolver() {
   drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
@@ -1711,7 +1793,18 @@ function dlts_viewer_djakot_iiif_resolver() {
 }
 
 /**
- * Undocumented function.
+ * Generates a IIIF manifest for a single collection.
+ *
+ * This function creates a IIIF Collection manifest that lists all the items
+ * (books, maps, photos) belonging to a specific collection.
+ *
+ * @param object $entity
+ *   The collection node object.
+ * @param bool $cache
+ *   Whether to use a cached version of the manifest. Defaults to TRUE.
+ *
+ * @return array
+ *   A IIIF Collection manifest as a PHP array.
  */
 function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = TRUE) {
 
@@ -1787,7 +1880,19 @@ function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = T
 }
 
 /**
- * Undocumented function.
+ * Generates a IIIF manifest for a set of collections.
+ *
+ * This function can either generate a manifest for a single collection (if only
+ * one is provided) or a higher-level collection that lists multiple
+ * sub-collections.
+ *
+ * @param array $entities
+ *   An array of collection node objects.
+ * @param bool $cache
+ *   Whether to use a cached version of the manifest. Defaults to TRUE.
+ *
+ * @return array
+ *   A IIIF Collection manifest as a PHP array.
  */
 function dlts_viewer_iiif_resource_manifest_collections($entities, $cache = TRUE) {
   drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
@@ -1854,9 +1959,15 @@ function dlts_viewer_iiif_resource_manifest_collections($entities, $cache = TRUE
 }
 
 /**
- * Undocumented function.
+ * Generates a IIIF manifest listing all available collections.
+ *
+ * This function creates a top-level IIIF Collection manifest that serves as an
+ * entry point to all collections in the system.
+ *
  * @link https://iiif.io/api/presentation/3.0/#a-summary-of-property-requirements
- * @todo document function
+ *
+ * @return array
+ *   A IIIF Collection manifest as a PHP array.
  */
 function dlts_viewer_iiif_resource_manifest_collections_list() {
   drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
@@ -1910,7 +2021,17 @@ function dlts_viewer_iiif_resource_manifest_collections_list() {
 }
 
 /**
- * Undocumented function.
+ * Generates a IIIF manifest from a "boutique" JSON file.
+ *
+ * This function is intended to serve pre-generated, custom, or "boutique"
+ * manifests that are stored as static JSON files. It looks for a file
+ * matching the identifier and returns its content.
+ *
+ * @param string $identifier
+ *   The identifier for the boutique manifest.
+ *
+ * @return array
+ *   The decoded boutique manifest as a PHP array.
  */
 function dlts_viewer_iiif_resource_manifest_boutique($identifier) {
 
@@ -2001,7 +2122,6 @@ function dlts_viewer_repository_hjson($noid, $cache = true) {
     return $data;
 
   } else {
-  
     return [ 'error' => 'error' ];
 
   }
