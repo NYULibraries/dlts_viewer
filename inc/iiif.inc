@@ -71,11 +71,28 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
 
   $uri = urlencode($image_id);
 
+  $context = stream_context_create([
+    'ssl' => [
+      // Set to FALSE to disable checking the remote certificate against a local certificate authority.
+      'verify_peer' => FALSE,
+    
+      // Set to FALSE to not verify the remote host's name against the common name (CN)
+      // or subject alternative name (SAN) fields in the certificate.
+      'verify_peer_name' => FALSE,
+    
+      // Allow self-signed certificates. Requires verify_peer set to TRUE, 
+      // but in this case, setting verify_peer to FALSE overrides it for a full bypass.
+      // Including it here for completeness with the general self-signed certificate options.
+      'allow_self_signed' => TRUE,
+    ],
+  ]);
+
   $response = drupal_http_request(
     "$image_server/iiif/2/$uri/info.json",
     [
       'method' => 'GET',
       'timeout' => 300,
+      'context'=> $context,
     ]
   );
 
