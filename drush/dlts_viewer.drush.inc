@@ -1127,7 +1127,7 @@ function dlts_viewer_drush_update_photos_title() {
 
   $tablename = 'dlts_viewer_titles_update';
 
-  $sql = "SELECT nid, noid, identifier FROM {$tablename} WHERE status = '0' LIMIT 1000";
+  $sql = "SELECT nid, noid, identifier FROM {$tablename} WHERE status = '0' LIMIT 10";
 
   $nodes = db_query($sql)->fetchAll();
 
