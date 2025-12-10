@@ -16,50 +16,27 @@
  */
 function dlts_photo_handle_load($handle, array $map = [], $resource_index = 0) {
 
-  $language = [ 'en', LANGUAGE_NONE ];
+  $id = filter_xss($handle);
 
-  $query_parameters = drupal_get_query_parameters();
+  // id can be noid or identifier.
+  $results = db_query(
+    'SELECT * FROM dlts_viewer_resource 
+     WHERE noid = :id 
+     OR identifier = :id 
+     LIMIT 1',
+    [ ':id' => $id ]
+    )->fetchAll();
 
-  if (isset($query_parameters['lang'])) {
-    $language = [
-      filter_xss($query_parameters['lang'])
-    ];
-  }
+  if (empty($results)) {
+    return FALSE;
+  } else {
 
-  $query = new EntityFieldQuery();
+    $resource = array_pop($results);
 
-  $result = $query
-    ->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'dlts_photo_set')
-    ->propertyCondition('language', $language)
-    ->propertyCondition('status', 1)
-    ->fieldCondition('field_handle', 'url', '%' . db_like($handle) . '%', 'LIKE')
-    ->addTag('node_access')
-    ->execute();
+    $node = node_load($resource->nid);
 
-  if (empty($result['node'])) {
-
-    $query = new EntityFieldQuery();
-
-    $result = $query
-      ->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', 'dlts_photo_set')
-      ->propertyCondition('language', $language)
-      ->propertyCondition('status', 1)
-      ->fieldCondition('field_identifier', 'value', $handle)
-      ->addTag('node_access')
-      ->execute();
-
-    if (empty($result['node'])) {
-      return FALSE;
-    }
+    return $node;
 
   }
-
-  $keys = array_keys($result['node']);
-
-  $nid = array_pop($keys);
-
-  return node_load($nid);
 
 }

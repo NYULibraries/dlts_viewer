@@ -143,13 +143,20 @@ function dlts_photo_load($sequence, $map, $resource_index) {
  *   object MongoDB book page object
  */
 function dlts_photo_sequence_load($sequence, $map, $resource_index) {
+
   // Load MongoDB helper.
   module_load_include('inc', 'dlts_viewer', 'inc/mongodb');
+
   $wrapper = entity_metadata_wrapper('node', $map[$resource_index - 1]);
+
   $identifier = $wrapper->field_identifier->value();
+
   $result = dlts_viewer_mongodb_load_sequence($sequence, $identifier, 'dlts_photo');
+
   if ($result) {
     return $result;
   }
+
   return FALSE;
+
 }

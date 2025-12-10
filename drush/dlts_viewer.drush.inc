@@ -761,7 +761,6 @@ function dlts_viewer_drush_list_translation() {
   }
 }
 
-
 function dlts_viewer_drush_add_translation_strings() {
 
   $table = 'dlts_viewer_locale';
@@ -1121,13 +1120,15 @@ function dlts_viewer_drush_update_photos_title_create_table() {
 
 function dlts_viewer_drush_update_photos_title() {
 
+  // dlts_viewer_drush_update_photos_title_create_table();
+
   $module = DRUPAL_ROOT . '/' . drupal_get_path('module', 'dlts_viewer');
 
   include_once "{$module}/inc/iiif.inc";
 
   $tablename = 'dlts_viewer_titles_update';
 
-  $sql = "SELECT nid, noid, identifier FROM {$tablename} WHERE status = '0' LIMIT 10";
+  $sql = "SELECT nid, noid, identifier FROM {$tablename} WHERE status = '0' LIMIT 100";
 
   $nodes = db_query($sql)->fetchAll();
 

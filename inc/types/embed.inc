@@ -110,7 +110,6 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
       ];
       break;
     case 'mirador4':
-
       $template = 'viewer_embed_mirador_latest_page';
 
       $basePath = "$module/viewers/mirador4/dist";
@@ -126,11 +125,11 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
       // Example: read contents
       if ($jsPath) {
-        $jsContent = file_get_contents($jsPath);
+          $jsContent = file_get_contents($jsPath);
       }
 
       if ($cssPath) {
-        $cssContent = file_get_contents($cssPath);
+          $cssContent = file_get_contents($cssPath);
       }
 
       $opts =  [
@@ -150,7 +149,6 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
       break;
     case 'mirador':
-    case 'mirador3':
       $template = 'viewer_embed_page';
       $opts =  [
         'analytics' => $analytics,
