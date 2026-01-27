@@ -1,13 +1,18 @@
-import React from 'react'
+import React, { useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import { FormControl } from '@mui/material'
+import Typography from '@mui/material/Typography'
+import Accordion from '@mui/material/Accordion'
+import AccordionDetails from '@mui/material/AccordionDetails'
+import AccordionSummary from '@mui/material/AccordionSummary'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import CheckIcon from '@mui/icons-material/CheckSharp'
 import MenuItem from '@mui/material/MenuItem'
-import CollapsibleSection from 'mirador/dist/es/src/containers/CollapsibleSection'
-import { updateConfig } from 'mirador/dist/es/src/state/actions/config'
-import { getLanguagesFromConfigWithCurrent } from 'mirador/dist/es/src/state/selectors/config'
-import { getManifestoInstance } from 'mirador/dist/es/src/state/selectors/manifests'
+import { updateConfig } from 'mirador/src/state/actions/config'
+import { getLanguagesFromConfigWithCurrent } from 'mirador/src/state/selectors/config'
+import { getManifestoInstance } from 'mirador/src/state/selectors/manifests'
 import PropTypes from 'prop-types'
 
 const translations = {
@@ -65,16 +70,55 @@ const langstyles = {
   },
 }
 
-const LanguageSelector = (props) => {
+/**
+ * CollapsibleSection - boilerplate is from Mirador 4 component source code
+ */
+const CollapsibleSection = ({ children, label, id }) => {
+  const [open, setOpen] = useState(true)
 
-  const {
-    rootElem,
-    handleClick,
-    languages,
-    t,
-    resourceLanguages,
-  } = props
+  const handleChange = useCallback((_event, isExpanded) => {
+    setOpen(isExpanded)
+  }, [])
 
+  const sectionId = id || `collapsible-${label ? label.replace(/\s+/g, '-').toLowerCase() : 'section'}`
+
+  return (
+    <Accordion
+      slotProps={{ heading: { component: 'h4' } }}
+      id={sectionId}
+      elevation={0}
+      expanded={open}
+      onChange={handleChange}
+      disableGutters
+      square
+      variant="compact"
+    >
+      <AccordionSummary
+        id={`${sectionId}-header`}
+        aria-controls={`${sectionId}-content`}
+        aria-label={open ? `Collapse ${label}` : `Expand ${label}`}
+        expandIcon={<ExpandMoreIcon />}
+      >
+        <Typography variant="overline">
+          {label}
+        </Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        {children}
+      </AccordionDetails>
+    </Accordion>
+  )
+}
+
+const LanguageSelector = ({
+  rootElem = {},
+  handleClick = () => {},
+  languages = [],
+  resourceLanguages = [],
+}) => {
+  // react-i18next translation replaces Mirador 3 old t ()
+  const { t } = useTranslation()
+  
   // If there is only one language, don't show the language selector.
   if (resourceLanguages.length < 2) return (<></>)
 
@@ -87,7 +131,6 @@ const LanguageSelector = (props) => {
               if (resourceLanguages.includes(language.locale)) {
                 return (
                   <MenuItem
-                    button={!language.current}
                     key={language.locale}
                     onClick={() => {
                       handleClick({ rootElem, language})
@@ -140,20 +183,17 @@ const mapStateToProps = (state, { windowId }) => {
   }
 }
 
-LanguageSelector.propTypes = {
-  handleClick: PropTypes.func.isRequired,
-  t: PropTypes.func.isRequired,
-  languages: PropTypes.array.isRequired,
-  resourceLanguages: PropTypes.array.isRequired,
-  rootElem: PropTypes.object,
+CollapsibleSection.propTypes = {
+  children: PropTypes.node.isRequired,
+  label: PropTypes.string.isRequired,
+  id: PropTypes.string,
 }
 
-LanguageSelector.defaultProps = {
-  handleClick: () =>  {},
-  t: () =>  {},
-  languages: [],
-  resourceLanguages: [],
-  rootElem: {},
+LanguageSelector.propTypes = {
+  handleClick: PropTypes.func,
+  languages: PropTypes.array,
+  resourceLanguages: PropTypes.array,
+  rootElem: PropTypes.object,
 }
 
 export default {
