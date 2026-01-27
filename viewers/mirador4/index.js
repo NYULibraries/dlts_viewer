@@ -1,6 +1,7 @@
 import Mirador from 'mirador';
 import { miradorImageToolsPlugin } from 'mirador-image-tools';
 import { defaultConfig } from './viewerConfig.js'
+import LanguageSelector from './plugins/LanguageSelector.jsx'
 import './style.css'
 
 const uuid = 'mirador-app'
@@ -37,4 +38,5 @@ const config = {
 
 Mirador.viewer(config, [
   ...miradorImageToolsPlugin,
+  LanguageSelector,
 ])
