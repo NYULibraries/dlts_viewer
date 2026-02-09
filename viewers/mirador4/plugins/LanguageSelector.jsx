@@ -83,6 +83,7 @@ const LanguageSelector = ({
   handleClick = () => {},
   languages = [],
   resourceLanguages = [],
+  windowId,
 }) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(true)
@@ -94,7 +95,7 @@ const LanguageSelector = ({
   // If there is only one language, don't show the language selector.
   if (resourceLanguages.length < 2) return null
 
-  const sectionId = 'language-selector-section'
+  const sectionId = `language-selector-${windowId}`
   const sectionLabel = t('availableLanguages')
 
   return (
@@ -177,6 +178,7 @@ const mapStateToProps = (state, { windowId }) => {
       return langs
     }, []),
     rootElem: document.getElementById(state.config.id),
+    windowId,
   }
 }
 
@@ -185,6 +187,7 @@ LanguageSelector.propTypes = {
   languages: PropTypes.array,
   resourceLanguages: PropTypes.array,
   rootElem: PropTypes.object,
+  windowId: PropTypes.string,
 }
 
 export default {
