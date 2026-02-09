@@ -95,9 +95,9 @@ const LanguageSelector = ({
   // If there is only one language, don't show the language selector.
   if (resourceLanguages.length < 2) return null
 
-  const sectionId = `language-selector-${windowId}`
+  const windowIdShort = windowId?.replace(/^window-/, '') || 'default'
+  const sectionId = `language-selector-${windowIdShort}`
   const sectionLabel = t('availableLanguages')
-
   return (
     <div style={langstyles.container}>
       <Accordion
