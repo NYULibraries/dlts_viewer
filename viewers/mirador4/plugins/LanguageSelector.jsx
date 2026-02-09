@@ -15,15 +15,23 @@ import { getLanguagesFromConfigWithCurrent } from 'mirador/src/state/selectors/c
 import { getManifestoInstance } from 'mirador/src/state/selectors/manifests'
 import PropTypes from 'prop-types'
 
+
 const translations = {
   en: {
     availableLanguages: 'Available languages',
+    collapseSection: 'Collapse {{section}}',
+    expandSection: 'Expand {{section}}',
   },
   ar: {
     availableLanguages: 'اللغات المتوفرة',
+    collapseSection: 'طي {{section}}',
+    expandSection: 'توسيع {{section}}',
   },
+  // no translation for fa
   fa: {
     availableLanguages: 'Available languages',
+    collapseSection: 'Collapse {{section}}',
+    expandSection: 'Expand {{section}}',
   },  
 }
 
@@ -70,86 +78,75 @@ const langstyles = {
   },
 }
 
-/**
- * CollapsibleSection - boilerplate is from Mirador 4 component source code
- */
-const CollapsibleSection = ({ children, label, id }) => {
-  const [open, setOpen] = useState(true)
-
-  const handleChange = useCallback((_event, isExpanded) => {
-    setOpen(isExpanded)
-  }, [])
-
-  const sectionId = id || `collapsible-${label ? label.replace(/\s+/g, '-').toLowerCase() : 'section'}`
-
-  return (
-    <Accordion
-      slotProps={{ heading: { component: 'h4' } }}
-      id={sectionId}
-      elevation={0}
-      expanded={open}
-      onChange={handleChange}
-      disableGutters
-      square
-      variant="compact"
-    >
-      <AccordionSummary
-        id={`${sectionId}-header`}
-        aria-controls={`${sectionId}-content`}
-        aria-label={open ? `Collapse ${label}` : `Expand ${label}`}
-        expandIcon={<ExpandMoreIcon />}
-      >
-        <Typography variant="overline">
-          {label}
-        </Typography>
-      </AccordionSummary>
-      <AccordionDetails>
-        {children}
-      </AccordionDetails>
-    </Accordion>
-  )
-}
-
 const LanguageSelector = ({
   rootElem = {},
   handleClick = () => {},
   languages = [],
   resourceLanguages = [],
 }) => {
-  // react-i18next translation replaces Mirador 3 old t ()
   const { t } = useTranslation()
+  const [open, setOpen] = useState(true)
+
+  const handleChange = useCallback((_event, isExpanded) => {
+    setOpen(isExpanded)
+  }, [])
   
   // If there is only one language, don't show the language selector.
-  if (resourceLanguages.length < 2) return (<></>)
+  if (resourceLanguages.length < 2) return null
+
+  const sectionId = 'language-selector-section'
+  const sectionLabel = t('availableLanguages')
 
   return (
     <div style={langstyles.container}>
-      <CollapsibleSection label={t('availableLanguages')}>
-        <FormControl style={langstyles.formControl}>
-          {
-            languages.map(language => {
-              if (resourceLanguages.includes(language.locale)) {
-                return (
-                  <MenuItem
-                    key={language.locale}
-                    onClick={() => {
-                      handleClick({ rootElem, language})
-                    }}
-                  >
-                    <ListItemIcon>{language.current && <CheckIcon />}</ListItemIcon>
-                    <ListItemText 
-                      primaryTypographyProps={{ variant: 'body1' }}
-                      style={langstyles.listItemText}
+      <Accordion
+        slotProps={{ heading: { component: 'h4' } }}
+        id={sectionId}
+        elevation={0}
+        expanded={open}
+        onChange={handleChange}
+        disableGutters
+        square
+        variant="compact"
+      >
+        <AccordionSummary
+          id={`${sectionId}-header`}
+          aria-controls={`${sectionId}-content`}
+          aria-label={t(open ? 'collapseSection' : 'expandSection', { section: sectionLabel })}
+          expandIcon={<ExpandMoreIcon />}
+        >
+          <Typography variant="overline">
+            {sectionLabel}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <FormControl style={langstyles.formControl}>
+            {
+              languages.map(language => {
+                if (resourceLanguages.includes(language.locale)) {
+                  return (
+                    <MenuItem
+                      key={language.locale}
+                      onClick={() => {
+                        handleClick({ rootElem, language})
+                      }}
                     >
-                      {language.label}
-                    </ListItemText>
-                  </MenuItem>
-                )
-              }
-            })
-          }
-        </FormControl>
-      </CollapsibleSection>
+                      <ListItemIcon>{language.current && <CheckIcon />}</ListItemIcon>
+                      <ListItemText 
+                        primaryTypographyProps={{ variant: 'body1' }}
+                        style={langstyles.listItemText}
+                      >
+                        {language.label}
+                      </ListItemText>
+                    </MenuItem>
+                  )
+                }
+                return null
+              })
+            }
+          </FormControl>
+        </AccordionDetails>
+      </Accordion>
     </div>
   )
 }
@@ -181,12 +178,6 @@ const mapStateToProps = (state, { windowId }) => {
     }, []),
     rootElem: document.getElementById(state.config.id),
   }
-}
-
-CollapsibleSection.propTypes = {
-  children: PropTypes.node.isRequired,
-  label: PropTypes.string.isRequired,
-  id: PropTypes.string,
 }
 
 LanguageSelector.propTypes = {
