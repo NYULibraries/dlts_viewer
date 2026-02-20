@@ -27,7 +27,7 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
 
     $image = "$image_server/iiif/2/$uri/$region/$size/$rotation/$quality";
 
-    // bad, but nothing I can do at the moment.
+    // @TODO: Remove
     // Set the options to disable SSL verification
     $options = [
       'method' => 'GET',
@@ -63,7 +63,7 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
       header('Access-Control-Allow-Origin: *');
       header('Access-Control-Allow-Methods: GET');
       header("Content-Transfer-Encoding: binary");
-      header("Master-Image: $original_image_source");
+      header("Image-Source-Url: $original_image_source");
       header("Image-Server-Url: $image");
       header("Etag: $etag");
       echo $content;

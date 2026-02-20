@@ -114,10 +114,11 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
   // Partners the book belong.
   if (isset($metadata->partner)) {
     foreach ($metadata->partner->value as $value) {
+      $partner_title = isset($value->label) ? $value->label : $value->title;
       $partners[] = [
-        'title' => $value->label,
+        'title' => $partner_title,
         'language' => $value->language,
-        'identifier' => $value->uuid,
+        'identifier' => $value->identifier,
         'code' => $value->code,
         'name' => $value->name,
       ];
@@ -127,10 +128,11 @@ function create_dlts_book_from_json($data, $cretePages = FALSE, $legacy = FALSE)
   // Collections the book belong.
   if (isset($metadata->collection)) {
     foreach ($metadata->collection->value as $value) {
+      $collection_title = isset($value->label) ? $value->label : $value->title;
       $collections[] = [
-        'title' => $value->label,
+        'title' => $collection_title,
         'language' => $value->language,
-        'identifier' => $value->uuid,
+        'identifier' => $value->identifier,
         'code' => $value->code,
         'name' => $value->name,
         'partner' => $value->partner,
