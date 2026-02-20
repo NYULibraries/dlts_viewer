@@ -4,6 +4,8 @@ import { defaultConfig } from './viewerConfig.js'
 import LanguageSelector from './plugins/LanguageSelector.jsx'
 import './style.css'
 
+console.log('Mirador version: 4.0.0')
+
 const uuid = 'mirador-app'
 
 const elem = document.getElementById(uuid)
