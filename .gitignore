@@ -35,5 +35,7 @@ composer.phar
 
 viewers/mirador4/node_modules/
 viewers/mirador4/dist/index.html
+!viewers/mirador4/package.json
 viewers/mirador4/package-lock.json
 viewers/mirador4/.parcel-cache
+
