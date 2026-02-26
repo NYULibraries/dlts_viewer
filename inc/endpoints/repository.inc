@@ -642,3 +642,61 @@ function _dlts_viewer_extract_cookies(array $headers) {
 
   return implode('; ', array_unique($cookies));
 }
+
+
+function dlts_viewer_repository_query_repository_by_collection_id($id) {
+  try {
+    if (!user_access('access dlts repository')) {
+      throw new Exception('User not allowed.');
+    }
+    // Username for the repository challange.
+    $user = variable_get('repository_user', NULL);
+    // Password for repository challange.
+    $pass = variable_get('repository_pass', NULL);
+    // Repository URL.
+    $endpoint = variable_get('repository_endpoint', NULL);
+    // We need this values to continue.
+    if ($user && $pass && $endpoint) {
+      /*
+       * Not available. Search repository. NoId will not be set to null.
+       */
+      $endpoint = parse_url($endpoint);
+
+      $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'];
+
+      // Entity language.
+      $collection_uuid = filter_xss($id);
+
+      if ($collection_uuid) {
+        $partOf = [];
+        $requestUrl = $endpoint . '/api/v0/colls/' . $collection_uuid;
+        $request = drupal_http_request($requestUrl);
+        if ($request->code == '200') {
+          $coll_data = json_decode($request->data);
+          $partOf['uuid'] = $coll_data->id;
+          $partOf['name'] = $coll_data->name;
+          $partOf['code'] = $coll_data->code;
+          $partOf['type'] = 'collection';
+          $partOf['provider'] = [];
+          $partOf['provider']['uuid'] = $coll_data->partner_id;
+          $partner_url = parse_url($coll_data->partner_url);
+          $partner_url = $endpoint . $partner_url['path'];
+          $request = drupal_http_request($partner_url);
+          if ($request->code == '200') {
+            $partner_data = json_decode($request->data);
+            $partOf['provider']['code'] = $partner_data->code;
+            $partOf['provider']['name'] = $partner_data->name;
+            $partOf['provider']['type'] = 'partner';
+          }
+          return $partOf;
+        } else {
+          throw new Exception('Request failed with status code ' . $request->code . '.');
+        }
+      } 
+    } 
+  } catch (Exception $e) {
+    return [
+      'error' => $e->getMessage(),
+    ];
+  }
+}
