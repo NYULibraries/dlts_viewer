@@ -109,6 +109,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'script' => file_get_contents("$module/viewers/clover-iiif/dist/clover-iiif.2.3.2.umd.js"),
       ];
       break;
+    case 'mirador':
     case 'mirador4':
       $template = 'viewer_embed_mirador_latest_page';
 
@@ -148,7 +149,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
       ];
 
       break;
-    case 'mirador':
+    case 'mirador4':
       $template = 'viewer_embed_page';
       $opts =  [
         'analytics' => $analytics,
