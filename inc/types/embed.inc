@@ -17,7 +17,13 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
-  $language = isset($query_parameters['language']) ? filter_xss($query_parameters['language']) : 'en';
+  $language = 'en';
+
+  if (isset($query_parameters['language'])) {
+    $language = filter_xss($query_parameters['language']);
+  } elseif (isset($query_parameters['lang'])) {
+    $language = filter_xss($query_parameters['lang']);
+  }
 
   $viewer = isset($query_parameters['viewer']) ? filter_xss($query_parameters['viewer']) : 'mirador';
 
@@ -122,9 +128,9 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
       // Get the first match (there should only be one)
       $jsPath = $jsFiles ? $jsFiles[0] : null;
+
       $cssPath = $cssFiles ? $cssFiles[0] : null;
 
-      // Example: read contents
       if ($jsPath) {
           $jsContent = file_get_contents($jsPath);
       }
