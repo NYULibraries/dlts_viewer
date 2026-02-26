@@ -117,6 +117,24 @@ function dlts_viewer_list_books() {
 }
 
 /**
+ * List of serials.
+ */
+function dlts_viewer_list_serials() {
+  $query = new EntityFieldQuery();
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_serial')
+    ->propertyCondition('language', ['en', 'und'])
+    ->propertyCondition('status', 1)
+    ->addMetaData('account', user_load(0))
+    ->execute();
+  if (empty($result['node'])) {
+    return FALSE;
+  }
+  return array_keys($result['node']);
+}
+
+/**
  * Get multivolume book by node id.
  *
  * @param string $nid
@@ -258,6 +276,29 @@ function book_nid($identifier, $language = LANGUAGE_NONE) {
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'dlts_book')
+    ->propertyCondition('language', $language)
+    ->fieldCondition('field_identifier', 'value', $identifier, '=')
+    ->execute();
+  if (empty($result['node'])) {
+    return FALSE;
+  }
+  $keys = array_keys($result['node']);
+  return (int) $keys[0];
+}
+
+/**
+ * Get serial id by identifier.
+ *
+ * @param string $identifier
+ *   Node identifier.
+ * @param string $language
+ *   Node language.
+ */
+function serial_nid($identifier, $language = LANGUAGE_NONE) {
+  $query = new EntityFieldQuery();
+  $result = $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_serial')
     ->propertyCondition('language', $language)
     ->fieldCondition('field_identifier', 'value', $identifier, '=')
     ->execute();
