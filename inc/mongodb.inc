@@ -24,6 +24,7 @@ function dlts_viewer_mongodb_collections_by_type($type) {
     'dlts_partner' => 'dlts_partner',
     'dlts_photo_set' => 'dlts_photo',
     'dlts_postcard' => 'dlts_postcard',
+    'dlts_serial' => 'dlts_serial_page',
   ];
   if (isset($collections[$type])) {
     return $collections[$type];
