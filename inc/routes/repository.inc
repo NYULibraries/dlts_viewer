@@ -27,6 +27,18 @@ function _dlts_viewer_menu_repository() {
     'type' => MENU_CALLBACK,
   ];
  
+  $items['api/v1/repository/search'] = [
+    'title' => 'Query repository',
+    'description' => 'Query repository.',
+    'access arguments' => [
+      'access content',
+    ],
+    'page callback' => 'dlts_viewer_repository_search',
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints/repository.inc',
+    'type' => MENU_CALLBACK,
+  ];
+
   // List all partners.
   // https://HOST/api/v1/repository/partners
   $items['api/v1/repository/partners'] = [

@@ -260,13 +260,9 @@ function dlts_viewer_search_repository() {
     $endpoint = variable_get('repository_endpoint', NULL);
     // We need this values to continue.
     if ($user && $pass && $endpoint) {
-      // @todo Cache response.
-      $cache = md5($_SERVER['QUERY_STRING']);
       // Path to public directory.
       // @todo Migth want to use private instead of public.
       $realpath = drupal_realpath('public://') . '/datasource';
-      // Path to use to cache response/return value.
-      $dir_path = $realpath . '/rsbe';
       // Get query.
       // @todo Should we use Drupal's method?
       parse_str(
@@ -433,4 +429,198 @@ function dlts_viewer_search_repository() {
   return [
     'error' => 'Fatal error, cause unknow.',
   ];
+}
+
+/**
+ * Queries the repository endpoint for a digitized item and its hierarchy.
+ *
+ * Authenticates, searches for the given digi_id, then resolves the SES,
+ * collection, and partner records via follow-up requests. The session is
+ * always destroyed before returning.
+ *
+ * @return array|null
+ *   Associative array with keys 'resource', 'collection', 'partner', or NULL
+ *   on failure.
+ */
+function dlts_viewer_repository_search() {
+
+  $params = drupal_get_query_parameters();
+
+  $digi_id = isset($params['digi_id']) ? filter_xss($params['digi_id']) : null;
+
+  $endpoint = rtrim(variable_get('repository_go_endpoint', ''), '/');
+
+  $user = variable_get('repository_go_user', '');
+
+  $pass = variable_get('repository_go_pass', '');
+
+  if (empty($endpoint) || empty($user) || empty($pass)) {
+    watchdog('dlts_viewer', 'Missing repository credentials or endpoint.', [], WATCHDOG_ERROR);
+    return NULL;
+  }
+
+  if (empty($digi_id)) {
+    watchdog('dlts_viewer', 'Invalid or empty digi_id supplied.', [], WATCHDOG_ERROR);
+    return NULL;
+  }
+
+  $login_url  = $endpoint . '/api/v0/sessions';
+
+  $login_res  = drupal_http_request($login_url, array(
+    'method'  => 'POST',
+    'data'    => drupal_json_encode(array('email' => $user, 'password' => $pass)),
+    'headers' => array('Content-Type' => 'application/json'),
+  ));
+
+  if ((int) $login_res->code !== 201) {
+    watchdog('dlts_viewer', 'Repository login failed (HTTP @code): @err', array(
+      '@code' => $login_res->code,
+      '@err'  => isset($login_res->error) ? $login_res->error : 'unknown',
+    ), WATCHDOG_ERROR);
+    return NULL;
+  }
+
+  $cookie_str = _dlts_viewer_extract_cookies($login_res->headers);
+
+  $base_options = array(
+    'headers' => array(
+      'User-Agent' => 'Viewer/D7 (dlts@nyu.edu)',
+      'Accept'     => 'application/json',
+      'Cookie'     => $cookie_str,
+    ),
+    'timeout' => 15.0,
+  );
+
+  $output = NULL;
+
+  $search_url = $endpoint . '/api/v0/search?' . drupal_http_build_query(array(
+    'scope'   => 'ses',
+    'digi_id' => $digi_id,
+  ));
+
+  $search_res = drupal_http_request($search_url, $base_options);
+
+  if ((int) $search_res->code === 200) {
+    $data = _dlts_viewer_json_decode($search_res->data);
+
+    if ($data && !empty($data->response->docs)) {
+      // docs may be a plain array or a stdClass; normalise to array.
+      $docs = (array) $data->response->docs;
+      $doc  = reset($docs);
+
+      $output = _dlts_viewer_resolve_hierarchy($doc, $base_options);
+    }
+  }
+  else {
+    watchdog('dlts_viewer', 'Repository search failed (HTTP @code): @err', array(
+      '@code' => $search_res->code,
+      '@err'  => isset($search_res->error) ? $search_res->error : 'no data returned',
+    ), WATCHDOG_ERROR);
+  }
+
+  drupal_http_request($login_url, array(
+    'method'  => 'DELETE',
+    'headers' => array(
+      'Cookie' => $cookie_str,
+      'Accept' => 'application/json',
+    ),
+  ));
+
+  return $output;
+}
+
+/**
+ * Resolves the SES, collection, and partner records for a search result doc.
+ *
+ * @param object $doc
+ *   A single search result document containing a 'url' property.
+ * @param array $options
+ *   Request options (headers, timeout) passed to drupal_http_request().
+ *
+ * @return array|null
+ *   Array with keys 'resource', 'collection', 'partner', or NULL if the
+ *   primary SES fetch fails.
+ */
+function _dlts_viewer_resolve_hierarchy($doc, array $options) {
+  if (empty($doc->url)) {
+    watchdog('dlts_viewer', 'Search result doc missing url property.', array(), WATCHDOG_WARNING);
+    return NULL;
+  }
+
+  $results = array('resource' => NULL, 'collection' => NULL, 'partner' => NULL);
+
+  // Fetch SES resource.
+  $ses_res = drupal_http_request($doc->url, $options);
+  if ((int) $ses_res->code !== 200) {
+    watchdog('dlts_viewer', 'SES fetch failed (HTTP @code) for @url', array(
+      '@code' => $ses_res->code,
+      '@url'  => $doc->url,
+    ), WATCHDOG_WARNING);
+    return NULL;
+  }
+  $results['resource'] = _dlts_viewer_json_decode($ses_res->data);
+
+  // Fetch collection.
+  if (!empty($results['resource']->coll_url)) {
+    $coll_res = drupal_http_request($results['resource']->coll_url, $options);
+    if ((int) $coll_res->code === 200) {
+      $results['collection'] = _dlts_viewer_json_decode($coll_res->data);
+    }
+
+    // Fetch partner only if collection resolved.
+    if (!empty($results['collection']->partner_url)) {
+      $part_res = drupal_http_request($results['collection']->partner_url, $options);
+      if ((int) $part_res->code === 200) {
+        $results['partner'] = _dlts_viewer_json_decode($part_res->data);
+      }
+    }
+  }
+
+  return $results;
+}
+
+/**
+ * Decodes a JSON string and logs an error on failure.
+ *
+ * @param string $raw
+ *   Raw JSON string.
+ *
+ * @return mixed|null
+ *   Decoded value, or NULL if decoding failed.
+ */
+function _dlts_viewer_json_decode($raw) {
+  $decoded = json_decode($raw);
+  if (json_last_error() !== JSON_ERROR_NONE) {
+    watchdog('dlts_viewer', 'JSON decode error: @err', array(
+      '@err' => json_last_error_msg(),
+    ), WATCHDOG_ERROR);
+    return NULL;
+  }
+  return $decoded;
+}
+
+/**
+ * Parses Set-Cookie response headers into a single Cookie request string.
+ *
+ * @param array $headers
+ *   Response headers from drupal_http_request().
+ *
+ * @return string
+ *   Semicolon-separated cookie string, or empty string if none found.
+ */
+function _dlts_viewer_extract_cookies(array $headers) {
+  if (empty($headers['set-cookie'])) {
+    return '';
+  }
+
+  $cookies = array();
+  foreach ((array) $headers['set-cookie'] as $c) {
+    // Keep only the name=value pair; strip path, domain, flags, etc.
+    $pair = strtok($c, ';');
+    if ($pair !== FALSE) {
+      $cookies[] = trim($pair);
+    }
+  }
+
+  return implode('; ', array_unique($cookies));
 }
