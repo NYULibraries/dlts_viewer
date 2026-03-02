@@ -594,6 +594,23 @@ function _dlts_viewer_resolve_hierarchy($doc, array $options) {
     }
   }
 
+  $results['resource']->fmds = [];
+
+  if (!empty($results['resource']->fmds_url)) {
+    $fmds_res = drupal_http_request($results['resource']->fmds_url, $options);
+    if ((int) $fmds_res->code === 200) {
+      $fmds = _dlts_viewer_json_decode($fmds_res->data);
+      foreach ($fmds as $fmd) {
+        $results['resource']->fmds[] = [
+          'id' => $fmd->id,
+          'name' => $fmd->name,
+          'searchable' => (isset($fmd->data) && isset($fmd->data->searchable) && $fmd->data->searchable) ? TRUE : FALSE,
+          'filesize' => $fmd->size,
+        ];
+      }
+    }
+  }
+
   return $results;
 }
 
