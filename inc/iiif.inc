@@ -1874,7 +1874,7 @@ function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = T
   $result = $query
     ->entityCondition('entity_type', 'node')
     ->propertyCondition('language', ['en', 'und'])
-    ->entityCondition('bundle', [ 'dlts_map', 'dlts_book', 'dlts_photo_set' ])
+    ->entityCondition('bundle', [ 'dlts_map', 'dlts_book', 'dlts_photo_set', 'dlts_serial', ])
     ->propertyCondition('status', 1)
     ->fieldCondition('field_collection', 'nid', $entity->nid, '=')
     ->addTag('node_access')
@@ -1938,6 +1938,7 @@ function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = T
  *   A IIIF Collection manifest as a PHP array.
  */
 function dlts_viewer_iiif_resource_manifest_collections($entities, $cache = TRUE) {
+
   drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
   global $base_url;
