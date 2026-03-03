@@ -176,3 +176,11 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
   echo theme($template, $opts);
 
 }
+
+function dlts_viewer_embed_edit_dispatcher($object) {
+  if (is_object($object)) {
+    $node = node_load($object->nid);
+    drupal_goto("node/{$node->nid}/edit");
+  }
+  drupal_not_found();
+}

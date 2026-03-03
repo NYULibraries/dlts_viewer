@@ -267,6 +267,16 @@ function _dlts_viewer_menu_api() {
     'delivery callback' => 'drupal_deliver_html_page',
     'type' => MENU_CALLBACK,
   ];
+  
+// https://[HOST]/api/embed/columbia_aco002609/edit
+  $items['api/embed/%dlts_noid/edit'] = [
+    'title' => 'Viewer',
+    'access arguments' => [ 'access content' ],
+    'page callback' => 'dlts_viewer_embed_edit_dispatcher',
+    'page arguments' => [ 2 ],
+    'delivery callback' => 'drupal_deliver_html_page',
+    'type' => MENU_CALLBACK,
+  ];
 
   $items['api/embed/%dlts_noid/%'] = [
     'title' => 'Viewer',

@@ -2450,21 +2450,27 @@ function dlts_viewer_api_v1_sequences($version = NULL) {
  * API callback.
  */
 function dlts_viewer_api_v1_objects($version = NULL) {
+
   if (
     user_access('dlts create object') &&
     $_SERVER['REQUEST_METHOD'] == 'POST'
   ) {
+
     $datasource = [];
+
     $entity_types = [
       'image_set',
       'dlts_book',
       'dlts_photo_set',
       'dlts_postcard',
       'dlts_map',
+      'dlts_serial',
     ];
+
     $datasource = (array) json_decode(
       file_get_contents('php://input')
     );
+
     switch ($version) {
       case 'v1':
         if (in_array($datasource['entity_type'], $entity_types)) {
@@ -2484,6 +2490,10 @@ function dlts_viewer_api_v1_objects($version = NULL) {
             case 'dlts_postcard':
               module_load_include('inc', 'dlts_viewer', 'inc/endpoints/postcard');
               return dlts_viewer_api_v1_dlts_postcard_objects($datasource);
+
+            case 'dlts_serial':
+              module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_serial');
+              return dlts_viewer_api_v1_serial_objects($datasource);
           }
         }
         break;
@@ -2491,9 +2501,11 @@ function dlts_viewer_api_v1_objects($version = NULL) {
   } elseif (user_access('access content') && $_SERVER['REQUEST_METHOD'] == 'GET') {
     return dlts_viewer_list_resource();
   }
+
   return [
     'error' => 'User not allowed.',
   ];
+
 }
 
 /**

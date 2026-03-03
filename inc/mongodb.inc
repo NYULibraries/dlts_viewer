@@ -24,7 +24,7 @@ function dlts_viewer_mongodb_collections_by_type($type) {
     'dlts_partner' => 'dlts_partner',
     'dlts_photo_set' => 'dlts_photo',
     'dlts_postcard' => 'dlts_postcard',
-    'dlts_serial' => 'dlts_serial_page',
+    'dlts_serial' => 'dlts_serial',
   ];
   if (isset($collections[$type])) {
     return $collections[$type];
@@ -189,7 +189,6 @@ function dlts_viewer_dispatch_mongodb_record($record) {
 
   $entity = node_load($record->nid);
 
-  // Wrapp book entity with Entity API wrapper.
   $wrapper = entity_metadata_wrapper('node', $entity);
 
   $title = $wrapper->field_title->value();  
@@ -245,9 +244,9 @@ function dlts_viewer_dispatch_mongodb_record($record) {
       $uri = $doc['cm']['uri'];
       $rows[] = [
         [ 'field' => 'sequence', 'data' => $thumbnail ],
-        [ 'field' => 'uri', 'data' => "<a href='$base_url/api/image/$type/$identifier/$sequence/full/full/0/default.jpg'>$uri</a>" ],
+        [ 'field' => 'uri', 'data' => "<a href='$base_url/api/image/$type/$identifier/$sequence/full/full/0/default.jpg'>$base_url/api/image/$type/$identifier/$sequence/full/full/0/default.jpg</a>" ],
         [ 'field' => 'height', 'data' => $height ],
-        [ 'field' => 'width', 'data' => $width ],        
+        [ 'field' => 'width', 'data' => $width ],
       ];
     }
   }
@@ -258,11 +257,11 @@ function dlts_viewer_dispatch_mongodb_record($record) {
     ],      
     [
       [ 'field' => 'label', 'data' => 'Handle' ],
-      [ 'field' => 'value', 'data' => $handle['url'] ],
+      [ 'field' => 'value', 'data' => "<a href='{$handle['url']}'>{$handle['url']}</a>" ],
     ],
     [
       [ 'field' => 'label', 'data' => 'NoId' ],
-      [ 'field' => 'value', 'data' => $noid ],
+      [ 'field' => 'value', 'data' => "$noid" ],
     ],
     [
       [ 'field' => 'label', 'data' => 'Type' ],
@@ -279,7 +278,11 @@ function dlts_viewer_dispatch_mongodb_record($record) {
     [
       [ 'field' => 'label', 'data' => 'Partner' ],
       [ 'field' => 'value', 'data' => $partner ],
-    ],                  
+    ],
+    [
+      [ 'field' => 'label', 'data' => 'Url' ],
+      [ 'field' => 'value', 'data' => "<a href='$base_url/api/embed/$identifier'>$base_url/api/embed/$identifier</a>" ],
+    ],                    
   ];    
 
   $node_table = [
@@ -298,7 +301,7 @@ function dlts_viewer_dispatch_mongodb_record($record) {
   $records_table = [
     'header' => [
       [ 'data' => 'Sequence', 'field' => 'sequence' ],
-      [ 'data' => 'Master file', 'field' => 'uri' ],
+      [ 'data' => 'Image Url', 'field' => 'uri' ],
       [ 'data' => 'Height', 'field' => 'height' ],
       [ 'data' => 'Width', 'field' => 'width' ],
     ],

@@ -155,6 +155,7 @@ function dlts_viewer_object_types() {
     'photo' => 'photos',
     'map' => 'maps',
     'postcard' => 'postcards',
+    'serial' => 'serials',
   ];
 }
 
@@ -170,6 +171,7 @@ function dlts_viewer_resource_type($type = NULL) {
     'dlts_photo_set' => 'photos',
     'dlts_photo' => 'photos',
     'dlts_map' => 'maps',
+    'dlts_serial' => 'serials',
     'dlts_postcard' => 'postcards',
   ];
   if (isset($resources[$type])) {

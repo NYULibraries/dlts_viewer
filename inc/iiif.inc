@@ -167,19 +167,19 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
   $image = "$image_server/iiif/$apiVersion/$uri/$region/$size/$rotation/$quality?v=" . time();
 
   $context = stream_context_create([
-    'method' => 'GET',
-    'timeout' => 500,
-    'ssl' => [
-      // Set to FALSE to disable checking the remote certificate against a local certificate authority.
-      'verify_peer' => FALSE,    
-      // Set to FALSE to not verify the remote host's name against the common name (CN)
-      // or subject alternative name (SAN) fields in the certificate.
-      'verify_peer_name' => FALSE,    
-      // Allow self-signed certificates. Requires verify_peer set to TRUE, 
-      // but in this case, setting verify_peer to FALSE overrides it for a full bypass.
-      // Including it here for completeness with the general self-signed certificate options.
-      'allow_self_signed' => TRUE,
-    ],
+  //   'method' => 'GET',
+  //   'timeout' => 500,
+  //   'ssl' => [
+  //     // Set to FALSE to disable checking the remote certificate against a local certificate authority.
+  //     'verify_peer' => FALSE,    
+  //     // Set to FALSE to not verify the remote host's name against the common name (CN)
+  //     // or subject alternative name (SAN) fields in the certificate.
+  //     'verify_peer_name' => FALSE,    
+  //     // Allow self-signed certificates. Requires verify_peer set to TRUE, 
+  //     // but in this case, setting verify_peer to FALSE overrides it for a full bypass.
+  //     // Including it here for completeness with the general self-signed certificate options.
+  //     'allow_self_signed' => TRUE,
+  //   ],
   ]);
 
   $content = file_get_contents($image, false, $context);
@@ -192,7 +192,15 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
     $responseType = substr($http_response_header[3], 14);
   }
 
-  $original_image_source = file_create_url($sequence['cm']['uri']);
+  $cm_uri = '';
+  if (isset($sequence['cm']['uri'])) {
+    $cm_uri = $sequence['cm']['uri'];
+  }
+  elseif (isset($sequence['uri'])) {
+    $cm_uri = $sequence['uri'];
+  }
+
+  $original_image_source = file_create_url($cm_uri);
 
   if ($content && $requestStatus === '200' && $responseType === 'image/jpeg') {
     $etag = md5($content);
@@ -264,6 +272,10 @@ function dlts_viewer_iiif_resource_manifest($type, $entity, $cache = TRUE) {
 
     case 'dlts_map':
       return dlts_viewer_iiif_map_manifest($entity, $cache);
+
+    case 'dlts_serial':
+      module_load_include('inc', 'dlts_viewer', 'inc/types/iiif/serial');
+      return dlts_viewer_iiif_serial_manifest($entity, $cache);
   }
 }
 

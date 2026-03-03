@@ -455,4 +455,141 @@ function dlts_viewer_css_alter(&$css) {
 // Here we need to make sure we delete the record from Apache Solr
 function dlts_viewer_node_delete($node) {
   db_delete('dlts_viewer_resource')->condition('nid', $node->nid)->execute();
+  _dlts_viewer_purge_manifest_on_change($node);
+}
+
+/**
+ * Implements hook_node_update().
+ */
+function dlts_viewer_node_update($node) {
+  _dlts_viewer_purge_manifest_on_change($node);
+}
+
+/**
+ * Internal helper to delete the manifest file when a node changes.
+ */
+function _dlts_viewer_purge_manifest_on_change($node) {
+  
+  $supported_bundles = ['dlts_serial', 'dlts_book'];
+
+  if (!in_array($node->type, $supported_bundles)) {
+    return;
+  }
+
+  $wrapper = entity_metadata_wrapper('node', $node);
+  
+  // Guard against missing identifiers
+  if (!isset($wrapper->field_identifier)) {
+    return;
+  }
+
+  $identifier = $wrapper->field_identifier->value();
+
+  $type_alias = dlts_viewer_get_bundle_alias($node->type);
+  
+  $cache_path = drupal_realpath('public://') . "/iiif/$type_alias/$identifier/manifest.json";
+
+  if (file_exists($cache_path)) {
+    if (file_unmanaged_delete($cache_path)) {
+      watchdog('dlts_viewer', 'Purged IIIF manifest for %id due to node update.', ['%id' => $identifier], WATCHDOG_INFO);
+    }
+  }
+}
+
+/**
+ * Page callback: Displays a paginated list of resources and their cache status.
+ */
+function dlts_viewer_cache_admin_page() {
+  $header = [
+    ['data' => t('Identifier'), 'field' => 'n.nid'], // Sortable by NID
+    ['data' => t('Title')],
+    ['data' => t('Type')],
+    ['data' => t('Status')],
+    ['data' => t('Operations')],
+  ];
+
+  // 1. Define the supported bundles
+  $bundles = ['dlts_book', 'dlts_serial'];
+
+  // 2. Build the Pager Query
+  $query = db_select('node', 'n')->extend('PagerDefault')->extend('TableSort');
+  $query->fields('n', ['nid', 'title', 'type', 'language']);
+  $query->condition('n.language', 'en', '=');
+  $query->condition('n.type', $bundles, 'IN');
+  $query->limit(25); // Show 25 items per page
+  $query->orderByHeader($header);
+
+  $results = $query->execute();
+
+  $rows = [];
+  $base_path = drupal_realpath('public://') . '/iiif';
+
+  foreach ($results as $node) {
+    $entity = node_load($node->nid);
+    $wrapper = entity_metadata_wrapper('node', $entity);
+    $id = $wrapper->field_identifier->value();
+    $type_alias = dlts_viewer_get_bundle_alias($node->type);
+    
+    // Construct expected path
+    $cache_file = "$base_path/$type_alias/$id/manifest.json";
+    $is_cached = file_exists($cache_file);
+
+    $status = $is_cached 
+      ? '<span style="color: green;">● ' . t('Cached') . '</span>' 
+      : '<span style="color: #ccc;">○ ' . t('Empty') . '</span>';
+
+    $rows[] = [
+      'id' => l($id, "node/$node->nid"),
+      'title' => truncate_utf8($node->title, 40, TRUE, TRUE),
+      'type' => $type_alias,
+      'status' => $status,
+      'actions' => $is_cached 
+        ? l(t('Purge'), "admin/config/services/iiif-cache/purge/$type_alias/$id", ['query' => drupal_get_destination()]) 
+        : t('N/A'),
+    ];
+  }
+
+  $output = '<h3>' . t('IIIF Manifest Inventory') . '</h3>';
+  $output .= theme('table', ['header' => $header, 'rows' => $rows]);
+  $output .= theme('pager');
+
+  return $output;
+}
+
+/**
+ * Add a button or link to trigger a Batch Purge
+ */
+function dlts_viewer_cache_purge_all_submit($form, &$form_state) {
+  $files = glob(drupal_realpath('public://') . "/iiif/*/*/manifest.json");
+  
+  $batch = [
+    'title' => t('Purging Manifests...'),
+    'operations' => [],
+    'finished' => 'dlts_viewer_purge_finished',
+  ];
+
+  foreach ($files as $file) {
+    $batch['operations'][] = ['file_unmanaged_delete', [$file]];
+  }
+
+  batch_set($batch);
+}
+
+/**
+ * Menu callback: Deletes a specific manifest file.
+ */
+function dlts_viewer_cache_purge_action($type, $id) {
+  // Security: Basic sanitization of path arguments
+  $type = check_plain($type);
+  $id = check_plain($id);
+  
+  $path = drupal_realpath('public://') . "/iiif/$type/$id/manifest.json";
+
+  if (file_exists($path)) {
+    if (file_unmanaged_delete($path)) {
+      drupal_set_message(t('Manifest for %id has been purged.', ['%id' => $id]));
+    }
+  }
+
+  drupal_goto('admin/config/services/iiif-cache');
 }

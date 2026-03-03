@@ -56,6 +56,22 @@ function _dlts_viewer_menu_admin() {
     'type' => MENU_CALLBACK,
   ];
 
+  $items['admin/config/services/iiif-cache'] = [
+    'title' => 'IIIF Manifest Cache',
+    'description' => 'Manage and purge cached IIIF Presentation manifests.',
+    'page callback' => 'dlts_viewer_cache_admin_page',
+    'access arguments' => ['administer site configuration'],
+    'type' => MENU_NORMAL_ITEM,
+  ];
+
+  // Hidden path for the purge action
+  $items['admin/config/services/iiif-cache/purge/%/%'] = [
+    'page callback' => 'dlts_viewer_cache_purge_action',
+    'page arguments' => [5, 6],
+    'access arguments' => ['administer site configuration'],
+    'type' => MENU_CALLBACK,
+  ];
+
   return $items;
 
 }

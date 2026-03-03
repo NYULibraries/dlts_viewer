@@ -23,6 +23,7 @@ function dlts_viewer_get_bundle_alias($type) {
     'dlts_collection' => 'collections',
     'dlts_partner' => 'partners',
     'creativework' => 'creativework',
+    'dlts_serial' => 'serials',
   ];
   if (isset($types[$type])) {
     return $types[$type];
@@ -47,7 +48,8 @@ function dlts_viewer_is_bundle($bundle) {
     'dlts_postcard',
     'dlts_collection',
     'dlts_partner',
-    'creativework'
+    'creativework',
+    'dlts_serial',
   ];
   return in_array($bundle, $bundles);
 }
@@ -71,6 +73,7 @@ function dlts_type_load($type) {
     'collections' => 'dlts_collection',
     'partners' => 'dlts_partner',
     'creativework' => 'creativework',
+    'serials' => 'dlts_serial',
   ];
 
   if (isset($types[$type])) {
