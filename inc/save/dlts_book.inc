@@ -191,43 +191,40 @@ function save_dlts_book($node, $language = 'en') {
         $ewrapper->field_call_number->set($node['call_number']);
       }
       if (!empty($node['representative_image'])) {
-        $label = (isset($node['representative_image']['label'])) ? $node['representative_image']['label'] : NULL;
-        $serialize_data = serialize(
-          array(
-            'label' => $label,
-            'uri' => $node['representative_image']['uri'],
-            'url' => file_create_url($node['representative_image']['uri']),
-            'image_style' => '0x230',
-          )
-        );
-        $representative_image = array(
-          'uri' => $node['representative_image']['uri'],
-          'label' => $label,
-          'data' => $serialize_data,
-        );
+        $representative_image = [
+          'uri' => $node['representative_image']->cm->uri,
+          'label' => "{$node['title']} - Representative image",
+          'data' => serialize(
+            [
+             'label' => "{$node['title']} - Representative image",
+              'uri' => $node['representative_image']->cm->uri,
+              'url' => file_create_url($node['representative_image']->cm->uri),
+              'image_style' => '0x230',
+            ]
+          ),
+        ];
         $ewrapper->field_representative_image->set($representative_image);
       }
+
       $field_pdf_file = [];
       if (!empty($node['pdf_files'])) {
+        $field_pdf_file = [];
         foreach ($node['pdf_files'] as $pdf) {
-          $label = (isset($pdf['label'])) ? $pdf['label'] : '';
-          $field_pdf_file[] = array(
-            'uri' => $pdf['uri'],
+          $label = $pdf['label'] ?? '';
+          $field_pdf_file[] = [
+            'uri'   => $pdf['uri'],
             'label' => $label,
-            'data' => serialize(
-              array(
-                'label' => $label,
-                'uri' => $pdf['uri'],
-                'filesize' => $pdf['filesize'],
-                'searchable' => (isset($pdf['searchable']) && $pdf['searchable']) ? $pdf['searchable'] : FALSE,
-              )
-            ),
-          );
-          unset($label);
+            'data'  => serialize([
+              'label' => $label,
+              'uri' => $pdf['uri'],
+              'filesize' => $pdf['filesize'],
+              'searchable' => !empty($pdf['searchable']) ? $pdf['searchable'] : FALSE,
+            ]),
+          ];
         }
         $ewrapper->field_pdf_file->set($field_pdf_file);
       }
-      unset($field_pdf_file);
+
       if (!empty($node['subject'])) {
         $vid = dlts_viewer_subject_vocabulary_vid();
         $node_subjects = [];
