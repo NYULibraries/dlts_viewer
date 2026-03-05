@@ -490,12 +490,6 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
     'viewingDirection' => $viewingDirection,
     'items' => array_values($items),
     'metadata' => array_values($fields),
-    'homepage' => [[
-      'id' => "$base_url/$type/$identifier/1",
-      'type' => 'Text',
-      'label' => ['en' => ['View on NYU DLTS Viewer']],
-      'format' => 'text/html',
-    ]],
     'logo'             => [[
       'id' => "$base_url/$module_path/images/nyu-logo.jpg",
       'type' => 'Image',
@@ -506,16 +500,29 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
     'thumbnail' => $thumbnail,
   ];
 
+  $handle = $wrapper->field_handle->value();
+  if (!empty($handle['url'])) {
+    $manifest['homepage'] = [
+      'id' => $handle['url'],
+      'type' => 'Text',
+      'label' => ['en' => ['View on NYU DLTS Viewer']],
+      'format' => 'text/html',
+    ];
+  }
+
   // Optional top-level keys — only added when non-empty to keep the manifest clean.
   if (!empty($pdfs)) {
     $manifest['rendering'] = $pdfs;
   }
+
   if (!empty($fields['field_description']['value'])) {
     $manifest['summary'] = $fields['field_description']['value'];
   }
+
   if ($required_statement !== NULL) {
     $manifest['requiredStatement'] = $required_statement;
   }
+
   if (!empty($partof)) {
     $manifest['partOf'] = $partof;
   }
