@@ -516,9 +516,12 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
     $manifest['rendering'] = $pdfs;
   }
 
-  if (!empty($fields['field_description']['value'])) {
-    $manifest['summary'] = $fields['field_description']['value'];
-  }
+  // https://iiif.io/api/presentation/3.0/#summary
+  // A Manifest should have the summary property with at least one entry.
+  // e.g., { "summary": { "en": [ "This is a summary of the object." ] } }
+  // if (!empty($fields['field_description']['value'])) {
+  //   $manifest['summary'] = $fields['field_description']['value'];
+  // }
 
   if ($required_statement !== NULL) {
     $manifest['requiredStatement'] = $required_statement;
