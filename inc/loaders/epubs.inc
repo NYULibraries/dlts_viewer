@@ -1,15 +1,5 @@
 <?php
 
-function dlts_proxy_load($identifier) {
-  $identifier = filter_xss($identifier);
-  $proxies = variable_get('dlts_proxies', []);
-  $keys = array_keys($proxies);
-  if (in_array($identifier, $keys)) {
-    return $proxies[$identifier];
-  }
-  return false;
-}
-
 /**
  * @file
  * Wildcard loaders.
@@ -23,7 +13,9 @@ function dlts_proxy_load($identifier) {
  *
  * @return object
  */
-function dlts_epub_load($identifier, $publisher, $version = 'v1') {
+function dlts_epub_load($identifier, $publisher, $version = 'v1', $reset_cache = false) {
+
+  $version = 'v1';
 
   $identifier = filter_xss($identifier);
 
@@ -32,7 +24,7 @@ function dlts_epub_load($identifier, $publisher, $version = 'v1') {
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     return dlts_viewer_supafolio_book($identifier);
   } else {
-    $data = dlts_viewer_epubs_metadata($version, $publisher, $identifier, true);
+    $data = dlts_viewer_epubs_metadata($version, $publisher, $identifier, $reset_cache);
     if (!isset($data['error'])) {
       return $data;
     } else {
