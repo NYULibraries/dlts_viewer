@@ -1181,6 +1181,19 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   global $base_url;
 
+  $search_service = false;
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  if (
+    isset($query_parameters['search_service']) && 
+    !empty($query_parameters['search_service']) &&
+    $query_parameters['search_service'] == 'true'
+  ) {
+    $search_service = true;
+  }
+
   $wrapper = entity_metadata_wrapper('node', $entity);
 
   $identifier = $wrapper->field_identifier->value();
@@ -1566,6 +1579,17 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     ],
     'thumbnail' => $thumbnail,
   ];
+
+  if ($search_service) {
+    $res['service'] = [
+        [
+            'id' => "http://localhost:8085/api/search", // @TODO: Set env once i have a server for elastic search
+            'type' => "SearchService1",
+            'profile' => "http://iiif.io/api/search/1/search",
+            'label' => "Search",
+        ],
+    ];
+  }
 
   if (isset($pdfs)) {
     $res['rendering'] = $pdfs;
