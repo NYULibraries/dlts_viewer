@@ -103,7 +103,7 @@ function _dlts_viewer_menu_epub() {
   ];
 
   // epubs.
-  // http://HOST/api/v0/epubs/nyu-press/9780814744758/opt/indexer
+  // http://HOST/api/v1/epubs/nyu-press/9780814744758/opt/indexer
   $items['api/%dlts_version/epubs/%dlts_publisher/%dlts_epub/opt/indexer'] = [
     'title' => 'Indexer',
     'description' => 'Query epubs API.',
@@ -133,6 +133,7 @@ function _dlts_viewer_menu_epub() {
   ];
 
   // http://HOST/api/supafolio/[isbn13]
+  // @LINK: /api/supafolio/9781479815425
   $items['api/supafolio/%'] = [
     'title' => 'Supafolio API',
     'description' => 'Supafolio API.',
@@ -146,6 +147,7 @@ function _dlts_viewer_menu_epub() {
     'delivery callback' => 'drupal_json_output',
   ];
 
+  // @LINK: /api/v1/epub-manager/nyu-press/9781479815425
   $items['api/%dlts_version/epub-manager/%dlts_publisher/%'] = [
     'title' => 'Query repository',
     'description' => 'Query epubs API.',

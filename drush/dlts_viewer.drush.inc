@@ -210,11 +210,6 @@ function dlts_viewer_drush_task_dlts326() {
 }
 
 function dlts_viewer_drush_index_epubs() {
-  // $records = drupal_http_request('https://sites.dlib.nyu.edu/viewer/api/v1/objects?collection=fdm&rows=500');
-  // $data = json_decode($records->data);
-  global $base_url;
-
-  $docs = [];
 
   $results = db_query('SELECT * FROM dlts_viewer_epubs');
 
@@ -222,7 +217,7 @@ function dlts_viewer_drush_index_epubs() {
     $identifier = $record->identifier;
     $publisher = $record->publisher;
 
-    $epub = dlts_viewer_epubs_metadata('v1', $publisher, $identifier, false);
+    $epub = dlts_viewer_epubs_metadata('v1', $publisher, $identifier);
 
     $request = dlts_viewer_epubs_indexer_v1($publisher, $epub);
 
@@ -357,7 +352,7 @@ function dlts_viewer_drush_add_epub() {
           drush_log("Supafolio API - Record with ISBN13 $identifier - " . $record->data['errors'][0]['message'], 'error');
         } else {
           if ($identifier === $record->isbn13) {
-            $metadata = dlts_viewer_epubs_metadata_v0($record);
+            $metadata = dlts_viewer_epubs_metadata_v1($record);
             db_insert('dlts_viewer_epubs')
               ->fields([
                 'label' => $record->title,

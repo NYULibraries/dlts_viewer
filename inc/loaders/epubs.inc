@@ -13,7 +13,7 @@
  *
  * @return object
  */
-function dlts_epub_load($identifier, $publisher, $version = 'v1', $reset_cache = false) {
+function dlts_epub_load($identifier, $publisher, $version = 'v1') {
 
   $version = 'v1';
 
@@ -24,7 +24,7 @@ function dlts_epub_load($identifier, $publisher, $version = 'v1', $reset_cache =
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     return dlts_viewer_supafolio_book($identifier);
   } else {
-    $data = dlts_viewer_epubs_metadata($version, $publisher, $identifier, $reset_cache);
+    $data = dlts_viewer_epubs_metadata($version, $publisher, $identifier);
     if (!isset($data['error'])) {
       return $data;
     } else {
