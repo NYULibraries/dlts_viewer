@@ -136,6 +136,10 @@ function dlts_viewer_admin_epubs() {
  */
 function dlts_viewer_admin_epub($publisher, $epub) {
 
+  $files = $epub['files'];
+
+  unset($epub['files']);
+
   $title = $epub['title'];
 
   $isbn = $epub['isbnEbook'];
@@ -143,21 +147,58 @@ function dlts_viewer_admin_epub($publisher, $epub) {
   $rows = [];
 
   foreach ($epub as $key => $item) {
+
     if ($key == 'subjects') {
       $item = implode(' / ', $item);
     }
+
     if ($key == 'subjects') {
       if (is_array($item)) {
         $item = implode(' / ', $item);
       }
     }
+
+    if ($key == 'contributorsInOrder') {
+      if (is_array($item)) {
+        $item = implode(' / ', $contributors);
+      }
+    }
+
+    if ($key == 'contributors') {
+      $contributors = [];
+      foreach ($item as $contributor) {
+        $contributors[] = $contributor['name'];
+      }
+      if (is_array($item)) {
+        $item = implode(' / ', $contributors);
+      }
+    }
+
+    if ($key == 'reviews') {
+      if (is_array($item) && !empty($item)) {
+        $item = 'Yes';
+      } else {
+         $item = 'No';
+      }
+    }
+
+    if ($key == 'series') {
+      if (is_array($item) && !empty($item)) {
+        $item = 'Yes';
+      } else {
+         $item = 'No';
+      }
+    }
+
     if ($key == 'description_html') {
       $item = "<textarea disabled rows='5' style='-webkit-box-sizing:border-box; -moz-box-sizing:border-box; box-sizing:border-box; padding:2px 4px; width: 100%; min-widht: 100%'>$item</textarea>";
     }
+
     $rows[] = [
       'label' => $key,
       'value' => $item,
     ];
+
   }
 
   sort($rows);
