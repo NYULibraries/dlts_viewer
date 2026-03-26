@@ -368,7 +368,7 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
   // https://nyu.atlassian.net/browse/DLTSVIEWER-211 - No 'field_subtitle', 
   $metadata_keys = [
     'field_author', 'field_contributor', 'field_creator', 'field_editor',
-    'field_description', 'field_volume', 'field_title',
+    'field_description', 'field_volume', 'field_number', 'field_title',
     'field_publication_date_text', 'field_publication_location', 'field_isbn',
     'field_language', 'field_publisher', 'field_topic', 'field_scanning_notes',
   ];
