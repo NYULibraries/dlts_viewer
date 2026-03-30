@@ -26,8 +26,12 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
     $image = "$image_server/iiif/2/$uri/$region/$size/$rotation/$quality";
 
     $options = [
-      'method' => 'GET',
-      'timeout' => 500,
+      'http' => [
+        'method'  => 'GET',
+        'timeout' => 500,
+        'follow_location' => 1,
+        'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+      ],
       'ssl' => [
         'verify_peer' => FALSE,
         'verify_peer_name' => FALSE,
