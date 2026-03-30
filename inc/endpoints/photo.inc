@@ -4,9 +4,7 @@
  * @file
  * API Photos endpoint.
  */
-// https://stage-sites.dlib.nyu.edu/viewer/api/iiif/photos/5tb2rnch/1/full/250,/0/default.jpg
-// full/max/0/default.jpg
-// api/iiif/photos/%dlts_photo_handle/%dlts_photo_sequence/%dlts_iiif_region/%dlts_iiif_size/%dlts_iiif_rotation/%dlts_iiif_quality
+// https://[HOST]/viewer/api/iiif/photos/5tb2rnch/1/full/250,/0/default.jpg
 function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
 
   $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');
@@ -27,14 +25,12 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
 
     $image = "$image_server/iiif/2/$uri/$region/$size/$rotation/$quality";
 
-    // @TODO: Remove
-    // Set the options to disable SSL verification
     $options = [
       'method' => 'GET',
       'timeout' => 500,
       'ssl' => [
-        'verify_peer' => false,
-        'verify_peer_name' => false,
+        'verify_peer' => FALSE,
+        'verify_peer_name' => FALSE,
       ],
     ];
 
@@ -63,8 +59,8 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
       header('Access-Control-Allow-Origin: *');
       header('Access-Control-Allow-Methods: GET');
       header("Content-Transfer-Encoding: binary");
-      header("Image-Source-Url: $original_image_source");
       header("Image-Server-Url: $image");
+      header("Master-Image: $original_image_source");
       header("Etag: $etag");
       echo $content;
       exit(0);
@@ -75,7 +71,7 @@ function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region 
           'response' => [
             'message' => $http_response_header,
             'error' => $http_response_header[0],
-            'imageSource' => $original_image_source,
+            'masterImage' => $original_image_source,
             'request' => $image,
             'entity' => [
               'nid' => $entity->nid,
