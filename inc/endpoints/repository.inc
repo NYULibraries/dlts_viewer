@@ -225,7 +225,7 @@ function dlts_viewer_search_repository_partner() {
  * Search using Solr.
  * @link http://localhost:9000/api/v1/repository?digi_id=princeton_aco002112
  */
-function dlts_viewer_search_repository() {
+function dlts_viewer_search_repository($digi_id = null) {
   try {
     if (!user_access('access dlts repository')) {
       throw new Exception('User not allowed.');
@@ -254,6 +254,9 @@ function dlts_viewer_search_repository() {
         ),
         $args
       );
+      if (!empty($digi_id)) {
+        $digi_id = $digi_id;
+      }
       // No digi_id, no go.
       if (isset($args['digi_id']) && !empty($args['digi_id'])) {
         $digi_id = filter_var(
@@ -289,40 +292,7 @@ function dlts_viewer_search_repository() {
         ->propertyCondition('language', $language)
         ->fieldCondition('field_identifier', 'value', $entity['digi_id'], '=')
         ->execute();
-
-      if (!empty($result['node'])) {
-        $keys = array_keys($result['node']);
-        $nid = array_pop($keys);
-        $node = node_load($nid); 
-        $wrapper = entity_metadata_wrapper('node', $node);
-        $handle_raw = $wrapper->field_handle->value();
-        $handle = explode('/', $handle_raw['url']);
-        $partOf = [];
-        foreach ($wrapper->field_collection->value() as $collection) {
-          $collection_wrapper = entity_metadata_wrapper('node', $collection);
-          $field_partner = $collection_wrapper->field_partner->value();
-          $partner_wrapper = entity_metadata_wrapper('node', $field_partner[0]);
-          $isPartOf[] = [
-            'uuid' => $collection_wrapper->field_identifier->value(),
-            'type' => dlts_viewer_rsbe_types_alias_map($collection_wrapper->getBundle()),
-            'code' => $collection_wrapper->field_code->value(),
-            'name' => $collection_wrapper->field_name->value(),
-            'provider' => [
-              'uuid' => $partner_wrapper->field_identifier->value(),
-              'type' => dlts_viewer_rsbe_types_alias_map($partner_wrapper->getBundle()),
-              'code' => $partner_wrapper->field_code->value(),
-              'name' => $partner_wrapper->field_name->value(),
-            ],
-          ];
-        }
-        $entity['noid'] = $handle[count($handle) - 1];
-        $entity['type'] = dlts_viewer_rsbe_types_alias_map($wrapper->getBundle());
-        $entity['isPartOf'] = $isPartOf;
-      }
-      /*
-       * Not available. Search repository. NoId will not be set to null.
-       */
-      else {
+      
         $scope = 'ses';
 
         $endpoint = parse_url($endpoint);
@@ -398,7 +368,6 @@ function dlts_viewer_search_repository() {
         } else {
           throw new Exception('Request failed with status code ' . $request->code . '.');
         }
-      }
     } else {
       throw new Exception('Incorrect configuration.');
     }
@@ -518,6 +487,9 @@ function dlts_viewer_repository_search() {
       $docs = (array) $data->response->docs;
       $doc  = reset($docs);
       $output = _dlts_viewer_resolve_hierarchy($doc, $base_options);
+    } 
+    else {
+      return dlts_viewer_search_repository($digi_id);
     }
   }
   else {
