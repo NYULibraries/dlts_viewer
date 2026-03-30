@@ -164,7 +164,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'type' => $type,
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'is_set' => $is_set,
+        'is_set' => $is_set ? 'true' : 'false',
         'css' => $cssContent,
         'script' => $jsContent,
       ];
