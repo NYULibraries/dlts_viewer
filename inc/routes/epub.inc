@@ -71,8 +71,7 @@ function _dlts_viewer_menu_epub() {
     'type' => MENU_CALLBACK,
   ];
 
-  // epubs.
-  // http://HOST/api/v0/epubs/nyu-press
+  // http://HOST/api/v1/epubs/nyu-press
   $items['api/%dlts_version/epubs/%dlts_publisher'] = [
     'title' => 'Query repository',
     'description' => 'Query epubs API.',
@@ -86,8 +85,6 @@ function _dlts_viewer_menu_epub() {
     'type' => MENU_CALLBACK,
   ];
 
-  // epubs.
-  // curl -b ./cookie http://HOST/api/v0/epubs/nyu-press/9780814744758
   $items['api/%dlts_version/epubs/%dlts_publisher/%dlts_epub'] = [
     'title' => 'Query repository',
     'description' => 'Query epubs API.',

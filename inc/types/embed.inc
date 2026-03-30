@@ -25,6 +25,12 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
     $language = filter_xss($query_parameters['lang']);
   }
 
+  if (isset($query_parameters['language'])) {
+    $language = filter_xss($query_parameters['language']);
+  } elseif (isset($query_parameters['lang'])) {
+    $language = filter_xss($query_parameters['lang']);
+  }
+
   $viewer = isset($query_parameters['viewer']) ? filter_xss($query_parameters['viewer']) : 'mirador';
 
   $reset = isset($query_parameters['reset']) ? filter_xss($query_parameters['reset']) : false;
@@ -164,6 +170,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
       ];
 
       break;
+
     case 'mirador3':
       $template = 'viewer_embed_page';
       $opts =  [
