@@ -12,8 +12,6 @@ const uuid = 'mirador-app'
 
 const elem = document.getElementById(uuid)
 
-console.log('Mirador 4')
-
 const {
   endpoint,
   identifier,
