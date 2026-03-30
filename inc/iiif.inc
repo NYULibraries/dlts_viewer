@@ -696,9 +696,9 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
 
   // $reposidentifier = $ijson->pubinfo->reposidentifier;
 
-  $archdesc = $ijson->archdesc;
+  $archdesc = isset($ijson->archdesc) ? $ijson->archdesc : null;
 
-  $eadheader = $ijson->eadheader;
+  $eadheader = isset($ijson->eadheader) ? $ijson->eadheader : null;
 
   // Resource
   $fields['resource'] = [
