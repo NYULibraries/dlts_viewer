@@ -24,6 +24,7 @@
       data-endpoint="<?php echo $endpoint ?>"
       data-type="<?php echo $type ?>"
       data-sequence="<?php echo $sequence ?>"
+      data-set="<?php echo $is_set ?>"
       data-identifier="<?php echo $identifier ?>">
     </div>
     <script>

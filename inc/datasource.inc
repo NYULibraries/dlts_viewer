@@ -779,7 +779,6 @@ function dlts_viewer_admin_list_topics($entity, $status = 1, $requestedLang = 'e
 
 }
 
-// $entity (collection entity) $date to filter by
 function dlts_viewer_admin_list_topics_($entity, $date, $requestedLang = 'en') {
   $wrapper = entity_metadata_wrapper('node', $entity);
   $status = 1;
@@ -896,4 +895,35 @@ function dlts_viewer_resources_to_update() {
     ];
   }
 
+}
+
+/**
+ * Resource is set?
+ */
+function dlts_viewer_is_set($id) {
+
+  $object = dlts_noid_load($id);
+
+  if (!empty($object)) {
+
+    $query = new EntityFieldQuery();
+
+    $nid = $object->nid;
+
+    $bundles = [ 'dlts_multivol_book', 'dlts_series_book' ];
+
+    $result = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', $bundles, 'IN')
+      ->propertyCondition('status', 1)
+      ->fieldCondition('field_book', 'nid', $nid, '=')
+      ->execute();
+
+    if (!empty($result['node'])) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  } else {
+    return FALSE;
+  }
 }

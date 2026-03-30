@@ -123,6 +123,24 @@ function _dlts_viewer_menu_iiif() {
   ];
 
   /*
+   * Register IIIF Presentation Manifest routes for sets.
+   * @link 
+   *
+   * @return array
+   *   IIIF Presentation sets manifest.
+   */
+  $items['api/presentation/sets/%dlts_set/manifest.json'] = [
+    'title' => 'IIIF Presentation sets API 3 - Manifest',
+    'access arguments' => [ 'access iiif content' ],
+    'page callback' => 'dlts_viewer_iiif_sets_list_manifest',
+    'page arguments' => [ 3 ],
+    'page arguments' => [ 3 ],
+    'type' => MENU_CALLBACK,
+    'delivery callback' => 'dlts_viewer_ldjson_iiif_presentation_3_output',
+    'file' => 'inc/types/iiif/sets.inc',
+  ];
+
+  /*
    * Register IIIF Presentation Manifest routes for collections.
    * @link https://iiif.io/api/cookbook/recipe/0032-collection
    *

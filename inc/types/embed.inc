@@ -68,6 +68,12 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
   $title = html_entity_decode($title, ENT_QUOTES);
 
+  $is_set = false;
+ 
+  if ($type === 'books') {
+    $is_set = dlts_viewer_is_set($identifier);
+  }  
+
   // Set entity title.
   drupal_set_title($title);
 
@@ -97,6 +103,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'type' => $type,
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+        'is_set' => $is_set,
       ];
       break;
     case 'clover':
@@ -110,6 +117,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'sequence' => $sequence,
         'endpoint' => $base_url,
         'type' => $type,
+        'is_set' => $is_set,
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
         'script' => file_get_contents("$module/viewers/clover-iiif/dist/clover-iiif.2.3.2.umd.js"),
@@ -150,12 +158,13 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'type' => $type,
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+        'is_set' => $is_set,
         'css' => $cssContent,
         'script' => $jsContent,
       ];
 
       break;
-    case 'mirador4':
+    case 'mirador3':
       $template = 'viewer_embed_page';
       $opts =  [
         'analytics' => $analytics,
