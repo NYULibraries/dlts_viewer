@@ -2,7 +2,7 @@ import Mirador from 'mirador';
 import { miradorImageToolsPlugin } from 'mirador-image-tools';
 import { defaultConfig } from './viewerConfig.js'
 import LanguageSelector from './plugins/LanguageSelector.jsx'
-import ManifestSetSelector from './plugins/ManifestSetSelector.jsx'
+import createManifestSetSelector from './plugins/ManifestSetSelector.jsx'
 import './style.css'
 
 const uuid = 'mirador-app'
@@ -19,6 +19,17 @@ const {
 } = elem.dataset
 
 const manifestId = `${endpoint}/api/presentation/${type}/${identifier}/manifest.json`
+const plugins = [
+  ...miradorImageToolsPlugin,
+  LanguageSelector,
+]
+
+if (set === 'true') {
+  plugins.push(createManifestSetSelector({
+    endpoint,
+    identifier,
+  }))
+}
 
 const config = {
   ...defaultConfig,
@@ -38,8 +49,4 @@ const config = {
   },
 }
 
-Mirador.viewer(config, [
-  ...miradorImageToolsPlugin,
-  LanguageSelector,
-  ManifestSetSelector,
-])
+Mirador.viewer(config, plugins)
