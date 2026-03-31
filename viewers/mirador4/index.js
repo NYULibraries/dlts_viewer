@@ -2,7 +2,7 @@ import Mirador from 'mirador';
 import { miradorImageToolsPlugin } from 'mirador-image-tools';
 import { defaultConfig } from './viewerConfig.js'
 import LanguageSelector from './plugins/LanguageSelector.jsx'
-import createManifestSetSelector from './plugins/ManifestSetSelector.jsx'
+import createMultiVolumeSelector from './plugins/MultiVolumeSelector.jsx'
 import './style.css'
 
 const uuid = 'mirador-app'
@@ -15,7 +15,7 @@ const {
   type,
   language,
   sequence,
-  set,
+  multivolume,
 } = elem.dataset
 
 const manifestId = `${endpoint}/api/presentation/${type}/${identifier}/manifest.json`
@@ -24,11 +24,8 @@ const plugins = [
   LanguageSelector,
 ]
 
-if (set === 'true') {
-  plugins.push(createManifestSetSelector({
-    endpoint,
-    identifier,
-  }))
+if (multivolume === 'true') {
+  plugins.push(createMultiVolumeSelector({ endpoint, identifier }))
 }
 
 const config = {

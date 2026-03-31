@@ -134,10 +134,26 @@ function _dlts_viewer_menu_iiif() {
     'access arguments' => [ 'access iiif content' ],
     'page callback' => 'dlts_viewer_iiif_sets_list_manifest',
     'page arguments' => [ 3 ],
-    'page arguments' => [ 3 ],
     'type' => MENU_CALLBACK,
     'delivery callback' => 'dlts_viewer_ldjson_iiif_presentation_3_output',
     'file' => 'inc/types/iiif/sets.inc',
+  ];
+
+  /*
+   * Register IIIF Presentation Manifest routes for multivolume.
+   * @link 
+   *
+   * @return array
+   *   IIIF Presentation multivolume manifest.
+   */
+  $items['api/presentation/multivolume/%dlts_multivolume/manifest.json'] = [
+    'title' => 'IIIF Presentation multivolume API 3 - Manifest',
+    'access arguments' => [ 'access iiif content' ],
+    'page callback' => 'dlts_viewer_iiif_multivolume_list_manifest',
+    'page arguments' => [ 3 ],
+    'type' => MENU_CALLBACK,
+    'delivery callback' => 'dlts_viewer_ldjson_iiif_presentation_3_output',
+    'file' => 'inc/types/iiif/multivolume.inc',
   ];
 
   /*
