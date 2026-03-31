@@ -74,10 +74,10 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
   $title = html_entity_decode($title, ENT_QUOTES);
 
-  $is_set = false;
+  $is_multivolume = false;
  
   if ($type === 'books') {
-    $is_set = dlts_viewer_is_set($identifier);
+    $is_multivolume = dlts_viewer_is_multivolume($identifier);
   }  
 
   // Set entity title.
@@ -109,7 +109,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'type' => $type,
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'is_set' => $is_set,
+        'is_multivolume' => $is_multivolume ? 'true' : 'false',
       ];
       break;
     case 'clover':
@@ -123,7 +123,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'sequence' => $sequence,
         'endpoint' => $base_url,
         'type' => $type,
-        'is_set' => $is_set,
+        'is_multivolume' => $is_multivolume ? 'true' : 'false',
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
         'script' => file_get_contents("$module/viewers/clover-iiif/dist/clover-iiif.2.3.2.umd.js"),
@@ -164,7 +164,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'type' => $type,
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'is_set' => $is_set ? 'true' : 'false',
+        'is_multivolume' => $is_multivolume ? 'true' : 'false',
         'css' => $cssContent,
         'script' => $jsContent,
       ];
@@ -182,6 +182,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'sequence' => $sequence,
         'endpoint' => $base_url,
         'type' => $type,
+        'is_multivolume' => $is_multivolume ? 'true' : 'false',
         'identifier' => $identifier,
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
         'script' => file_get_contents("$module/mirador/integration/dist/mirador.js"),

@@ -15,7 +15,6 @@ import { getLanguagesFromConfigWithCurrent } from 'mirador/src/state/selectors/c
 import { getManifestoInstance } from 'mirador/src/state/selectors/manifests'
 import PropTypes from 'prop-types'
 
-
 const translations = {
   en: {
     availableLanguages: 'Available languages',
@@ -86,7 +85,8 @@ const LanguageSelector = ({
   windowId,
 }) => {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(true)
+  // default language selector to closed, avoid extra cognitive load for users.
+  const [open, setOpen] = useState(false)
 
   const handleChange = useCallback((_event, isExpanded) => {
     setOpen(isExpanded)
@@ -171,12 +171,21 @@ const mapDispatchToProps = (dispatch, { afterSelect }) => ({
 })
 
 const mapStateToProps = (state, { windowId }) => {
-  return {
-    languages: getLanguagesFromConfigWithCurrent(state),
-    resourceLanguages: getManifestoInstance(state, { windowId }).getLabel().reduce((langs, lang) => {
+  // During manifest changes, getManifestoInstance can
+  // briefly be undefined, and the plugin was calling .getLabel() unconditionally.
+  // mapStateToProps now checks if the manifesto instance exists and 
+  // falls back to resourceLanguages: [] until the new manifest is ready.
+  const manifestoInstance = getManifestoInstance(state, { windowId })
+  const resourceLanguages = manifestoInstance
+    ? manifestoInstance.getLabel().reduce((langs, lang) => {
       langs.push(lang._locale)
       return langs
-    }, []),
+    }, [])
+    : []
+
+  return {
+    languages: getLanguagesFromConfigWithCurrent(state),
+    resourceLanguages,
     rootElem: document.getElementById(state.config.id),
     windowId,
   }

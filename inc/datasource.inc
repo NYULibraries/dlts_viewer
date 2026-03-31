@@ -927,3 +927,35 @@ function dlts_viewer_is_set($id) {
     return FALSE;
   }
 }
+
+/**
+ * Resource is multivolume?
+ */
+function dlts_viewer_is_multivolume($id) {
+
+  $object = dlts_noid_load($id);
+
+  if (!empty($object)) {
+
+    $query = new EntityFieldQuery();
+
+    $nid = $object->nid;
+
+    $bundle = 'dlts_multivol_book';
+
+    $result = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', $bundle, '=')
+      ->propertyCondition('status', 1)
+      ->fieldCondition('field_book', 'nid', $nid, '=')
+      ->execute();
+
+    if (!empty($result['node'])) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  } else {
+    return FALSE;
+  }
+}
+
