@@ -2,7 +2,7 @@ import Mirador from 'mirador';
 import { miradorImageToolsPlugin } from 'mirador-image-tools';
 import { defaultConfig } from './viewerConfig.js'
 import LanguageSelector from './plugins/LanguageSelector.jsx'
-import createMultiVolumeSelector from './plugins/MultiVolumeSelector.jsx'
+import createMultiVolumeSelector from './plugins/createMultiVolumeSelector.jsx'
 import './style.css'
 
 const uuid = 'mirador-app'
