@@ -53,6 +53,7 @@ function dlts_multivolume_load($id) {
 
   $objects = [
     'title' => $set_node->title,
+    'identifier' => $object->identifier,
     'type'  => 'set',
     'items' => [],
   ];
