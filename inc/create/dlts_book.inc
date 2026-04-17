@@ -186,24 +186,26 @@ function create_dlts_book_from_json($data) {
     }
   }
 
+  // 0|Left to right
+  // 1|Right to left
   if (isset($data['read_order'])) {
-    $read_order_raw = $data['read_order'];
-    if ($read_order_raw == 'Right to left' || $read_order_raw == '1') {
-      $read_order[] = 1;
-    }
-    elseif ($read_order_raw == 'Left to right' || $read_order_raw == '0') {
-      $read_order[] = 0;
-    }
+    $read_order[] = (int) $data['read_order'];
+    // if ($read_order_raw == 'Right to left' || $read_order_raw === 1) {
+    //   $read_order[] = 1;
+    // }
+    // elseif ($read_order_raw == 'Left to right' || $read_order_raw == 0) {
+    //   $read_order[] = 0;
+    // }
   }
 
   if (isset($data['scan_order'])) {
-    $scan_order_raw = $data['scan_order'];
-    if ($scan_order_raw == 'Right to left' || $scan_order_raw == '1') {
-      $scan_order[] = 1;
-    }
-    elseif ($scan_order_raw == 'Left to right' || $scan_order_raw == '0') {
-      $scan_order[] = 0;
-    }
+    $scan_order[] = (int) $data['scan_order'];
+    // if ($scan_order_raw == 'Right to left' || $scan_order_raw == '1') {
+    //   $scan_order[] = 1;
+    // }
+    // elseif ($scan_order_raw == 'Left to right' || $scan_order_raw == '0') {
+    //   $scan_order[] = 0;
+    // }
   }
 
   if (isset($metadata->scanning_notes) && !empty($metadata->scanning_notes->value)) {
@@ -880,35 +882,6 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
     );
 
     switch ($datasource['type']) {
-      case 'postcard':
-        try {
-          // Check if request has all the keys we required.
-          if (!isset($datasource['identifier'])) {
-            throw new Exception('Field identifier can not be empty.');
-          }
-          if (!isset($datasource['metadata'])) {
-            throw new Exception('Field metadata can not be empty.');
-          }
-          if (!isset($datasource['status'])) {
-            throw new Exception('Field status can not be empty.');
-          }
-          module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_postcard');
-          $entity = create_dlts_dlts_postcard_from_json($datasource);
-          if ($entity) {
-            return [
-              'data' => $entity,
-            ];
-          } else {
-            throw new Exception('Unexpected error.');
-          }
-        }
-        catch (Exception $e) {
-          watchdog('dlts_viewer', $e->getMessage(), [], WATCHDOG_CRITICAL);
-          return [
-            'error' => $e->getMessage(),
-          ];
-        }
-        break;
 
       case 'book':
         try {
@@ -933,20 +906,20 @@ function dlts_viewer_api_v1_0_1_dlts_book_objects($source) {
           }
         }
         catch (Exception $e) {
-          watchdog('dlts_viewer', $e->getMessage(), array(), WATCHDOG_CRITICAL);
-          return array(
+          watchdog('dlts_viewer', $e->getMessage(), [], WATCHDOG_CRITICAL);
+          return [
             'error' => $e->getMessage(),
-          );
+          ];
         }
         break;
 
       default:
-        return array(
+        return [
           'error' => 'Type not ' . $datasource['type'] . ' supported.',
-        );
+        ];
     }
   }
-  return array(
+  return [
     'error' => 'Not allowed.',
-  );
+  ];
 }
