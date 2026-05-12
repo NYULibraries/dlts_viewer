@@ -413,7 +413,7 @@ function dlts_book_fields_values($wrapper, array $translatable_fields = []) {
       $wrapper_collection = entity_metadata_wrapper('node', $field_collection);
       $collection_name = $wrapper_collection->field_name->value();
       $collection_locale = db_query('SELECT translation FROM dlts_viewer_locale WHERE language = :language AND source = :source LIMIT 1', [ ':language' => $language, ':source' => $collection_name ])->fetchField();
-      if (isset($collection_locale)) {
+      if (isset($collection_locale) && !empty($collection_locale)) {
         $metadata['field_collection']['value'][] = $collection_locale;
       } else {
         $metadata['field_collection']['value'][] = $collection_name;
@@ -431,7 +431,7 @@ function dlts_book_fields_values($wrapper, array $translatable_fields = []) {
       $wrapper_partner = entity_metadata_wrapper('node', $field_partner);
       $partner_name = $wrapper_partner->field_name->value();
       $partner_locale = db_query('SELECT translation FROM dlts_viewer_locale WHERE language = :language AND source = :source LIMIT 1', [ ':language' => $language, ':source' => $partner_name ])->fetchField();
-      if (isset($partner_locale)) {
+      if (isset($partner_locale) && !empty($partner_locale)) {
         $metadata['field_partner']['value'][] = $partner_locale;
       } else {
         $metadata['field_partner']['value'][] = $partner_name;
@@ -1275,7 +1275,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     unset($nid_wrapper);
   }
 
-  $translations_keys = array_keys($translations);
+   // $translations_keys = array_keys($translations);
 
   // https://iiif.io/api/presentation/3.0/#rendering
   $field_pdf_file_raw = $wrapper->field_pdf_file->value();
@@ -1342,13 +1342,13 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     'field_description',
     'field_call_number',
     'field_volume',
-    'field_title',
     'field_publication_date_text',
     'field_publication_location',
     'field_isbn',
     'field_language',
     'field_publisher',
     'field_topic',
+    // 'field_title', // https://nyu.atlassian.net/browse/DLTSVIEWER-220?focusedCommentId=312215
     // 'field_scanning_notes',
     // 'field_sequence_count',
     // 'field_language_code',
@@ -1712,12 +1712,7 @@ function dlts_viewer_iiif_resource_page_canvas($type, $resource, $page) {
       ],
     ],
     'items' => [
-      dlts_viewer_iiif_book_page_annotation_page(
-        $type,
-        $resource,
-        $page,
-        $item
-      ),
+      dlts_viewer_iiif_book_page_annotation_page($type, $resource, $page),
     ],
   ];
 

@@ -2643,3 +2643,44 @@ function dlts_viewer_list_entities(int $start = 0, int $length = 10) {
   return $response;
 
 }
+
+function dlts_viewer_objects_sequences($object) {
+
+  $node = node_load($object->nid);
+
+  $wrapper = entity_metadata_wrapper('node', $node);
+
+  $isPartOf = $wrapper->field_identifier->value();
+
+  $realpath = drupal_realpath('public://') . '/datasource';
+
+  $bundle = dlts_viewer_get_bundle_alias($wrapper->getBundle());
+
+  $results = dlts_viewer_mongodb_load_resource_by_identifier($isPartOf, 'dlts_books_page');
+
+  $docs = [];
+
+  foreach ($results as $result) {
+    $result = (array) $result;
+    $docs[] = [
+      'fid' => (string) $result['_id'],
+      'sequence' => $result['sequence'],
+      'uri' => $result['cm']['uri'],
+      'url' => file_create_url($result['cm']['uri']),
+      'width' => $result['cm']['width'],
+      'height' => $result['cm']['height'],
+    ];
+  }
+
+  // Try to mimic Apache Solr response.
+  $response = [
+    'response' => [
+      'numFound' => count($docs),
+      'start' => 0,
+      'docs' => $docs,
+    ],
+  ];
+
+  return $response;
+
+}

@@ -83,6 +83,17 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
+  $items['api/v1/objects/%dlts_noid/sequences'] = [
+    'title' => 'Object sequences',
+    'access arguments' => [ 
+      'access content' 
+    ],
+    'page callback' => 'dlts_viewer_objects_sequences',
+    'page arguments' => [ 3 ],
+    'delivery callback' => 'drupal_json_output',
+    'file' => 'inc/endpoints.inc',
+  ];
+
   // Update/Delete book.
   $items['api/v1/objects/books/%dlts_book'] = [
     'title' => 'Update book',
