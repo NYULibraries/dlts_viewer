@@ -140,7 +140,7 @@ function save_dlts_photo_set($node, $node_language = 'en') {
 
     $nid = $ewrapper->getIdentifier();
 
-    $exists = db_query("SELECT nid FROM dlts_viewer_resource WHERE nid = '$nid'")->fetchAll();
+    $exists = db_query("SELECT nid FROM {dlts_viewer_resource} WHERE nid = :nid", [':nid' => $nid])->fetchAll();
 
     if (count($exists) <= 0) {
 
@@ -148,9 +148,13 @@ function save_dlts_photo_set($node, $node_language = 'en') {
 
       $noid = $node['noid'];
 
-      $edit_query = "INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', 'photos', '0');";
-
-      db_query($edit_query);
+      db_insert('dlts_viewer_resource')->fields([
+        'nid' => $nid,
+        'noid' => $noid,
+        'identifier' => $identifier,
+        'document' => 'photos',
+        'proceed' => 0,
+      ])->execute();
 
     }
   }

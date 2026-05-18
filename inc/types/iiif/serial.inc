@@ -381,16 +381,20 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
 
   $module_path = drupal_get_path('module', 'dlts_viewer');
 
+  $title = $fields['field_title']['value'] ?? ['en' => ['Untitled']];
+
+  unset($fields['field_title']);
+
   $manifest = [
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
     'id' => "$base_url/api/presentation/$type/$identifier/manifest.json",
     'type' => 'Manifest',
-    'label' => $fields['field_title']['value'] ?? ['en' => ['Untitled']],
+    'label' => $title,
     'behavior' => $sequence_count > 1 ? ['paged'] : ['individuals'],
     'viewingDirection' => $viewingDirection,
     'items' => array_values($items),
     'metadata' => array_values($fields),
-    'logo'             => [[
+    'logo' => [[
       'id' => "$base_url/$module_path/images/nyu-logo.jpg",
       'type' => 'Image',
       'format' => 'image/jpeg',

@@ -149,6 +149,24 @@ function dlts_viewer_drush_command() {
     'description' => dt('Task - Update photos title'),
   ];
 
+  // drush dlts-cache-clear --type=all
+  // drush dlts-cache-clear --type=iiif
+  // drush dlts-cache-clear --type=datasource --identifiers=identifier1,identifier2
+  // drush dlts-cache-clear --type=ijson --identifiers=noid1,noid2
+  $items['dlts-purge-cache'] = [
+    'callback' => 'dlts_viewer_drush_purge_cache',
+    'description' => dt('Clear JSON file cache by type (datasource, iiif, ijson, hjson, all). Optionally target specific items.'),
+    'options' => [
+      'type' => dt('Cache type to clear: datasource, iiif, ijson, hjson, or all.'),
+      'identifiers' => dt('Comma-separated list of identifiers (or noids for ijson/hjson) to target. If omitted, all cache files for the type are deleted.'),
+    ],
+    'examples' => [
+      'drush dlts-cache-clear --type=all' => dt('Clear all JSON cache types.'),
+      'drush dlts-cache-clear --type=iiif' => dt('Clear all IIIF cache files.'),
+      'drush dlts-cache-clear --type=datasource --identifiers=identifier1,identifier2' => dt('Clear datasource cache for specific identifiers.'),
+      'drush dlts-cache-clear --type=ijson --identifiers=noid1,noid2' => dt('Clear ijson cache for specific noids.'),
+    ],
+  ];
 
   return $items;
 
@@ -406,13 +424,13 @@ function dlts_viewer_pick_one_identifier() {
  */
 function dlts_viewer_delete_by_identifier() {
   $identifier = drush_get_option('identifier', NULL);
-  $record = db_query("SELECT nid, document FROM dlts_viewer_resource WHERE identifier = '$identifier' LIMIT 1")->fetchAll();
+  $record = db_query("SELECT nid, document FROM {dlts_viewer_resource} WHERE identifier = :identifier LIMIT 1", [':identifier' => $identifier])->fetchAll();
   $type = $record[0]->document;
   if ($type == 'maps' || $type == 'photos') {
     $nid = $record[0]->nid;
     node_delete($nid);
     drush_log("Node $nid deleted.", 'success');
-    db_query("DELETE FROM dlts_viewer_resource WHERE identifier = '$identifier'");
+    db_delete('dlts_viewer_resource')->condition('identifier', $identifier)->execute();
   } else {
     $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
     if (count($nids) > 0) {
@@ -420,7 +438,7 @@ function dlts_viewer_delete_by_identifier() {
       foreach ($nids as $nid) {
         node_delete($nid);
         drush_log("Node $nid deleted", 'success');
-        db_query("DELETE FROM dlts_viewer_resource WHERE identifier = '$identifier'");
+        db_delete('dlts_viewer_resource')->condition('identifier', $identifier)->execute();
       }
     } else {
       drush_log("Node not found. Identifier $identifier ");
@@ -440,6 +458,7 @@ function dlts_viewer_drush_help($section) {
 
 // ./vendor/bin/drush viewer-test
 function dlts_viewer_drush_viewer_test() {
+  echo "This is a test command for development.";
 }
 
 // ./vendor/bin/drush resources-list-cleanup
@@ -495,9 +514,9 @@ function dlts_viewer_drush_add_resources() {
 
   $_type = $types[$type];
 
-  db_query("DELETE FROM dlts_viewer_resource WHERE document = '$type';");
+  db_delete('dlts_viewer_resource')->condition('document', $type)->execute();
 
-  db_query("DELETE FROM dlts_viewer_resource WHERE document = '$_type';");
+  db_delete('dlts_viewer_resource')->condition('document', $_type)->execute();
 
   $nodes = db_query($sql)->fetchAll();
 
@@ -507,7 +526,13 @@ function dlts_viewer_drush_add_resources() {
     $handlepathinfo = parse_url($node->handle);
     $handle = explode('/', $handlepathinfo['path']);
     $noid = trim($handle[2]);
-    db_query("INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', '$type', '1')");
+    db_insert('dlts_viewer_resource')->fields([
+      'nid' => $nid,
+      'noid' => $noid,
+      'identifier' => $identifier,
+      'document' => $type,
+      'proceed' => 1,
+    ])->execute();
   }
 
 }
@@ -1105,11 +1130,228 @@ function dlts_viewer_drush_update_photos_title_create_table() {
     $handle = explode('/', $handlepathinfo['path']);
     $noid = trim($handle[2]);
 
-    db_query("INSERT INTO $tablename (nid, noid, identifier, status) VALUES ('$nid', '$noid', '$identifier', '0')");
+    db_insert($tablename)->fields([
+      'nid' => $nid,
+      'noid' => $noid,
+      'identifier' => $identifier,
+      'status' => '0',
+    ])->execute();
 
     drush_log("{$nid} - {$identifier} - {$noid}", 'ok');
 
   }
+
+}
+
+/**
+ * Drush command callback: dlts-cache-clear.
+ *
+ * Clears the public-directory JSON file cache by type, optionally scoped to a
+ * list of identifiers or noids.
+ *
+ * Cache layout:
+ *   datasource : public://datasource/{bundle}/{identifier}/info.{lang}.json
+ *   iiif       : public://iiif/{type}/{identifier}/*.json
+ *   ijson      : public://ijson/{noid}.json
+ *   hjson      : public://hjson/{noid}.json
+ */
+function dlts_viewer_drush_purge_cache() {
+
+  $type = drush_get_option('type', FALSE);
+
+  if (!$type) {
+    drush_log(dt('No cache type specified. Use --type=datasource|iiif|ijson|hjson|all.'), 'error');
+    return;
+  }
+
+  $valid_types = ['datasource', 'iiif', 'ijson', 'hjson', 'all'];
+
+  if (!in_array($type, $valid_types)) {
+    drush_log(dt('Invalid cache type "@type". Valid types: datasource, iiif, ijson, hjson, all.', ['@type' => $type]), 'error');
+    return;
+  }
+
+  $identifiers_option = drush_get_option('identifiers', FALSE);
+
+  $identifiers = [];
+
+  if ($identifiers_option) {
+    $identifiers = array_values(array_filter(array_map('trim', explode(',', $identifiers_option))));
+  }
+
+  $realpath = drupal_realpath('public://');
+
+  $types_to_clear = ($type === 'all') ? ['datasource', 'iiif', 'ijson', 'hjson'] : [$type];
+
+  foreach ($types_to_clear as $cache_type) {
+    _dlts_viewer_drush_clear_cache_type($realpath, $cache_type, $identifiers);
+  }
+
+}
+
+/**
+ * Clear cache files for a single cache type.
+ *
+ * @param string $realpath
+ *   Absolute path to the Drupal public files directory.
+ * @param string $type
+ *   One of: datasource, iiif, ijson, hjson.
+ * @param array $identifiers
+ *   Identifiers (or noids) to target. When empty, all files for the type are
+ *   deleted.
+ */
+function _dlts_viewer_drush_clear_cache_type($realpath, $type, array $identifiers = []) {
+
+  $base_dir = "$realpath/$type";
+
+  if (!is_dir($base_dir)) {
+    drush_log(dt('Cache directory does not exist: @dir', ['@dir' => $base_dir]), 'warning');
+    return;
+  }
+
+  $deleted = 0;
+
+  // Sanitize identifiers: reject anything that could escape the base directory.
+  $safe_identifiers = [];
+  foreach ($identifiers as $id) {
+    if (preg_match('/[\/\\\\]|\.\./', $id) || $id === '' || $id === '.') {
+      drush_log(dt('Skipping unsafe identifier: @id', ['@id' => $id]), 'error');
+      continue;
+    }
+    $safe_identifiers[] = $id;
+  }
+  $identifiers = $safe_identifiers;
+
+  switch ($type) {
+
+    // ijson and hjson: flat directory – one file per noid.
+    case 'ijson':
+    case 'hjson':
+      if (empty($identifiers)) {
+        $deleted += _dlts_viewer_drush_delete_json_files($base_dir);
+      }
+      else {
+        foreach ($identifiers as $noid) {
+          $file = "$base_dir/$noid.json";
+          $real_file = realpath($file);
+          $real_base = realpath($base_dir);
+          if ($real_file === FALSE || strpos($real_file, $real_base . DIRECTORY_SEPARATOR) !== 0) {
+            drush_log(dt('Skipping out-of-bounds path: @file', ['@file' => $file]), 'error');
+            continue;
+          }
+          if (unlink($real_file)) {
+            $deleted++;
+            drush_log(dt('Deleted @file', ['@file' => $real_file]), 'ok');
+          }
+          else {
+            drush_log(dt('Failed to delete @file', ['@file' => $real_file]), 'warning');
+          }
+        }
+      }
+      break;
+
+    // datasource: public://datasource/{bundle}/{identifier}/info.*.json
+    case 'datasource':
+      if (empty($identifiers)) {
+        $deleted += _dlts_viewer_drush_delete_json_files_recursive($base_dir);
+      }
+      else {
+        $bundle_dirs = glob("$base_dir/*", GLOB_ONLYDIR);
+        foreach ((array) $bundle_dirs as $bundle_dir) {
+          foreach ($identifiers as $identifier) {
+            $item_dir = "$bundle_dir/$identifier";
+            if (is_dir($item_dir)) {
+              $deleted += _dlts_viewer_drush_delete_json_files($item_dir);
+            }
+          }
+        }
+      }
+      break;
+
+    // iiif: public://iiif/{resource_type}/{identifier}/*.json
+    case 'iiif':
+      if (empty($identifiers)) {
+        $deleted += _dlts_viewer_drush_delete_json_files_recursive($base_dir);
+      }
+      else {
+        $type_dirs = glob("$base_dir/*", GLOB_ONLYDIR);
+        foreach ((array) $type_dirs as $type_dir) {
+          foreach ($identifiers as $identifier) {
+            $item_dir = "$type_dir/$identifier";
+            if (is_dir($item_dir)) {
+              $deleted += _dlts_viewer_drush_delete_json_files($item_dir);
+            }
+          }
+        }
+      }
+      break;
+
+  }
+
+  drush_log(dt('[@type] Deleted @count cache file(s).', ['@type' => $type, '@count' => $deleted]), 'ok');
+
+}
+
+/**
+ * Delete all JSON files directly inside a directory (non-recursive).
+ *
+ * @param string $dir
+ *   Directory path.
+ *
+ * @return int
+ *   Number of files deleted.
+ */
+function _dlts_viewer_drush_delete_json_files($dir) {
+
+  $deleted = 0;
+
+  foreach ((array) glob("$dir/*.json") as $file) {
+    if (is_file($file)) {
+      if (unlink($file)) {
+        $deleted++;
+        drush_log(dt('Deleted @file', ['@file' => $file]), 'ok');
+      }
+      else {
+        drush_log(dt('Failed to delete @file', ['@file' => $file]), 'warning');
+      }
+    }
+  }
+
+  return $deleted;
+
+}
+
+/**
+ * Recursively delete all JSON files under a directory tree.
+ *
+ * @param string $dir
+ *   Root directory path.
+ *
+ * @return int
+ *   Number of files deleted.
+ */
+function _dlts_viewer_drush_delete_json_files_recursive($dir) {
+
+  $deleted = 0;
+
+  $iterator = new RecursiveIteratorIterator(
+    new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
+    RecursiveIteratorIterator::LEAVES_ONLY
+  );
+
+  foreach ($iterator as $file) {
+    if ($file->isFile() && $file->getExtension() === 'json') {
+      if (unlink($file->getPathname())) {
+        $deleted++;
+        drush_log(dt('Deleted @file', ['@file' => $file->getPathname()]), 'ok');
+      }
+      else {
+        drush_log(dt('Failed to delete @file', ['@file' => $file->getPathname()]), 'warning');
+      }
+    }
+  }
+
+  return $deleted;
 
 }
 

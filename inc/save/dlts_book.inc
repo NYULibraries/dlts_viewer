@@ -397,11 +397,16 @@ function save_dlts_book($node, $language = 'en') {
     if ($saved) {
       $nid = $ewrapper->getIdentifier();
       if ($node_language == 'en') {
-        $exists = db_query("SELECT nid FROM dlts_viewer_resource WHERE nid = '$nid'")->fetchAll();
+        $exists = db_query("SELECT nid FROM {dlts_viewer_resource} WHERE nid = :nid", [':nid' => $nid])->fetchAll();
         if (count($exists) <= 0) {
           $noid = $node['noid'];
-          $edit_query = "INSERT INTO dlts_viewer_resource (nid, noid, identifier, document, proceed) VALUES ('$nid', '$noid', '$identifier', 'books', '0');";
-          db_query($edit_query);
+          db_insert('dlts_viewer_resource')->fields([
+            'nid' => $nid,
+            'noid' => $noid,
+            'identifier' => $identifier,
+            'document' => 'books',
+            'proceed' => 0,
+          ])->execute();
         }
         // Multi volume book.
         if (!empty($node['multivolume']) && !empty($node['multivolume']->volume)) {

@@ -109,7 +109,7 @@ function dlts_viewer_shutdown_log_api_requests($request) {
 
   // $REDIRECT_URL = $_SERVER['REDIRECT_URL'];
 
-  $HTTP_REFERER = $_SERVER['HTTP_REFERER'];
+  $HTTP_REFERER = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
 
   db_insert('dlts_viewer_apilog')->fields([
     'q' => $q,

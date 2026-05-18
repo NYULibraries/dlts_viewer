@@ -49,6 +49,12 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
 
   $file_destination = "$dir_path/$sequence.json";
 
+  $query_parameters = drupal_get_query_parameters();
+  
+  if (isset($query_parameters['reset'])) {
+    $cache = FALSE;
+  }
+
   if ($cache && file_exists($file_destination)) {
     return drupal_json_decode(
       file_get_contents($file_destination)
@@ -75,18 +81,18 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
   $options = [
     'method' => 'GET',
     'timeout' => 500,
-    'ssl' => [
+    // 'ssl' => [
       // Set to FALSE to disable checking the remote certificate against a local certificate authority.
-      'verify_peer' => FALSE,    
+    //   'verify_peer' => FALSE,    
       // Set to FALSE to not verify the remote host's name against the common name (CN)
       // or subject alternative name (SAN) fields in the certificate.
-      'verify_peer_name' => FALSE,    
+    //   'verify_peer_name' => FALSE,    
       // Allow self-signed certificates. Requires verify_peer set to TRUE, 
       // but in this case, setting verify_peer to FALSE overrides it for a full bypass.
       // Including it here for completeness with the general self-signed certificate options.
-      'allow_self_signed' => TRUE,
-    ],
-  ];
+    //   'allow_self_signed' => TRUE,
+    // ],
+];
 
   $response = drupal_http_request("$image_server/iiif/2/$uri/info.json", $options);
 
@@ -164,23 +170,24 @@ function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $s
 
   $uri = urlencode($image_id);
 
-  $image = "$image_server/iiif/$apiVersion/$uri/$region/$size/$rotation/$quality?v=" . time();
+  $image = "$image_server/iiif/$apiVersion/$uri/$region/$size/$rotation/$quality";
 
-  $context = stream_context_create([
-  //   'method' => 'GET',
-  //   'timeout' => 500,
-  //   'ssl' => [
-  //     // Set to FALSE to disable checking the remote certificate against a local certificate authority.
-  //     'verify_peer' => FALSE,    
-  //     // Set to FALSE to not verify the remote host's name against the common name (CN)
-  //     // or subject alternative name (SAN) fields in the certificate.
-  //     'verify_peer_name' => FALSE,    
-  //     // Allow self-signed certificates. Requires verify_peer set to TRUE, 
-  //     // but in this case, setting verify_peer to FALSE overrides it for a full bypass.
-  //     // Including it here for completeness with the general self-signed certificate options.
-  //     'allow_self_signed' => TRUE,
-  //   ],
-  ]);
+  // bad, but nothing I can do at the moment.
+  // Set the options to disable SSL verification
+  $options = [
+    'http' => [
+      'method' => 'GET',
+      'timeout' => 500,
+    ],
+    'ssl' => [
+      'verify_peer' => false,
+      'verify_peer_name' => false,
+    ],
+  ];
+
+  $context = stream_context_create($options);
+
+  $http_response_header = [];
 
   $content = file_get_contents($image, false, $context);
 
@@ -785,22 +792,37 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
   // Add 'Conditions Governing Use' <userrestrict> metadata field to Mirador viewer for archival objects
   // Should go in Copyright section
   if (isset($archdesc->userestrict) && !empty($archdesc->userestrict[0])) {
+    $conditionsgoverninguse = '';
     foreach ($archdesc->userestrict as $userestrict) {
       if (isset($userestrict->children) && !empty($userestrict->children)) {
         foreach ($userestrict->children as $item) {
+          $conditionsgoverninguse .= "<p>{$item->value->value}</p>";
           $required_statement[]= "<p>{$item->value->value}</p>";
         }
       }
     }
+    // $fields['conditionsgoverninguse'] = [
+    //   'label' => [ $lang => 'Conditions Governing Use' ],
+    //   'value' => [ $lang => $conditionsgoverninguse ],
+    // ];
   }
+
+  // relatedmaterial - interesting.
+  // $archdesc->relatedmaterial
 
   // Preferred Citation
   // Should go in Copyright section
   if (isset($archdesc->prefercite)) {
     $prefercite = $archdesc->prefercite[0];
+    $prefercite_children = '';
     foreach ($prefercite->children as $children) {
-      $required_statement[] = "<p>{$children->value->value}</p>";
+      $prefercite_children .= "<p>{$children->value->value}</p>";
+      $required_statement[] = $prefercite_children;
     }
+    // $fields['prefercite'] = [
+    //   'label' => [ $lang => 'Preferred Citation' ],
+    //   'value' => [ $lang => $prefercite_children ],
+    // ];
   }
 
   if (isset($title)) {
@@ -1275,7 +1297,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     unset($nid_wrapper);
   }
 
-   // $translations_keys = array_keys($translations);
+  // $translations_keys = array_keys($translations);
 
   // https://iiif.io/api/presentation/3.0/#rendering
   $field_pdf_file_raw = $wrapper->field_pdf_file->value();
@@ -1429,6 +1451,8 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $behavior = [ 'paged' ];
   }
 
+  $field_title = (isset($fields['field_title']['value']) && isset($fields['field_title']['value'][$entity->language]) && isset($fields['field_title']['value'][$entity->language][0])) ? $fields['field_title']['value'][$entity->language][0] : $entity->title ;
+
   // Check if this books is part of a multivol.
   $multivolume_book = dlts_viewer_is_multivolume_book($entity);
 
@@ -1454,10 +1478,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     // Get volume value.
     $volume_number_str = $multivolume_book_wrapper->field_volume_number_str->value();
 
-    // Change entity title.
-    foreach ($fields['field_title']['value'] as $key => $value) {
-      $fields['field_title']['value'][$key][0] = t('@title @volume', [ '@title' => $value[0], '@volume' => $volume_number_str ]);
-    }
+    $field_title = t('@title @volume', [ '@title' => $field_title, '@volume' => $volume_number_str ]);
 
     $multivolume_books = dlts_viewer_books_is_partof_multivolume($multivolume_book_wrapper->field_multivol->value()->nid);
 
@@ -1551,7 +1572,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
     'id' => "$base_url/api/presentation/$type/$identifier/manifest.json",
     'type' => 'Manifest',
-    'label' => $fields['field_title']['value'],
+    'label' => $field_title,
     'behavior' => $behavior,
     'items' => $items,
     'metadata' => $metadata,
@@ -1802,10 +1823,7 @@ function dlts_viewer_iiif_annotation($type, $resource, $item) {
 }
 
 /**
- * Deprecated IIIF resolver.
- *
- * This function was used to resolve IIIF requests from an older system
- * (Djatoka). It is now deprecated.
+ * Deprecated.
  */
 function dlts_viewer_djakot_iiif_resolver() {
   drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);

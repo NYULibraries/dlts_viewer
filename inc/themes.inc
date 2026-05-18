@@ -155,6 +155,10 @@ function dlts_viewer_theme() {
       'template' => 'templates/embed_mirador',
       'variables' => [],
     ],
+    'viewer_embed_mirador_ext_page' => [
+      'template' => 'templates/embed_mirador_ext',
+      'variables' => [],
+    ],
     'viewer_embed_clover_page' => [
       'template' => 'templates/embed_clover',
       'variables' => [],

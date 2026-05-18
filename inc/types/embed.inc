@@ -96,6 +96,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
   }
 
   switch ($viewer) {
+
     case 'uv':
       $template = 'viewer_embed_uv_page';
       $opts =  [
@@ -112,6 +113,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'is_multivolume' => $is_multivolume ? 'true' : 'false',
       ];
       break;
+
     case 'clover':
       $template = 'viewer_embed_clover_page';
       $opts =  [
@@ -128,47 +130,6 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
         'script' => file_get_contents("$module/viewers/clover-iiif/dist/clover-iiif.2.3.2.umd.js"),
       ];
-      break;
-    case 'mirador':
-    case 'mirador4':
-      $template = 'viewer_embed_mirador_latest_page';
-
-      $basePath = "$module/viewers/mirador4/dist";
-
-      // Find the JS and CSS files regardless of hash
-      $jsFiles = glob("$basePath/mirador4.*.js");
-
-      $cssFiles = glob("$basePath/mirador4.*.css");
-
-      // Get the first match (there should only be one)
-      $jsPath = $jsFiles ? $jsFiles[0] : null;
-
-      $cssPath = $cssFiles ? $cssFiles[0] : null;
-
-      if ($jsPath) {
-          $jsContent = file_get_contents($jsPath);
-      }
-
-      if ($cssPath) {
-          $cssContent = file_get_contents($cssPath);
-      }
-
-      $opts =  [
-        'analytics' => $analytics,
-        'appid' => 'mirador-app',
-        'title' => $title,
-        'language' => $language,
-        'direction' => $direction,
-        'sequence' => $sequence,
-        'endpoint' => $base_url,
-        'type' => $type,
-        'identifier' => $identifier,
-        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'is_multivolume' => $is_multivolume ? 'true' : 'false',
-        'css' => $cssContent,
-        'script' => $jsContent,
-      ];
-
       break;
 
     case 'mirador3':
@@ -188,6 +149,76 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'script' => file_get_contents("$module/mirador/integration/dist/mirador.js"),
       ];
       break;
+
+    case 'mirador':
+    case 'mirador4':
+      $template = 'viewer_embed_mirador_ext_page';
+
+      $basePath = "$module/viewers/mirador4/dist";
+
+      // Find the JS and CSS files regardless of hash.
+      $jsFiles = glob("$basePath/mirador4.*.js");
+      $cssFiles = glob("$basePath/mirador4.*.css");
+
+      $jsFile = $jsFiles ? basename($jsFiles[0]) : '';
+      $cssFile = $cssFiles ? basename($cssFiles[0]) : '';
+
+      $modulePath = base_path() . $module;
+
+      $opts = [
+        'analytics' => $analytics,
+        'appid' => 'mirador-app',
+        'title' => $title,
+        'language' => $language,
+        'direction' => $direction,
+        'sequence' => $sequence,
+        'endpoint' => $base_url,
+        'type' => $type,
+        'identifier' => $identifier,
+        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+        'is_multivolume' => $is_multivolume ? 'true' : 'false',
+        'js_url' => "$modulePath/viewers/mirador4/dist/$jsFile",
+        'css_url' => "$modulePath/viewers/mirador4/dist/$cssFile",
+        'show_canvas_info' => 'true',
+        'show_collection' => 'true',
+      ];
+
+      break;
+
+    case 'mirador-4-prev1':
+      $template = 'viewer_embed_mirador_ext_page';
+
+      $basePath = "$module/viewers/mirador-4-prev1";
+
+      // Find the JS and CSS files regardless of hash.
+      $jsFiles = glob("$basePath/mirador4.*.js");
+      $cssFiles = glob("$basePath/mirador4.*.css");
+
+      $jsFile = $jsFiles ? basename($jsFiles[0]) : '';
+      $cssFile = $cssFiles ? basename($cssFiles[0]) : '';
+
+      $modulePath = base_path() . $module;
+
+      $opts = [
+        'analytics' => $analytics,
+        'appid' => 'mirador-app',
+        'title' => $title,
+        'language' => $language,
+        'direction' => $direction,
+        'sequence' => $sequence,
+        'endpoint' => $base_url,
+        'type' => $type,
+        'identifier' => $identifier,
+        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+        'js_url' => "$modulePath/viewers/mirador-4-prev1/$jsFile",
+        'css_url' => "$modulePath/viewers/mirador-4-prev1/$cssFile",
+        'show_canvas_info' => 'true',
+        'show_collection' => 'false',
+        'is_multivolume' => $is_multivolume ? 'true' : 'false',
+      ];
+
+      break;
+
   }
 
   echo theme($template, $opts);
