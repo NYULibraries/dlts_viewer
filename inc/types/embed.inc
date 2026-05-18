@@ -150,41 +150,6 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
       ];
       break;
 
-    case 'mirador':
-    case 'mirador4':
-      $template = 'viewer_embed_mirador_ext_page';
-
-      $basePath = "$module/viewers/mirador4/dist";
-
-      // Find the JS and CSS files regardless of hash.
-      $jsFiles = glob("$basePath/mirador4.*.js");
-      $cssFiles = glob("$basePath/mirador4.*.css");
-
-      $jsFile = $jsFiles ? basename($jsFiles[0]) : '';
-      $cssFile = $cssFiles ? basename($cssFiles[0]) : '';
-
-      $modulePath = base_path() . $module;
-
-      $opts = [
-        'analytics' => $analytics,
-        'appid' => 'mirador-app',
-        'title' => $title,
-        'language' => $language,
-        'direction' => $direction,
-        'sequence' => $sequence,
-        'endpoint' => $base_url,
-        'type' => $type,
-        'identifier' => $identifier,
-        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'is_multivolume' => $is_multivolume ? 'true' : 'false',
-        'js_url' => "$modulePath/viewers/mirador4/dist/$jsFile",
-        'css_url' => "$modulePath/viewers/mirador4/dist/$cssFile",
-        'show_canvas_info' => 'true',
-        'show_collection' => 'true',
-      ];
-
-      break;
-
     case 'mirador-4-prev1':
       $template = 'viewer_embed_mirador_ext_page';
 
@@ -218,6 +183,41 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
       ];
 
       break;
+
+    default:
+      $template = 'viewer_embed_mirador_ext_page';
+
+      $basePath = "$module/viewers/mirador4/dist";
+
+      // Find the JS and CSS files regardless of hash.
+      $jsFiles = glob("$basePath/mirador4.*.js");
+      $cssFiles = glob("$basePath/mirador4.*.css");
+
+      $jsFile = $jsFiles ? basename($jsFiles[0]) : '';
+      $cssFile = $cssFiles ? basename($cssFiles[0]) : '';
+
+      $modulePath = base_path() . $module;
+
+      $opts = [
+        'analytics' => $analytics,
+        'appid' => 'mirador-app',
+        'title' => $title,
+        'language' => $language,
+        'direction' => $direction,
+        'sequence' => $sequence,
+        'endpoint' => $base_url,
+        'type' => $type,
+        'identifier' => $identifier,
+        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+        'is_multivolume' => $is_multivolume ? 'true' : 'false',
+        'js_url' => "$modulePath/viewers/mirador4/dist/$jsFile",
+        'css_url' => "$modulePath/viewers/mirador4/dist/$cssFile",
+        'show_canvas_info' => 'true',
+        'show_collection' => 'true',
+      ];
+
+      break;
+
 
   }
 
