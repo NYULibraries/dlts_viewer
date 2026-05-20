@@ -314,7 +314,7 @@ function dlts_viewer_list_resource(int $start = 0, int $length = 10) {
       'iiif' => [
         'presentation' => "$base_url/api/presentation/$result_alias/$result_identifier/manifest.json",
       ],
-      'uri' => "$base_url/api/v1/$result_alias/$result_identifier",
+      'uri' => "$base_url/api/embed/$result_identifier",
     ];
   }
   // Try to mimic Apache Solr response.
@@ -1950,7 +1950,6 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
       case 'geographic_coordinates':
       case 'isbn':
       case 'number':
-      case 'volume':
       case 'ocr_text':
       case 'other_version':
       case 'page_count':

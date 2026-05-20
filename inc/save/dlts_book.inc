@@ -19,10 +19,13 @@ function save_dlts_book($node, $language = 'en') {
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_series_book');
   module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_series');
   module_load_include('inc', 'dlts_viewer', 'inc/create/taxonomy');
+  
   // Get the current user.
   // global $base_url;
   global $user;
+
   $username = $user->name;
+
   try {
     if (!user_access('dlts create object')) {
       throw new Exception(__FUNCTION__ . " user not allowed to run task $username.");
@@ -118,14 +121,6 @@ function save_dlts_book($node, $language = 'en') {
     // We do not translate all the values.
     if ($node_language == 'en') {
 
-      // if (!empty($node['ticket'])) {
-      //   $ewrapper->field_ticket->set($node['ticket']);
-      // }
-
-      // if (!empty($node['noid'])) {
-      //  $ewrapper->field_noid->set(trim($node['noid']));
-      // }
-
       if (!empty($node['partners']) && is_array($node['partners']) && count($node['partners']) > 0) {
         foreach ($node['partners'] as $partner) {
           $partner_entity = NULL;
@@ -171,6 +166,9 @@ function save_dlts_book($node, $language = 'en') {
       }
       if (!empty($node['scan_order'])) {
         $ewrapper->field_scan_order->set($node['scan_order'][0]);
+      }
+      if (!empty($node['scanning_notes'])) {
+        $ewrapper->field_scanning_notes->set($node['scanning_notes']);
       }
       if (!empty($node['page_count'])) {
         $ewrapper->field_page_count->set((int) $node['page_count']);
@@ -315,7 +313,13 @@ function save_dlts_book($node, $language = 'en') {
       $ewrapper->field_subtitle->set($node['subtitle']);
     }
     if (!empty($node['description'])) {
-      $ewrapper->field_description->set(implode('; ', $node['description']));
+      if (is_array($node['description'])) {
+        $description = implode('; ', $node['description']);
+      }
+      else {
+        $description = $node['description'];
+      }
+      $ewrapper->field_description->set($description);
     }
     if (!empty($node['editor'])) {
       $ewrapper->field_editor->set($node['editor']);

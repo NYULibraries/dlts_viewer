@@ -92,22 +92,19 @@ function create_dlts_book_from_json($data) {
 
   if (!isset($data['metadata'])) {
     $metadata = [];
-  }
-  else {
+  } else {
     $metadata = $data['metadata'];
   }
 
   if (!isset($data['multivolume'])) {
     $multivolume = [];
-  }
-  else {
+  } else {
     $multivolume = $data['multivolume'];
   }
 
   if (!isset($data['series'])) {
     $series = [];
-  }
-  else {
+  } else {
     $series = $data['series'];
   }
 
@@ -133,7 +130,7 @@ function create_dlts_book_from_json($data) {
         'identifier' => $value->identifier,
         'code' => $value->code,
         'name' => $value->name,
-        'partner' => $value->partners,
+        'partner' => isset($value->partner) ? $value->partner : [],
       ];
     }
   }
@@ -143,7 +140,7 @@ function create_dlts_book_from_json($data) {
   }
 
   if (isset($metadata->subtitle) && !empty($metadata->subtitle->value)) {
-    $subtitle = $metadata->subtitle->value[0];
+    $subtitle = trim($metadata->subtitle->value[0]);
   }
 
   if (isset($data['page_count']) && !empty($data['page_count'])) {
@@ -205,7 +202,7 @@ function create_dlts_book_from_json($data) {
   }
 
   if (isset($metadata->scanning_notes) && !empty($metadata->scanning_notes->value)) {
-    $scanning_notes = $metadata->scanning_notes->value[0];
+    $scanning_notes = implode("\n", $metadata->scanning_notes->value);
   }
 
   if (isset($metadata->scan_date) && !empty($metadata->scan_date->value)) {
@@ -380,7 +377,6 @@ function create_dlts_book_from_json($data) {
     $handlepath = str_replace('/2333.1/', '', $parsed_url['path']);    
     $noid = trim($handlepath);
   }
-
 
   $node = [
     'entity_title' => $entity_title,

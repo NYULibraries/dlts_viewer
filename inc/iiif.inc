@@ -81,18 +81,7 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
   $options = [
     'method' => 'GET',
     'timeout' => 500,
-    // 'ssl' => [
-      // Set to FALSE to disable checking the remote certificate against a local certificate authority.
-    //   'verify_peer' => FALSE,    
-      // Set to FALSE to not verify the remote host's name against the common name (CN)
-      // or subject alternative name (SAN) fields in the certificate.
-    //   'verify_peer_name' => FALSE,    
-      // Allow self-signed certificates. Requires verify_peer set to TRUE, 
-      // but in this case, setting verify_peer to FALSE overrides it for a full bypass.
-      // Including it here for completeness with the general self-signed certificate options.
-    //   'allow_self_signed' => TRUE,
-    // ],
-];
+  ];
 
   $response = drupal_http_request("$image_server/iiif/2/$uri/info.json", $options);
 
@@ -131,10 +120,10 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
  * @link https://iiif.io/api/image/2.1/#image-requests
  * @link http://[HOST]/api/image/books/princeton_aco000102/1/full/max/0/default.jpg
  *
- * @param string $type
- *   The resource type (e.g., 'books', 'photos').
- * @param object $resource
- *   The node object representing the resource.
+ * @param string $_type
+ *   The resource type (e.g., 'books', 'photos').  (not used in this function but included for consistency)
+ * @param object $_resource
+ *   The node object representing the resource. (not used in this function but included for consistency)
  * @param array $sequence
  *   A sequence array from MongoDB containing the image URI.
  * @param string $region
@@ -146,7 +135,7 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
  * @param string $quality
  *   The quality of the image. Defaults to 'default.jpg'.
  */
-function dlts_viewer_iiif_tile($type, $resource, $sequence, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
+function dlts_viewer_iiif_tile($_type, $_resource, $sequence, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
   
   $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');
 
@@ -497,7 +486,7 @@ function dlts_book_fields_values($wrapper, array $translatable_fields = []) {
       $metadata['field_handle'] = [
         'label' => $fields['field_handle'],
         'value' => [
-          $field_handle_raw['url'],
+          "<a href='{$field_handle_raw['url']}'>{$field_handle_raw['url']}</a>",
         ],
       ];
     }
@@ -1370,7 +1359,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     'field_language',
     'field_publisher',
     'field_topic',
-    // 'field_title', // https://nyu.atlassian.net/browse/DLTSVIEWER-220?focusedCommentId=312215
+    'field_title', // https://nyu.atlassian.net/browse/DLTSVIEWER-220?focusedCommentId=312215
     // 'field_scanning_notes',
     // 'field_sequence_count',
     // 'field_language_code',
@@ -1398,6 +1387,9 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     }
   }
 
+  $object_title = $fields['field_title'];
+
+  unset($fields['field_title']);
   // https://jira.nyu.edu/browse/DLTSVIEWER-152
   unset($fields['field_page_count']);
   unset($fields['field_dimensions']);
@@ -1451,8 +1443,6 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $behavior = [ 'paged' ];
   }
 
-  $field_title = (isset($fields['field_title']['value']) && isset($fields['field_title']['value'][$entity->language]) && isset($fields['field_title']['value'][$entity->language][0])) ? $fields['field_title']['value'][$entity->language][0] : $entity->title ;
-
   // Check if this books is part of a multivol.
   $multivolume_book = dlts_viewer_is_multivolume_book($entity);
 
@@ -1478,7 +1468,9 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     // Get volume value.
     $volume_number_str = $multivolume_book_wrapper->field_volume_number_str->value();
 
-    $field_title = t('@title @volume', [ '@title' => $field_title, '@volume' => $volume_number_str ]);
+    foreach ($object_title['value'] as $lang => $value) {
+      $object_title['value'][$lang][0] = t('@title @volume', [ '@title' => $object_title['value'][$lang][0], '@volume' => $volume_number_str ]);
+    }
 
     $multivolume_books = dlts_viewer_books_is_partof_multivolume($multivolume_book_wrapper->field_multivol->value()->nid);
 
@@ -1572,7 +1564,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
     'id' => "$base_url/api/presentation/$type/$identifier/manifest.json",
     'type' => 'Manifest',
-    'label' => $field_title,
+    'label' => $object_title['value'],
     'behavior' => $behavior,
     'items' => $items,
     'metadata' => $metadata,
@@ -1589,26 +1581,42 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
         'format' => 'text/html',
       ],
     ],
-    'logo' => [
+    'provider' => [
       [
-        'id' => "$base_url/$module/images/nyu-logo.jpg",
-        'type' => 'Image',
-        'format' => 'image/jpeg',
-        'height' => 900,
-        'width' => 900,
-      ],
+        'id' => "https://wp.nyu.edu/library-dlts/",
+        'type' => "Agent",
+        'label' => [ 'en' => [ "NYU Digital Library Technology Services" ] ],
+        'homepage' => [
+          [
+            'id' => "https://wp.nyu.edu/library-dlts/",
+            'type' => "Text",
+            'label' => [ 'en' => [ "NYU Digital Library Technology Services Homepage" ] ],
+            'format' => "text/html"
+          ]
+        ],
+        'logo' => [
+          [
+            'id' => "$base_url/$module/images/nyu-logo.jpg",
+            'type' => 'Image',
+            'format' => 'image/jpeg',
+            'height' => 900,
+            'width' => 900,
+          ],
+        ],
+      ],      
     ],
     'thumbnail' => $thumbnail,
   ];
 
   if ($search_service) {
+    $search_id = variable_get('search_service_url', 'http://localhost:8085/api/search');
     $res['service'] = [
-        [
-            'id' => "http://localhost:8085/api/search", // @TODO: Set env once i have a server for elastic search
-            'type' => "SearchService1",
-            'profile' => "http://iiif.io/api/search/1/search",
-            'label' => "Search",
-        ],
+      [
+        'id' => $search_id,
+        'type' => "SearchService1",
+        'profile' => "http://iiif.io/api/search/1/search",
+        'label' => "Search",
+      ],
     ];
   }
 
@@ -1616,9 +1624,9 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $res['rendering'] = $pdfs;
   }
 
-  if (isset($fields['field_description']) && !empty($fields['field_description']['value'])) {
-    $res['summary'] = $fields['field_description']['value'];
-  }
+  // if (isset($fields['field_description']) && !empty($fields['field_description']['value'])) {
+  //   $res['summary'] = $fields['field_description']['value'];
+  // }
 
   if (isset($required_statement)) {
     $res['requiredStatement'] = $required_statement;
@@ -1934,13 +1942,6 @@ function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = T
             $ew->title->value(),
           ],
         ],
-        // 'thumbnail' => [
-        //   [
-        //     'id' => "$base_url/api/image/$type/$eidentifier/1/full/!300,300/0/default.jpg",
-        //     'type' => 'Image',
-        //     'format' => 'image/jpeg',
-        //   ],
-        // ],
       ];
     }
   }
