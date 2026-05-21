@@ -153,6 +153,15 @@ const defaultConfig = {
       useNextVariants: true, // Set so that console deprecation warning is removed.
     },
   },
+  osdConfig: {
+    alwaysBlend: false,
+    blendTime: 0.1,
+    preserveImageSizeOnResize: true,
+    preserveViewport: true,
+    showNavigationControl: false,
+    zoomPerClick: 1, // disable zoom-to-click
+    zoomPerDoubleClick: 2.0
+  },
 }
 
 export {

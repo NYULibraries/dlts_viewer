@@ -1006,6 +1006,56 @@ function dlts_viewer_api_list_maps(int $start = 0, int $length = 15, $requestedL
  * @return json|array
  *   A keyed array to be converted into JSON.
  */
+function _dlts_viewer_serial_loader($node, $reset = FALSE) {
+
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
+
+  $wrapper = entity_metadata_wrapper('node', $node);
+
+  $bundle = dlts_viewer_get_bundle_alias($wrapper->getBundle());
+
+  $identifier = $wrapper->field_identifier->value();
+
+  $query_parameters = drupal_get_query_parameters();
+
+  $requestedLang = 'en';
+
+  // Need to make sure lang exists.
+  if (isset($query_parameters['lang'])) {
+    $requestedLang = $query_parameters['lang'];
+  }
+
+  if (isset($query_parameters['reset'])) {
+    $reset = TRUE;
+  }
+
+  $realpath = drupal_realpath('public://');
+
+  $cachepath = "$realpath/datasource/$bundle/$identifier/info.$requestedLang.json";
+
+  if (file_exists($cachepath) && !$reset) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET');
+    header('Content-Type: application/json;charset=utf-8');
+    echo file_get_contents($cachepath);
+    exit(0);
+  }
+
+  return dlts_viewer_api_serial_json($node);
+
+}
+
+/**
+ * Generate metadata about a book.
+ *
+ * @param object $node
+ *   A dlts_book node object.
+ * @param bool $reset
+ *   True if request does not want cache version of the resource.
+ *
+ * @return json|array
+ *   A keyed array to be converted into JSON.
+ */
 function _dlts_viewer_book_loader($node, $reset = FALSE) {
 
   drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
@@ -1706,6 +1756,354 @@ function dlts_viewer_api_photo_json($entity, $requestedLang = 'en') {
   }
 
   file_put_contents("$dir_path/info.$requestedLang.json", json_encode($response), LOCK_EX);
+
+  return $response;
+
+}
+
+/**
+ * Serial.
+ *
+ * @param object $entity
+ *   Index to start.
+ * @param string $requestedLang
+ *   Language code.
+ */
+function dlts_viewer_api_serial_json($entity, $requestedLang = 'en') {
+
+  global $base_url;
+
+  drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
+
+  $fields = $series = $volumes = $collections = [];
+
+  // Get query parameters.
+  $query_parameters = drupal_get_query_parameters();
+
+  // Need to make sure lang exists.
+  if (isset($query_parameters['lang'])) {
+    $requestedLang = $query_parameters['lang'];
+  }
+
+  $availableLanguages = language_list();
+
+  // Default to left-to-rigth.
+  // @todo will set later on using the book field "field_language_code"
+  // and the language map from $availableLanguages.
+  $worldDirection = 'ltr';
+
+  // Entity API wrapper.
+  $wrapper = entity_metadata_wrapper('node', $entity);
+
+  $bundle = dlts_viewer_get_bundle_alias($wrapper->getBundle());
+
+  // Book identifier.
+  $identifier = $wrapper->field_identifier->value();
+
+  $field_language_code = $wrapper->field_language_code->value();
+
+  $field_language_code_pop = array_pop($field_language_code);
+
+  $language_code = dlts_viewer_map_language_code($field_language_code_pop);
+
+  foreach ($availableLanguages as $code => $lang) {
+    if (
+      // MUST check if language is enable.
+      $availableLanguages[$code]->enabled &&
+      // Check if this books exists in the given language.
+      // 2 different strategies to check.
+      (
+        // 1) check if loaded book language match the language
+        $code == $entity->language ||
+        // If not,
+        // 2) This book is not the same language as $code,
+        // query the book using the identifier and $code
+        // if we have a nid, we have a book.
+        book_nid($identifier, $code)
+      )
+    ) {
+      $availableLanguages[$code]->direction = ($availableLanguages[$code]->direction == 0) ? 'ltr' : 'rtl';
+      $availableLanguages[$code]->default = ($code == $requestedLang) ? 1 : 0;
+      // We don't have any use for this properties.
+      unset($availableLanguages[$code]->prefix);
+      unset($availableLanguages[$code]->plurals);
+      unset($availableLanguages[$code]->formula);
+      unset($availableLanguages[$code]->domain);
+      unset($availableLanguages[$code]->weight);
+      unset($availableLanguages[$code]->javascript);
+    }
+    else {
+      // Language is not enabled.
+      unset($availableLanguages[$code]);
+    }
+  }
+
+  // Field representative image.
+  $fri = $wrapper->field_representative_image->value();
+
+  $representative_image = file_create_url($fri['uri']);
+
+  // Default title of the book.
+  $displayTitle = $title = trim($wrapper->field_title->value());
+
+  $type = dlts_viewer_content_types_type($entity->type);
+
+  $imageCount = 0;
+
+  foreach ($type['fields'] as $field) {
+    $name = str_replace('field_', '', $field['field_name']);
+    $field_name = $field['field_name'];
+    // Get the raw value of the field.
+    $raw_value = $wrapper->$field_name->value();
+    $fields[$name] = [
+      'label' => locale($field['label'], NULL, $requestedLang),
+      'value' => NULL,
+    ];
+    switch ($name) {
+      case 'author':
+      case 'contributor':
+      case 'creator':
+      case 'description':
+      case 'dimensions':
+      case 'editor':
+      case 'geographic_coordinates':
+      case 'isbn':
+      case 'number':
+      case 'ocr_text':
+      case 'other_version':
+      case 'page_count':
+      case 'publication_date_text':
+      case 'publication_location':
+      case 'publisher':
+      case 'scan_date':
+      case 'scanning_notes':
+      case 'subtitle':
+      case 'call_number':
+        $fields[$name]['value'] = $raw_value;
+        break;
+
+      case 'binding_orientation':
+        $fields[$name]['value'] = $field['settings']['allowed_values'][$raw_value];
+        break;
+
+      case 'collection':
+        $fields[$name]['value'] = [];
+        $collections = dlts_viewer_collections($raw_value);
+        foreach ($collections as $collection) {
+          unset($collection['title']);
+          unset($collection['type']);
+          unset($collection['language']);
+          unset($collection['partner']['title']);
+          unset($collection['partner']['type']);
+          unset($collection['partner']['language']);
+          $collection['name'] = locale($collection['name'], NULL, $requestedLang);
+          $collection['partner']['name'] = locale($collection['partner']['name'], NULL, $requestedLang);
+          $fields[$name]['value'][] = $collection;
+        }
+        break;
+
+      case 'geographic_subject':
+        // @todo Find out how to deal with this.
+        unset($fields[$name]);
+        break;
+
+      case 'handle':
+        $fields[$name]['value'] = $raw_value['url'];
+        break;
+
+      case 'identifier':
+        unset($fields[$name]);
+        break;
+
+      case 'language':
+        $fields[$name]['value'] = array_pop($raw_value);
+        break;
+
+      case 'language_code':
+        $fields[$name]['value'] = array_pop($raw_value);
+        break;
+
+      case 'partner':
+        $partner_value = [];
+        foreach ($raw_value as $partner) {
+          $partner_wrapper = entity_metadata_wrapper('node', $partner);
+          $partner_value[] = [
+            'identifier' => $partner_wrapper->field_identifier->value(),
+            'code' => $partner_wrapper->field_code->value(),
+            'name' => locale($partner_wrapper->field_name->value(), NULL, $requestedLang),
+          ];
+        }
+        $fields[$name]['value'] = $partner_value;
+        unset($partner_value);
+        break;
+
+      case 'pdf_file':
+        $fields[$name]['value'] = [
+          'hi' => [],
+          'lo' => [],
+        ];
+        foreach ($raw_value as $value) {
+          $data = [
+            'uri' => $value['uri'],
+            'label' => $value['label'],
+          ];
+          $data['size'] = field_fileserver_get_pdf_filesize($data);
+          $data['uri'] = file_create_url($data['uri']);
+          $filename = pathinfo($data['uri'], PATHINFO_FILENAME);
+          preg_match('/_(hi|lo)/', $filename, $matches);
+          if (isset($value['data'])) {
+            $serial = unserialize($value['data']);
+            if (isset($serial['filesize']) && $serial['filesize'] > 0) {
+              $data['size'] = $serial['filesize'];
+            }
+            if (isset($serial['searchable'])) {
+              $data['searchable'] = $serial['searchable'];
+            }
+          }
+          if (isset($matches) && isset($matches[1])) {
+            switch ($matches[1]) {
+              case 'hi':
+                $fields[$name]['value']['hi'] = [
+                  'label' => locale('High-resolution', NULL, $requestedLang),
+                  'uri' => $data['uri'],
+                  'searchable' => $data['searchable'],
+                  'filesize' => $data['size'],
+                ];
+                break;
+
+              case 'lo':
+                $fields[$name]['value']['lo'] = [
+                  'label' => locale('Low-resolution', NULL, $requestedLang),
+                  'uri' => $data['uri'],
+                  'searchable' => $data['searchable'],
+                  'filesize' => $data['size'],
+                ];
+                break;
+            }
+          }
+        }
+        break;
+
+      case 'publication_date':
+        $fields[$name]['value'] = $raw_value['value'];
+        break;
+
+      case 'read_order':
+        // [0] => Left to right
+        // [1] => Right to left
+        $map = [
+          0 => 'ltr',
+          1 => 'rtl',
+        ];
+        $worldDirection = $fields[$name]['value'] = $map[$raw_value];
+        unset($map);
+        break;
+
+      case 'representative_image':
+        unset($fields[$name]);
+        break;
+
+      case 'rights':
+        $fields[$name]['value'] = trim($raw_value);
+        break;
+
+      case 'scan_order':
+        // [0] => Left to right
+        // [1] => Right to left
+        $map = [
+          0 => 'ltr',
+          1 => 'rtl',
+        ];
+        $fields[$name]['value'] = $map[$raw_value];
+        unset($map);
+        break;
+
+      case 'sequence_count':
+        $imageCount = $fields[$name]['value'] = (int) $raw_value;
+        break;
+
+      case 'subject':
+        $subjects = [];
+        foreach ($raw_value as $subject) {
+          $subjects[] = [
+            'uuid' => $subject->uuid,
+            'name' => $subject->name,
+          ];
+        }
+        $fields[$name]['value'] = $subjects;
+        unset($subjects);
+        break;
+
+      case 'title':
+        unset($fields[$name]);
+        break;
+
+      case 'topic':
+        $topics = [];
+        foreach ($raw_value as $topic) {
+          $topics[] = locale($topic, NULL, $requestedLang);
+        }
+        $fields[$name]['value'] = $topics;
+        unset($topics);
+        break;
+
+      case 'volume':
+        $fields['volumes'] = $volumes;
+        unset($fields[$name]);
+        break;
+    }
+  }
+
+  $handle_raw = $wrapper->field_handle->value();
+
+  $handle = explode('/', $handle_raw['url']);
+
+  $items = [];
+
+  for ($sequence = 1; $imageCount >= $sequence; ++$sequence) {
+    $items[] = "$base_url/api/image/$bundle/$identifier/$sequence/info.json";
+  }
+
+  $response = [
+    'title' => $title,
+    'displayTitle' => $displayTitle,
+    'type' => 'serial',
+    'identifier' => $identifier,
+    'nid' => $entity->nid,
+    'noid' => $handle[count($handle) - 1],
+    'worldDirection' => $worldDirection,
+    'requestedLanguage' => $availableLanguages[$requestedLang],
+    'availableLanguages' => $availableLanguages,
+    'status' => (int) $entity->status,
+    'isMultivolume' => false,
+    'isSeries' => false,
+    'iiif' => [
+      'identifier' => "$bundle/$identifier",
+      'image' => [
+        'service' => "$base_url/api/image",
+        'version' => 2,
+        'items' => $items,
+      ],
+      'presentation' => [
+        'service' => "$base_url/api/presentation",
+        'manifest' => "$base_url/api/presentation/$bundle/$identifier/manifest.json",
+        'version' => 3,
+      ],
+    ],
+    'representativeImage' => $representative_image,
+    'thumbnail' => "$base_url/api/image/$bundle/$identifier/1/full/150,/0/default.jpg",
+    'metadata' => $fields,
+  ];
+
+  $realpath = drupal_realpath('public://') . '/datasource';
+
+  $cachepath = "$realpath/$bundle/$identifier/info.$requestedLang.json";
+
+  if (!file_exists("$realpath/$bundle/$identifier")) {
+    mkdir("$realpath/$bundle/$identifier", 0755, TRUE);
+  }
+
+  file_put_contents($cachepath, json_encode($response), LOCK_EX);
 
   return $response;
 
@@ -2532,10 +2930,9 @@ function _dlts_viewer_noid_loader($resource, $reset = FALSE) {
       case 'maps':
         // http://HOST/api/v1/noid/6hdr7z37
         return _dlts_viewer_map_loader($entity);
-      case 'postcards';
-        // http://HOST/api/v1/noid/0zpc8fgz
-        // return _dlts_viewer_postcard_loader($node);
-        return [];
+      case 'serials':
+        // http://HOST/api/v1/noid/fales_ear000102
+        return _dlts_viewer_serial_loader($entity);
     }
     return false;
   }
