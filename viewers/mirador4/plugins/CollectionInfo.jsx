@@ -12,6 +12,7 @@ export default [
   {
     target: "WindowSideBarInfoPanel",
     mode: "wrap",
+    weight: 0,
     component: HideCollection,
     mapStateToProps: (state) => ({
       showCollection: state.config?.dlts?.showCollection !== false,

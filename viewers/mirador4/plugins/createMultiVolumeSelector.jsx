@@ -1,5 +1,7 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
+import { CompanionWindowSection } from 'mirador';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -20,16 +22,6 @@ import { useTranslation } from 'react-i18next';
  * used to fetch `/api/presentation/multivolume/:identifier/manifest.json`.
  */
 const styles = {
-  container: {
-    width: '100%',
-    paddingBlockStart: '0',
-    paddingInlineStart: '0',
-    paddingInlineEnd: '8px',
-    paddingBlockEnd: '8px',
-    marginBottom: "16px",
-    paddingBlockStart: "16px",
-    borderBottom: "0.5px solid rgba(0, 0, 0, 0.25)",
-  },
   formControl: {
     width: '100%',
     marginTop: '0',
@@ -150,13 +142,33 @@ export default function createMultiVolumeSelector({ endpoint, identifier }) {
     const [items, setItems] = useState([]);
     const [errorDetail, setErrorDetail] = useState('');
     const [loading, setLoading] = useState(true);
-    
-    // default to closed, avoid extra cognitive load for users.
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(false);
+    const anchorRef = useRef(null);
+    const [portalContainer, setPortalContainer] = useState(null);
+
+    useLayoutEffect(() => {
+      const anchor = anchorRef.current;
+      if (!anchor) return;
+
+      const scrollContainer = anchor.closest('.mirador-scrollto-scrollable');
+      if (!scrollContainer) return;
+
+      // Find the CompanionWindowSection that contains our anchor (ManifestInfo's section)
+      const mySection = Array.from(scrollContainer.children).find(child => child.contains(anchor));
+      if (!mySection) return;
+
+      const div = document.createElement('div');
+      scrollContainer.insertBefore(div, mySection);
+      setPortalContainer(div);
+
+      return () => {
+        if (div.parentNode) div.parentNode.removeChild(div);
+      };
+    }, []);
 
     const handleChange = useCallback((_event, isExpanded) => {
-      setOpen(isExpanded)
-    }, [])
+      setOpen(isExpanded);
+    }, []);
 
     useEffect(() => {
       let active = true;
@@ -216,7 +228,7 @@ export default function createMultiVolumeSelector({ endpoint, identifier }) {
       return items.some(item => item.id === currentManifestId) ? currentManifestId : '';
     }, [currentManifestId, items]);
 
-    if (!loading && !errorDetail && items.length === 0) return children ?? null;
+    const showSection = loading || !!errorDetail || items.length > 0;
 
     const windowIdShort = windowId?.replace(/^window-/, '') || 'default';
     const sectionId = `manifest-selector-${windowIdShort}`;
@@ -227,70 +239,75 @@ export default function createMultiVolumeSelector({ endpoint, identifier }) {
 
     return (
       <>
-        <div style={styles.container}>
-          <Accordion
-            slotProps={{ heading: { component: 'h4' } }}
-            id={sectionId}
-            elevation={0}
-            expanded={open}
-            onChange={handleChange}
-            disableGutters
-            square
-            variant="compact"
-          >
-            <AccordionSummary
-              id={`${sectionId}-header`}
-              aria-controls={`${sectionId}-content`}
-              aria-label={t(open ? 'collapseSection' : 'expandSection', { section: sectionLabel })}
-              expandIcon={<ExpandMoreIcon />}
-            >
-              <Typography variant="overline">
-                {sectionLabel}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              {loading && (
-                <Typography style={styles.status} variant="body2">
-                  {t('loadingManifests')}
-                </Typography>
-              )}
-              {!loading && error && (
-                <Typography style={styles.status} variant="body2">
-                  {error}
-                </Typography>
-              )}
-              {!loading && !error && (
-                <FormControl style={styles.formControl}>
-                  {items.map(item => (
-                    <MenuItem
-                      key={item.id}
-                      onClick={() => browseToManifest(item.id)}
-                      selected={item.id === selectedValue}
-                    >
-                      <ListItemText
-                        slotProps={
-                          {
-                            primary: {
-                              variant: 'body1',
-                              sx: {
-                                overflowWrap: 'anywhere',
-                                whiteSpace: 'normal',
-                              },
-                            },
-                          }
-                        }
-                        style={styles.listItemText}
-                      >
-                        {item.label}
-                      </ListItemText>
-                    </MenuItem>
-                  ))}
-                </FormControl>
-              )}
-            </AccordionDetails>
-          </Accordion>
-        </div>
+        {/* Hidden anchor used to find the ManifestInfo section for portal insertion */}
+        <span ref={anchorRef} style={{ display: 'none' }} aria-hidden="true" />
         {children}
+        {showSection && portalContainer && createPortal(
+          <CompanionWindowSection>
+            <Accordion
+              slotProps={{ heading: { component: 'h4' } }}
+              id={sectionId}
+              elevation={0}
+              expanded={open}
+              onChange={handleChange}
+              disableGutters
+              square
+              variant="compact"
+            >
+              <AccordionSummary
+                id={`${sectionId}-header`}
+                aria-controls={`${sectionId}-content`}
+                aria-label={t(open ? 'collapseSection' : 'expandSection', { section: sectionLabel })}
+                expandIcon={<ExpandMoreIcon />}
+              >
+                <Typography variant="overline">
+                  {sectionLabel}
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                {loading && (
+                  <Typography style={styles.status} variant="body2">
+                    {t('loadingManifests')}
+                  </Typography>
+                )}
+                {!loading && error && (
+                  <Typography style={styles.status} variant="body2">
+                    {error}
+                  </Typography>
+                )}
+                {!loading && !error && (
+                  <FormControl style={styles.formControl}>
+                    {items.map(item => (
+                      <MenuItem
+                        key={item.id}
+                        onClick={() => browseToManifest(item.id)}
+                        selected={item.id === selectedValue}
+                      >
+                        <ListItemText
+                          slotProps={
+                            {
+                              primary: {
+                                variant: 'body1',
+                                sx: {
+                                  overflowWrap: 'anywhere',
+                                  whiteSpace: 'normal',
+                                },
+                              },
+                            }
+                          }
+                          style={styles.listItemText}
+                        >
+                          {item.label}
+                        </ListItemText>
+                      </MenuItem>
+                    ))}
+                  </FormControl>
+                )}
+              </AccordionDetails>
+            </Accordion>
+          </CompanionWindowSection>,
+          portalContainer
+        )}
       </>
     );
   };
@@ -329,6 +346,7 @@ export default function createMultiVolumeSelector({ endpoint, identifier }) {
   return {
     target: 'ManifestInfo',
     mode: 'wrap',
+    weight: 50,
     name: `MultiVolumeSelector-${identifier}`,
     component: MultiVolumeSelector,
     mapStateToProps,

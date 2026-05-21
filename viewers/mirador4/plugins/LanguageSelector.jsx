@@ -1,5 +1,7 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
+import { CompanionWindowSection } from 'mirador'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import { FormControl } from '@mui/material'
@@ -35,40 +37,9 @@ const translations = {
 }
 
 const langstyles = {
-  container: {
-    width: '100%',
-    paddingBlockStart: '0',
-    paddingInlineStart: '0',
-    paddingInlineEnd: '8px',
-    paddingBlockEnd: '8px',
-    // borderBottom: 'none',
-    marginBottom: "16px",
-    paddingBlockStart: "16px",
-    borderBottom: "0.5px solid rgba(0, 0, 0, 0.25)",
-  },
-  content: {
-    display: 'flex',
-    justifyContent: 'space-around',
-    alignItems: 'start',
-    flexDirection: 'column',
-    margin: '0',
-  },
   formControl: {
     width: '100%',
     marginTop: '0', 
-  },
-  sectionTitle: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingRight: '8px', 
-  },
-  selectMenu: {
-    '&::before': {
-      content: "''",
-      borderBottom: '.1px solid rgba(0, 0, 0, 0.2)',
-    },
   },
   listItemText: {
     paddingInlineStart: '20px',
@@ -87,8 +58,29 @@ const LanguageSelector = ({
   windowId,
 }) => {
   const { t } = useTranslation()
-  // default language selector to closed, avoid extra cognitive load for users.
   const [open, setOpen] = useState(false)
+  const anchorRef = useRef(null)
+  const [portalContainer, setPortalContainer] = useState(null)
+
+  useLayoutEffect(() => {
+    const anchor = anchorRef.current
+    if (!anchor) return
+
+    const scrollContainer = anchor.closest('.mirador-scrollto-scrollable')
+    if (!scrollContainer) return
+
+    // Find the CompanionWindowSection that contains our anchor (ManifestInfo's section)
+    const mySection = Array.from(scrollContainer.children).find(child => child.contains(anchor))
+    if (!mySection) return
+
+    const div = document.createElement('div')
+    scrollContainer.insertBefore(div, mySection)
+    setPortalContainer(div)
+
+    return () => {
+      if (div.parentNode) div.parentNode.removeChild(div)
+    }
+  }, [])
 
   const handleChange = useCallback((_event, isExpanded) => {
     setOpen(isExpanded)
@@ -98,46 +90,45 @@ const LanguageSelector = ({
   const sectionId = `language-selector-${windowIdShort}`
   const sectionLabel = t('availableLanguages')
 
-  // If there is only one language, skip the selector but still render children (ManifestInfo).
-  if (resourceLanguages.length < 2) return children ?? null
-
+  // Always render the anchor so the portal container can be created.
+  // The portal is only shown when there are multiple languages to select from.
   return (
     <>
-      <div style={langstyles.container}>
-        <Accordion
-          slotProps={{ heading: { component: 'h4' } }}
-          id={sectionId}
-          elevation={0}
-          expanded={open}
-          onChange={handleChange}
-          disableGutters
-          square
-          variant="compact"
-        >
-          <AccordionSummary
-            id={`${sectionId}-header`}
-            aria-controls={`${sectionId}-content`}
-            aria-label={t(open ? 'collapseSection' : 'expandSection', { section: sectionLabel })}
-            expandIcon={<ExpandMoreIcon />}
+      <span ref={anchorRef} style={{ display: 'none' }} aria-hidden="true" />
+      {children}
+      {resourceLanguages.length >= 2 && portalContainer && createPortal(
+        <CompanionWindowSection>
+          <Accordion
+            slotProps={{ heading: { component: 'h4' } }}
+            id={sectionId}
+            elevation={0}
+            expanded={open}
+            onChange={handleChange}
+            disableGutters
+            square
+            variant="compact"
           >
-            <Typography variant="overline">
-              {sectionLabel}
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <FormControl style={langstyles.formControl}>
-              {
-                languages.map(language => {
+            <AccordionSummary
+              id={`${sectionId}-header`}
+              aria-controls={`${sectionId}-content`}
+              aria-label={t(open ? 'collapseSection' : 'expandSection', { section: sectionLabel })}
+              expandIcon={<ExpandMoreIcon />}
+            >
+              <Typography variant="overline">
+                {sectionLabel}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <FormControl style={langstyles.formControl}>
+                {languages.map(language => {
                   if (resourceLanguages.includes(language.locale)) {
                     return (
                       <MenuItem
                         key={language.locale}
-                        onClick={() => {
-                          handleClick({ rootElem, language})
-                        }}
+                        onClick={() => handleClick({ rootElem, language })}
                       >
                         <ListItemIcon>{language.current && <CheckIcon />}</ListItemIcon>
-                        <ListItemText 
+                        <ListItemText
                           primaryTypographyProps={{ variant: 'body1' }}
                           style={langstyles.listItemText}
                         >
@@ -147,13 +138,13 @@ const LanguageSelector = ({
                     )
                   }
                   return null
-                })
-              }
-            </FormControl>
-          </AccordionDetails>
-        </Accordion>
-      </div>
-      {children}
+                })}
+              </FormControl>
+            </AccordionDetails>
+          </Accordion>
+        </CompanionWindowSection>,
+        portalContainer
+      )}
     </>
   )
 }
@@ -209,6 +200,7 @@ LanguageSelector.propTypes = {
 export default {
   target: 'ManifestInfo',
   mode: 'wrap',
+  weight: 0,
   component: LanguageSelector,
   mapDispatchToProps,
   mapStateToProps,

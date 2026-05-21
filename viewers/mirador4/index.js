@@ -46,6 +46,20 @@ if (imageTools === 'true' ) {
   plugins.push(...miradorImageToolsPlugin)
 }
 
+// Sort wrap plugins by weight (descending) per target.
+// Mirador reverses the plugins array before composing wraps, so descending registration
+// order → lower weight = innermost (portal committed first = appears first in panel).
+function sortWrapsDescending(plugins, target) {
+  const wraps = plugins
+    .filter(p => p.target === target && p.mode === 'wrap')
+    .sort((a, b) => (b.weight ?? 50) - (a.weight ?? 50))
+  const others = plugins.filter(p => !(p.target === target && p.mode === 'wrap'))
+  return [...wraps, ...others]
+}
+
+let sortedPlugins = sortWrapsDescending(plugins, 'WindowSideBarInfoPanel')
+sortedPlugins = sortWrapsDescending(sortedPlugins, 'ManifestInfo')
+
 const config = {
   ...defaultConfig,
   ...{
@@ -68,4 +82,4 @@ const config = {
   },
 }
 
-Mirador.viewer(config, plugins)
+Mirador.viewer(config, sortedPlugins)

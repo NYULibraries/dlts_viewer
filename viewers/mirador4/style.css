@@ -1,3 +1,4 @@
+
 .MuiTypography-body1 span {
   padding-left: 0;
 }
@@ -39,4 +40,16 @@ h5[id$="-related-heading"] {
 
 .mosaic-tile {
   margin: 0 !important;
+}
+
+/* teikmeout - https://github.com/NYULibraries/dlts_viewer_mirador/blob/dltsviewer-203-styling-infopanel/style.css */
+/* rule used to remove the highlighting bar on the sidebar */
+span.MuiTabs-indicator {
+  height: 0px !important;
+}
+
+/* teikmeout: - https://github.com/NYULibraries/dlts_viewer_mirador/blob/dltsviewer-203-styling-infopanel/style.css */
+/* rule used to remove the top border window highlight */
+div.MuiToolbar-root.MuiToolbar-dense.mirador-window-top-bar {
+  border-top: 0px !important;
 }
