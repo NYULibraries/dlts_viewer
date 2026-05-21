@@ -28,6 +28,11 @@
       data-show-canvas-info="<?php echo $show_canvas_info ?>"
       data-show-collection="<?php echo $show_collection ?>"
       data-multivolume="<?php echo $is_multivolume ?>"
+      data-workspace-view="<?php echo $workspace_view ?>" 
+      data-view-type="<?php echo $view_type ?>" 
+      data-embeded="<?php echo $embeded ?>" 
+      data-history="<?php echo $enable_history ?>"
+      data-image-tools="<?php echo $show_image_tools ?>"
     >
     </div>
     <script type="module" src="<?php echo $js_url ?>"></script>
