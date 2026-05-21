@@ -3,6 +3,9 @@ import { miradorImageToolsPlugin } from 'mirador-image-tools';
 import { defaultConfig } from './viewerConfig.js'
 import LanguageSelector from './plugins/LanguageSelector.jsx'
 import createMultiVolumeSelector from './plugins/createMultiVolumeSelector.jsx'
+import createBookHistoryPlugin from './plugins/createBookHistoryPlugin.js'
+import CollectionInfo from "./plugins/CollectionInfo.jsx";
+
 import './style.css'
 
 const uuid = 'mirador-app'
@@ -16,22 +19,41 @@ const {
   language,
   sequence,
   multivolume,
+  embeded,
+  history,
+  search,
+  showCanvasInfo,
+  showCollection,
+  imageTools,
 } = elem.dataset
 
 const manifestId = `${endpoint}/api/presentation/${type}/${identifier}/manifest.json`
+
 const plugins = [
-  ...miradorImageToolsPlugin,
   LanguageSelector,
+  ...CollectionInfo
 ]
 
 if (multivolume === 'true') {
   plugins.push(createMultiVolumeSelector({ endpoint, identifier }))
 }
 
+if (history === 'true' && embeded !== 'true') {
+  plugins.push(createBookHistoryPlugin({ endpoint, identifier }))
+}
+
+if (imageTools === 'true' ) {
+  plugins.push(...miradorImageToolsPlugin)
+}
+
 const config = {
   ...defaultConfig,
   ...{
     id: uuid,
+    dlts: {
+      showCanvasInfo: showCanvasInfo !== "false",
+      showCollection: showCollection !== "false",
+    },
     language,
     windows: [
       {
@@ -40,7 +62,7 @@ const config = {
         imageToolsOpen: false,
         canvasIndex: Number(sequence) - 1,
         view: 'single',
-        hideWindowTitle: (type === 'photos') ? true: false , // We don't want to show the window title for photos (not metadata to display).
+        hideWindowTitle: false,
       },
     ],
   },

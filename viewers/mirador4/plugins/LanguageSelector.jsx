@@ -37,13 +37,14 @@ const translations = {
 const langstyles = {
   container: {
     width: '100%',
-    marginTop: '16px',
-    paddingBlockStart: '16px',
+    paddingBlockStart: '0',
     paddingInlineStart: '0',
     paddingInlineEnd: '8px',
     paddingBlockEnd: '8px',
-    borderBottom: 'none',
-    borderTop: '0.5px solid rgba(0, 0, 0, 0.25)',
+    // borderBottom: 'none',
+    marginBottom: "16px",
+    paddingBlockStart: "16px",
+    borderBottom: "0.5px solid rgba(0, 0, 0, 0.25)",
   },
   content: {
     display: 'flex',
@@ -78,6 +79,7 @@ const langstyles = {
 }
 
 const LanguageSelector = ({
+  children,
   rootElem = {},
   handleClick = () => {},
   languages = [],
@@ -91,64 +93,68 @@ const LanguageSelector = ({
   const handleChange = useCallback((_event, isExpanded) => {
     setOpen(isExpanded)
   }, [])
-  
-  // If there is only one language, don't show the language selector.
-  if (resourceLanguages.length < 2) return null
 
   const windowIdShort = windowId?.replace(/^window-/, '') || 'default'
   const sectionId = `language-selector-${windowIdShort}`
   const sectionLabel = t('availableLanguages')
+
+  // If there is only one language, skip the selector but still render children (ManifestInfo).
+  if (resourceLanguages.length < 2) return children ?? null
+
   return (
-    <div style={langstyles.container}>
-      <Accordion
-        slotProps={{ heading: { component: 'h4' } }}
-        id={sectionId}
-        elevation={0}
-        expanded={open}
-        onChange={handleChange}
-        disableGutters
-        square
-        variant="compact"
-      >
-        <AccordionSummary
-          id={`${sectionId}-header`}
-          aria-controls={`${sectionId}-content`}
-          aria-label={t(open ? 'collapseSection' : 'expandSection', { section: sectionLabel })}
-          expandIcon={<ExpandMoreIcon />}
+    <>
+      <div style={langstyles.container}>
+        <Accordion
+          slotProps={{ heading: { component: 'h4' } }}
+          id={sectionId}
+          elevation={0}
+          expanded={open}
+          onChange={handleChange}
+          disableGutters
+          square
+          variant="compact"
         >
-          <Typography variant="overline">
-            {sectionLabel}
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <FormControl style={langstyles.formControl}>
-            {
-              languages.map(language => {
-                if (resourceLanguages.includes(language.locale)) {
-                  return (
-                    <MenuItem
-                      key={language.locale}
-                      onClick={() => {
-                        handleClick({ rootElem, language})
-                      }}
-                    >
-                      <ListItemIcon>{language.current && <CheckIcon />}</ListItemIcon>
-                      <ListItemText 
-                        primaryTypographyProps={{ variant: 'body1' }}
-                        style={langstyles.listItemText}
+          <AccordionSummary
+            id={`${sectionId}-header`}
+            aria-controls={`${sectionId}-content`}
+            aria-label={t(open ? 'collapseSection' : 'expandSection', { section: sectionLabel })}
+            expandIcon={<ExpandMoreIcon />}
+          >
+            <Typography variant="overline">
+              {sectionLabel}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <FormControl style={langstyles.formControl}>
+              {
+                languages.map(language => {
+                  if (resourceLanguages.includes(language.locale)) {
+                    return (
+                      <MenuItem
+                        key={language.locale}
+                        onClick={() => {
+                          handleClick({ rootElem, language})
+                        }}
                       >
-                        {language.label}
-                      </ListItemText>
-                    </MenuItem>
-                  )
-                }
-                return null
-              })
-            }
-          </FormControl>
-        </AccordionDetails>
-      </Accordion>
-    </div>
+                        <ListItemIcon>{language.current && <CheckIcon />}</ListItemIcon>
+                        <ListItemText 
+                          primaryTypographyProps={{ variant: 'body1' }}
+                          style={langstyles.listItemText}
+                        >
+                          {language.label}
+                        </ListItemText>
+                      </MenuItem>
+                    )
+                  }
+                  return null
+                })
+              }
+            </FormControl>
+          </AccordionDetails>
+        </Accordion>
+      </div>
+      {children}
+    </>
   )
 }
 
@@ -192,6 +198,7 @@ const mapStateToProps = (state, { windowId }) => {
 }
 
 LanguageSelector.propTypes = {
+  children: PropTypes.node,
   handleClick: PropTypes.func,
   languages: PropTypes.array,
   resourceLanguages: PropTypes.array,
@@ -200,8 +207,8 @@ LanguageSelector.propTypes = {
 }
 
 export default {
-  target: 'CanvasInfo',
-  mode: 'add',
+  target: 'ManifestInfo',
+  mode: 'wrap',
   component: LanguageSelector,
   mapDispatchToProps,
   mapStateToProps,

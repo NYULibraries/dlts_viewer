@@ -22,13 +22,13 @@ import { useTranslation } from 'react-i18next';
 const styles = {
   container: {
     width: '100%',
-    marginTop: '16px',
-    paddingBlockStart: '16px',
+    paddingBlockStart: '0',
     paddingInlineStart: '0',
     paddingInlineEnd: '8px',
     paddingBlockEnd: '8px',
-    borderBottom: 'none',
-    borderTop: '0.5px solid rgba(0, 0, 0, 0.25)',
+    marginBottom: "16px",
+    paddingBlockStart: "16px",
+    borderBottom: "0.5px solid rgba(0, 0, 0, 0.25)",
   },
   formControl: {
     width: '100%',
@@ -141,6 +141,7 @@ export default function createMultiVolumeSelector({ endpoint, identifier }) {
   const setManifestUrl = `${endpoint}/api/presentation/multivolume/${identifier}/manifest.json`;
 
   const MultiVolumeSelector = ({
+    children,
     currentManifestId = '',
     browseToManifest,
     windowId = '',
@@ -215,7 +216,7 @@ export default function createMultiVolumeSelector({ endpoint, identifier }) {
       return items.some(item => item.id === currentManifestId) ? currentManifestId : '';
     }, [currentManifestId, items]);
 
-    if (!loading && !errorDetail && items.length === 0) return null;
+    if (!loading && !errorDetail && items.length === 0) return children ?? null;
 
     const windowIdShort = windowId?.replace(/^window-/, '') || 'default';
     const sectionId = `manifest-selector-${windowIdShort}`;
@@ -225,74 +226,78 @@ export default function createMultiVolumeSelector({ endpoint, identifier }) {
       : (!setManifestUrl ? t('unavailableManifests') : '');
 
     return (
-      <div style={styles.container}>
-        <Accordion
-          slotProps={{ heading: { component: 'h4' } }}
-          id={sectionId}
-          elevation={0}
-          expanded={open}
-          onChange={handleChange}
-          disableGutters
-          square
-          variant="compact"
-        >
-          <AccordionSummary
-            id={`${sectionId}-header`}
-            aria-controls={`${sectionId}-content`}
-            aria-label={t(open ? 'collapseSection' : 'expandSection', { section: sectionLabel })}
-            expandIcon={<ExpandMoreIcon />}
+      <>
+        <div style={styles.container}>
+          <Accordion
+            slotProps={{ heading: { component: 'h4' } }}
+            id={sectionId}
+            elevation={0}
+            expanded={open}
+            onChange={handleChange}
+            disableGutters
+            square
+            variant="compact"
           >
-            <Typography variant="overline">
-              {sectionLabel}
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            {loading && (
-              <Typography style={styles.status} variant="body2">
-                {t('loadingManifests')}
+            <AccordionSummary
+              id={`${sectionId}-header`}
+              aria-controls={`${sectionId}-content`}
+              aria-label={t(open ? 'collapseSection' : 'expandSection', { section: sectionLabel })}
+              expandIcon={<ExpandMoreIcon />}
+            >
+              <Typography variant="overline">
+                {sectionLabel}
               </Typography>
-            )}
-            {!loading && error && (
-              <Typography style={styles.status} variant="body2">
-                {error}
-              </Typography>
-            )}
-            {!loading && !error && (
-              <FormControl style={styles.formControl}>
-                {items.map(item => (
-                  <MenuItem
-                    key={item.id}
-                    onClick={() => browseToManifest(item.id)}
-                    selected={item.id === selectedValue}
-                  >
-                    <ListItemText
-                      slotProps={
-                        {
-                          primary: {
-                            variant: 'body1',
-                            sx: {
-                              overflowWrap: 'anywhere',
-                              whiteSpace: 'normal',
-                            },
-                          },
-                        }
-                      }
-                      style={styles.listItemText}
+            </AccordionSummary>
+            <AccordionDetails>
+              {loading && (
+                <Typography style={styles.status} variant="body2">
+                  {t('loadingManifests')}
+                </Typography>
+              )}
+              {!loading && error && (
+                <Typography style={styles.status} variant="body2">
+                  {error}
+                </Typography>
+              )}
+              {!loading && !error && (
+                <FormControl style={styles.formControl}>
+                  {items.map(item => (
+                    <MenuItem
+                      key={item.id}
+                      onClick={() => browseToManifest(item.id)}
+                      selected={item.id === selectedValue}
                     >
-                      {item.label}
-                    </ListItemText>
-                  </MenuItem>
-                ))}
-              </FormControl>
-            )}
-          </AccordionDetails>
-        </Accordion>
-      </div>
+                      <ListItemText
+                        slotProps={
+                          {
+                            primary: {
+                              variant: 'body1',
+                              sx: {
+                                overflowWrap: 'anywhere',
+                                whiteSpace: 'normal',
+                              },
+                            },
+                          }
+                        }
+                        style={styles.listItemText}
+                      >
+                        {item.label}
+                      </ListItemText>
+                    </MenuItem>
+                  ))}
+                </FormControl>
+              )}
+            </AccordionDetails>
+          </Accordion>
+        </div>
+        {children}
+      </>
     );
   };
 
   MultiVolumeSelector.propTypes = {
     browseToManifest: PropTypes.func.isRequired,
+    children: PropTypes.node,
     currentManifestId: PropTypes.string,
     windowId: PropTypes.string,
   };
@@ -322,8 +327,8 @@ export default function createMultiVolumeSelector({ endpoint, identifier }) {
   });
 
   return {
-    target: 'CanvasInfo',
-    mode: 'add',
+    target: 'ManifestInfo',
+    mode: 'wrap',
     name: `MultiVolumeSelector-${identifier}`,
     component: MultiVolumeSelector,
     mapStateToProps,

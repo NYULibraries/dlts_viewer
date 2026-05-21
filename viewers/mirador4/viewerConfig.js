@@ -157,8 +157,8 @@ const defaultConfig = {
     alwaysBlend: false,
     blendTime: 0.1,
     preserveImageSizeOnResize: true,
-    preserveViewport: true,
-    showNavigationControl: false,
+    preserveViewport: false,
+     showNavigationControl: false,
     zoomPerClick: 1, // disable zoom-to-click
     zoomPerDoubleClick: 2.0
   },

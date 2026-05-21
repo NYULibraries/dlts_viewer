@@ -1559,6 +1559,7 @@ function dlts_viewer_api_v1_map($entity, $requestedLang = 'en') {
     'requestedLanguage' => $availableLanguages[$requestedLang],
     'availableLanguages' => $availableLanguages,
     'status' => (int) $entity->status,
+    'embedUrl' => "$base_url/api/embed/$identifier",
     'representativeImage' => $representative_image,
     'thumbnail' => "$base_url/iiif/2/maps/$identifier/1/full/150,/0/default.jpg",
     'metadata' => $fields,
@@ -2077,6 +2078,7 @@ function dlts_viewer_api_serial_json($entity, $requestedLang = 'en') {
     'status' => (int) $entity->status,
     'isMultivolume' => false,
     'isSeries' => false,
+    'embedUrl' => "$base_url/api/embed/$identifier",
     'iiif' => [
       'identifier' => "$bundle/$identifier",
       'image' => [
@@ -2124,6 +2126,8 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
   drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
 
   $fields = $series = $volumes = $collections = [];
+
+  $imageCount = 0;
 
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
@@ -2557,6 +2561,7 @@ function dlts_viewer_api_book_json($entity, $requestedLang = 'en') {
     'requestedLanguage' => $availableLanguages[$requestedLang],
     'availableLanguages' => $availableLanguages,
     'status' => (int) $entity->status,
+    'embedUrl' => "$base_url/api/embed/$identifier",
     'iiif' => [
       'identifier' => "$bundle/$identifier",
       'image' => [
