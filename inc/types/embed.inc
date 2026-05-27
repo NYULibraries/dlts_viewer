@@ -8,9 +8,9 @@
  */
 function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
-  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
-
   global $base_url;
+
+  drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
   $analytics = variable_get('analytics', []);
 
@@ -33,40 +33,19 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
   $viewer = isset($query_parameters['viewer']) ? filter_xss($query_parameters['viewer']) : 'mirador';
 
-  $reset = isset($query_parameters['reset']) ? filter_xss($query_parameters['reset']) : false;
-
   $type = $record->document;
 
   $identifier = $record->identifier;
 
-  $realpath = drupal_realpath('public://');
+  $entity = node_load($record->nid);
 
-  $cachepath = "$realpath/iiif/$type/$identifier/manifest.json";
+  $wrapper = entity_metadata_wrapper('node', $entity);
 
-  if ($reset && file_exists($cachepath)) {
+  $title = $wrapper->field_title->value();
 
-    $cache = file_get_contents($cachepath);
+  $translations = dlts_viewer_list_translation($identifier, $entity->type);
 
-    $data = json_decode($cache);
-
-    $title = $data->label->$language[0];
-
-    $languages = array_keys( (array) $data->label);
-
-  } else {
-
-    $entity = node_load($record->nid);
-
-    // Wrapp book entity with Entity API wrapper.
-    $wrapper = entity_metadata_wrapper('node', $entity);
-
-    $title = $wrapper->field_title->value();
-
-    $translations = dlts_viewer_list_translation($identifier, $entity->type);
-
-    $languages = array_keys($translations);
-
-  }
+  $languages = array_keys($translations);
 
   if (!in_array($language, $languages)) {
     $language = 'en';
@@ -78,7 +57,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
  
   if ($type === 'books') {
     $is_multivolume = dlts_viewer_is_multivolume($identifier);
-  }  
+  }
 
   // Set entity title.
   drupal_set_title($title);
@@ -98,8 +77,10 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
   switch ($viewer) {
 
     case 'uv':
+
       $template = 'viewer_embed_uv_page';
-      $opts =  [
+
+      $opts = [
         'analytics' => $analytics,
         'appid' => 'uv-app',
         'title' => $title,
@@ -112,29 +93,14 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
         'is_multivolume' => $is_multivolume ? 'true' : 'false',
       ];
-      break;
 
-    case 'clover':
-      $template = 'viewer_embed_clover_page';
-      $opts =  [
-        'analytics' => $analytics,
-        'appid' => 'clover-app',
-        'title' => $title,
-        'language' => $language,
-        'direction' => $direction,
-        'sequence' => $sequence,
-        'endpoint' => $base_url,
-        'type' => $type,
-        'is_multivolume' => $is_multivolume ? 'true' : 'false',
-        'identifier' => $identifier,
-        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'script' => file_get_contents("$module/viewers/clover-iiif/dist/clover-iiif.2.3.2.umd.js"),
-      ];
       break;
 
     case 'mirador3':
+
       $template = 'viewer_embed_page';
-      $opts =  [
+
+      $opts = [
         'analytics' => $analytics,
         'appid' => 'mirador-app',
         'title' => $title,
@@ -148,15 +114,18 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
         'script' => file_get_contents("$module/mirador/integration/dist/mirador.js"),
       ];
+
       break;
 
     default:
+
       $template = 'viewer_embed_mirador_ext_page';
 
       $basePath = "$module/viewers/mirador4/dist";
 
       // Find the JS and CSS files regardless of hash.
       $jsFiles = glob("$basePath/mirador4.*.js");
+
       $cssFiles = glob("$basePath/mirador4.*.css");
 
       $jsFile = $jsFiles ? basename($jsFiles[0]) : '';
@@ -183,13 +152,11 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'show_collection' => 'false',
         'show_image_tools' => 'true',
         'enable_history' => 'false',
-        'workspace_view' => 'mosaic',
-        'view_type' => 'single',
+        'workspace_view' => 'mosaic', 
+        'view_type' => 'single', // Configure which viewing mode (e.g. single, book, gallery) for windows to be opened in
       ];
 
       break;
-
-
   }
 
   echo theme($template, $opts);

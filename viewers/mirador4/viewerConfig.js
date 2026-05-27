@@ -161,7 +161,8 @@ const defaultConfig = {
     preserveViewport: false,
      showNavigationControl: false,
     zoomPerClick: 1, // disable zoom-to-click
-    zoomPerDoubleClick: 2.0
+    zoomPerDoubleClick: 2.0,
+    crossOriginPolicy: 'Anonymous',
   },
 };
 

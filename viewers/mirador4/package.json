@@ -12,6 +12,7 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.7",
     "@mui/material": "^7.3.7",
+    "openseadragon": "^6.0.2" ,
     "mirador": "4.0.0",
     "mirador-image-tools": "1.0.0",
     "prop-types": "^15.8.1",
@@ -23,5 +24,8 @@
     "@babel/preset-react": "^7.28.5",
     "parcel": "^2.0.0",
     "process": "^0.11.10"
+  },
+  "overrides": {
+    "openseadragon": "^6.0.2" 
   }
 }

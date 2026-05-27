@@ -25,6 +25,7 @@ const {
   showCanvasInfo,
   showCollection,
   imageTools,
+  viewType,
 } = elem.dataset
 
 const manifestId = `${endpoint}/api/presentation/${type}/${identifier}/manifest.json`
@@ -75,7 +76,7 @@ const config = {
         imageToolsEnabled: true,
         imageToolsOpen: false,
         canvasIndex: Number(sequence) - 1,
-        view: 'single',
+        view: viewType,
         hideWindowTitle: false,
       },
     ],
