@@ -41,7 +41,7 @@ function dlts_viewer_views_pre_render(&$view) {
         // DLPAS-341 introduced a bug
         // See https://jira.nyu.edu/browse/DLTSVIEWER-182
         // This code checks if the volume number is already appended to the title
-        if (strpos($field_title, (string) $number) === false) {
+        if (!empty($number) && strpos($field_title, (string) $number) === FALSE) {
           $result->field_field_book_1[0]['rendered']['#markup'] = $field_title . ' ' . $number;
         }
 

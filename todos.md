@@ -62,146 +62,96 @@ http://localhost:1234/book/woj_mss092_ref14/1
 
 https://localhost/viewer/api/v1/objects?type=dlts_map
 
+◐ Now I have a comprehensive picture. Let me compile the full updated review and present it clearly.
 
-◐ Now I have a complete picture of the file. Let me analyze the issues systematically.
+  Here are all the confirmed issues:
 
-  The file is ~3075 lines, ~89.8 KB. Let me catalogue issues:
-
-  1. Massive code duplication (biggest issue)
-
-  The `switch` block for field processing is almost identical in 3+ functions:
-  - `dlts_viewer_api_v1_map()` (lines ~1332-1520) 
-  - `dlts_viewer_api_serial_json()` (lines ~1857-2049)
-  - `dlts_viewer_api_book_json()` (lines ~2333-2525)
+  Bugs:
+  1. Line 114: `date_text` branch — `$value` is undefined/stale when `$type == 'date_text'` (commented-out assignment `// $raw_value['value'];`)
+  2. Line 433: `$partners[0]` — unchecked empty array crash in `dlts_viewer_list_collections_collection()`; if node has no partner, `$partners` is empty and this crashes
+  3. Line 604: (approximate — in `dlts_viewer_list_collections`) — similar `$partners[0]` issue
 
 
-  - And the same pattern repeats in `dlts_viewer_api_photo_json()` as well
+  4. Line 711: `'status' => $status` — missing colon in the placeholder key for `db_query_range()`, so the status parameter never gets bound to the query
+  5. Line 1083: `_dlts_viewer_book_thumbnails_loader()` — `$cursor->skip()` called twice, causing a double-skip bug
+  6. Line 1100: `'per_page '` — trailing space in the array key, a typo that will break the expected parameter name
+  7. Line 1634: `$items[]` used without initialization in `dlts_viewer_api_photo_json` — if the loop doesn't execute, `$items` is undefined when referenced later
+  8. Line 1940: `unset($parent_series)` in `dlts_viewer_api_book_json()` — the variable was never defined, so this is a harmless no-op that should be removed
+  9. Line 2178: `$node['ticket']` accessed before `$node` is defined as an array at line 2190, reading from an undefined variable instead
+  10. Line 2209: `implode()` called with deprecated argument order — should swap to `implode(', ', $keys)` format, same issue with `$expected_keys`
 
-  All three have nearly identical `foreach` loops iterating through fields with the same `switch` cases for handling different field types. This entire block should be extracted into a helper function to eliminate the duplication.
+  There's also dead code scattered throughout: `_dlts_viewer_book_thumbnails_loader()` marked as not working and never called, `dlts_viewer_objects_sequences()` using MongoDB functions with no documentation, and commented-out cases in the sequences API function.
 
-  The `availableLanguages` filtering logic is also repeated across multiple functions, and the PDF file handling block appears in at least three places as well.
+  On the security side, I'm noticing `filter_xss()` being applied to numeric values that should just be cast to integers, and an `unserialize()` call missing the `allowed_classes` whitelist option. For code style, there's inconsistent use of `array()` versus `[]` syntax scattered across multiple functions, and the resource and collection listing functions are building their SQL queries in a way that could be cleaned up.
 
-  Looking at the bugs now, there's a statement on line 109 that computes a value but doesn't assign it to anything — it should be storing the result in `$value`. Line 126 has an undefined variable issue where `$title` is checked but never defined, so the conditional will always fall back to `$node->title`. The `node_load()` calls on lines 577, 841, and 1016 are passing the wrong arguments — they're including the entity type when `node_load()` only takes the nid parameter.
+  I also see some quirks like a hardcoded collection code with no explanation and a trailing space in an array key that's probably unintentional. Let me organize these findings clearly.
 
-  Continuing through the list, there's a potential notice on line 593 if the `$partners` array is empty when accessing the first element. Line 337 has `$viewerUrl` that might not be set depending on the `$result_type` value. The placeholder key in the database query around lines 700-701 is missing the colon prefix — it should be `:status` instead of `status`. There's a duplicate call to `$cursor->skip()` on lines 1220 and 1218. Line 2318 tries to unset a variable that was never initialized. And the `implode()` function on line 2787 has its arguments in the wrong order for newer PHP versions.
-
-  Looking further, line 2756 references `$node['ticket']` but that variable is actually defined later at line 2768, so it's undefined at that point. There's also a return type inconsistency where a function documented to return `json|array` is returning `false` instead. I'm also seeing commented-out code blocks that should be cleaned up, particularly in the switch statement around lines 2818-2828 where there are old cases for handling different datasource types that are no longer being used.
-
-  Beyond the syntax issues, there are several functions marked with `@todo` comments that need attention — one function is flagged as "not working" and relies on MongoDB which might be dead code, another is completely undocumented and needs proper documentation, and there's a geographic subject case that has an unresolved todo about how to handle it properly.
-
-  I'm also noticing some other code quality issues: there are functions that depend on MongoDB operations that may no longer be active, inconsistent use of old `array()` syntax versus modern `[]` syntax scattered throughout, and some functions have excessive blank line spacing that makes them harder to read. There's also a hardcoded collection code value buried in one of the API functions, and the thinking cuts off while discussing security concerns.
-
-  Looking at the security issues more closely, I see `filter_xss()` being applied to numeric values where type casting would be more appropriate, and `unserialize()` calls that lack the recommended validation whitelist for PHP 7+. Some loader functions are also bypassing Drupal's output pipeline entirely by directly echoing content and calling `exit(0)`, which should instead return proper responses through Drupal's delivery mechanisms. There appear to be duplicate SQL queries as well that could be consolidated.
-
-  I'm also noticing some potential redundancy between the metadata functions—`dlts_viewer_book_metadata()` and `dlts_viewer_book()` seem to provide an older format compared to `dlts_viewer_api_book_json()`, so it's unclear if both are still necessary. Additionally, there's an issue in `dlts_viewer_api_photo_json()` where `$items` is being used without being initialized first.
-
-● Here's a structured review of the issues:
+● Here's the complete updated issue list for the current state of the file:
 
   ---------------------------------------------------------------------------------------------------------------------------------
 
-  inc/endpoints.inc — Code Review
+  endpoints.inc — Updated Review
 
   🐛 Bugs
 
-  ┌────────────────┬─────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Line           │ Issue                                                                                   │
-  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 109            │ $raw_value['value']; — value is never assigned (missing $value =). Dead expression.     │
-  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 126            │ $title is never defined; !empty($title) always falls back to $node->title.              │
-  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 577, 841, 1016 │ node_load('node', $nid) — node_load() only takes a nid, not entity type first.          │
-  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 593            │ $partners[0]['code'] crashes with notice/error if $partners is empty.                   │
-  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 337            │ $viewerUrl is potentially undefined if $result_type is neither book nor map.            │
-  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 700            │ Placeholder key 'status' is missing the colon — should be ':status'.                    │
-  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 1218–1220      │ $cursor->skip() called twice in _dlts_viewer_book_thumbnails_loader().                  │
-  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 1714           │ $items used but never initialized ($items = []) in dlts_viewer_api_photo_json().        │
-  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 2318           │ unset($parent_series) — variable is never defined.                                      │
-  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 2756           │ $node['ticket'] accessed before $node is defined (it's defined at line 2768).           │
-  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 2787           │ implode($keys, ', ') — argument order deprecated; should be implode(', ', $keys).       │
-  └────────────────┴─────────────────────────────────────────────────────────────────────────────────────────┘
+  ┌───────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Line  │ Issue                                                                                                              │
+  ├───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ~114  │ date_text branch has // $raw_value['value']; commented out → $value is undefined/stale from previous loop          │
+  │       │ iteration                                                                                                          │
+  ├───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼
+  │ ~604  │ $partners[0]['code'] in dlts_viewer_list_collections() — same unchecked empty array crash                          │
+  ├───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ~711  │ 'status' => $status in dlts_viewer_api_list_topics() — missing : prefix; compare with the correct ':status' at     │
+  │       │ line 720. The placeholder is never bound, breaking the status filter                                               │
+  ├───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ~1634 │ $items[] in dlts_viewer_api_photo_json() — $items never initialized before the for loop; if $imageCount == 0, loop │
+  │       │ never runs and $items is undefined at line 1656                                                                    │
+  ├───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ~1940 │ unset($parent_series) in dlts_viewer_api_book_json() — $parent_series is never defined; harmless no-op but dead    │
+  ├───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ~2178 │ $node['ticket'] accessed before $node is defined as an array (line ~2190)                                          │
+  ├───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ~2209 │ implode($keys, ', ') — wrong argument order (deprecated in PHP 7.4, fatal in PHP 8+); should be implode(', ',      │
+  │       │ $keys)                                                                                                             │
+  └───────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  💀 Dead Code
+
+  ┌─────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────────────────┐
+  │ Location                                │ Issue                                                                            │
+  ├─────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────┤
+  │ _dlts_viewer_book_thumbnails_loader()   │ Marked @todo not working; uses mongodb_collection() and $cursor->skip() (called  │
+  │ (~1039–1107)                            │ twice — double-skip bug at ~1083). Should be removed.                            │
+  ├─────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────┤
+  │ dlts_viewer_objects_sequences()         │ Uses dlts_viewer_mongodb_load_resource_by_identifier() — MongoDB-dependent, no   │
+  │ (~2455–2494)                            │ docblock, effectively dead                                                       │
+  ├─────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────┤
+  │ Lines ~2241–2242                        │ Commented-out case 'dlts_book' in dlts_viewer_api_v1_sequences() — should be     │
+  │                                         │ removed or restored                                                              │
+  └─────────────────────────────────────────┴──────────────────────────────────────────────────────────────────────────────────┘
+
+  Also: both dead functions have bugs internally (double skip, 'per_page ' typo) that confirm they haven't been touched in a longtime.
+
+  🔐 Security/Safety
+
+  ┌──────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Line     │ Issue                                                                                                           │
+  ├──────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ~384–388 │ filter_xss() applied to rows/start values already confirmed numeric by is_numeric() — use (int) cast instead    │
+  ├──────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ~1284    │ unserialize($value['data']) with no ['allowed_classes' => false] option                                         │
+  └──────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  🧹 Style/Cleanup
+
+   - Mixed array() vs [] — dlts_viewer_api_list_topics() uses array() for its placeholders (lines ~707–740); thumbnails loaderalso uses array(). All other code uses [].
+   - $collectionCode = 'aco' hardcoded in dlts_viewer_api_list_topics() with no explanation — this function silently only worksfor the ACO collection.
+   - Count+results SQL duplication — dlts_viewer_list_resource() and dlts_viewer_list_collections_collection() both run the samequery twice (once for count, once for results). Could use SQL_CALC_FOUND_ROWS or a subquery.
+   - dlts_viewer_list_collections_collection() still has @todo document function in its docblock.
 
   ---------------------------------------------------------------------------------------------------------------------------------
 
-  ♻️ Massive Duplication — Extract Into Helpers
+  What's already fixed (since original review): node_load('node', $nid) wrong args ✓, $viewerUrl undefined ✓, $title undefined ✓,major duplication (426 lines removed) ✓
 
-  The field-processing switch block appears nearly identically in 3 functions:
-
-   - dlts_viewer_api_v1_map() (~lines 1332–1520)
-   - dlts_viewer_api_serial_json() (~lines 1857–2049)
-   - dlts_viewer_api_book_json() (~lines 2333–2525)
-
-  Each contains the same cases: collection, handle, partner, pdf_file, read_order, scan_order, subject, topic, etc. → Extract into _dlts_viewer_process_fields().
-
-  The availableLanguages filtering loop is also duplicated across those three plus dlts_viewer_api_photo_json() → Extract into_dlts_viewer_filter_languages().
-
-  The double SQL query build (count + results with identical JOINs) is duplicated in:
-
-   - dlts_viewer_list_resource() (lines 174–270)
-   - dlts_viewer_list_collections_collection() (lines 398–474)
-
-  ---------------------------------------------------------------------------------------------------------------------------------
-
-  🗑️ Dead Code to Remove
-
-  ┌───────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Lines     │ Item                                                                                                         │
-  ├───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 1176–1244 │ _dlts_viewer_book_thumbnails_loader() — doc says @todo not working, uses MongoDB mongodb_collection().       │
-  ├───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 2818–2828 │ Commented-out case 'dlts_book' and case 'dlts_postcard' in dlts_viewer_api_v1_sequences().                   │
-  ├───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 1356–1359 │ Commented-out case 'volume' block in dlts_viewer_api_v1_map().                                               │
-  ├───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 3035–3074 │ dlts_viewer_objects_sequences() — uses dlts_viewer_mongodb_load_resource_by_identifier(), likely dead.       │
-  └───────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-
-  ---------------------------------------------------------------------------------------------------------------------------------
-
-  ⚠️ @todo / Unresolved Issues
-
-  ┌──────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Line             │ Item                                                                                         │
-  ├──────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 356–360          │ dlts_viewer_list_collections_collection() — marked undocumented.                             │
-  ├──────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 1382, 1900, 2376 │ case 'geographic_subject' just does unset() with @todo Find out how to deal with this.       │
-  ├──────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 659              │ $collectionCode = 'aco' hardcoded in dlts_viewer_api_list_topics().                          │
-  ├──────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ 2137, 1786       │ @todo will set later on using field_language_code — never addressed.                         │
-  └──────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────┘
-
-  ---------------------------------------------------------------------------------------------------------------------------------
-
-  🔐 Security / Safety
-
-  ┌──────────────────────┬───────────────────────────────────────────────────────────────────────────────────────┐
-  │ Line                 │ Issue                                                                                 │
-  ├──────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
-  │ 377–381              │ filter_xss() used on numeric rows/start params — use (int) cast instead.              │
-  ├──────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
-  │ 1431, 1950           │ unserialize() called without ['allowed_classes' => false] (PHP 7+ best practice).     │
-  ├──────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
-  │ 1062–1067, 1111–1116 │ Loader functions do echo + exit(0) directly, bypassing Drupal's output pipeline.      │
-  └──────────────────────┴───────────────────────────────────────────────────────────────────────────────────────┘
-
-  ---------------------------------------------------------------------------------------------------------------------------------
-
-  🧹 Style / Consistency
-
-   - Mixed array() vs [] syntax (e.g., lines 692–711 use array(); the rest use []).
-   - Excessive blank lines between every statement in some functions.
-   - dlts_viewer_book() / dlts_viewer_book_metadata() appear to be an older metadata format vs dlts_viewer_api_book_json() —unclear if both code paths are still active.
-
-  ---------------------------------------------------------------------------------------------------------------------------------
-
-  Top priorities: fix the node_load() bug (affects multiple endpoints), eliminate the 3× duplicated field-processing switch, andremove the MongoDB-dependent dead code. Want me to start on any of these?
+  What would you like to tackle next — the bugs, the dead code removal, or something else?

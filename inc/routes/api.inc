@@ -83,6 +83,7 @@ function _dlts_viewer_menu_api() {
     'file' => 'inc/endpoints.inc',
   ];
 
+  // api/v1/objects/princeton_aco000102/sequences
   $items['api/v1/objects/%dlts_noid/sequences'] = [
     'title' => 'Object sequences',
     'access arguments' => [ 
@@ -178,17 +179,6 @@ function _dlts_viewer_menu_api() {
     'load arguments' => [ '%map', '%index' ],
     'delivery callback' => 'drupal_json_output',
     'file' => 'inc/endpoints/photo.inc',
-  ];
-
-  // @link api/v1/books/princeton_aco000102/thumbnails
-  $items['api/v1/books/%dlts_book/thumbnails'] = [
-    'access arguments' => [
-      'access content',
-    ],
-    'page callback' => '_dlts_viewer_book_thumbnails_loader',
-    'delivery callback' => 'drupal_json_output',
-    'page arguments' => [ 3 ],
-    'file' => 'inc/endpoints.inc',
   ];
 
   // @link api/v1/books/princeton_aco000102

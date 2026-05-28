@@ -97,6 +97,6 @@
 
   unset($document->content);
 
-  $document->addField('content', implode($searchableFields, ' '));
+  $document->addField('content', implode(' ', $searchableFields));
 
 }
