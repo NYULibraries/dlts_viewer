@@ -3,14 +3,25 @@
   padding-left: 0;
 }
 
-h5[id$="-related-heading"] {
-  display: none;
-  visibility: hidden;
+h5[id$="-related-heading"],
+h5[id$="-resource-heading"] {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
 .MuiToolbar-root.mirador-companion-window-header {
-  opacity: 0.5;
-  display: none;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
 .mirador-osd-info {

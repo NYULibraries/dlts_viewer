@@ -754,9 +754,9 @@ function dlts_viewer_epubs_metadata_v1($data) {
   $hardcoverId = $custom->hardcover;
 
   // Use array_filter to find the matching object
-  $matchingFormat = array_filter($data->formats, function($book) use ($hardcoverId) {
-    return $book['isbn'] === $hardcoverId;
-  });
+  // $matchingFormat = array_filter($data->formats, function($book) use ($hardcoverId) {
+  //   return $book['isbn'] === $hardcoverId;
+  // });
 
   // Sort formats by date
   usort($data->formats, function ($a, $b) {
@@ -805,6 +805,9 @@ function dlts_viewer_epubs_metadata_v1($data) {
 
   }
 
+  // https://nyu.atlassian.net/browse/NYUP-1133
+  $imprint = (isset($data->imprint) && isset($data->imprint->name)) ? $data->imprint->name : 'NYU Press';
+
   // Schema/Crosswalk
   // https://docs.google.com/spreadsheets/d/1j0P4WP80sJ-e_umdqDPbLjQZovoduQC_I7fGdI1O4iQ/edit?gid=0#gid=0
   // https://jira.nyu.edu/browse/NYUP-739
@@ -843,6 +846,7 @@ function dlts_viewer_epubs_metadata_v1($data) {
     'title' => $title,
     'titleSort' => $data->title_without_prefix,
     'titleGroupId' => $custom->cs_title_group,
+    'imprint' => $imprint,
     'yearBook' => $yearBook,
     'yearOpenAccess' => $yearOpenAccess,
   ];
