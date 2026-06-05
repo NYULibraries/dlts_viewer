@@ -8,9 +8,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <base target="content-frame">
 </head>
-<body class="pane-body openlayers-loading <?php echo $pane_metadata_hidden ?>">
-  <?php print $page_top ?>
-  <?php print $page ?>
-  <?php print $page_bottom ?>
+<body class="pane-body openlayers-loading <?php if (isset($pane_metadata_hidden)) : print $pane_metadata_hidden; endif; ?>">
+  <?php if (isset($page_top)) : print $page_top; endif; ?>
+  <?php if (isset($page)) : print $page; endif; ?>
+  <?php if (isset($page_bottom)) : print $page_bottom; endif; ?>
 </body>
 </html>

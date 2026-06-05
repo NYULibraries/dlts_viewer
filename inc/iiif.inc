@@ -1286,8 +1286,6 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     unset($nid_wrapper);
   }
 
-  // $translations_keys = array_keys($translations);
-
   // https://iiif.io/api/presentation/3.0/#rendering
   $field_pdf_file_raw = $wrapper->field_pdf_file->value();
 
@@ -1299,7 +1297,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
         'label' => $value['label'],
       ];
 
-      $udata = unserialize($value['data']);
+      $udata = unserialize($value['data'], ['allowed_classes' => false]);
 
       $data['size'] = 'Not available';
 
@@ -1428,7 +1426,6 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $pw = entity_metadata_wrapper('node',  $field_partner[0]);
     $partner_code = $pw->field_code->value();
     $partof[] = [
-      // '@context' => 'http://iiif.io/api/presentation/3/context.json',
       'id' => "$base_url/api/presentation/collections/$collection_code:$partner_code/manifest.json",
       'type' => 'Collection',
       'label' => [
@@ -1448,18 +1445,13 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
   // If book is part of multi-volume; append volume value to entity title.
   if ($multivolume_book) {
-
     $multivolume_book_wrapper = entity_metadata_wrapper('node', $multivolume_book);
-
-    $multivolume_idenfier = $multivolume_book_wrapper->field_identifier->value();
-
     $multivolume_partof = [
-      // '@context' => 'http://iiif.io/api/presentation/3/context.json',
-      'id' => "$base_url/api/presentation/multivolume/$multivolume_idenfier/manifest.json",
+      'id' => "$base_url/api/presentation/multivolume/$identifier/manifest.json",
       'type' => 'Collection',
       'label' => [
         $multivolume_book_wrapper->language->value() => [
-          $multivolume_book_wrapper->title->value(),
+          trim($multivolume_book_wrapper->title->value()),
         ],
       ],
       'items' => [],
@@ -1492,11 +1484,13 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
 
       unset($mb_wrapper);
     }
+
     unset($multivolume_book);
+
     asort($volumes);
 
-    // Need fix
-    // $partof[] = $multivolume_partof;
+    $partof[] = $multivolume_partof;
+
   }
 
   $collection_name = dlts_viewer_mongodb_collections_by_type($bundle);
@@ -1518,11 +1512,11 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     if ($page['cm']['uri'] == $field_representative_image_uri) {
       $sequence = end($page['sequence']);
       $thumbnail[] = [
-        'id' => "$base_url/api/image/$type/$identifier/$sequence/full/!300,300/0/default.jpg",
+        'id' => "$base_url/api/image/$type/$identifier/$sequence/full/!400,400/0/default.jpg",
         'type' => 'Image',
         'format' => 'image/jpeg',
-        'height' => 300,
-        'width' => 300,
+        'height' => 400,
+        'width' => 400,
         'service' => [
           [
             'id' => "$base_url/api/image/$type/$identifier/$sequence",
@@ -1548,11 +1542,11 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $thumbnail_raw = $items[0]['items'][0]['items'][0]['body'];
     $thumbnail = [
       [
-        'id' => $thumbnail_raw['id'] . '/full/!300,300/0/default.jpg',
+        'id' => $thumbnail_raw['id'] . '/full/!400,400/0/default.jpg',
         'type' => 'Image',
         'format' => 'image/jpeg',
-        'height' => 300,
-        'width' => 300,
+        'height' => 400,
+        'width' => 400,
         'service' => $thumbnail_raw['service'],
       ],
     ];

@@ -151,6 +151,13 @@ function dlts_viewer_preprocess_html(&$vars) {
    *
    */
   header_remove('X-Frame-Options');
+
+  $language_default = language_default();
+
+  $vars['resource_language_code'] = $language_default->language;
+
+  $vars['language_dir'] = $language_default->dir;
+
   // check if we are in an admin page
   if (dlts_viewer_is_resource()) {
     // see html.tpl.php
@@ -170,8 +177,6 @@ function dlts_viewer_preprocess_html(&$vars) {
       $vars['classes_array'][] = 'not_mobile';
     }
     // See: https://jira.nyu.edu/jira/browse/DLTSVIEWER-81
-    $language_default = language_default();
-    $vars['resource_language_code'] = $language_default->language;
     // We have access to $resource_language_code in the global context
     // if the resource exist.
     // See: dlts_viewer_book_dispatcher()
