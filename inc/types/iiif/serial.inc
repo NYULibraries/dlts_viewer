@@ -123,7 +123,7 @@ function dlts_serial_fields_values($wrapper, array $translatable_fields = []) {
     if (!empty($handle['url'])) {
       $metadata['field_handle'] = [
         'label' => $labels['field_handle'],
-        'value' => [$handle['url']],
+        'value' => [ "<a href='{$handle['url']}'>" . $handle['url'] . "</a>" ],
       ];
     }
   }
@@ -280,7 +280,14 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
       if (empty($data['value'])) {
         continue;
       }
-      $fields[$name]['label'][$lang] = [$data['label']];
+      // https://nyu.atlassian.net/browse/DLTSSER-38
+      // Change "Scanning Notes" header to “Publication History”
+      // @TODO: This is a temporary workaround for a specific field; change the content-type later on.
+      if ($name === 'field_scanning_notes') {
+        $fields[$name]['label'][$lang] = [ t('Publication History') ];
+      } else {
+        $fields[$name]['label'][$lang] = [$data['label']];
+      }
       $fields[$name]['value'][$lang] = $data['value'];
     }
   }
@@ -360,11 +367,11 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
 
     if ($use_as_thumb) {
       $thumbnail = [[
-        'id' => "$base_url/api/image/$type/$identifier/$seq_id/full/!300,300/0/default.jpg",
+        'id' => "$base_url/api/image/$type/$identifier/$seq_id/full/!400,400/0/default.jpg",
         'type' => 'Image',
         'format' => 'image/jpeg',
-        'height' => 300,
-        'width' => 300,
+        'height' => 400,
+        'width' => 400,
         'service' => [[
           'id' => "$base_url/api/image/$type/$identifier/$seq_id",
           'type' => 'ImageService2',
@@ -384,6 +391,12 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
   $title = $fields['field_title']['value'] ?? ['en' => ['Untitled']];
 
   unset($fields['field_title']);
+
+  // Hide Read Order, Scan Order, and Binding Orientation from serials
+  // https://nyu.atlassian.net/browse/DLTSSER-38
+  unset($fields['field_read_order']);
+  unset($fields['field_scan_order']);
+  unset($fields['field_binding_orientation']);
 
   $manifest = [
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
