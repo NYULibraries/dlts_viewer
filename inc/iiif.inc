@@ -1626,47 +1626,59 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     $res['requiredStatement'] = $required_statement;
   }
 
+  // $series_partof = [];  
+  // Check if this book is part of a series.
+  // $series_books = dlts_viewer_series_book($entity->nid);
+  // if (!empty($series_books) && is_array($series_books)) {
+  //   // This book "Series Book"
+  //   $sb = reset($series_books);
+  //   // Series Book wrapper
+  //   $sw = entity_metadata_wrapper('node', $sb);
+  //   // Series node that this book belongs to
+  //   $field_series = $sw->field_series->value();
+  //   // Series node id
+  //   $series_nid = $field_series->nid;
+  //   $sbooks = dlts_viewer_objects_partof_series_nid($series_nid);
+  //   $series_partof = [
+  //     'id' => "$base_url/api/presentation/series/{$identifier}/manifest.json",
+  //     'type' => 'Collection',
+  //     'label' => [
+  //       $sw->language->value() => [
+  //         trim($sb->title),
+  //       ],
+  //     ],
+  //     'items' => [],
+  //   ];
+  //   foreach ($sbooks as $sbs) {
+  //     $sbs_wrapper = entity_metadata_wrapper('node', $sbs);
+  //     $series_title = trim($sbs->title);
+  //     $sbs_node = $sbs_wrapper->field_book->value();
+  //     $sbs_book_wrapper = entity_metadata_wrapper('node', $sbs_node);
+  //     $sbs_idenfier = $sbs_book_wrapper->field_identifier->value();
+  //     $sbs_volume_number_str = trim($sbs_wrapper->field_volume_number_str->value());
+  //     $series_partof['items'][] = [
+  //       'id' => "$base_url/api/presentation/books/$sbs_idenfier/manifest.json",
+  //       'type' => 'Manifest',
+  //       'label' => [
+  //         $sbs_book_wrapper->language->value() => t('@title @volume', [ 
+  //           '@title' => $series_title, 
+  //           '@volume' => $sbs_volume_number_str
+  //         ]),
+  //       ],
+  //     ];
+  //     unset($sbs_wrapper);
+  //     unset($series_title);
+  //     unset($sbs_node);
+  //     unset($sbs_book_wrapper);
+  //     unset($sbs_idenfier);
+  //     unset($sbs_volume_number_str);
+  //   }
+  //   $partof[] = $series_partof;
+  // }
+
   if (isset($partof) && !empty($partof)) {
     $res['partOf'] = $partof;
   }
-
-  // $series_books = dlts_viewer_series_book($entity->nid);
-
-  // $isSeries = false;
-
-  // if (!empty($series_books)) {
-  //   $isSeries = true;
-  //   foreach ($series_books as $series_book) {
-  //     $series_wrapper = entity_metadata_wrapper('node', $series_book);
-  //     $series_volume_number_str = trim($series_wrapper->field_volume_number_str->value());
-  //     $series_title = t(
-  //       '@title, @volume',
-  //       array(
-  //         '@title' => trim($series_wrapper->title->value()),
-  //         '@volume' => $series_volume_number_str,
-  //       )
-  //     );
-  //     $series_book_identifier = $series_wrapper->field_identifier->value();
-  //     $parent = $series_wrapper->field_series->value();
-  //     $parent_wrapper = entity_metadata_wrapper('node', $parent);
-  //     $parent_title = trim($parent_wrapper->title->value());
-  //     $parent_identifier = $parent_wrapper->field_identifier->value();
-  //     $series[] = array(
-  //       'title' => $series_title,
-  //       'identifier' => $series_book_identifier,
-  //       'isPartOf' => array(
-  //         'title' => $parent_title,
-  //         'identifier' => $parent_identifier,
-  //       ),
-  //     );
-  //   }
-  //   unset($series_volume_number_str);
-  //   unset($series_title);
-  //   unset($parent_series);
-  //   unset($series_wrapper);
-  //   unset($parent_wrapper);
-  //   unset($series_books);
-  // }
 
   drupal_register_shutdown_function('dlts_viewer_cache_manifest', [ 'type' => $type, 'resource' => $entity, 'data' => $res ]);
 

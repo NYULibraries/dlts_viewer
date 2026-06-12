@@ -83,4 +83,24 @@ const config = {
   },
 }
 
+if (viewType === 'gallery') {
+  config.window = {
+    allowClose: false,
+    allowFullscreen: true,
+    allowMaximize: false,
+    allowTopMenuButton: false,
+    panels: {
+      info: true,
+      attribution: true,
+      canvas: false,
+      annotations: false,
+      search: false,
+      layers: false,
+    },
+    sideBarOpen: false,
+    allowWindowSideBar: true,
+    authNewWindowCenter: "screen"
+  }
+}
+
 Mirador.viewer(config, sortedPlugins)

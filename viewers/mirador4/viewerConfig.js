@@ -17,7 +17,7 @@ const defaultConfig = {
       attribution: true,
       canvas: false,
       annotations: false,
-      search: true,
+      search: false,
       layers: false,
     },
     sideBarOpen: true,

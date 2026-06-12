@@ -959,3 +959,22 @@ function dlts_viewer_is_multivolume($id) {
   }
 }
 
+/**
+ * Undocumented function.
+ *
+ * @todo document function
+ */
+function dlts_viewer_objects_partof_series_nid($nid) {
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'dlts_series_book')
+    ->fieldCondition('field_series', 'nid', $nid, '=')
+    ->execute();
+  if (empty($result['node'])) {
+    return FALSE;
+  }
+  else {
+    $keys = array_keys($result['node']);
+    return node_load_multiple($keys);
+  }
+}

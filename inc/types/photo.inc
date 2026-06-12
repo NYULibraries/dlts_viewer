@@ -40,9 +40,6 @@ function dlts_viewer_photo_set_dispatcher($entity) {
   // Collection.
   $field_collection = $wrapper->field_collection->value();
 
-  // Partner.
-  // $field_partner = $wrapper->field_partner->value();
-
   // Title.
   $title = $wrapper->field_title->value();
 

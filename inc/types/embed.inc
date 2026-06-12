@@ -6,7 +6,7 @@
  * @param object $record
  *   Record from dlts_resource table.
  */
-function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
+function dlts_viewer_embed_dispatcher($record, $sequence = null) {
 
   global $base_url;
 
@@ -54,9 +54,19 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
   $title = html_entity_decode($title, ENT_QUOTES);
 
   $is_multivolume = false;
+
+  $view_type = 'single';
  
   if ($type === 'books') {
     $is_multivolume = dlts_viewer_is_multivolume($identifier);
+  }
+
+  if ($type === 'photos' && is_null($sequence)) {
+    $view_type = 'gallery';
+  }
+
+  if (is_null($sequence)) {
+    $sequence = 1;
   }
 
   // Set entity title.
@@ -76,47 +86,6 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
 
   switch ($viewer) {
 
-    case 'uv':
-
-      $template = 'viewer_embed_uv_page';
-
-      $opts = [
-        'analytics' => $analytics,
-        'appid' => 'uv-app',
-        'title' => $title,
-        'language' => $language,
-        'direction' => $direction,
-        'sequence' => $sequence,
-        'endpoint' => $base_url,
-        'type' => $type,
-        'identifier' => $identifier,
-        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'is_multivolume' => $is_multivolume ? 'true' : 'false',
-      ];
-
-      break;
-
-    case 'mirador3':
-
-      $template = 'viewer_embed_page';
-
-      $opts = [
-        'analytics' => $analytics,
-        'appid' => 'mirador-app',
-        'title' => $title,
-        'language' => $language,
-        'direction' => $direction,
-        'sequence' => $sequence,
-        'endpoint' => $base_url,
-        'type' => $type,
-        'is_multivolume' => $is_multivolume ? 'true' : 'false',
-        'identifier' => $identifier,
-        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'script' => file_get_contents("$module/mirador/integration/dist/mirador.js"),
-      ];
-
-      break;
-
     default:
 
       $template = 'viewer_embed_mirador_ext_page';
@@ -129,6 +98,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
       $cssFiles = glob("$basePath/mirador4.*.css");
 
       $jsFile = $jsFiles ? basename($jsFiles[0]) : '';
+
       $cssFile = $cssFiles ? basename($cssFiles[0]) : '';
 
       $modulePath = base_path() . $module;
@@ -153,7 +123,7 @@ function dlts_viewer_embed_dispatcher($record, $sequence = 1) {
         'show_image_tools' => 'true',
         'enable_history' => 'false',
         'workspace_view' => 'mosaic', 
-        'view_type' => 'single', // Configure which viewing mode (e.g. single, book, gallery) for windows to be opened in
+        'view_type' => $view_type, // Configure which viewing mode (e.g. single, book, gallery) for windows to be opened in
       ];
 
       break;
