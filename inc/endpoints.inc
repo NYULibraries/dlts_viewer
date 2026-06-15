@@ -2151,7 +2151,6 @@ function dlts_viewer_api_v1_objects($version = NULL) {
       'image_set',
       'dlts_book',
       'dlts_photo_set',
-      'dlts_postcard',
       'dlts_map',
       'dlts_serial',
     ];
@@ -2175,10 +2174,6 @@ function dlts_viewer_api_v1_objects($version = NULL) {
             case 'dlts_map':
               module_load_include('inc', 'dlts_viewer', 'inc/endpoints/map');
               return dlts_viewer_api_v1_dlts_map_objects($datasource);
-
-            case 'dlts_postcard':
-              module_load_include('inc', 'dlts_viewer', 'inc/endpoints/postcard');
-              return dlts_viewer_api_v1_dlts_postcard_objects($datasource);
 
             case 'dlts_serial':
               module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_serial');
