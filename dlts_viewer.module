@@ -598,3 +598,79 @@ function dlts_viewer_cache_purge_action($type, $id) {
 
   drupal_goto('admin/config/services/iiif-cache');
 }
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function dlts_viewer_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  $view_name = NULL;
+
+  // 1. Check if the active router item has a view object passed in its arguments
+  if (!empty($router_item['page_arguments'])) {
+    foreach ($router_item['page_arguments'] as $arg) {
+      if (is_object($arg) && isset($arg->name)) {
+        $view_name = $arg->name;
+        break;
+      }
+      elseif (is_string($arg) && !empty($router_item['page_callback']) && strpos($router_item['page_callback'], 'views') !== false) {
+        $view_name = $arg;
+        break;
+      }
+    }
+  }
+
+  // 2. If we found a view name and the user has permission, process the node
+  if ($view_name && user_access('administer views')) {
+    $node = menu_get_object();
+    if ($node) {
+      $wrapper = entity_metadata_wrapper('node', $node);
+      $bundle = $wrapper->getBundle();
+      if ($bundle == 'dlts_book' || $bundle == 'dlts_serial' || $bundle == 'dlts_map' || $bundle == 'dlts_photo_set') {
+        $identifier = $wrapper->field_identifier->value();
+
+        // Define our two new tabs
+        $new_tabs = [
+          [
+            '#theme' => 'menu_local_task',
+            '#link' => [
+              'title' => t('DLTS Viewer View'),
+              'href' => "api/embed/$identifier",
+              'localized_options' => [
+                'attributes' => [
+                  'title' => t('DLTS Viewer view.'),
+                ],
+              ],
+            ],
+          ],
+          [
+            '#theme' => 'menu_local_task',
+            '#link' => [
+              'title' => t('IIIF Presentation Manifest'),
+              'href' => "api/presentation/noid/$identifier",
+              'localized_options' => [
+                'attributes' => [
+                  'title' => t('IIIF Presentation Manifest.'),
+                ],
+              ],
+            ],
+          ]
+        ];
+
+        // Initialize the output array if it doesn't exist yet
+        if (!isset($data['tabs'][0]['output'])) {
+          $data['tabs'][0]['output'] = [];
+        }
+
+        // PREPEND: Merge new tabs to the FRONT of the existing tabs array
+        $data['tabs'][0]['output'] = array_merge($new_tabs, $data['tabs'][0]['output']);
+    
+        // Update the tab count correctly by adding exactly 2
+        if (!isset($data['tabs'][0]['count'])) {
+          $data['tabs'][0]['count'] = 2;
+        } else {
+          $data['tabs'][0]['count'] += 2;
+        }
+      }       
+    }
+  }
+}

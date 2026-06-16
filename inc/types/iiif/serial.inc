@@ -397,6 +397,38 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
   unset($fields['field_read_order']);
   unset($fields['field_scan_order']);
   unset($fields['field_binding_orientation']);
+  unset($fields['field_description']);
+
+  $metadata_field_display_order = [
+    'field_collection', // Publication Title (previously Collection)
+    'field_author', // Author 
+    'field_volume', // Volume
+    'field_number', // Number
+    'field_publication_location', // Place of publication
+    'field_publisher', // Publisher
+    'field_publication_date_text', // Date of publication
+    'field_call_number', // Call Number
+    'field_scanning_notes', // Publication history
+    'field_subject', // Subject
+    'field_language', // Language
+    'field_partner', // Provider
+    'field_handle', // Permanent link
+  ];
+
+  // Sort $fields keys to match $metadata_field_display_order.
+  $ordered_fields = [];
+  foreach ($metadata_field_display_order as $key) {
+    if (isset($fields[$key])) {
+      $ordered_fields[$key] = $fields[$key];
+    }
+  }
+  // Append any remaining fields not covered by the display order.
+  foreach ($fields as $key => $value) {
+    if (!isset($ordered_fields[$key])) {
+      $ordered_fields[$key] = $value;
+    }
+  }
+  $fields = $ordered_fields;
 
   $manifest = [
     '@context' => 'http://iiif.io/api/presentation/3/context.json',
@@ -455,4 +487,5 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
   ]);
 
   return $manifest;
+
 }
