@@ -64,7 +64,6 @@ function dlts_viewer_is_bundle($bundle) {
  *   Machine name of the content type.
  */
 function dlts_type_load($type) {
-
   $types = [
     'books' => 'dlts_book',
     'maps' => 'dlts_map',
@@ -74,6 +73,7 @@ function dlts_type_load($type) {
     'partners' => 'dlts_partner',
     'creativework' => 'creativework',
     'serials' => 'dlts_serial',
+    'object' => 'object',
   ];
 
   if (isset($types[$type])) {

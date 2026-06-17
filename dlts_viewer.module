@@ -646,7 +646,7 @@ function dlts_viewer_menu_local_tasks_alter(&$data, $router_item, $root_path) {
             '#theme' => 'menu_local_task',
             '#link' => [
               'title' => t('IIIF Presentation Manifest'),
-              'href' => "api/presentation/noid/$identifier",
+              'href' => "api/presentation/object/$identifier/manifest.json",
               'localized_options' => [
                 'attributes' => [
                   'title' => t('IIIF Presentation Manifest.'),
