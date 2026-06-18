@@ -182,11 +182,11 @@ function _dlts_viewer_menu_api() {
   ];
 
   // @link api/v1/books/princeton_aco000102
-  $items['api/v1/books/%dlts_book'] = [
+  $items['api/v1/books/%dlts_noid'] = [
     'access arguments' => [
       'access content',
     ],
-    'page callback' => '_dlts_viewer_book_loader',
+    'page callback' => '_dlts_viewer_noid_loader',
     'delivery callback' => 'drupal_json_output',
     'page arguments' => [ 3 ],
     'file' => 'inc/endpoints.inc',
