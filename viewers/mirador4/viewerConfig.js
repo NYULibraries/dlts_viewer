@@ -159,7 +159,7 @@ const defaultConfig = {
     blendTime: 0.1,
     preserveImageSizeOnResize: true,
     preserveViewport: false,
-     showNavigationControl: false,
+    showNavigationControl: false,
     zoomPerClick: 1, // disable zoom-to-click
     zoomPerDoubleClick: 2.0,
     crossOriginPolicy: 'Anonymous',

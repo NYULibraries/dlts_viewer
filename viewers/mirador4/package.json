@@ -13,7 +13,7 @@
     "@mui/icons-material": "^7.3.7",
     "@mui/material": "^7.3.7",
     "openseadragon": "^6.0.2" ,
-    "mirador": "4.0.0",
+    "mirador": "4.1.0",
     "mirador-image-tools": "1.0.0",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
