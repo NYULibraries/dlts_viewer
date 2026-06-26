@@ -307,6 +307,10 @@ function save_dlts_serial($node, $language = 'en') {
       $ewrapper->field_publication_date_text->set($node['publication_date_text']);
     }
 
+    if (!empty($node['call_number'])) {
+      $ewrapper->field_call_number->set($node['call_number']);
+    }
+
     if (!empty($node['scanning_notes'])) {
       $scanning_notes_paragraphs = array_map(function($line) {
         return trim($line);

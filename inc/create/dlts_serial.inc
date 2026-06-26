@@ -108,6 +108,10 @@ function dlts_viewer_api_v1_serial_objects(array $data) {
     $node['language_string'] = $metadata->language->value;
   }
 
+  if (isset($metadata->call_number) && isset($metadata->call_number->value)) {
+    $node['call_number'] = $metadata->call_number->value;
+  }
+
   // 6. Partners & Collections
   foreach (['partners', 'collections'] as $field) {
     if (isset($metadata->{$field}->value) && is_array($metadata->{$field}->value)) {

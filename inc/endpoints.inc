@@ -1120,6 +1120,8 @@ function _dlts_viewer_process_metadata_fields(array $type_fields, $wrapper, $req
         break;
 
       case 'pdf_file':
+        // Notice: Undefined index: searchable in _dlts_viewer_process_metadata_fields()
+        // (line 1160 of /var/www/html/viewer/sites/all/modules/dlts_viewer/inc/endpoints.inc).
         $fields[$name]['value'] = [
           'hi' => [],
           'lo' => [],

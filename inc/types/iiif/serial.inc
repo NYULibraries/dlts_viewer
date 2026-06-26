@@ -270,6 +270,7 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
     'field_description', 'field_volume', 'field_number', 'field_title',
     'field_publication_date_text', 'field_publication_location', 'field_isbn',
     'field_language', 'field_publisher', 'field_topic', 'field_scanning_notes',
+    'field_call_number',
   ];
 
   $fields = [];
