@@ -180,12 +180,14 @@ function dlts_viewer_drush_command() {
 // https://nyu.atlassian.net/browse/DLTSSER-9
 // ./vendor/bin/drush dlts-delete-earwest
 function dlts_viewer_drush_delete_earwest() {
-  $results = db_query("SELECT identifier FROM dlts_viewer_resource WHERE document = 'books' AND identifier LIKE 'fales_earwest%'")->fetchAll();
+  $results = db_query("SELECT identifier FROM dlts_viewer_resource WHERE identifier LIKE 'fales_earwest%'")->fetchAll();
+
   foreach ($results as $record) {
     $identifier = $record->identifier;
     drush_log("Deleting resource with identifier: $identifier", 'ok');
     dlts_viewer_delete_by_identifier($identifier);
   }
+
 }
 
 function dlts_viewer_drush_task_dlts326() {
@@ -438,11 +440,21 @@ function dlts_viewer_pick_one_identifier() {
  * Delete by identifier.
  * $ ./vendor/bin/drush delete-by-identifier --identifier=princeton_aco000150
  */
-function dlts_viewer_delete_by_identifier() {
-  $identifier = drush_get_option('identifier', NULL);
+function dlts_viewer_delete_by_identifier($identifier = NULL) {
+  
+  if (!$identifier) {
+      $identifier = drush_get_option('identifier', NULL);
+      if (!$identifier) {
+        drush_log('Error: Identifier is missing.', 'error');
+        return;
+      }
+  }  
+
   $record = db_query("SELECT nid, document FROM {dlts_viewer_resource} WHERE identifier = :identifier LIMIT 1", [':identifier' => $identifier])->fetchAll();
+
   $type = $record[0]->document;
-  if ($type == 'maps' || $type == 'photos') {
+
+  if ($type == 'maps' || $type == 'photos' || $type == 'serials') {
     $nid = $record[0]->nid;
     node_delete($nid);
     drush_log("Node $nid deleted.", 'success');
@@ -451,11 +463,9 @@ function dlts_viewer_delete_by_identifier() {
     $nids = dlts_viewer_get_translations_nid_by_identifier($identifier);
     if (count($nids) > 0) {
       drush_log("Deleting node by identifier $identifier.", 'ok');
-      foreach ($nids as $nid) {
-        node_delete($nid);
-        drush_log("Node $nid deleted", 'success');
-        db_delete('dlts_viewer_resource')->condition('identifier', $identifier)->execute();
-      }
+      node_delete_multiple($nids);
+      drush_log("Node $nid deleted", 'success');
+      db_delete('dlts_viewer_resource')->condition('identifier', $identifier)->execute();
     } else {
       drush_log("Node not found. Identifier $identifier ");
     }
