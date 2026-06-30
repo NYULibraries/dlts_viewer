@@ -168,8 +168,24 @@ function dlts_viewer_drush_command() {
     ],
   ];
 
+  $items['dlts-delete-earwest'] = [
+    'callback' => 'dlts_viewer_drush_delete_earwest',
+    'description' => dt('Task - Delete Earwest records'),
+  ];
+
   return $items;
 
+}
+
+// https://nyu.atlassian.net/browse/DLTSSER-9
+// ./vendor/bin/drush dlts-delete-earwest
+function dlts_viewer_drush_delete_earwest() {
+  $results = db_query("SELECT identifier FROM dlts_viewer_resource WHERE document = 'books' AND identifier LIKE 'fales_earwest%'")->fetchAll();
+  foreach ($results as $record) {
+    $identifier = $record->identifier;
+    drush_log("Deleting resource with identifier: $identifier", 'ok');
+    dlts_viewer_delete_by_identifier($identifier);
+  }
 }
 
 function dlts_viewer_drush_task_dlts326() {
