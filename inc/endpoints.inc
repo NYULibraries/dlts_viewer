@@ -383,6 +383,8 @@ function dlts_viewer_list_collections_collection($collections) {
   foreach ($collection_wrapper->field_partner->value() as $partner) {
     $partner_wrapper = entity_metadata_wrapper('node', $partner);
     $partners[] = [
+      'nid' => $partner->nid,
+      'identifier' => $partner_wrapper->field_identifier->value(),
       'code' => $partner_wrapper->field_code->value(),
       'name' => $partner_wrapper->field_name->value(),
     ];
