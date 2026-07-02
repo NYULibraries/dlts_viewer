@@ -342,8 +342,6 @@ function dlts_viewer_list_collections_collection($collections) {
 
   $length = 10;
 
-  $status = 1;
-
   // Get query parameters.
   $query_parameters = drupal_get_query_parameters();
 
@@ -355,101 +353,39 @@ function dlts_viewer_list_collections_collection($collections) {
     $start = (int) $query_parameters['start'];
   }
 
-  foreach ($collections as $collection) {
+  // foreach ($entities['node'] as $node) {
+  //   $entity = node_load($node->nid);
+  //   $wrapper = entity_metadata_wrapper('node', $entity);
+  //   $partners = [];
+  //   $collection_code = '';
+  //   $partners_code = '';
+  //   foreach ($wrapper->field_partner->getIterator() as $delta => $partner_wrapper) {
+  //     if ($partner_wrapper->getBundle() == 'dlts_partner') {
+  //       $partners[] = [
+  //         'name' => $partner_wrapper->field_name->value(),
+  //         'code' => $partner_wrapper->field_code->value(),
+  //       ];
+  //     }
+  //   }
 
-    $partners = [];
+  $collection = reset($collections);
 
-    $partner_code = NULL;
+  $collection_wrapper = entity_metadata_wrapper('node', $collection);
 
-    $collection_wrapper = entity_metadata_wrapper('node', $collection);
+  $collection_code = $collection_wrapper->field_code->value();
 
-    $collection_code = $collection_wrapper->field_code->value();
+  $collection_name = $collection_wrapper->field_name->value();
 
-    $collection_name = $collection_wrapper->field_name->value();
+  $collection_identifier = $collection_wrapper->field_identifier->value();
 
-    $placeholders = [
-      ':status' => $status,
+  $partners = [];
+
+  foreach ($collection_wrapper->field_partner->value() as $partner) {
+    $partner_wrapper = entity_metadata_wrapper('node', $partner);
+    $partners[] = [
+      'code' => $partner_wrapper->field_code->value(),
+      'name' => $partner_wrapper->field_name->value(),
     ];
-
-    foreach ($collection_wrapper->field_partner->value() as $partner) {
-      $partner_wrapper = entity_metadata_wrapper('node', $partner);
-      $partners[] = [
-        'code' => $partner_wrapper->field_code->value(),
-        'name' => $partner_wrapper->field_name->value(),
-      ];
-    }
-
-    if (!empty($partners)) {
-      $partner_code = $partners[0]['code'];
-    }
-
-    $base_query = "
-      FROM node
-      LEFT JOIN field_data_field_title title
-        ON node.nid = title.entity_id
-      LEFT JOIN field_data_field_handle handle
-        ON node.nid = handle.entity_id
-      LEFT JOIN field_data_field_identifier identifier
-        ON node.nid = identifier.entity_id
-      LEFT JOIN field_data_field_collection collection
-        ON node.nid = collection.entity_id
-      INNER JOIN field_data_field_code collection_code
-        ON collection.field_collection_nid = collection_code.entity_id
-      LEFT JOIN field_data_field_partner partner
-        ON node.nid = partner.entity_id
-      INNER JOIN field_data_field_code partner_code
-        ON partner.field_partner_nid = partner_code.entity_id
-      WHERE node.status = :status";
-
-    if (isset($collection_code)) {
-      $base_query .= ' AND collection_code.field_code_value = :collection';
-      $placeholders[':collection'] = filter_xss($collection_code);
-    }
-
-    if (isset($partner_code)) {
-      $base_query .= ' AND partner_code.field_code_value = :partner';
-      $placeholders[':partner'] = filter_xss($partner_code);
-    }
-
-    $count = db_query("SELECT COUNT(DISTINCT node.nid)" . $base_query, $placeholders)->fetchField();
-    $results = db_query_range("SELECT node.nid, node.type, title, handle.field_handle_url, identifier.field_identifier_value" . $base_query, $start, $length, $placeholders)->fetchAll();
-
-    foreach ($results as $result) {
-
-      $handle_raw = $result->field_handle_url;
-
-      $handle = explode('/', $handle_raw);
-
-      $result_type = str_replace('dlts_', '', $result->type);
-
-      $result_alias = $result_type . 's';
-
-      $identifier = $result->field_identifier_value;
-
-      $nodes[] = [
-        'title' => trim($result->title),
-        'nid' => $result->nid,
-        'noid' => $handle[count($handle) - 1],
-        'type' => $result_type,
-        'typeAlias' => $result_alias,
-        'identifier' => $identifier,
-        'collections' => [ [
-          'code' => $collection_code,
-          'name' => $collection_name,
-        ] ],
-        'partners' => $partners,
-        'uri' => "$base_url/api/v1/noid/$identifier",
-        'handle' => $handle_raw,
-        'viewerUrl' => "$base_url/$result_alias/$identifier",
-        'embedUrl' => "$base_url/api/embed/$identifier",
-        'iiif' => [
-          'thumbnail' => "$base_url/api/image/$result_alias/$identifier/1/full/!400,400/0/default.jpg",
-          'presentation' => "$base_url/api/presentation/$result_alias/$identifier/manifest.json",
-        ],
-
-      ];
-    }
-
   }
 
   // Try to mimic Apache Solr response.
@@ -457,6 +393,15 @@ function dlts_viewer_list_collections_collection($collections) {
     'response' => [
       'numFound' => (int) $count,
       'start' => (int) $start,
+      'rows' => (int) $length,
+      'collection' => [
+        'nid' => $collection->nid,
+        'identifier' => $collection_identifier,
+        'title' => $collection_name,
+        'code' => $collection_code,
+        'partners' => $partners,
+
+      ],
       'docs' => $nodes,
     ],
   ];
