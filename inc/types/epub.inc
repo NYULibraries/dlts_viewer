@@ -1016,8 +1016,6 @@ function dlts_viewer_epubs_indexer_v1($_publisher, $epub) {
 
     $epub->reviews = json_encode($epub->reviews);
 
-    unset($epub->imprint);
-
     unset($epub->files);
 
     $options = [
