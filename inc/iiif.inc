@@ -189,6 +189,7 @@ function dlts_viewer_iiif_tile($_type, $_resource, $sequence, $region = 'full', 
   }
 
   $cm_uri = '';
+
   if (isset($sequence['cm']['uri'])) {
     $cm_uri = $sequence['cm']['uri'];
   }
@@ -238,7 +239,7 @@ function dlts_viewer_iiif_tile($_type, $_resource, $sequence, $region = 'full', 
  * It takes an entity and calls the corresponding manifest generation function
  * (e.g., for books, photos, maps).
  *
- * @param string $type
+ * @param string $_type
  *   The resource type (e.g., 'books', 'photos', 'maps').
  * @param object $entity
  *   The node object for which to generate the manifest.
@@ -249,7 +250,7 @@ function dlts_viewer_iiif_tile($_type, $_resource, $sequence, $region = 'full', 
  * @return array
  *   The IIIF manifest as a PHP array.
  */
-function dlts_viewer_iiif_resource_manifest($type, $entity, $cache = TRUE) {
+function dlts_viewer_iiif_resource_manifest(string $_type, $entity, $cache = TRUE) {
 
   drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
@@ -685,16 +686,24 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
 
   $hjson = dlts_viewer_repository_hjson($noid, $cache);
 
-  $ijson = dlts_viewer_repository_ijson($noid, $partner_code, $collection_code);
+  $ijson = dlts_viewer_repository_ijson($noid, $partner_code, $collection_code, $cache);
 
-  // I want to add this information to the request header.
-  // $sourcefile = $ijson->runinfo->sourcefile;
+  $archdesc = null;
 
-  // $reposidentifier = $ijson->pubinfo->reposidentifier;
+  $eadheader = null;
 
-  $archdesc = isset($ijson->archdesc) ? $ijson->archdesc : null;
+  if ($ijson && !isset($ijson->error)) {
 
-  $eadheader = isset($ijson->eadheader) ? $ijson->eadheader : null;
+    // I want to add this information to the request header.
+    // $sourcefile = $ijson->runinfo->sourcefile;
+
+    // $reposidentifier = $ijson->pubinfo->reposidentifier;
+
+    $archdesc = isset($ijson->archdesc) ? $ijson->archdesc : null;
+
+    $eadheader = isset($ijson->eadheader) ? $ijson->eadheader : null;
+
+  }
 
   // Resource
   $fields['resource'] = [
@@ -703,7 +712,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
   ];
 
   // Finding Aid Title
-  if (isset($eadheader->filedesc->titlestmt->titleproper)) {
+  if (!is_null($eadheader) && isset($eadheader->filedesc->titlestmt->titleproper)) {
     $fields['findingaidtitle'] = [
       'label' => [ $lang => [ 'Finding Aid Title' ], ],
       'value' => [ $lang => [ strip_tags($eadheader->filedesc->titlestmt->titleproper) ], ],
@@ -727,7 +736,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
   }
 
   // Finding Aid URL
-  if (isset($eadheader->eadid) && isset($eadheader->eadid->url)) {
+  if (!is_null($eadheader) && isset($eadheader->eadid) && isset($eadheader->eadid->url)) {
     $fields['findingaidurl'] = [
       'label' => [ $lang => [ 'Finding Aid URL' ], ],
       'value' => [ $lang => [ $eadheader->eadid->url ], ],
@@ -735,7 +744,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
   }
 
   // Language of Material
-  if (isset($archdesc->did) && isset($archdesc->did->langmaterial) && isset($archdesc->did->langmaterial[0])) {
+  if (!is_null($archdesc) && isset($archdesc->did) && isset($archdesc->did->langmaterial) && isset($archdesc->did->langmaterial[0])) {
     $fields['langmaterial'] = [
       'label' => [ $lang => [ 'Language of Material' ] ],
       'value' => [ $lang => [ $archdesc->did->langmaterial[0]->value ], ],
@@ -768,7 +777,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
   }
 
   // Sponsor
-  if (isset($eadheader->filedesc->titlestmt->sponsor)) {
+  if (!is_null($eadheader) && isset($eadheader->filedesc->titlestmt->sponsor)) {
     $fields['sponsor'] = [
       'label' => [ $lang => [ 'Sponsor' ], ],
       'value' => [ $lang => [ $eadheader->filedesc->titlestmt->sponsor ], ],
@@ -780,7 +789,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
   // Conditions Governing Use
   // Add 'Conditions Governing Use' <userrestrict> metadata field to Mirador viewer for archival objects
   // Should go in Copyright section
-  if (isset($archdesc->userestrict) && !empty($archdesc->userestrict[0])) {
+  if (!is_null($archdesc) && isset($archdesc->userestrict) && !empty($archdesc->userestrict[0])) {
     $conditionsgoverninguse = '';
     foreach ($archdesc->userestrict as $userestrict) {
       if (isset($userestrict->children) && !empty($userestrict->children)) {
@@ -801,7 +810,7 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
 
   // Preferred Citation
   // Should go in Copyright section
-  if (isset($archdesc->prefercite)) {
+  if (!is_null($archdesc) && isset($archdesc->prefercite)) {
     $prefercite = $archdesc->prefercite[0];
     $prefercite_children = '';
     foreach ($prefercite->children as $children) {
@@ -2174,6 +2183,8 @@ function dlts_viewer_iiif_resource_manifest_boutique($identifier) {
  */
 function dlts_viewer_repository_hjson($noid, $cache = true) {
 
+  $data = [];
+
   // Username for the repository challange.
   $user = variable_get('publisher_user', NULL);
 
@@ -2197,7 +2208,7 @@ function dlts_viewer_repository_hjson($noid, $cache = true) {
 
     $file_path= "$dir_path/$noid.json";
 
-    if ($cache && file_exists($file_path)) {
+    if (1 == 2 && $cache && file_exists($file_path)) {
 
       $data = json_decode(
         file_get_contents($file_path)
@@ -2254,7 +2265,6 @@ function dlts_viewer_repository_hjson($noid, $cache = true) {
  *   if the repository credentials are not configured or the request fails.
  */
 function  dlts_viewer_repository_ijson($noid, $partner_code, $collection_code, $cache = true) {
-
   // Username for the repository challange.
   $user = variable_get('publisher_user', NULL);
 
@@ -2276,6 +2286,8 @@ function  dlts_viewer_repository_ijson($noid, $partner_code, $collection_code, $
 
     $file_path = "$dir_path/$noid.json";
 
+    $cache = false;
+
     if ($cache && file_exists($file_path)) {
 
       $data = json_decode(
@@ -2284,32 +2296,7 @@ function  dlts_viewer_repository_ijson($noid, $partner_code, $collection_code, $
 
     } else {
 
-      $collection_code_transformed = $collection_code;
-
-      // 1. Preferred Pattern: Handles R* code like 'ad_mc016' and transforms it to 'ad_mc_016'
-      // Pattern: (Letters) _ (Letters) (Digits) -> Transformation: (Letters) _ (Letters) _ (Digits)
-      if (preg_match('/^([a-zA-Z]+)_([a-zA-Z]+)(\d+)$/', $collection_code, $matches)) {
-        array_shift($matches);
-        $collection_code_transformed = implode('_', $matches); // Result: 'ad_mc_016'
-      }
-
-      // 2. NEW PATTERN: Handles codes like 'tam674' and transforms it to 'tam_674'
-      // Pattern: (Letters)(Digits) -> Transformation: (Letters)_(Digits)
-      else if (preg_match('/^([a-zA-Z]+)(\d+)$/', $collection_code, $matches)) {
-        array_shift($matches);
-        $collection_code_transformed = implode('_', $matches); // Result: 'tam_674'
-      }
-
-      // 3. Original, Faulty Pattern Test (Included for completeness/debugging)
-      // Pattern: (Letters)(Digits)_(Digits)
-      else if (preg_match('/^([a-zA-Z]+)(\d+)_(\d+)$/', $collection_code, $matches)) {
-        array_shift($matches);
-        $collection_code_transformed = implode('_', $matches);
-      }
-    
-      else {
-        return [ 'error' => 'error' ];
-      }
+      $collection_code_transformed = dlts_viewer_transform_collection_code($collection_code);
 
       $ijson_endpoint = "$endpoint/metadata/api/v0/ijson/$partner_code/$collection_code_transformed/$collection_code_transformed.json";
 
@@ -2319,7 +2306,7 @@ function  dlts_viewer_repository_ijson($noid, $partner_code, $collection_code, $
         $data = json_decode($ijson_request->data);
         drupal_register_shutdown_function('dlts_viewer_cache_ijson', [ 'noid' => $noid, 'data' => $ijson_request->data, ]);
       } else {
-        return [ 'error' => 'error' ];
+        $data = [ 'error' => 'error' ];
       }
 
     }
@@ -2327,5 +2314,104 @@ function  dlts_viewer_repository_ijson($noid, $partner_code, $collection_code, $
     return $data;
 
   }
+
+}
+
+/**
+ * Transforms collection code based on defined patterns.
+ *
+ * Applies regex patterns to transform collection codes:
+ * - Pattern 1: (Letters)_(Letters)(Digits) -> (Letters)_(Letters)_(Digits)
+ * - Pattern 2: (Letters)(Digits) -> (Letters)_(Digits)
+ * - Pattern 3: See DLTSVIEWER-227 - dlts_viewer_ijson_collection_lookup
+ *
+ * @param string $collection_code
+ *   The collection code to transform.
+ *
+ * @return string|NULL
+ *   The transformed collection code, or NULL if no pattern matches.
+ */
+function dlts_viewer_transform_collection_code(string $collection_code) {
+
+  // 1. Preferred Pattern: Handles R* code like 'ad_mc016' and transforms it to 'ad_mc_016'
+  if (preg_match('/^([a-zA-Z]+)_([a-zA-Z]+)(\d+)$/', $collection_code, $matches)) {
+    array_shift($matches);
+    return implode('_', $matches);
+  }
+
+  // 2. NEW PATTERN: Handles codes like 'tam674' and transforms it to 'tam_674'
+  if (preg_match('/^([a-zA-Z]+)(\d+)$/', $collection_code, $matches)) {
+    array_shift($matches);
+    return implode('_', $matches);
+  }
+
+  // 3. Lookup Table for Non-Standard Collection Codes
+  // The first collections that were added to R* and the collection code does 
+  // not follow the current practice of using the archival “component identifier” code, e.g., mss293.
+  // we were given a lookup table for the non-standard collection codes to use for this cases.
+  // See: https://nyu.atlassian.net/browse/DLTSVIEWER-227
+  if ($collection_lookup = dlts_viewer_ijson_collection_lookup($collection_code)) {
+    return $collection_lookup['transformed'];
+  }
+
+  // 4. Original
+  // Pattern: (Letters)(Digits)_(Digits)
+  if (preg_match('/^([a-zA-Z]+)(\d+)_(\d+)$/', $collection_code, $matches)) {
+    array_shift($matches);
+    return implode('_', $matches);
+  }
+
+  watchdog('iiif', 'Invalid collection code format: @code', [ '@code' => $collection_code ], WATCHDOG_ERROR);
+
+  return NULL;
+
+}
+
+function dlts_viewer_ijson_collection_lookup(string $collection_code) {
+
+  $collections = [
+    'beard' => [ 'partner' => 'fales', 'code' => 'beard', 'display_code' => 'MSS.309' ],
+    'berol' => [ 'partner' => 'fales', 'code' => 'berol', 'display_code' => 'MSS.057' ],
+    'blake' => [ 'partner' => 'fales', 'code' => 'blake', 'display_code' => 'MSS.217' ],
+    'dougherty' => [ 'partner' => 'fales', 'code' => 'dougherty', 'display_code' => 'MSS.213' ],
+    'gcn' => [ 'partner' => 'fales', 'code' => 'gcn', 'display_code' => 'MSS.231' ],
+    'judson' => [ 'partner' => 'fales', 'code' => 'judson', 'display_code' => 'MSS.094' ],
+    'levydime' => [ 'partner' => 'fales', 'code' => 'levydime', 'display_code' => 'MSS.028' ],
+    'lotringer' => [ 'partner' => 'fales', 'code' => 'lotringer', 'display_code' => 'MSS.221' ],
+    'mendez' => [ 'partner' => 'fales', 'code' => 'mendez', 'display_code' => 'MSS.100' ],
+    'moore' => [ 'partner' => 'fales', 'code' => 'moore', 'display_code' => 'MSS.135' ],
+    'rivers' => [ 'partner' => 'fales', 'code' => 'rivers', 'display_code' => 'MSS.293' ],
+    'thane' => [ 'partner' => 'fales', 'code' => 'thane', 'display_code' => 'MSS.287' ],
+    'wojnarowicz' => [ 'partner' => 'fales', 'code' => 'wojnarowicz', 'display_code' => 'MSS.092' ],
+    'akkasah_pa' => [ 'partner' => 'nyuad', 'code' => 'akkasah_pa', 'display_code' => 'nyuad_photo' ],
+    'barsarchive' => [ 'partner' => 'nyuad', 'code' => 'barsarchive', 'display_code' => 'AD.MC.001' ],
+    'hering' => [ 'partner' => 'nyuarchives', 'code' => 'hering', 'display_code' => 'MC.74' ],
+    'historicphotos' => [ 'partner' => 'nyuarchives', 'code' => 'historicphotos', 'display_code' => 'Photo.002' ],
+    'iaaa' => [ 'partner' => 'nyuarchives', 'code' => 'iaaa', 'display_code' => 'RG.9.8' ],
+    'washsquarephoto' => [ 'partner' => 'nyuarchives', 'code' => 'washsquarephoto', 'display_code' => 'PHOTO.00001' ],
+    'withers' => [ 'partner' => 'nyuarchives', 'code' => 'withers', 'display_code' => 'RISM.MC.1' ],
+    'wsn' => [ 'partner' => 'nyuarchives', 'code' => 'wsn', 'display_code' => 'RG.39.178' ],
+    'alba_moscow' => [ 'partner' => 'tamwag', 'code' => 'alba_moscow', 'display_code' => 'ALBA.PHOTO.177' ],
+    'graphics_002' => [ 'partner' => 'tamwag', 'code' => 'graphics_002', 'display_code' => 'GRAPHICS.002' ],
+    'graphics_039' => [ 'partner' => 'tamwag', 'code' => 'graphics_039', 'display_code' => 'GRAPHICS.039' ],
+    'guantanamo_setonhall' => [ 'partner' => 'tamwag', 'code' => 'guantanamo_setonhall', 'display_code' => 'TAM.472' ],
+    'ohal' => [ 'partner' => 'tamwag', 'code' => 'ohal', 'display_code' => 'OH.002' ],
+    'photos_023' => [ 'partner' => 'tamwag', 'code' => 'photos_023', 'display_code' => 'PHOTOS.023' ],
+    'randall_photo' => [ 'partner' => 'tamwag', 'code' => 'randall_photo', 'display_code' => 'ALBA.PHOTO.011' ],
+    'rosie' => [ 'partner' => 'tamwag', 'code' => 'rosie', 'display_code' => 'OH.081' ],
+    'scp' => [ 'partner' => 'tamwag', 'code' => 'scp', 'display_code' => 'ALBA.242' ],
+    'wag025' => [ 'partner' => 'tamwag', 'code' => 'wag025', 'display_code' => 'WAG.025.003' ],
+  ];
+
+  // Add a lowercase 'transformed' key to every entry, derived from its
+  // display_code using the same underscore-separator regex approach as
+  // dlts_viewer_transform_collection_code().
+  foreach ($collections as &$collection) {
+    $collection['transformed'] = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $collection['display_code']));
+  }
+
+  unset($collection);
+
+  return $collections[$collection_code] ?? FALSE;
 
 }

@@ -628,7 +628,7 @@ function _dlts_viewer_resolve_hierarchy($doc, array $options) {
     $fmds_res = drupal_http_request($results['resource']->fmds_url, $options);
     if ((int) $fmds_res->code === 200) {
       $fmds = _dlts_viewer_json_decode($fmds_res->data);
-      foreach ($fmds as $fmd) {
+      foreach ((array) $fmds as $fmd) {
         $results['resource']->fmds[] = [
           'id' => $fmd->id,
           'name' => $fmd->name,
