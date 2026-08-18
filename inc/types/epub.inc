@@ -806,7 +806,7 @@ function dlts_viewer_epubs_metadata_v1($data) {
   }
 
   // https://nyu.atlassian.net/browse/NYUP-1133
-  $imprint = (isset($data->imprint) && isset($data->imprint->name)) ? $data->imprint->name : 'NYU Press';
+  $imprint = (isset($data->imprint) && isset($data->imprint['name'])) ? $data->imprint['name'] : 'NYU Press';
 
   // Schema/Crosswalk
   // https://docs.google.com/spreadsheets/d/1j0P4WP80sJ-e_umdqDPbLjQZovoduQC_I7fGdI1O4iQ/edit?gid=0#gid=0
@@ -1023,7 +1023,9 @@ function dlts_viewer_epubs_indexer_v1($_publisher, $epub) {
       'data' => json_encode([$epub]),
     ];
 
-    $response = drupal_http_request("$solrurl/update/json?_=" . time() . "&commit=true&commitWithin=1000&overwrite=true&wt=json", $options);
+    $solrurl = "$solrurl/update/json?_=" . time() . "&commit=true&commitWithin=1000&overwrite=true&wt=json";
+
+    $response = drupal_http_request($solrurl, $options);
 
     if ($response->code == '200' && isset($response->data)) {
       $r = json_decode($response->data);
@@ -1034,6 +1036,7 @@ function dlts_viewer_epubs_indexer_v1($_publisher, $epub) {
     } else {
        return [
          'status_message' => $response->status_message,
+         'url' => $solrurl,
          'code' => $response->code,
          'error' => $response->error,
          'message' => json_decode($response->data),
@@ -1048,7 +1051,6 @@ function dlts_viewer_epubs_indexer_v1($_publisher, $epub) {
  * Undocumented function.
  */
 function dlts_viewer_epubs_indexer($_version, $publisher, $epub) {
-
   if (!user_access('dlts create object')) {
     return [
       'status' => 'error',

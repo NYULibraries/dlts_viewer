@@ -14,11 +14,13 @@ function dlts_viewer_ijson_dispatcher($partner, $collection) {
     // Parse the URL.
     $endpoint = parse_url($publisher);
     // https://dev-ead-publisher.dlib.nyu.edu/findingaids/<partner>/<collection code>/<collection code>.json
-    $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'] . $endpoint['path'] . "/preview/ijson/$partner/$collection/$collection.json";  
+    $endpoint = $endpoint['scheme'] . '://' . $user . ':' . $pass . '@' . $endpoint['host'] . (isset($endpoint['path']) ? $endpoint['path'] : '') . "/preview/ijson/$partner/$collection/$collection.json";
     $request = drupal_http_request($endpoint);
     if ($request->code == '200') {
       // unset($request->data->runinfo);
       return json_decode($request->data);
+    } else {
+      return [ 'error' => $request->error, 'code' => $request->code, 'message' => $request->status_message, 'request_path' => "preview/ijson/$partner/$collection/$collection.json" ];
     }
   }
 }

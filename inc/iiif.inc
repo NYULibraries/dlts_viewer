@@ -569,7 +569,6 @@ function dlts_book_fields_values($wrapper, array $translatable_fields = []) {
  *   IIIF Presentation API v3 - Photo manifest as array.
  */
 function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
-
   global $base_url;
 
   $query_parameters = drupal_get_query_parameters();
@@ -2265,6 +2264,7 @@ function dlts_viewer_repository_hjson($noid, $cache = true) {
  *   if the repository credentials are not configured or the request fails.
  */
 function  dlts_viewer_repository_ijson($noid, $partner_code, $collection_code, $cache = true) {
+
   // Username for the repository challange.
   $user = variable_get('publisher_user', NULL);
 
@@ -2285,8 +2285,6 @@ function  dlts_viewer_repository_ijson($noid, $partner_code, $collection_code, $
     $dir_path = "$realpath/ijson";
 
     $file_path = "$dir_path/$noid.json";
-
-    $cache = false;
 
     if ($cache && file_exists($file_path)) {
 
