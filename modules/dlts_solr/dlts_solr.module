@@ -6,47 +6,49 @@
  */
 
 function dlts_solr_node_update($node) {
-  $bundle = 'dlts_book';
-  if ($node->type == $bundle && $node->language != 'en') {
-    $type = 'node';
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $identifier = $wrapper->field_identifier->value();
-    $query = new EntityFieldQuery;
-    $keys = [];
-    $result = $query->entityCondition('entity_type', $type)
-      ->entityCondition('bundle', $bundle)
-      ->fieldCondition('field_identifier', 'value',  $identifier)
-      ->propertyCondition('status', 1)
-      ->propertyCondition('language', 'en')
-      ->execute();
-    if (!empty($result['node'])) {
-      $keys = array_keys($result['node']);
-      foreach ($keys as $id) {
-        $indexer_table = apachesolr_get_indexer_table($type);
-        db_merge($indexer_table)->key(
-          [
-            'entity_type' => $type, 
-            'entity_id' => $id
-          ]
-        )
-        // insertFields acts only on insert.
-        ->insertFields(
-          [
-            'entity_type' => $type,
-            'entity_id' => $id,
-            'bundle' => $bundle,
-            'status' => 1
-          ]
-        )
-        /// fields acts on insert or update.
-        ->fields([
-          'changed' => REQUEST_TIME
-          ]
-        )
-        ->execute();
-      }
-    }
-  }
+  // aof1: I need to log this and find out why I did this.
+
+  // $bundle = 'dlts_book';
+  // if ($node->type == $bundle && $node->language != 'en') {
+  //   $type = 'node';
+  //   $wrapper = entity_metadata_wrapper('node', $node);
+  //   $identifier = $wrapper->field_identifier->value();
+  //   $query = new EntityFieldQuery;
+  //   $keys = [];
+  //   $result = $query->entityCondition('entity_type', $type)
+  //     ->entityCondition('bundle', $bundle)
+  //     ->fieldCondition('field_identifier', 'value',  $identifier)
+  //     ->propertyCondition('status', 1)
+  //     ->propertyCondition('language', 'en')
+  //     ->execute();
+  //   if (!empty($result['node'])) {
+  //     $keys = array_keys($result['node']);
+  //     foreach ($keys as $id) {
+  //       $indexer_table = apachesolr_get_indexer_table($type);
+  //       db_merge($indexer_table)->key(
+  //         [
+  //           'entity_type' => $type, 
+  //           'entity_id' => $id
+  //         ]
+  //       )
+  //       // insertFields acts only on insert.
+  //       ->insertFields(
+  //         [
+  //           'entity_type' => $type,
+  //           'entity_id' => $id,
+  //           'bundle' => $bundle,
+  //           'status' => 1
+  //         ]
+  //       )
+  //       /// fields acts on insert or update.
+  //       ->fields([
+  //         'changed' => REQUEST_TIME
+  //         ]
+  //       )
+  //       ->execute();
+  //     }
+  //   }
+  // }
 }
 
 /**
@@ -68,11 +70,13 @@ function dlts_solr_apachesolr_delete_index_alter($query) {
  * @param string $entity_type
  */
 function dlts_solr_apachesolr_index_document_build(ApacheSolrDocument $document, $entity, $entity_type, $env_id) {
+
   module_load_include('inc', 'dlts_solr', 'inc/common');
-  // Wrap node with Entity API.
-  $ewrapper = entity_metadata_wrapper('node', $entity);
+
   $document->addField('base_url', base_path());
+
   switch ($entity->type) {
+
     case 'dlts_book':
       // Load utils.
       module_load_include('inc', 'dlts_solr', 'inc/book');
@@ -80,28 +84,35 @@ function dlts_solr_apachesolr_index_document_build(ApacheSolrDocument $document,
       dlts_solr_index_book($document, $entity, $entity_type, $env_id);
       break;
 
-			case 'dlts_series':
-        // Load utils.
-        module_load_include('inc', 'dlts_solr', 'inc/series');
-        // Pass the document as reference.
-        dlts_solr_index_series($document, $entity, $entity_type, $env_id);
+    case 'dlts_serial':
+      // Load utils.
+      module_load_include('inc', 'dlts_solr', 'inc/serial');
+      // Pass the document as reference.
+      dlts_solr_index_serial($document, $entity, $entity_type, $env_id);
+      break;
+
+		case 'dlts_series':
+      // Load utils.
+      module_load_include('inc', 'dlts_solr', 'inc/series');
+      // Pass the document as reference.
+      dlts_solr_index_series($document, $entity, $entity_type, $env_id);
 			break;
 
-			case 'dlts_map':
-				// Load utils.
-				module_load_include('inc', 'dlts_solr', 'inc/map');
-        // Pass the document as reference.
-        dlts_solr_index_map($document, $entity, $entity_type, $env_id);
-				break;
+		case 'dlts_map':
+		  // Load utils.
+		  module_load_include('inc', 'dlts_solr', 'inc/map');
+      // Pass the document as reference.
+      dlts_solr_index_map($document, $entity, $entity_type, $env_id);
+			break;
 
-      case 'dlts_photo_set':
-        // Load utils.
-        module_load_include('inc', 'dlts_solr', 'inc/photos');
-        // Pass the document as reference.
-        dlts_solr_index_photos($document, $entity, $entity_type, $env_id);
-        break;
-
+    case 'dlts_photo_set':
+      // Load utils.
+      module_load_include('inc', 'dlts_solr', 'inc/photos');
+      // Pass the document as reference.
+      dlts_solr_index_photos($document, $entity, $entity_type, $env_id);
+      break;
   }
+
 }
 
 /**

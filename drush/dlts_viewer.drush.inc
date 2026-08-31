@@ -37,9 +37,13 @@ function dlts_viewer_drush_command() {
     ],
   ];
 
+  // ./vendor/bin/drush resources-list-by-type --type=photos
   $items['resources-list-by-type'] = [
     'callback' => 'dlts_viewer_drush_list_resources_type',
-    'description' => dt('Returns list of all resources in the table dlts_viewer_resources')
+    'description' => dt('Returns list of all resources in the table dlts_viewer_resources'),
+    'options' => [
+      'type' => dt('Resource type'),
+    ],
   ];
 
   $items['resources-list'] = [
@@ -173,8 +177,71 @@ function dlts_viewer_drush_command() {
     'description' => dt('Task - Delete Earwest records'),
   ];
 
+  $items['dlts-task-ijson-test'] = [
+    'callback' => 'dlts_viewer_drush_ijson_test',
+    'description' => dt('Task - iJSON test'),
+  ];
+
   return $items;
 
+}
+
+function dlts_viewer_drush_ijson_test() {
+  include_once drupal_get_path('module', 'dlts_viewer') . '/inc/iiif.inc';
+  $results = db_query("SELECT nid, noid, identifier FROM dlts_viewer_resource WHERE document = 'photos' ORDER BY RAND() LIMIT 25")->fetchAll();
+  $failed = [];
+  $success = [];
+  foreach ($results as $record) {
+    $node = node_load($record->nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $field_collection = $wrapper->field_collection->value();
+    $field_partner = $wrapper->field_partner->value();
+    $cw = entity_metadata_wrapper('node', $field_collection[0]);
+    $pw = entity_metadata_wrapper('node', $field_partner[0]);
+    $collection_code = $cw->field_code->value();
+    $partner_code = $pw->field_code->value();
+
+    $ijson = dlts_viewer_repository_ijson($collection_code, $partner_code, $collection_code, false);
+
+    // drush_log("iJSON for identifier: $record->identifier - (" . (isset($ijson->eadheader->filedesc->titlestmt->titleproper) ? 'success' : 'failed') . ")", (isset($ijson->eadheader->filedesc->titlestmt->titleproper) ? 'ok' : 'error'));
+
+    $title = strip_tags($ijson->eadheader->filedesc->titlestmt->titleproper);
+
+    if (isset($ijson->eadheader->filedesc->titlestmt->titleproper)) {
+      $success[] = $record->identifier;
+      // drush_log("Finding Aids title: $title", 'ok');
+    }
+
+    if (!isset($ijson->eadheader->filedesc->titlestmt->titleproper)) {
+      $failed[] = [
+        'nid' => $record->nid,
+        'identifier' => $record->identifier,
+        'collection_code' => $collection_code,
+        'partner_code' => $partner_code,
+      ];
+      // drush_log("iJSON for identifier: $record->identifier - failed", 'error');
+    }
+
+    // Failed
+    // AD-MC-007_ref4502
+    // AD_MC_036_ref1025
+
+    // iJSON for identifier: nyuad_pa000005_n000087
+    // iJSON for identifier: AD-MC-007_ref2801
+    // iJSON for identifier: wsp_ls_6_6_07
+    // iJSON for identifier: RG_026_ref121
+    // iJSON for identifier: AD_MC_036_ref906
+    // iJSON for identifier: NYUSC_palphotos000136
+    // iJSON for identifier: AD_MC_028_ref1369
+    // iJSON for identifier: wsp_gv_9_1_25
+    // iJSON for identifier: wsa_5_6_05
+    // iJSON for identifier: RG_028_ref338
+    // iJSON for identifier: AD-MC-031_ref34
+    // iJSON for identifier: AD-MC-012_ref308
+    // iJSON for identifier: cap1_ref147
+
+  }
+  print_r($failed);
 }
 
 // https://nyu.atlassian.net/browse/DLTSSER-9
@@ -284,6 +351,7 @@ function dlts_viewer_drush_list_resources_type() {
     'maps',
     'photos',
     'postcards',
+    'serials',
   ];
   
   include_once  "{$module}/inc/iiif.inc";
@@ -292,9 +360,9 @@ function dlts_viewer_drush_list_resources_type() {
     $sql = "SELECT noid, identifier FROM dlts_viewer_resource WHERE document = '$type' LIMIT 500";
     $nodes = db_query($sql)->fetchAll();
     foreach ($nodes as $node) {
-      $noid = $node->noid;
-      $hjson = dlts_viewer_repository_hjson($noid);
-      print_r($hjson);
+      // $noid = $node->noid;
+      // $hjson = dlts_viewer_repository_hjson($noid);
+      print_r($node);
     }
   } else {
     drush_log('Type not supported.', 'error');
