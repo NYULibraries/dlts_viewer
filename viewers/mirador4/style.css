@@ -63,3 +63,21 @@ span.MuiTabs-indicator {
 div.MuiToolbar-root.MuiToolbar-dense.mirador-window-top-bar {
   border-top: 0px !important;
 }
+
+/* Invisible h2 title for screen readers */
+.dlts-photos .mirador-window-top-bar h2 {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* add margin left if title is hidden to keep icons to the right */
+.dlts-photos .mirador-window-top-bar h2 + * {
+  margin-left: auto;
+}
