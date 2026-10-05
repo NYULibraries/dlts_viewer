@@ -37,6 +37,15 @@ function dlts_viewer_drush_command() {
     ],
   ];
 
+  $items['create-object'] = [
+    'callback' => 'dlts_viewer_drush_create_object',
+    'description' => dt('Create object'),
+    'options' => [
+      'metadata-filepath' => dt('Metadata file path'),
+      'sequence-filepath' => dt('Sequence file path'),
+    ],
+  ];
+
   // ./vendor/bin/drush resources-list-by-type --type=photos
   $items['resources-list-by-type'] = [
     'callback' => 'dlts_viewer_drush_list_resources_type',
@@ -182,8 +191,148 @@ function dlts_viewer_drush_command() {
     'description' => dt('Task - iJSON test'),
   ];
 
+  $items['dlts-task-find-delete-broken-resources'] = [
+    'callback' => 'dlts_viewer_drush_find_delete_broken_resources',
+    'description' => dt('Task - Find and delete broken resources'),
+  ];
+
+  $items['dlts-task-remove-pdfs-from-entity'] = [
+    'callback' => 'dlts_viewer_drush_remove_pdfs_from_entity',
+    'description' => dt('Task - Remove PDFs from entity by it identifier'),
+    'options' => [
+      'identifier' => dt('Resource identifier'),
+    ],
+  ];
+
   return $items;
 
+}
+
+// ./vendor/bin/drush dlts-task-remove-pdfs-from-entity --user=1 --identifier=fales_earwest000007
+function dlts_viewer_drush_remove_pdfs_from_entity() {
+
+  global $base_url;
+
+  $identifier = drush_get_option('identifier', FALSE);
+
+  if (!$identifier) {
+    drush_log('No identifier) provided.', 'error');
+    exit();
+  }
+
+  $resource = db_query("SELECT * FROM dlts_viewer_resource WHERE identifier = :identifier", [ ':identifier' => $identifier ])->fetchAll();
+
+  if ($resource) {
+
+    $noid = $resource[0]->noid;
+
+    $node = dlts_resource_load($identifier);
+
+    $wrapper = entity_metadata_wrapper('node', $node);
+
+    $wrapper->field_pdf_file->set([]);
+
+    $saved = $wrapper->save();
+
+    if (!$saved) {
+      throw new Exception("Fail to import $identifier.");
+    } else {
+      drush_log("PDFs remove from node $base_url/api/embed/$noid", 'ok');
+    }
+
+
+  }
+
+}
+
+// ./vendor/bin/drush create-object --user=1 --sequence-filepath=./fales_earwest000008.sequences.json --metadata-filepath=./fales_earwest000008.en.json
+function dlts_viewer_drush_create_object() {
+
+  $entity_types = [
+    'image_set',
+     'dlts_book',
+    'dlts_photo_set',
+    'dlts_map',
+    'dlts_serial',
+  ];
+
+  $metadata_filepath = drush_get_option('metadata-filepath', FALSE);
+
+  $sequence_filepath = drush_get_option('sequence-filepath', FALSE);
+
+  if (!$metadata_filepath) {
+    drush_log('No metadata filepath provided.', 'error');
+    exit();
+  }
+
+  if (!$sequence_filepath) {
+    drush_log('No sequence filepath provided.', 'error');
+    exit();
+  }
+  
+  $metadata = (array) json_decode( file_get_contents($metadata_filepath) );
+
+  $sequences = (array) json_decode( file_get_contents($sequence_filepath) );
+
+  $identifier = $metadata['identifier'];
+
+  $allMatch = array_reduce($sequences, function ($carry, $item) use ($identifier) {
+    return $carry && isset($item->isPartOf) && $item->isPartOf === $identifier;
+  }, true);
+
+  if ($allMatch) {
+    drush_log('All items match fales_earwest000008', 'ok');
+  } else {
+    drush_log('At least one item does not match or is missing: isPartOf', 'error');
+  }
+
+  if (
+    user_access('dlts create object')
+  ) {
+
+    if (in_array($metadata['entity_type'], $entity_types)) {
+        switch ($metadata['entity_type']) {
+          case 'dlts_book':
+            module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_book');
+            $edit = dlts_viewer_api_v1_dlts_book_objects($metadata);
+            break;
+
+          case 'dlts_photo_set':
+          case 'image_set':
+            $edit = dlts_viewer_api_v1_dlts_photo_set_objects($metadata);
+            break;
+          case 'dlts_map':
+            module_load_include('inc', 'dlts_viewer', 'inc/endpoints/map');
+            $edit = dlts_viewer_api_v1_dlts_map_objects($metadata);
+            break;
+
+          case 'dlts_serial':
+            module_load_include('inc', 'dlts_viewer', 'inc/create/dlts_serial');
+            $edit = dlts_viewer_api_v1_serial_objects($metadata);
+            dlts_viewer_mongodb_new_sequence($sequences, $metadata['entity_type']);
+            break;
+
+        }
+        print_r($edit);
+    }
+  }
+
+}
+
+// ./vendor/bin/drush dlts-task-find-delete-broken-resources
+function dlts_viewer_drush_find_delete_broken_resources() {
+  $results = db_query("
+    SELECT nid, noid, identifier 
+    FROM dlts_viewer_resource
+  ")->fetchAll();
+  foreach ($results as $record) {
+    $node = db_query("SELECT * FROM node WHERE nid = :nid", [ ':nid' => $record->nid ])->fetchAll();
+    if (empty($node)) {
+      db_delete('dlts_viewer_resource')
+        ->condition('nid', $record->nid)
+        ->execute();
+    }
+  }
 }
 
 function dlts_viewer_drush_ijson_test() {

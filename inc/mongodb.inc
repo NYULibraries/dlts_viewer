@@ -34,62 +34,59 @@ function dlts_viewer_mongodb_collections_by_type($type) {
 }
 
 /**
- * Update sequence.
+ * Insert or replace sequence documents for a given identifier.
  *
- * @param array $arguments
- *   Arguments.
+ * Drops existing documents where `isPartOf` matches the target identifier
+ * before inserting the new sequence array.
+ *
+ * @param array $pages
+ *   Array of page/sequence documents (as arrays or objects).
  * @param string $collection_name
- *   Name of collection to table to query.
+ *   Name of the MongoDB collection.
  *
- * @return array
- *   Item.
+ * @return bool|array
+ *   Array of inserted documents/status on success, or FALSE on failure.
  */
-function dlts_viewer_mongodb_update_sequence(array $arguments, $collection_name = 'dlts_books_page') {
-  $cursor = mongodb_collection($collection_name);
-  $data = (array) $arguments;
-  // Make sure we let MongoDB assing the _id for the document.
-  if (isset($data['_id'])) {
-    unset($data['_id']);
+function dlts_viewer_mongodb_new_sequence(array $pages,$collection_name = 'dlts_books_page') {
+  if (empty($pages)) {
+    return FALSE;
   }
-  $query = [
-    'sequence' => $data['sequence'],
-    'isPartOf' => $data['isPartOf'],
-  ];
-  // Find document and modify.
-  // See: https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/
-  // See: http://php.net/manual/en/mongocollection.findandmodify.php
-  $op = $cursor->findAndModify(
-    $query, 
-    [ '$set' => $data ], 
-    NULL,
-    [
-      'sort' => [ 'rating' => 1 ],
-      'upsert' => TRUE,
-      'new' => TRUE,
-    ]
-  );
-  // We should have the current result document as an associative array.
-  // if NULL, we have a problem, log error.
-  if (!$op) {
+
+  // Get the target identifier from the first element
+  $first_item = reset($pages);
+  $isPartOf = is_object($first_item) ? ($first_item->isPartOf ?? NULL) : ($first_item['isPartOf'] ?? NULL);
+
+  if (!$isPartOf) {
     watchdog(
-      'MongoDB update document',
-      'Unable to update sequence page <strong>%sequence</strong> from resource <strong>%identifier</strong>.',
-      [
-        '%identifier' => $arguments['isPartOf'],
-        '%sequence' => $arguments['sequence'],
-      ],
+      'MongoDB insert sequences',
+      'Missing isPartOf property in provided sequence array.',
+      [],
       WATCHDOG_ERROR
     );
     return FALSE;
   }
-  return $op;
-}
 
-/**
- * See dlts_viewer_mongodb_update_sequence.
- */
-function dlts_viewer_mongodb_new_sequence($arguments, $collection_name = 'dlts_books_page') {
-  return dlts_viewer_mongodb_update_sequence($arguments, $collection_name);
+  $cursor = mongodb_collection($collection_name);
+
+  // 1. Remove all existing records matching this identifier
+  $cursor->remove(['isPartOf' =>$isPartOf]);
+
+  // 2. Prepare documents (ensure each element is an array and strip out existing _id)
+  $documents = [];
+  foreach ($pages as$page) {
+    $doc = (array)$page;
+    unset($doc['_id']);
+    $documents[] =$doc;
+  }
+
+  // 3. Perform batch insert
+  if (!empty($documents)) {
+    // Legacy mongo driver method: batchInsert
+    $result = $cursor->batchInsert($documents);
+    return $result;
+  }
+
+  return FALSE;
 }
 
 /**
