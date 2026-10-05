@@ -86,9 +86,17 @@ function dlts_viewer_embed_dispatcher($record, $sequence = null) {
 
   $template = 'viewer_embed_mirador_ext_page';
 
+  $viewer_dir = 'mirador4';
+
   if (is_numeric($viewer)) {
 
-    $basePath = "$module/viewers/mirador4/dist";
+    $basePath = "$module/viewers/mirador-$viewer/dist";
+
+    $viewer_dir = "mirador-$viewer";
+
+    if (!is_dir($basePath)) {
+      die('Viewer prototype not found');
+    }
 
     // Find the JS and CSS files regardless of hash.
     $jsFiles = glob("$basePath/mirador4.*.js");
@@ -98,7 +106,9 @@ function dlts_viewer_embed_dispatcher($record, $sequence = null) {
   }
   else {
 
-    $basePath = "$module/viewers/mirador4/dist";
+    $viewer_dir = "mirador4";
+
+    $basePath = "$module/viewers/$viewer_dir/dist";
 
     // Find the JS and CSS files regardless of hash.
     $jsFiles = glob("$basePath/mirador4.*.js");
@@ -125,8 +135,8 @@ function dlts_viewer_embed_dispatcher($record, $sequence = null) {
     'identifier' => $identifier,
     'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
     'is_multivolume' => $is_multivolume ? 'true' : 'false',
-    'js_url' => "$modulePath/viewers/mirador4/dist/$jsFile",
-    'css_url' => "$modulePath/viewers/mirador4/dist/$cssFile",
+    'js_url' => "$modulePath/viewers/$viewer_dir/dist/$jsFile",
+    'css_url' => "$modulePath/viewers/$viewer_dir/dist/$cssFile",
     'embeded' => 'false',
     'show_canvas_info' => 'false',
     'show_collection' => 'false',
