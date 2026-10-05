@@ -84,50 +84,57 @@ function dlts_viewer_embed_dispatcher($record, $sequence = null) {
     $direction = ($language_list[1][$language]->direction == '1') ? 'rtl' : 'ltr';
   }
 
-  switch ($viewer) {
+  $template = 'viewer_embed_mirador_ext_page';
 
-    default:
+  if (is_numeric($viewer)) {
 
-      $template = 'viewer_embed_mirador_ext_page';
+    $basePath = "$module/viewers/mirador4/dist";
 
-      $basePath = "$module/viewers/mirador4/dist";
+    // Find the JS and CSS files regardless of hash.
+    $jsFiles = glob("$basePath/mirador4.*.js");
 
-      // Find the JS and CSS files regardless of hash.
-      $jsFiles = glob("$basePath/mirador4.*.js");
+    $cssFiles = glob("$basePath/mirador4.*.css");
 
-      $cssFiles = glob("$basePath/mirador4.*.css");
-
-      $jsFile = $jsFiles ? basename($jsFiles[0]) : '';
-
-      $cssFile = $cssFiles ? basename($cssFiles[0]) : '';
-
-      $modulePath = base_path() . $module;
-
-      $opts = [
-        'analytics' => $analytics,
-        'appid' => 'mirador-app',
-        'title' => $title,
-        'language' => $language,
-        'direction' => $direction,
-        'sequence' => $sequence,
-        'endpoint' => $base_url,
-        'type' => $type,
-        'identifier' => $identifier,
-        'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
-        'is_multivolume' => $is_multivolume ? 'true' : 'false',
-        'js_url' => "$modulePath/viewers/mirador4/dist/$jsFile",
-        'css_url' => "$modulePath/viewers/mirador4/dist/$cssFile",
-        'embeded' => 'false',
-        'show_canvas_info' => 'false',
-        'show_collection' => 'false',
-        'show_image_tools' => 'true',
-        'enable_history' => 'false',
-        'workspace_view' => 'mosaic', 
-        'view_type' => $view_type, // Configure which viewing mode (e.g. single, book, gallery) for windows to be opened in
-      ];
-
-      break;
   }
+  else {
+
+    $basePath = "$module/viewers/mirador4/dist";
+
+    // Find the JS and CSS files regardless of hash.
+    $jsFiles = glob("$basePath/mirador4.*.js");
+
+    $cssFiles = glob("$basePath/mirador4.*.css");
+
+  }
+
+  $jsFile = $jsFiles ? basename($jsFiles[0]) : '';
+
+  $cssFile = $cssFiles ? basename($cssFiles[0]) : '';
+
+  $modulePath = base_path() . $module;
+
+  $opts = [
+    'analytics' => $analytics,
+    'appid' => 'mirador-app',
+    'title' => $title,
+    'language' => $language,
+    'direction' => $direction,
+    'sequence' => $sequence,
+    'endpoint' => $base_url,
+    'type' => $type,
+    'identifier' => $identifier,
+    'manifest' => "$base_url/api/presentation/$type/$identifier/manifest.json",
+    'is_multivolume' => $is_multivolume ? 'true' : 'false',
+    'js_url' => "$modulePath/viewers/mirador4/dist/$jsFile",
+    'css_url' => "$modulePath/viewers/mirador4/dist/$cssFile",
+    'embeded' => 'false',
+    'show_canvas_info' => 'false',
+    'show_collection' => 'false',
+    'show_image_tools' => 'true',
+    'enable_history' => 'false',
+    'workspace_view' => 'mosaic', 
+    'view_type' => $view_type, // Configure which viewing mode (e.g. single, book, gallery) for windows to be opened in
+  ];
 
   echo theme($template, $opts);
 
