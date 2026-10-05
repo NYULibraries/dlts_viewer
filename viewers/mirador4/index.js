@@ -34,6 +34,7 @@ const manifestId = `${endpoint}/api/presentation/${type}/${identifier}/manifest.
 const plugins = [LanguageSelector, ...CollectionInfo];
 
 if (type === "photos") {
+  elem.classList.add("dlts-photos");
   plugins.push(HideBottomNavIndex);
 }
 
