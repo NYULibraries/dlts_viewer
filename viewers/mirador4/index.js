@@ -93,7 +93,7 @@ if (viewType === "gallery") {
     allowClose: false,
     allowFullscreen: true,
     allowMaximize: false,
-    allowTopMenuButton: false,
+    allowTopMenuButton: true,
     panels: {
       info: true,
       attribution: true,
