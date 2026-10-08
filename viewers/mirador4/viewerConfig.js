@@ -1,6 +1,6 @@
 const defaultConfig = {
   id: null,
-  selectedTheme: "light",
+  selectedTheme: "dark",
   // For more info about adding and configuring languages in Mirador, see:
   // https://github.com/ProjectMirador/mirador/wiki/M3-Internationalization-(i18n)
   language: "en", // Set default language display here.
@@ -54,16 +54,6 @@ const defaultConfig = {
     },
   },
   theme: {
-    components: {
-      WindowCanvasNavigationControls: {
-        styleOverrides: {
-          root: ({ theme }) => ({
-            backgroundColor: theme.palette.background.paper,
-            boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.4)',
-          }),
-        },
-      },
-    },
     typography: {
       body1: {
         fontSize: "1rem",
