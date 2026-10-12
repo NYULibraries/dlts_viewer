@@ -552,6 +552,16 @@ function dlts_book_fields_values($wrapper, array $translatable_fields = []) {
     }
   }
 
+  if (array_search('field_scanning_notes', $type_fields)) {
+    $field_scanning_notes_raw = $wrapper->field_scanning_notes->value();
+    if (!empty($field_scanning_notes_raw)) {
+      $metadata['field_scanning_notes'] = [
+        'label' => 'Notes',
+        'value' => [ nl2br($field_scanning_notes_raw) ],
+      ];
+    }
+  }
+
   return $metadata;
 }
 
@@ -1366,7 +1376,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
     'field_publisher',
     'field_topic',
     'field_title', // https://nyu.atlassian.net/browse/DLTSVIEWER-220?focusedCommentId=312215
-    // 'field_scanning_notes',
+    'field_scanning_notes', // https://nyu.atlassian.net/browse/DLTSVIEWER-238
     // 'field_sequence_count',
     // 'field_language_code',
     // 'field_number',
@@ -1407,7 +1417,7 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   unset($fields['field_binding_orientation']);
   unset($fields['field_read_order']);
   unset($fields['field_scan_order']);
-  unset($fields['field_scanning_notes']);
+  // unset($fields['field_scanning_notes']); // https://nyu.atlassian.net/browse/DLTSVIEWER-238
   unset($fields['field_ocr_text']);
 
   $field_rights_raw = $wrapper->field_rights->value();
