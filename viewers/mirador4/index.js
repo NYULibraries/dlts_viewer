@@ -35,7 +35,7 @@ const plugins = [LanguageSelector, ...CollectionInfo];
 
 if (type === "photos") {
   elem.classList.add("dlts-photos");
-  plugins.push(HideBottomNavIndex);
+  plugins.push(...HideBottomNavIndex);
 }
 
 if (multivolume === "true") {
