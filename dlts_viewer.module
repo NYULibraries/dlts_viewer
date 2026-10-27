@@ -5,6 +5,11 @@
  * DLTS Viewer module.
  */
 
+// Define custom constants in your module
+define('DLTS_VIEWER_ACTION_INSERT', 'insert');
+define('DLTS_VIEWER_ACTION_UPDATE', 'update');
+define('DLTS_VIEWER_ACTION_DELETE', 'delete');
+
 /**
  * Load MongoDB helper.
  */
@@ -59,7 +64,16 @@ include_once 'inc/shutdown.inc';
  * Implementation of hook_init().
  */
 function dlts_viewer_init() {
+
   drupal_add_http_header('Access-Control-Allow-Origin', '*');
+
+  $qs = drupal_get_query_parameters();
+
+  // &utm_source=chatgpt.com
+  if (isset($qs['utm_source'])) {
+    if ($qs['utm_source'] == 'chatgpt.com') die();
+  }
+
 }
 
 /**
@@ -460,22 +474,32 @@ function dlts_viewer_css_alter(&$css) {
 // Here we need to make sure we delete the record from Apache Solr
 function dlts_viewer_node_delete($node) {
   db_delete('dlts_viewer_resource')->condition('nid', $node->nid)->execute();
-  _dlts_viewer_purge_manifest_on_change($node);
+  _dlts_viewer_purge_manifest_on_change($node, DLTS_VIEWER_ACTION_DELETE);
 }
 
 /**
  * Implements hook_node_update().
  */
 function dlts_viewer_node_update($node) {
-  _dlts_viewer_purge_manifest_on_change($node);
+  _dlts_viewer_purge_manifest_on_change($node, DLTS_VIEWER_ACTION_UPDATE);
 }
 
 /**
- * Internal helper to delete the manifest file when a node changes.
+ * Internal helper to delete all cached JSON files when a node changes.
+ *
+ * @param object $node
+ *   The node object being inserted, updated, or deleted.
+ * @param string $action
+ *   The lifecycle action (e.g., 'update', 'insert', 'delete').
  */
-function _dlts_viewer_purge_manifest_on_change($node) {
+function _dlts_viewer_purge_manifest_on_change($node, $action = DLTS_VIEWER_ACTION_UPDATE) {
   
-  $supported_bundles = ['dlts_serial', 'dlts_book'];
+  $supported_bundles = [
+    'dlts_serial', 
+    'dlts_book', 
+    'dlts_map', 
+    'dlts_photo_set',
+  ];
 
   if (!in_array($node->type, $supported_bundles)) {
     return;
@@ -489,15 +513,50 @@ function _dlts_viewer_purge_manifest_on_change($node) {
   }
 
   $identifier = $wrapper->field_identifier->value();
-
   $type_alias = dlts_viewer_get_bundle_alias($node->type);
-  
-  $cache_path = drupal_realpath('public://') . "/iiif/$type_alias/$identifier/manifest.json";
+  $public_path = drupal_realpath('public://');
 
-  if (file_exists($cache_path)) {
-    if (file_unmanaged_delete($cache_path)) {
-      watchdog('dlts_viewer', 'Purged IIIF manifest for %id due to node update.', ['%id' => $identifier], WATCHDOG_INFO);
+  // Directories to scan and purge
+  $target_dirs = [
+    "$public_path/iiif/$type_alias/$identifier",
+    "$public_path/datasource/$type_alias/$identifier",
+  ];
+
+  $purged_count = 0;
+  $failed_count = 0;
+
+  foreach ($target_dirs as $cache_dir) {
+    if (is_dir($cache_dir)) {
+      // Find all .json files in target directory (non-recursive)
+      $files = file_scan_directory($cache_dir, '/\.json$/i', ['recurse' => FALSE]);
+
+      foreach ($files as $file) {
+        // Attempt to fix restrictive permissions if file is not writable
+        if (!is_writable($file->uri)) {
+          @chmod($file->uri, 0664);
+        }
+
+        // Delete file and track success
+        if (file_unmanaged_delete($file->uri)) {
+          $purged_count++;
+        }
+        else {
+          $failed_count++;
+          watchdog('dlts_viewer', 'Failed to delete cached JSON file @file due to permission issues.', [
+            '@file' => $file->uri,
+          ], WATCHDOG_WARNING);
+        }
+      }
     }
+  }
+
+  // Log successful execution details
+  if ($purged_count > 0) {
+    watchdog('dlts_viewer', 'Purged @count IIIF/datasource cache JSON file(s) for %id due to node %change.', [
+      '@count' => $purged_count,
+      '%id' => $identifier,
+      '%change' => $action,
+    ], WATCHDOG_INFO);
   }
 }
 

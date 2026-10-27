@@ -188,7 +188,11 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
 
   $identifier = $wrapper->field_identifier->value();
 
-  $sequence = $seq['sequence'][0];
+  if (!empty($seq) && isset($seq['sequence']) && is_array($seq['sequence'])) {
+    $sequence = $seq['sequence'][0];
+  } else {
+    $sequence = "1";
+  }
 
   $do_not_render_identifiers = ['fales_sc000040', 'fales_sc000043'];
 

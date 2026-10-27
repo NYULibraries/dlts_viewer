@@ -99,6 +99,8 @@ function dlts_viewer_cache_book_sequence($edit) {
  */
 function dlts_viewer_shutdown_log_api_requests($request) {
 
+  return;
+
   global $user;
 
   $q = $_GET['q'];

@@ -10,8 +10,7 @@
  * IIIF Image API proxy.
  *
  * This function acts as a proxy to a IIIF image server. It retrieves image
- * information (info.json) for a specific sequence of a resource. It can
- * cache the response to a file to improve performance.
+ * information (info.json) for a specific sequence of a resource from Cantaloupe.
  *
  * @link /api/image/books/uaena_aco000016/1
  * @link https://iiif.io/api/image/2.1/#image-information
@@ -24,106 +23,94 @@
  *   An array containing sequence information, including the sequence number and
  *   the image identifier (URL or file ID).
  * @param bool $cache
- *   Whether to use a cached version of the info.json response if available.
- *   Defaults to TRUE.
+ *   Whether to send HTTP caching headers (Defaults to TRUE).
  *
- * @return array
- *   The decoded JSON response from the IIIF image server as an array, or an
- *   HTTP error response array.
+ * @return void|array
+ *   Outputs JSON directly and exits on success, or returns an error array.
  */
 function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence, $cache = TRUE) {
 
   drupal_register_shutdown_function('dlts_viewer_shutdown_log_api_requests', []);
 
-  $type = dlts_viewer_resource_type($type);
-
-  $wrapper = entity_metadata_wrapper('node', $resource);
-
-  $identifier = $wrapper->field_identifier->value();
-
-  $realpath = drupal_realpath('public://');
-
-  $dir_path = "$realpath/iiif/$type/$identifier";
-
-  $sequence = $resource_sequence['sequence'];
-
-  $file_destination = "$dir_path/$sequence.json";
-
-  $query_parameters = drupal_get_query_parameters();
-  
-  if (isset($query_parameters['reset'])) {
-    $cache = FALSE;
-  }
-
-  if ($cache && file_exists($file_destination)) {
-    return drupal_json_decode(
-      file_get_contents($file_destination)
-    );
-  }
-
   $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');
-
   $static_source = variable_get('dlts_image_static_source', 'HttpSource');
 
   switch ($static_source) {
     case 'FilesystemSource':
-      $image_id = $resource_sequence['fid'];
+      $image_id = isset($resource_sequence['fid']) ? $resource_sequence['fid'] : '';
       break;
 
     case 'HttpSource':
-      $image_id = $resource_sequence['url'];
+    default:
+      $image_id = isset($resource_sequence['url']) ? $resource_sequence['url'] : '';
       break;
   }
 
   $uri = urlencode($image_id);
 
-  // Set the options to disable SSL verification
   $options = [
     'method' => 'GET',
-    'timeout' => 500,
+    'timeout' => 15,
   ];
 
+  // Request info.json directly from Cantaloupe
   $response = drupal_http_request("$image_server/iiif/2/$uri/info.json", $options);
 
-  if ($response) {
-    if ($response->code == '200' && isset($response->data)) {
-      drupal_register_shutdown_function(
-        'dlts_viewer_cache_book_sequence',
-        [
-          'type' => $type,
-          'resource' => $resource,
-          'sequence' => $sequence,
-          'data' => $response->data,
-        ]
-      );
-      return drupal_json_decode($response->data);
+  if ($response && $response->code == '200' && !empty($response->data)) {
+    $max_age = 31536000; // 1 year
+    $request_time = isset($_SERVER['REQUEST_TIME']) ? $_SERVER['REQUEST_TIME'] : time();
+    $etag = '"' . md5($response->data) . '"';
+
+    // 1. Set headers
+    drupal_page_is_cacheable($cache);
+    
+    if ($cache) {
+      drupal_add_http_header('ETag', $etag);
+      drupal_add_http_header('Cache-Control', 'public, max-age=' . $max_age);
+      drupal_add_http_header('Expires', gmdate('D, d M Y H:i:s', $request_time + $max_age) . ' GMT');
     }
-    else {
-      return $response;
+
+    drupal_add_http_header('Content-Type', 'application/json;charset=utf-8');
+
+    // 2. Handle 304 Not Modified revalidation check
+    if ($cache && isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+      drupal_add_http_header('Status', '304 Not Modified');
+      drupal_exit();
     }
+
+    // 3. Print payload and exit immediately
+    echo $response->data;
+    drupal_exit();
   }
-  else {
+
+  // Fallback error handling if Cantaloupe request fails
+  if ($response && isset($response->code)) {
     return [
-      'code' => 500,
-      'error' => 'Unexpected error occurred.',
+      'code' => $response->code,
+      'error' => isset($response->error) ? $response->error : 'Cantaloupe server returned an error.',
     ];
   }
+
+  return [
+    'code' => 500,
+    'error' => 'Unexpected error occurred connecting to Cantaloupe.',
+  ];
 }
 
 /**
  * Returns a IIIF Image tile.
  *
  * This function retrieves an image tile from a IIIF image server based on the
- * provided parameters. It constructs the IIIF image URL and fetches the
- * image content, then serves it to the client with appropriate headers.
+ * provided parameters. It constructs the IIIF image URL, fetches the image 
+ * content, and serves it directly to the client with appropriate headers.
  *
  * @link https://iiif.io/api/image/2.1/#image-requests
  * @link http://[HOST]/api/image/books/princeton_aco000102/1/full/max/0/default.jpg
  *
  * @param string $_type
- *   The resource type (e.g., 'books', 'photos').  (not used in this function but included for consistency)
+ *   The resource type (e.g., 'books', 'photos'). Included for consistency.
  * @param object $_resource
- *   The node object representing the resource. (not used in this function but included for consistency)
+ *   The node object representing the resource. Included for consistency.
  * @param array $sequence
  *   A sequence array from MongoDB containing the image URI.
  * @param string $region
@@ -135,14 +122,11 @@ function dlts_viewer_iiif_api($type, object $resource, array $resource_sequence,
  * @param string $quality
  *   The quality of the image. Defaults to 'default.jpg'.
  */
-function dlts_viewer_iiif_tile($_type, $_resource, $sequence, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
-  
+function dlts_viewer_iiif_tile($_type, $_resource, array $sequence, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
+
   $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');
-
   $static_source = variable_get('dlts_image_static_source', 'HttpSource');
-
-  $sequence_uri = $sequence['uri'];
-
+  $sequence_uri = isset($sequence['uri']) ? $sequence['uri'] : '';
   $apiVersion = '2';
 
   switch ($static_source) {
@@ -150,86 +134,72 @@ function dlts_viewer_iiif_tile($_type, $_resource, $sequence, $region = 'full', 
       $image_id = $sequence_uri;
       break;
     case 'FilesystemSource':
-      $image_id = str_replace('fileserver://', '', $sequence_uri);
-      break;
     default:
       $image_id = str_replace('fileserver://', '', $sequence_uri);
       break;
   }
 
   $uri = urlencode($image_id);
+  $image_url = "$image_server/iiif/$apiVersion/$uri/$region/$size/$rotation/$quality";
 
-  $image = "$image_server/iiif/$apiVersion/$uri/$region/$size/$rotation/$quality";
-
-  // bad, but nothing I can do at the moment.
-  // Set the options to disable SSL verification
-  $options = [
-    'http' => [
-      'method' => 'GET',
-      'timeout' => 500,
-    ],
-    'ssl' => [
-      'verify_peer' => false,
-      'verify_peer_name' => false,
-    ],
-  ];
-
-  $context = stream_context_create($options);
-
-  $http_response_header = [];
-
-  $content = file_get_contents($image, false, $context);
-
-  $requestStatus = substr($http_response_header[0], 9, 3);
-
-  $responseType = substr($http_response_header[7], 14);
-
-  if ($responseType !== 'image/jpeg') {
-    $responseType = substr($http_response_header[3], 14);
-  }
-
+  // Determine original image source URL
   $cm_uri = '';
-
   if (isset($sequence['cm']['uri'])) {
     $cm_uri = $sequence['cm']['uri'];
   }
   elseif (isset($sequence['uri'])) {
     $cm_uri = $sequence['uri'];
   }
-
   $original_image_source = file_create_url($cm_uri);
 
-  if ($content && $requestStatus === '200' && $responseType === 'image/jpeg') {
-    $etag = md5($content);
-    header('Content-type: image/jpeg');
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET');
-    header('Content-Transfer-Encoding: binary');
-    header("Master-Image: $image_id");
-    header("Image-Server-Url: $image");
-    header("Image-Source-Url: $original_image_source");
-    header("Etag: $etag");
-    echo $content;
-    exit(0);
-  }
-  else {
-    if (isset($http_response_header)) {
-      header('HTTP/1.1 400 Bad Request', TRUE, 400);
-      header("Master-Image: $image_id");
-      header("Image-Server-Url: $image");
-      header("Image-Source-Url: $original_image_source");
-      die('HTTP/1.1 400 Bad Request');
+  // Fetch tile image directly using drupal_http_request
+  $options = [
+    'method' => 'GET',
+    'timeout' => 15,
+  ];
+
+  $response = drupal_http_request($image_url, $options);
+
+  if ($response && $response->code == '200' && !empty($response->data)) {
+    $etag = '"' . md5($response->data) . '"';
+    $max_age = 31536000; // 1 year
+    $request_time = isset($_SERVER['REQUEST_TIME']) ? $_SERVER['REQUEST_TIME'] : time();
+
+    // 1. Register cacheability with Drupal
+    drupal_page_is_cacheable(TRUE);
+
+    // 2. Set HTTP response headers
+    drupal_add_http_header('Content-Type', 'image/jpeg');
+    drupal_add_http_header('ETag', $etag);
+    drupal_add_http_header('Cache-Control', 'public, max-age=' . $max_age);
+    drupal_add_http_header('Expires', gmdate('D, d M Y H:i:s', $request_time + $max_age) . ' GMT');
+    drupal_add_http_header('Access-Control-Allow-Origin', '*');
+    drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
+    drupal_add_http_header('Content-Transfer-Encoding', 'binary');
+    
+    // Custom debugging headers
+    drupal_add_http_header('Master-Image', $image_id);
+    drupal_add_http_header('Image-Server-Url', $image_url);
+    drupal_add_http_header('Image-Source-Url', $original_image_source);
+
+    // 3. Handle 304 Not Modified if browser sends matching ETag
+    if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+      drupal_add_http_header('Status', '304 Not Modified');
+      drupal_exit();
     }
-    else {
-      header('HTTP/1.1 400 Bad Request', TRUE, 400);
-      header("Master-Image: $image_id");
-      header("Image-Server-Url: $image");
-      header("Image-Source-Url: $original_image_source");
-      die('HTTP/1.1 400 Bad Request');
-    }
-    exit(1);
+
+    // 4. Output tile binary and exit cleanly
+    echo $response->data;
+    drupal_exit();
   }
 
+  // Fallback Error Response
+  drupal_add_http_header('Status', '400 Bad Request');
+  drupal_add_http_header('Master-Image', $image_id);
+  drupal_add_http_header('Image-Server-Url', $image_url);
+  drupal_add_http_header('Image-Source-Url', $original_image_source);
+  
+  drupal_exit();
 }
 
 /**
@@ -593,10 +563,6 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
 
   $identifier = $wrapper->field_identifier->value();
 
-  $ids = dlts_noid_load($identifier);
-
-  $noid = $ids->noid;
-
   $realpath = drupal_realpath('public://');
 
   $bundle = $wrapper->getBundle();
@@ -608,10 +574,31 @@ function dlts_viewer_iiif_photo_manifest($entity, $cache = true) {
   $file_destination = "$dir_path/manifest.json";
 
   if ($cache && file_exists($file_destination)) {
-    return drupal_json_decode(
-      file_get_contents($file_destination)
-    );
+    $etag = '"' . md5_file($file_destination) . '"';
+    $max_age = 31536000; // 1 year
+    $request_time = isset($_SERVER['REQUEST_TIME']) ? $_SERVER['REQUEST_TIME'] : time();
+
+    // 1. Set cache and content headers (without 'immutable')
+    drupal_page_is_cacheable(TRUE);
+    drupal_add_http_header('ETag', $etag);
+    drupal_add_http_header('Cache-Control', 'public, max-age=' . $max_age);
+    drupal_add_http_header('Expires', gmdate('D, d M Y H:i:s', $request_time + $max_age) . ' GMT');
+    drupal_add_http_header('Content-Type', 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"');
+
+    // 2. Handle 304 revalidation if client sends matching ETag
+    if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+      drupal_add_http_header('Status', '304 Not Modified');
+      drupal_exit();
+    }
+
+    // 3. Stream JSON file directly and exit cleanly
+    readfile($file_destination);
+    drupal_exit();
   }
+
+  $ids = dlts_noid_load($identifier);
+
+  $noid = $ids->noid;
 
   $lang = 'en';
 
@@ -942,9 +929,26 @@ function dlts_viewer_iiif_map_manifest($entity, $cache = TRUE) {
   $file_destination = "$dir_path/manifest.json";
 
   if ($cache && file_exists($file_destination)) {
-    return drupal_json_decode(
-      file_get_contents($file_destination)
-    );
+    $etag = '"' . md5_file($file_destination) . '"';
+    $max_age = 31536000; // 1 year
+    $request_time = isset($_SERVER['REQUEST_TIME']) ? $_SERVER['REQUEST_TIME'] : time();
+
+    // 1. Set cache and content headers (without 'immutable')
+    drupal_page_is_cacheable(TRUE);
+    drupal_add_http_header('ETag', $etag);
+    drupal_add_http_header('Cache-Control', 'public, max-age=' . $max_age);
+    drupal_add_http_header('Expires', gmdate('D, d M Y H:i:s', $request_time + $max_age) . ' GMT');
+    drupal_add_http_header('Content-Type', 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"');
+
+    // 2. Handle 304 revalidation if client sends matching ETag
+    if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+      drupal_add_http_header('Status', '304 Not Modified');
+      drupal_exit();
+    }
+
+    // 3. Stream JSON file directly and exit cleanly
+    readfile($file_destination);
+    drupal_exit();
   }
 
   $fields = [];
@@ -1238,13 +1242,26 @@ function dlts_viewer_iiif_book_manifest($entity, $cache = TRUE) {
   $file_destination = "$dir_path/manifest.json";
 
   if ($cache && file_exists($file_destination)) {
-    // @todo Thinks about this, we are decoding a JSON file
-    // so that we can pass it to drupal_json_output
-    // and then json_encode it again...
-    // should we create another output callback?
-    return drupal_json_decode(
-      file_get_contents($file_destination)
-    );
+    $etag = '"' . md5_file($file_destination) . '"';
+    $max_age = 31536000; // 1 year
+    $request_time = isset($_SERVER['REQUEST_TIME']) ? $_SERVER['REQUEST_TIME'] : time();
+
+    // 1. Set cache and content headers (without 'immutable')
+    drupal_page_is_cacheable(TRUE);
+    drupal_add_http_header('ETag', $etag);
+    drupal_add_http_header('Cache-Control', 'public, max-age=' . $max_age);
+    drupal_add_http_header('Expires', gmdate('D, d M Y H:i:s', $request_time + $max_age) . ' GMT');
+    drupal_add_http_header('Content-Type', 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"');
+
+    // 2. Handle 304 revalidation if client sends matching ETag
+    if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+      drupal_add_http_header('Status', '304 Not Modified');
+      drupal_exit();
+    }
+
+    // 3. Stream JSON file directly and exit cleanly
+    readfile($file_destination);
+    drupal_exit();
   }
 
   $module = drupal_get_path('module', 'dlts_viewer');
@@ -1934,8 +1951,6 @@ function dlts_viewer_iiif_resource_manifest_collections_item($entity, $cache = T
 
   $wrapper = entity_metadata_wrapper('node', $entity);
 
-  // $identifier = $wrapper->field_identifier->value();
-
   $name = $wrapper->field_name->value();
 
   $code = $wrapper->field_code->value();
@@ -2134,41 +2149,6 @@ function dlts_viewer_iiif_resource_manifest_collections_list() {
     ],
     'items' => $items,
   ];
-}
-
-/**
- * Generates a IIIF manifest from a "boutique" JSON file.
- *
- * This function is intended to serve pre-generated, custom, or "boutique"
- * manifests that are stored as static JSON files. It looks for a file
- * matching the identifier and returns its content.
- *
- * @param string $identifier
- *   The identifier for the boutique manifest.
- *
- * @return array
- *   The decoded boutique manifest as a PHP array.
- */
-function dlts_viewer_iiif_resource_manifest_boutique($identifier) {
-
-  global $base_url;
-
-  $items = [];
-
-  $identifier = filter_xss($identifier);
-
-  $realpath = drupal_realpath('public://');
-
-  $filepath = "$realpath/boutique/$identifier.json";
-
-  if (file_exists($filepath)) {
-    return drupal_json_decode(
-      file_get_contents($filepath)
-    );
-  }
-
-  die('Not implemented yet');
-
 }
 
 /**

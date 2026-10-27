@@ -15,20 +15,13 @@
  *   A resource object.
  */
 function dlts_noid_load($id) {
-  $id = filter_xss($id);
-  // id can be noid or identifier.
-  $results = db_query(
-    'SELECT * FROM dlts_viewer_resource 
+  $result = db_query(
+    'SELECT * FROM {dlts_viewer_resource} 
      WHERE noid = :id 
      OR identifier = :id 
      LIMIT 1',
-    [ ':id' => $id ]
-    )->fetchAll();
+    [':id' => $id]
+  )->fetchObject();
 
-  if (empty($results)) {
-    return FALSE;
-  } else {
-    $result = array_pop($results);
-    return $result;
-  }
+  return $result ? $result : FALSE;
 }

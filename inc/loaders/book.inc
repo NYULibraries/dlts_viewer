@@ -88,7 +88,6 @@ function dlts_book_load($identifier) {
  *   MongoDB object.
  */
 function dlts_book_page_load($sequence, array $map, $resource_index) {
-
   $wrapper = entity_metadata_wrapper('node', $map[$resource_index - 1]);
 
   $isPartOf = $wrapper->field_identifier->value();
