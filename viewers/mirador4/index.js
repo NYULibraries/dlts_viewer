@@ -16,12 +16,14 @@ const {
   endpoint,
   identifier,
   type,
+  theme,
   language,
   sequence,
   multivolume,
   embeded,
   history,
   search,
+  defaultViewTheme,
   showCanvasInfo,
   showCollection,
   imageTools,
@@ -65,6 +67,11 @@ const config = {
   ...defaultConfig,
   ...{
     id: uuid,
+    // Fall back to the default selected theme if the requested theme
+    // isn't defined (e.g. an unrecognized resource type).
+    selectedTheme: defaultViewTheme && defaultConfig.themes[defaultViewTheme]
+      ? defaultViewTheme
+      : defaultConfig.selectedTheme,
     dlts: {
       showCanvasInfo: showCanvasInfo !== "false",
       showCollection: showCollection !== "false",
