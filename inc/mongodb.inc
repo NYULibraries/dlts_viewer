@@ -6,6 +6,34 @@
  */
 
 /**
+ * Handle an unreachable MongoDB server gracefully.
+ *
+ * Logs the underlying exception for administrators, then renders a
+ * friendly "service unavailable" page instead of letting the raw
+ * MongoConnectionException (with internal file paths) reach visitors.
+ *
+ * @param \Exception $exception
+ *   The MongoDB connection exception that was caught.
+ */
+function dlts_viewer_mongodb_connection_error(Exception $exception) {
+  watchdog(
+    'dlts_viewer',
+    'MongoDB connection failed: @message',
+    [ '@message' => $exception->getMessage() ],
+    WATCHDOG_CRITICAL
+  );
+
+  drupal_add_http_header('Status', '503 Service Unavailable');
+  drupal_set_title(t('Service temporarily unavailable'));
+
+  print theme('maintenance_page', [
+    'content' => t('This item cannot be displayed right now because the catalog service is temporarily unavailable. Please try again in a few minutes.'),
+  ]);
+
+  drupal_exit();
+}
+
+/**
  * MongoDB collection name by content type.
  *
  * @param string $type
@@ -102,8 +130,12 @@ function dlts_viewer_mongodb_new_sequence(array $pages,$collection_name = 'dlts_
  */
 function dlts_viewer_mongodb_load_by_identifier($identifier, $collection_name) {
   $query = [ 'identifier' => $identifier ];
-  $cursor = mongodb_collection($collection_name);
-  $result = $cursor->findOne($query);
+  try {
+    $cursor = mongodb_collection($collection_name);
+    $result = $cursor->findOne($query);
+  } catch (MongoConnectionException $e) {
+    dlts_viewer_mongodb_connection_error($e);
+  }
   return $result;
 }
 
@@ -120,8 +152,12 @@ function dlts_viewer_mongodb_load_by_identifier($identifier, $collection_name) {
  */
 function dlts_viewer_mongodb_load_by_item_identifier($isPartOf, $collection_name) {
   $query = [ 'isPartOf' => $isPartOf ];
-  $cursor = mongodb_collection($collection_name);
-  $result = $cursor->find($query);
+  try {
+    $cursor = mongodb_collection($collection_name);
+    $result = $cursor->find($query);
+  } catch (MongoConnectionException $e) {
+    dlts_viewer_mongodb_connection_error($e);
+  }
   return $result;
 }
 
@@ -144,8 +180,12 @@ function dlts_viewer_mongodb_load_sequence($sequence = 1, $isPartOf, $collection
     'isPartOf' => $isPartOf,
     'sequence' => (int) $sequence,
   ];
-  $cursor = mongodb_collection($collection_name);
-  $result = $cursor->findOne($query);
+  try {
+    $cursor = mongodb_collection($collection_name);
+    $result = $cursor->findOne($query);
+  } catch (MongoConnectionException $e) {
+    dlts_viewer_mongodb_connection_error($e);
+  }
   return $result;
 }
 
@@ -163,7 +203,11 @@ function dlts_viewer_mongodb_load_sequence($sequence = 1, $isPartOf, $collection
 function dlts_viewer_mongodb_load_resource_by_identifier($identifier, $collection_name) {
   $items = [];
   $query = [ 'isPartOf' => $identifier ];
-  $cursor = mongodb_collection($collection_name)->find($query);
+  try {
+    $cursor = mongodb_collection($collection_name)->find($query);
+  } catch (MongoConnectionException $e) {
+    dlts_viewer_mongodb_connection_error($e);
+  }
   $count = $cursor->count();
   if ($count > 0) {
     $cursor->sort([ 'sequence' => 1 ]);
