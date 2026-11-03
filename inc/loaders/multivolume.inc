@@ -11,6 +11,7 @@
  *   if no matching set is found.
  */
 function dlts_multivolume_load($id) {
+
   $object = dlts_noid_load($id);
 
   if (empty($object)) {
@@ -32,6 +33,10 @@ function dlts_multivolume_load($id) {
   }
 
   $keys = array_keys($result['node']);
+
+  if (count($keys) > 1) {
+    watchdog('dlts', 'Multiple dlts_multivol_book nodes reference book node %nid; using the last match (%nid2).', [ '%nid' => $book_nid, '%nid2' => end($keys), ], WATCHDOG_WARNING);
+  }
 
   $set_nid = array_pop($keys);
 
@@ -76,11 +81,23 @@ function dlts_multivolume_load($id) {
     return FALSE;
   }
 
+  // Collect the referenced book nids up front so they can be batch-loaded
+  // in a single query, avoiding an N+1 node_load() per volume below.
+  $book_nids = [];
+  foreach ($nodes as $node) {
+    $items = field_get_items('node', $node, 'field_book');
+    if (!empty($items[0]['nid'])) {
+      $book_nids[$node->nid] = $items[0]['nid'];
+    }
+  }
+
+  $books = !empty($book_nids) ? node_load_multiple(array_unique($book_nids)) : [];
+
   foreach ($nodes as $node) {
 
     $wrapper = entity_metadata_wrapper('node', $node);
-    
-    $book = $wrapper->field_book->value();
+
+    $book = isset($book_nids[$node->nid]) ? ($books[$book_nids[$node->nid]] ?? FALSE) : FALSE;
 
     if (empty($book)) {
       watchdog('dlts', 'field_book is empty on node %nid; skipping.', [ '%nid' => $node->nid, ], WATCHDOG_WARNING);

@@ -146,6 +146,7 @@ function _dlts_viewer_menu_iiif() {
    * @return array
    *   IIIF Presentation multivolume manifest.
    */
+  // /api/presentation/multivolume/isaw_ciaa000014/manifest.json
   $items['api/presentation/multivolume/%dlts_multivolume/manifest.json'] = [
     'title' => 'IIIF Presentation multivolume API 3 - Manifest',
     'access arguments' => [ 'access iiif content' ],

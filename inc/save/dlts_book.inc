@@ -412,14 +412,18 @@ function save_dlts_book($node, $language = 'en') {
             'proceed' => 0,
           ])->execute();
         }
+
         // Multi volume book.
         if (!empty($node['multivolume']) && !empty($node['multivolume']->volume)) {
           foreach ($node['multivolume']->volume as $multivolume) {
-            $multivolume->title = (isset($node['title_long']) && !empty($node['title_long'])) ? $node['title_long'] : $node['title'];
-            $multivolume->book = $identifier;
-            create_dlts_multivol_book($multivolume);
+            if ($multivolume->identifier == $identifier) {
+              $multivolume->title = (isset($node['title_long']) && !empty($node['title_long'])) ? $node['title_long'] : $node['title'];
+              $multivolume->book = $identifier;
+              create_dlts_multivol_book($multivolume);
+            }
           }
         }
+
         // Series book.
         if (!empty($node['series'])) {
           foreach ($node['series'] as $series) {
