@@ -1,6 +1,6 @@
 const defaultConfig = {
   id: null,
-  selectedTheme: "light",
+  selectedTheme: "dark",
   // For more info about adding and configuring languages in Mirador, see:
   // https://github.com/ProjectMirador/mirador/wiki/M3-Internationalization-(i18n)
   language: "en", // Set default language display here.
@@ -36,194 +36,73 @@ const defaultConfig = {
   workspaceControlPanel: {
     enabled: false, // Configure if the control panel should be rendered.  Useful if you want to lock the viewer down to only the configured manifests.
   },
-  themes: {
-    // Base theme, used when a resource type has no dedicated theme.
-    light: {
-      palette: {
-        mode: "light",
-        primary: {
-          main: "#57068c",
-        },
-        secondary: {
-          main: "#8900e1",
-        },
-        // Shades used by Mirador to style the workspace/window chrome.
-        shades: {
-          dark: "#eeeeee",
-          main: "#ffffff",
-          light: "#f5f5f5",
-        },
+  themes: (() => {
+    const light = {
+      mode: "light",
+      primary: { main: "#57068c" },
+      secondary: { main: "#8900e1" },
+      shades: {
+        dark: "#eeeeee",
+        main: "#ffffff",
+        light: "#f5f5f5",
       },
-    },
-    dark: {
-      palette: {
-        mode: "dark",
-        primary: {
-          main: "#84fef2",
-        },
-        secondary: {
-          main: "#4db6ac",
-        },
-        background: {
-          default: "#424242",
-          paper: "#424242",
-        },
-        shades: {
-          dark: "#000000",
-          main: "#424242",
-          light: "#616161",
-        },
+    };
+
+    // darkTheme() is the teal-accented dark palette; type *_dark keys reuse it.
+    const dark = {
+      mode: "dark",
+      primary: { main: "#84fef2" },
+      secondary: { main: "#4db6ac" },
+      background: {
+        default: "#424242",
+        paper: "#424242",
       },
-    },
-    // Books.
-    book_light: {
-      palette: {
-        mode: "light",
-        primary: {
-          main: "#8d6e63",
-        },
-        secondary: {
-          main: "#5d4037",
-        },
-        shades: {
-          dark: "#eeeeee",
-          main: "#ffffff",
-          light: "#f5f5f5",
-        },
+      shades: {
+        dark: "#000000",
+        main: "#424242",
+        light: "#616161",
       },
-    },
-    book_dark: {
-      palette: {
-        mode: "dark",
-        primary: {
-          main: "#84fef2",
-        },
-        secondary: {
-          main: "#4db6ac",
-        },
-        background: {
-          default: "#424242",
-          paper: "#424242",
-        },
-        shades: {
-          dark: "#000000",
-          main: "#424242",
-          light: "#616161",
-        },
-      },
-    },
-    // Maps.
-    map_light: {
-      palette: {
-        mode: "light",
-        primary: {
-          main: "#2e7d32",
-        },
-        secondary: {
-          main: "#43a047",
-        },
-        shades: {
-          dark: "#eeeeee",
-          main: "#ffffff",
-          light: "#f5f5f5",
-        },
-      },
-    },
-    map_dark: {
-      palette: {
-        mode: "dark",
-        primary: {
-          main: "#a5d6a7",
-        },
-        secondary: {
-          main: "#81c784",
-        },
-        background: {
-          default: "#424242",
-          paper: "#424242",
-        },
-        shades: {
-          dark: "#000000",
-          main: "#424242",
-          light: "#616161",
-        },
-      },
-    },
-    // Photos.
-    photo_light: {
-      palette: {
-        mode: "light",
-        primary: {
-          main: "#1565c0",
-        },
-        secondary: {
-          main: "#1e88e5",
-        },
-        shades: {
-          dark: "#eeeeee",
-          main: "#ffffff",
-          light: "#f5f5f5",
-        },
-      },
-    },
-    photo_dark: {
-      palette: {
-        mode: "dark",
-        primary: {
-          main: "#90caf9",
-        },
-        secondary: {
-          main: "#64b5f6",
-        },
-        background: {
-          default: "#424242",
-          paper: "#424242",
-        },
-        shades: {
-          dark: "#000000",
-          main: "#424242",
-          light: "#616161",
-        },
-      },
-    },
-    // Serials.
-    serial_light: {
-      palette: {
-        mode: "light",
-        primary: {
-          main: "#6a1b9a",
-        },
-        secondary: {
-          main: "#8e24aa",
-        },
-        shades: {
-          dark: "#eeeeee",
-          main: "#ffffff",
-          light: "#f5f5f5",
-        },
-      },
-    },
-    serial_dark: {
-      palette: {
-        mode: "dark",
-        primary: {
-          main: "#ce93d8",
-        },
-        secondary: {
-          main: "#ba68c8",
-        },
-        background: {
-          default: "#424242",
-          paper: "#424242",
-        },
-        shades: {
-          dark: "#000000",
-          main: "#424242",
-          light: "#616161",
-        },
-      },
-    },
-  },
+    };
+
+    const lightTheme = (overrides = {}) => ({
+      palette: { ...light, ...overrides },
+    });
+
+    const darkTheme = (overrides = {}) => ({
+      palette: { ...dark, ...overrides },
+    });
+
+    return {
+      // Base themes. Dark theme is teal-accented palette we had before. 
+      light: lightTheme(),
+      dark: darkTheme(),
+
+      book_light: lightTheme({
+        primary: { main: "#8d6e63" },
+        secondary: { main: "#5d4037" },
+      }),
+      book_dark: darkTheme(),
+
+      map_light: lightTheme({
+        primary: { main: "#2e7d32" },
+        secondary: { main: "#43a047" },
+      }),
+      map_dark: darkTheme(),
+
+      photo_light: lightTheme({
+        primary: { main: "#1565c0" },
+        secondary: { main: "#1e88e5" },
+      }),
+      photo_dark: darkTheme(),
+
+      serial_light: lightTheme({
+        primary: { main: "#6a1b9a" },
+        secondary: { main: "#8e24aa" },
+      }),
+      serial_dark: darkTheme(),
+    };
+  })(),
+
   theme: {
     components: {
       WindowCanvasNavigationControls: {

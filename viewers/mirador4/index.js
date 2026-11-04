@@ -17,9 +17,10 @@ const {
   endpoint,
   identifier,
   type,
-  theme,
+  theme, 
   language,
   sequence,
+  sequenceTotalSequence,
   multivolume,
   embeded,
   history,
@@ -80,6 +81,7 @@ const config = {
     dlts: {
       showCanvasInfo: showCanvasInfo !== "false",
       showCollection: showCollection !== "false",
+      sequenceTotalSequence: Number(sequenceTotalSequence) || 0,
     },
     language,
     windows: [

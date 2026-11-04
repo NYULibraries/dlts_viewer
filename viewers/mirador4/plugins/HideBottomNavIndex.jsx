@@ -30,20 +30,41 @@ const Index = styled(Typography)({
   whiteSpace: "nowrap",
 });
 
-const NavIndex = ({ TargetComponent: TC, targetProps, canvasCount, canvasIndex }) => {
+const NavIndex = ({
+  TargetComponent: TC,
+  targetProps,
+  canvasCount,
+  canvasIndex,
+  sequenceTotalSequence,
+}) => {
   const { t } = useTranslation();
   const dir = targetProps.viewingDirection === "right-to-left" ? "rtl" : "ltr";
-  // Manifest not loaded/undefined - hide the label. Empty manifest - "0 of 0".
-  // TODO: separate this when single photo/ multi photo is differentiated.
-  const countIsKnown = typeof canvasCount === "number";
-  const current = canvasCount === 0 ? 0 : canvasIndex + 1;
+
+  let navProps = targetProps;
+  let current;
+  let total;
+
+  if (sequenceTotalSequence === 1) {
+    // Single-sequence: always "1 of 1" and disable prev/next.
+    // TODO: This is enforced by the canvas count so disabling prev/next on count of 1 might be redundant.
+    navProps = {
+      ...targetProps,
+      hasPreviousCanvas: false,
+      hasNextCanvas: false,
+    };
+    current = 1;
+    total = 1;
+  } else if (typeof canvasCount === "number") {
+    current = canvasCount === 0 ? 0 : canvasIndex + 1;
+    total = canvasCount;
+  }
 
   return (
     <Root dir={dir}>
-      <TC {...targetProps} />
-      {countIsKnown && (
+      <TC {...navProps} />
+      {total != null && (
         <Index variant="caption" display="inline" role="status">
-          {t("pagination", { current, total: canvasCount })}
+          {t("pagination", { current, total })}
         </Index>
       )}
     </Root>
@@ -69,6 +90,7 @@ export default [
       return {
         canvasCount: getCanvases(state, { windowId }).length,
         canvasIndex: getCanvasIndex(state, { windowId }),
+        sequenceTotalSequence: state.config?.dlts?.sequenceTotalSequence || 0,
       };
     },
   },
