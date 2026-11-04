@@ -988,6 +988,7 @@ function _dlts_viewer_process_metadata_fields(array $type_fields, $wrapper, $req
       'label' => locale($field['label'], NULL, $requestedLang),
       'value' => NULL,
     ];
+
     switch ($name) {
       case 'author':
       case 'contributor':
@@ -1012,19 +1013,15 @@ function _dlts_viewer_process_metadata_fields(array $type_fields, $wrapper, $req
         break;
 
       case 'binding_orientation':
-        $fields[$name]['value'] = $field['settings']['allowed_values'][$raw_value];
+        $fields[$name]['value'] = $field['settings']['allowed_values'][$raw_value] ?? $raw_value;
         break;
 
       case 'collection':
         $fields[$name]['value'] = [];
         $collections = dlts_viewer_collections($raw_value);
         foreach ($collections as $collection) {
-          unset($collection['title']);
-          unset($collection['type']);
-          unset($collection['language']);
-          unset($collection['partner']['title']);
-          unset($collection['partner']['type']);
-          unset($collection['partner']['language']);
+          unset($collection['title'], $collection['type'], $collection['language']);
+          unset($collection['partner']['title'], $collection['partner']['type'], $collection['partner']['language']);
           $collection['name'] = locale($collection['name'], NULL, $requestedLang);
           $collection['partner']['name'] = locale($collection['partner']['name'], NULL, $requestedLang);
           $fields[$name]['value'][] = $collection;
@@ -1037,7 +1034,7 @@ function _dlts_viewer_process_metadata_fields(array $type_fields, $wrapper, $req
         break;
 
       case 'handle':
-        $handle = $fields[$name]['value'] = $raw_value['url'];
+        $handle = $fields[$name]['value'] = $raw_value['url'] ?? NULL;
         break;
 
       case 'identifier':
@@ -1045,71 +1042,77 @@ function _dlts_viewer_process_metadata_fields(array $type_fields, $wrapper, $req
         break;
 
       case 'language':
-        $fields[$name]['value'] = array_pop($raw_value);
-        break;
-
       case 'language_code':
-        $fields[$name]['value'] = array_pop($raw_value);
+        $fields[$name]['value'] = is_array($raw_value) ? array_pop($raw_value) : $raw_value;
         break;
 
       case 'partner':
         $partner_value = [];
-        foreach ($raw_value as $partner) {
-          $partner_wrapper = entity_metadata_wrapper('node', $partner);
-          $partner_value[] = [
-            'identifier' => $partner_wrapper->field_identifier->value(),
-            'code' => $partner_wrapper->field_code->value(),
-            'name' => locale($partner_wrapper->field_name->value(), NULL, $requestedLang),
-          ];
+        if (is_array($raw_value)) {
+          foreach ($raw_value as $partner) {
+            $partner_wrapper = entity_metadata_wrapper('node', $partner);
+            $partner_value[] = [
+              'identifier' => $partner_wrapper->field_identifier->value(),
+              'code' => $partner_wrapper->field_code->value(),
+              'name' => locale($partner_wrapper->field_name->value(), NULL, $requestedLang),
+            ];
+          }
         }
         $fields[$name]['value'] = $partner_value;
         unset($partner_value);
         break;
 
       case 'pdf_file':
-        // Notice: Undefined index: searchable in _dlts_viewer_process_metadata_fields()
-        // (line 1160 of /var/www/html/viewer/sites/all/modules/dlts_viewer/inc/endpoints.inc).
         $fields[$name]['value'] = [
           'hi' => [],
           'lo' => [],
         ];
-        foreach ($raw_value as $value) {
-          $data = [
-            'uri' => $value['uri'],
-            'label' => $value['label'],
-          ];
-          $data['size'] = field_fileserver_get_pdf_filesize($data);
-          $data['uri'] = file_create_url($data['uri']);
-          $filename = pathinfo($data['uri'], PATHINFO_FILENAME);
-          preg_match('/_(hi|lo)/', $filename, $matches);
-          if (isset($value['data'])) {
-            $serial = unserialize($value['data'], ['allowed_classes' => false]);
-            if (isset($serial['filesize']) && $serial['filesize'] > 0) {
-              $data['size'] = $serial['filesize'];
-            }
-            if (isset($serial['searchable'])) {
-              $data['searchable'] = $serial['searchable'];
-            }
-          }
-          if (isset($matches) && isset($matches[1])) {
-            switch ($matches[1]) {
-              case 'hi':
-                $fields[$name]['value']['hi'] = [
-                  'label' => locale('High-resolution', NULL, $requestedLang),
-                  'uri' => $data['uri'],
-                  'searchable' => $data['searchable'],
-                  'filesize' => $data['size'],
-                ];
-                break;
+        if (is_array($raw_value)) {
+          foreach ($raw_value as $value) {
+            $data = [
+              'uri' => $value['uri'] ?? '',
+              'label' => $value['label'] ?? '',
+              'searchable' => FALSE, // Default to FALSE to prevent undefined key notice
+            ];
 
-              case 'lo':
-                $fields[$name]['value']['lo'] = [
-                  'label' => locale('Low-resolution', NULL, $requestedLang),
-                  'uri' => $data['uri'],
-                  'searchable' => $data['searchable'],
-                  'filesize' => $data['size'],
-                ];
-                break;
+            $data['size'] = field_fileserver_get_pdf_filesize($data);
+            $data['uri'] = file_create_url($data['uri']);
+            $filename = pathinfo($data['uri'], PATHINFO_FILENAME);
+
+            preg_match('/_(hi|lo)/', $filename, $matches);
+
+            if (!empty($value['data'])) {
+              $serial = @unserialize($value['data'], ['allowed_classes' => FALSE]);
+              if (is_array($serial)) {
+                if (isset($serial['filesize']) && $serial['filesize'] > 0) {
+                  $data['size'] = $serial['filesize'];
+                }
+                if (isset($serial['searchable'])) {
+                  $data['searchable'] = (bool) $serial['searchable'];
+                }
+              }
+            }
+
+            if (isset($matches[1])) {
+              switch ($matches[1]) {
+                case 'hi':
+                  $fields[$name]['value']['hi'] = [
+                    'label' => locale('High-resolution', NULL, $requestedLang),
+                    'uri' => $data['uri'],
+                    'searchable' => $data['searchable'],
+                    'filesize' => $data['size'],
+                  ];
+                  break;
+
+                case 'lo':
+                  $fields[$name]['value']['lo'] = [
+                    'label' => locale('Low-resolution', NULL, $requestedLang),
+                    'uri' => $data['uri'],
+                    'searchable' => $data['searchable'],
+                    'filesize' => $data['size'],
+                  ];
+                  break;
+              }
             }
           }
         }
@@ -1120,27 +1123,25 @@ function _dlts_viewer_process_metadata_fields(array $type_fields, $wrapper, $req
         break;
 
       case 'read_order':
-        // [0] => Left to right
-        // [1] => Right to left
-        $map = [0 => 'ltr', 1 => 'rtl'];
-        $worldDirection = $fields[$name]['value'] = $map[$raw_value];
-        unset($map);
-        break;
-
-      case 'representative_image':
-        unset($fields[$name]);
-        break;
-
-      case 'rights':
-        $fields[$name]['value'] = trim($raw_value);
-        break;
-
       case 'scan_order':
         // [0] => Left to right
         // [1] => Right to left
         $map = [0 => 'ltr', 1 => 'rtl'];
-        $fields[$name]['value'] = $map[$raw_value];
+        $val = $map[$raw_value] ?? 'ltr';
+        if ($name === 'read_order') {
+          $worldDirection = $val;
+        }
+        $fields[$name]['value'] = $val;
         unset($map);
+        break;
+
+      case 'representative_image':
+      case 'title':
+        unset($fields[$name]);
+        break;
+
+      case 'rights':
+        $fields[$name]['value'] = is_string($raw_value) ? trim($raw_value) : $raw_value;
         break;
 
       case 'sequence_count':
@@ -1149,24 +1150,24 @@ function _dlts_viewer_process_metadata_fields(array $type_fields, $wrapper, $req
 
       case 'subject':
         $subjects = [];
-        foreach ($raw_value as $subject) {
-          $subjects[] = [
-            'uuid' => $subject->uuid,
-            'name' => $subject->name,
-          ];
+        if (is_array($raw_value)) {
+          foreach ($raw_value as $subject) {
+            $subjects[] = [
+              'uuid' => $subject->uuid ?? NULL,
+              'name' => $subject->name ?? '',
+            ];
+          }
         }
         $fields[$name]['value'] = $subjects;
         unset($subjects);
         break;
 
-      case 'title':
-        unset($fields[$name]);
-        break;
-
       case 'topic':
         $topics = [];
-        foreach ($raw_value as $topic) {
-          $topics[] = locale($topic, NULL, $requestedLang);
+        if (is_array($raw_value)) {
+          foreach ($raw_value as $topic) {
+            $topics[] = locale($topic, NULL, $requestedLang);
+          }
         }
         $fields[$name]['value'] = $topics;
         unset($topics);
@@ -1190,7 +1191,6 @@ function _dlts_viewer_process_metadata_fields(array $type_fields, $wrapper, $req
     'worldDirection' => $worldDirection,
     'handle' => $handle,
   ];
-
 }
 
 /**

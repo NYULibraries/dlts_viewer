@@ -183,6 +183,23 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
 
   global $base_url;
 
+  //Wrap book entity with Entity API wrapper.
+  $wrapper = entity_metadata_wrapper('node', $entity);
+
+  $identifier = $wrapper->field_identifier->value();
+
+  if (!empty($seq) && isset($seq['sequence']) && is_array($seq['sequence'])) {
+    $sequence = $seq['sequence'][0];
+  } else {
+    $sequence = "1";
+  }
+
+  $do_not_render_identifiers = ['fales_sc000040', 'fales_sc000043'];
+
+  if (in_array($identifier, $do_not_render_identifiers)) {
+    drupal_goto("/api/embed/$identifier/$sequence");
+  }
+
   $arg = $seq;
 
   // Check if this collection has searchable PDFs.
@@ -203,9 +220,6 @@ function dlts_viewer_book_dispatcher($entity, $seq) {
   if ($is_resource) {
     dlts_viewer_resource_language_code($entity);
   }
-
-  //Wrap book entity with Entity API wrapper.
-  $wrapper = entity_metadata_wrapper('node', $entity);
 
   $entity->title = $wrapper->field_title->value();
 

@@ -4,93 +4,120 @@
  * @file
  * API Photos endpoint.
  */
+
 // https://[HOST]/viewer/api/iiif/photos/5tb2rnch/1/full/250,/0/default.jpg
-// full/max/0/default.jpg
-// api/iiif/photos/%dlts_photo_handle/%dlts_photo_sequence/%dlts_iiif_region/%dlts_iiif_size/%dlts_iiif_rotation/%dlts_iiif_quality
-function dlts_viewer_dlts_photo_sequence_image_iiif($entity, $sequence, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
+/**
+ * IIIF Photo Sequence Image callback.
+ *
+ * Retrieves an image sequence for photo entities from the IIIF server, applies
+ * HTTP caching headers, and streams the raw binary response directly to the client.
+ *
+ * @param object $entity
+ *   The photo node object.
+ * @param array $sequence
+ *   Array containing image sequence metadata and target URI.
+ * @param string $region
+ *   IIIF region string. Defaults to 'full'.
+ * @param string $size
+ *   IIIF size string. Defaults to 'max'.
+ * @param int $rotation
+ *   IIIF rotation value. Defaults to 0.
+ * @param string $quality
+ *   IIIF quality and format string. Defaults to 'default.jpg'.
+ */
+function dlts_viewer_dlts_photo_sequence_image_iiif($entity, array $sequence, $region = 'full', $size = 'max', $rotation = 0, $quality = 'default.jpg') {
 
   $image_server = variable_get('dlts_image_server', 'http://127.0.0.1:8182');
 
   if (!empty($sequence['cm']['uri'])) {
     $static_source = variable_get('dlts_image_static_source', 'FilesystemSource');
+
     switch ($static_source) {
       case 'FilesystemSource':
         $image_id = str_replace('fileserver://', '', $sequence['cm']['uri']);
         break;
 
       case 'HttpSource':
+      default:
         $image_id = file_create_url($sequence['cm']['uri']);
         break;
     }
 
     $uri = urlencode($image_id);
+    $image_url = "$image_server/iiif/2/$uri/$region/$size/$rotation/$quality";
+    $original_image_source = file_create_url($sequence['cm']['uri']);
 
-    $image = "$image_server/iiif/2/$uri/$region/$size/$rotation/$quality";
-
-    // bad, but nothing I can do at the moment.
-    // Set the options to disable SSL verification
+    // Fetch image from IIIF image server
     $options = [
-      'http' => [
-        'method' => 'GET',
-        'timeout' => 500,
-      ],
-      'ssl' => [
-        'verify_peer' => false,
-        'verify_peer_name' => false,
-      ],
+      'method' => 'GET',
+      'timeout' => 15,
     ];
 
-    $context = stream_context_create($options);
+    $response = drupal_http_request($image_url, $options);
 
-    $content = file_get_contents($image, false, $context);
+    // Handle Successful Response
+    if ($response && $response->code == '200' && !empty($response->data)) {
+      $etag = '"' . md5($response->data) . '"';
+      $max_age = 31536000; // 1 year
+      $request_time = isset($_SERVER['REQUEST_TIME']) ? $_SERVER['REQUEST_TIME'] : time();
 
-    if (!isset($http_response_header)) {
-      header('HTTP/1.1 504 Gateway Timeout', TRUE, 504);
-      die('HTTP/1.1 504 Gateway Timeout');
-    }
+      // 1. Mark cacheable in Drupal
+      drupal_page_is_cacheable(TRUE);
 
-    $requestStatus = substr($http_response_header[0], 9, 3);
+      // 2. Set HTTP response headers
+      drupal_add_http_header('Content-Type', 'image/jpeg');
+      drupal_add_http_header('ETag', $etag);
+      drupal_add_http_header('Cache-Control', 'public, max-age=' . $max_age);
+      drupal_add_http_header('Expires', gmdate('D, d M Y H:i:s', $request_time + $max_age) . ' GMT');
+      drupal_add_http_header('Access-Control-Allow-Origin', '*');
+      drupal_add_http_header('Access-Control-Allow-Methods', 'GET');
+      drupal_add_http_header('Content-Transfer-Encoding', 'binary');
 
-    $responseType = substr($http_response_header[7], 14);
+      // Custom context headers
+      drupal_add_http_header('Master-Image', $original_image_source);
+      drupal_add_http_header('Image-Server-Url', $image_url);
 
-    if ($responseType !== 'image/jpeg') {
-      $responseType = substr($http_response_header[3], 14);
-    }
-
-    $original_image_source = file_create_url($sequence['cm']['uri']);   
-
-    if ($content && $requestStatus === '200' && $responseType === 'image/jpeg') {
-      $etag = md5($content);
-      header('Content-type: image/jpeg');
-      header('Access-Control-Allow-Origin: *');
-      header('Access-Control-Allow-Methods: GET');
-      header("Content-Transfer-Encoding: binary");
-      header("Master-Image: $original_image_source");
-      header("Image-Server-Url: $image");
-      header("Etag: $etag");
-      echo $content;
-      exit(0);
-    } else {
-      if (isset($http_response_header)) {
-        header($http_response_header[0], TRUE, 400);
-        $error = [
-          'response' => [
-            'message' => $http_response_header,
-            'error' => $http_response_header[0],
-            'imageSource' => $original_image_source,
-            'request' => $image,
-            'entity' => [
-              'nid' => $entity->nid,
-            ],
-          ],
-        ];
-        drupal_json_output($error);
-        die();
-      } else {
-        header('HTTP/1.1 400 Bad Request', TRUE, 400);
-        die('HTTP/1.1 400 Bad Request');
+      // 3. Handle 304 Not Modified revalidation
+      if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+        drupal_add_http_header('Status', '304 Not Modified');
+        drupal_exit();
       }
-      exit(1);
+
+      // 4. Output image binary and exit
+      echo $response->data;
+      drupal_exit();
     }
+
+    // Handle Gateway Timeout / Server Down
+    if (!$response || (isset($response->code) && $response->code == -1)) {
+      drupal_add_http_header('Status', '504 Gateway Timeout');
+      drupal_json_output([
+        'error' => [
+          'message' => 'IIIF image server connection timed out.',
+          'imageSource' => $original_image_source,
+          'request' => $image_url,
+          'entity' => [
+            'nid' => isset($entity->nid) ? $entity->nid : NULL,
+          ],
+        ],
+      ]);
+      drupal_exit();
+    }
+
+    // Handle HTTP Error Response from Cantaloupe
+    $status_code = isset($response->code) ? $response->code : 400;
+    drupal_add_http_header('Status', $status_code . ' Bad Request');
+    drupal_json_output([
+      'response' => [
+        'message' => isset($response->status_message) ? $response->status_message : 'Image processing error.',
+        'error' => isset($response->error) ? $response->error : 'Bad Request',
+        'imageSource' => $original_image_source,
+        'request' => $image_url,
+        'entity' => [
+          'nid' => isset($entity->nid) ? $entity->nid : NULL,
+        ],
+      ],
+    ]);
+    drupal_exit();
   }
 }

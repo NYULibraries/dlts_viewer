@@ -448,12 +448,6 @@ function dlts_viewer_create_book_page($data) {
         dlts_viewer_mongodb_new_sequence($page, 'dlts_books_page');
       }
     }
-    // Check if the JSON document include stitched pages.
-    if (isset($data->stitched->page) && !empty($data->stitched->page)) {
-      foreach ($data->stitched->page as $key => $page) {
-        dlts_viewer_mongodb_new_sequence($page, 'dlts_stitched_books_page');
-      }
-    }
   }
 }
 

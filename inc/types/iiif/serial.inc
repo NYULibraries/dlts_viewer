@@ -185,20 +185,36 @@ function dlts_viewer_iiif_serial_manifest($entity, $cache = TRUE) {
   global $base_url;
 
   $wrapper = entity_metadata_wrapper('node', $entity);
+
   $identifier = $wrapper->field_identifier->value();
+
   $bundle = $wrapper->getBundle();
+
   $type = dlts_viewer_get_bundle_alias($bundle);
 
   $cache_path = drupal_realpath('public://') . "/iiif/$type/$identifier/manifest.json";
 
-  $cache = false;
-
   if ($cache && file_exists($cache_path)) {
-    $cached = file_get_contents($cache_path);
-    if ($cached !== FALSE) {
-      return drupal_json_decode($cached);
+    $etag = '"' . md5_file($cache_path) . '"';
+    $max_age = 31536000; // 1 year
+    $request_time = isset($_SERVER['REQUEST_TIME']) ? $_SERVER['REQUEST_TIME'] : time();
+
+    // 1. Set cache and content headers (without 'immutable')
+    drupal_page_is_cacheable(TRUE);
+    drupal_add_http_header('ETag', $etag);
+    drupal_add_http_header('Cache-Control', 'public, max-age=' . $max_age);
+    drupal_add_http_header('Expires', gmdate('D, d M Y H:i:s', $request_time + $max_age) . ' GMT');
+    drupal_add_http_header('Content-Type', 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"');
+
+    // 2. Handle 304 revalidation if client sends matching ETag
+    if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+      drupal_add_http_header('Status', '304 Not Modified');
+      drupal_exit();
     }
-    watchdog('dlts_viewer', 'Failed to read cached manifest at %path.', ['%path' => $cache_path], WATCHDOG_WARNING);
+
+    // 3. Stream JSON file directly and exit cleanly
+    readfile($cache_path);
+    drupal_exit();
   }
 
   // -------------------------------------------------------------------------

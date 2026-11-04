@@ -21,13 +21,20 @@ function create_dlts_multivol_book($node) {
         create_dlts_multivol($isPartOf);
       }
     }
+    $multivol_identifier = $node->isPartOf[0]->identifier;
   } else {
     $multivolume_nid = multivol_nid($node->isPartOf->identifier);
     if (!$multivolume_nid) {
       create_dlts_multivol($node->isPartOf);
     }
+    $multivol_identifier = $node->isPartOf->identifier;
   }
-  $multivol_book_exist = multivol_book_nid($node->identifier, $node->volume_number);
+  // multivol_book_nid() resolves the multivol set by identifier, so it
+  // must be passed the set's identifier (isPartOf), not the volume's own
+  // book identifier. Passing the book identifier here always failed to
+  // find the set, causing a new dlts_multivol_book node to be created on
+  // every import instead of updating the existing one.
+  $multivol_book_exist = multivol_book_nid($multivol_identifier, $node->volume_number);
   if ($multivol_book_exist) {
     // Load the node by NID.
     $entity = node_load($multivol_book_exist);
@@ -97,11 +104,7 @@ function create_dlts_multivol_book($node) {
       $ewrapper->field_book->set($book_exist);
     }
   }
-  if (is_array($node->isPartOf)) {
-    $multivol_exist = multivol_nid($node->isPartOf[0]->identifier);
-  } else {
-    $multivol_exist = multivol_nid($node->isPartOf->identifier);
-  }
+  $multivol_exist = multivol_nid($multivol_identifier);
   if ($multivol_exist) {
     $ewrapper->field_multivol->set($multivol_exist);
   }
