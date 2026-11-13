@@ -38,6 +38,7 @@ viewers/mirador4/dist/index.html
 !viewers/mirador4/package.json
 viewers/mirador4/package-lock.json
 viewers/mirador4/.parcel-cache
+viewers/mirador4/.dev-dist
 
 
 viewers/mirador-4-as-of-today

@@ -4,7 +4,7 @@
   "private": true,
   "source": "index.html",
   "scripts": {
-    "dev": "parcel serve index.html --open",
+    "dev": "parcel serve index.html --dist-dir .dev-dist --open",
     "build": "rm -rf dist && parcel build index.html --dist-dir dist"
   },
   "dependencies": {
