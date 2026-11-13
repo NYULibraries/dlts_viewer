@@ -1,24 +1,26 @@
-import Mirador from 'mirador';
-import { miradorImageToolsPlugin } from 'mirador-image-tools';
-import { defaultConfig } from './viewerConfig.js'
-import LanguageSelector from './plugins/LanguageSelector.jsx'
-import createMultiVolumeSelector from './plugins/createMultiVolumeSelector.jsx'
-import createBookHistoryPlugin from './plugins/createBookHistoryPlugin.js'
+import Mirador from "mirador";
+import { miradorImageToolsPlugin } from "./plugins/imageTools/index.js";
+import { defaultConfig } from "./viewerConfig.js";
+import LanguageSelector from "./plugins/LanguageSelector.jsx";
+import createMultiVolumeSelector from "./plugins/createMultiVolumeSelector.jsx";
+import createBookHistoryPlugin from "./plugins/createBookHistoryPlugin.js";
 import CollectionInfo from "./plugins/CollectionInfo.jsx";
+import HideBottomNavIndex from "./plugins/HideBottomNavIndex.jsx";
 
-import './style.css'
+import "./style.css";
 
-const uuid = 'mirador-app'
+const uuid = "mirador-app";
 
-const elem = document.getElementById(uuid)
+const elem = document.getElementById(uuid);
 
 const {
   endpoint,
   identifier,
   type,
-  theme,
+  theme, 
   language,
   sequence,
+  sequenceTotalSequence,
   multivolume,
   embeded,
   history,
@@ -28,25 +30,27 @@ const {
   showCollection,
   imageTools,
   viewType,
-} = elem.dataset
+} = elem.dataset;
 
-const manifestId = `${endpoint}/api/presentation/${type}/${identifier}/manifest.json`
+const manifestId = `${endpoint}/api/presentation/${type}/${identifier}/manifest.json`;
 
-const plugins = [
-  LanguageSelector,
-  ...CollectionInfo
-]
+const plugins = [LanguageSelector, ...CollectionInfo];
 
-if (multivolume === 'true') {
-  plugins.push(createMultiVolumeSelector({ endpoint, identifier }))
+if (type === "photos") {
+  elem.classList.add("dlts-photos");
+  plugins.push(...HideBottomNavIndex);
 }
 
-if (history === 'true' && embeded !== 'true') {
-  plugins.push(createBookHistoryPlugin({ endpoint, identifier }))
+if (multivolume === "true") {
+  plugins.push(createMultiVolumeSelector({ endpoint, identifier }));
 }
 
-if (imageTools === 'true' ) {
-  plugins.push(...miradorImageToolsPlugin)
+if (history === "true" && embeded !== "true") {
+  plugins.push(createBookHistoryPlugin({ endpoint, identifier }));
+}
+
+if (imageTools === "true") {
+  plugins.push(...miradorImageToolsPlugin);
 }
 
 // Sort wrap plugins by weight (descending) per target.
@@ -54,14 +58,16 @@ if (imageTools === 'true' ) {
 // order → lower weight = innermost (portal committed first = appears first in panel).
 function sortWrapsDescending(plugins, target) {
   const wraps = plugins
-    .filter(p => p.target === target && p.mode === 'wrap')
-    .sort((a, b) => (b.weight ?? 50) - (a.weight ?? 50))
-  const others = plugins.filter(p => !(p.target === target && p.mode === 'wrap'))
-  return [...wraps, ...others]
+    .filter((p) => p.target === target && p.mode === "wrap")
+    .sort((a, b) => (b.weight ?? 50) - (a.weight ?? 50));
+  const others = plugins.filter(
+    (p) => !(p.target === target && p.mode === "wrap"),
+  );
+  return [...wraps, ...others];
 }
 
-let sortedPlugins = sortWrapsDescending(plugins, 'WindowSideBarInfoPanel')
-sortedPlugins = sortWrapsDescending(sortedPlugins, 'ManifestInfo')
+let sortedPlugins = sortWrapsDescending(plugins, "WindowSideBarInfoPanel");
+sortedPlugins = sortWrapsDescending(sortedPlugins, "ManifestInfo");
 
 const config = {
   ...defaultConfig,
@@ -75,6 +81,7 @@ const config = {
     dlts: {
       showCanvasInfo: showCanvasInfo !== "false",
       showCollection: showCollection !== "false",
+      sequenceTotalSequence: Number(sequenceTotalSequence) || 0,
     },
     language,
     windows: [
@@ -88,14 +95,14 @@ const config = {
       },
     ],
   },
-}
+};
 
-if (viewType === 'gallery') {
+if (viewType === "gallery") {
   config.window = {
     allowClose: false,
     allowFullscreen: true,
     allowMaximize: false,
-    allowTopMenuButton: false,
+    allowTopMenuButton: true,
     panels: {
       info: true,
       attribution: true,
@@ -106,8 +113,8 @@ if (viewType === 'gallery') {
     },
     sideBarOpen: false,
     allowWindowSideBar: true,
-    authNewWindowCenter: "screen"
-  }
+    authNewWindowCenter: "screen",
+  };
 }
 
-Mirador.viewer(config, sortedPlugins)
+Mirador.viewer(config, sortedPlugins);
